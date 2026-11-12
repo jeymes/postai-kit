@@ -1,0 +1,11 @@
+node_modules/
+.cortes/
+.env
+canais.json
+entrada/
+trabalho/
+public/
+out/
+*.log
+.DS_Store
+!.env.exemplo

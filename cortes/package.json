@@ -1,0 +1,35 @@
+{
+  "name": "postai-cortes",
+  "version": "0.2.0",
+  "description": "Fábrica de cortes do Postaí: transforma os vídeos pedidos no menu Cortes em cortes verticais com legenda, com o Claude da própria pessoa, e devolve cada um para aprovação.",
+  "private": true,
+  "license": "UNLICENSED",
+  "type": "module",
+  "scripts": {
+    "dev": "remotion studio",
+    "lint": "tsc",
+    "instalar": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON ferramentas/instalar.mts",
+    "buscar": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON ferramentas/buscar.mts",
+    "transcrever": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON ferramentas/transcrever.mts",
+    "cortar": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON ferramentas/cortar.mts",
+    "previa": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON ferramentas/cortar.mts --previa",
+    "enviar": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON ferramentas/enviar.mts",
+    "marcar": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON ferramentas/marcar.mts",
+    "estado": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON ferramentas/estado.mts"
+  },
+  "dependencies": {
+    "@remotion/bundler": "4.0.529",
+    "@remotion/captions": "4.0.529",
+    "@remotion/cli": "4.0.529",
+    "@remotion/google-fonts": "4.0.529",
+    "@remotion/renderer": "4.0.529",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "remotion": "4.0.529"
+  },
+  "devDependencies": {
+    "@types/node": "24.10.1",
+    "@types/react": "19.2.7",
+    "typescript": "5.9.3"
+  }
+}
