@@ -1,0 +1,53 @@
+{
+  "molde": "Conversa",
+  "titulo": "POV: faltam 3 dias pro casamento e a lista sumiu",
+  "parte": "PARTE 1",
+  "cenas": [
+    {
+      "quem": "noiva",
+      "fala": "Faltam três dias pro casamento e eu perdi a lista de convidados!",
+      "noiva": { "pose": "cabeca", "expressao": "preocupada" },
+      "organizadora": { "pose": "normal", "expressao": "neutra" }
+    },
+    {
+      "quem": "organizadora",
+      "fala": "Calma, noiva! Tá tudo aqui no Laços.",
+      "noiva": { "pose": "normal", "expressao": "surpresa" },
+      "organizadora": { "pose": "celular", "expressao": "feliz" },
+      "som": "notificacao"
+    },
+    {
+      "quem": "organizadora",
+      "fala": "Oitenta e sete já confirmaram presença.",
+      "organizadora": { "pose": "explicando", "expressao": "feliz" }
+    },
+    {
+      "quem": "noiva",
+      "fala": "Então eu posso respirar?!",
+      "noiva": { "pose": "comemorando", "expressao": "radiante" },
+      "organizadora": { "pose": "cintura", "expressao": "feliz" },
+      "som": "sucesso"
+    },
+    {
+      "quem": "organizadora",
+      "fala": "Pode. E já pode ir provar o vestido.",
+      "organizadora": { "pose": "cintura", "expressao": "radiante" }
+    }
+  ],
+  "cartao": {
+    "titulo": "Lista de convidados",
+    "numero": 87,
+    "rotulo": "confirmados",
+    "itens": ["Ana Souza", "Bruno Lima", "Carla Dias"],
+    "entra": 1,
+    "sai": 3,
+    "contaNa": 2
+  },
+  "zoom": { "em": "organizadora", "de": 1, "ate": 2 },
+  "pronuncia": { "Laços": "Lássos" },
+  "capa": { "titulo": "Faltam 3 dias e a lista sumiu", "destaque": "sumiu" },
+  "post": {
+    "titulo": "Faltam 3 dias pro casamento e a lista sumiu 😱",
+    "legenda": "Quem nunca? A lista de convidados fica toda no Laços, com quem já confirmou presença. #casamento #noiva #organizacaodecasamento"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "molde": "Narrado",
+  "voz": "pf_dora",
+  "mascote": true,
+  "cenas": [
+    { "fala": "Sabe aquele pão de queijo que sai quentinho às 7h da manhã?", "titulo": "Pão de queijo quentinho", "destaque": "quentinho" },
+    { "fala": "Agora você pede pelo site e retira sem fila.", "titulo": "Sem fila", "foto": "exemplos/produto.svg" },
+    { "fala": "Escolhe, paga no Pix e pronto. Só R$ 12,90 a dúzia!", "print": "exemplos/site.svg", "proporcao": 3, "rolagem": 0.6 },
+    { "fala": "Corre, que a fornada das sete acaba rápido!", "titulo": "Acaba rápido!", "animacao": "confete" }
+  ],
+  "chamada": "Peça pelo site",
+  "post": { "titulo": "Exemplo: vídeo narrado", "legenda": "Pão de queijo quentinho, sem fila 🧀 #paodequeijo #padaria" }
+}

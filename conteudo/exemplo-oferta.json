@@ -1,0 +1,11 @@
+{
+  "molde": "Oferta",
+  "gancho": "Sexta sem pão de queijo quentinho?",
+  "destaqueGancho": "pão de queijo",
+  "produto": { "nome": "Pão de queijo da casa", "preco": "R$ 2,50", "foto": "exemplos/produto.svg" },
+  "beneficios": ["Sai do forno às 7h", "Feito com queijo canastra", "Encomenda de 50 em diante"],
+  "post": {
+    "titulo": "Exemplo: pão de queijo",
+    "legenda": "Sexta pede pão de queijo saindo do forno 🧀 Encomende pelo link da bio. #paodequeijo #padaria"
+  }
+}

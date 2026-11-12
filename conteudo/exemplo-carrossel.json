@@ -1,0 +1,10 @@
+{
+  "molde": "Carrossel",
+  "slides": [
+    { "tipo": "capa", "titulo": "Os 3 mais pedidos da semana", "destaque": "mais pedidos", "subtitulo": "Arraste para o lado" },
+    { "tipo": "item", "titulo": "Pão de queijo da casa", "texto": "Sai do forno às 7h", "foto": "exemplos/produto.svg", "preco": "R$ 2,50" },
+    { "tipo": "item", "titulo": "Bolo de fubá com goiabada", "texto": "Fatia ou inteiro, sob encomenda", "preco": "R$ 38" },
+    { "tipo": "final", "titulo": "Qual é o seu favorito?", "texto": "Comenta aqui embaixo" }
+  ],
+  "post": { "titulo": "Exemplo: mais pedidos", "legenda": "Os queridinhos da semana 💛 Qual você leva? #padaria #cafedamanha" }
+}

@@ -1,0 +1,8 @@
+{
+  "molde": "AntesDepois",
+  "gancho": "O que 2 horas de faxina fazem",
+  "destaqueGancho": "2 horas",
+  "antes": { "foto": "exemplos/antes.svg" },
+  "depois": { "foto": "exemplos/depois.svg" },
+  "post": { "titulo": "Exemplo: antes e depois", "legenda": "Arrasta até o fim ✨ #antesedepois" }
+}

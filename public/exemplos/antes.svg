@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1920" viewBox="0 0 1080 1920" font-family="Helvetica, Arial, sans-serif">
+  <rect width="1080" height="1920" fill="#8C8279"/>
+  <rect x="0" y="1300" width="1080" height="620" fill="#6E655D"/>
+  <g fill="#5A524B" opacity="0.9"><rect x="120" y="1180" width="260" height="160" rx="12" transform="rotate(-12 250 1260)"/><rect x="560" y="1220" width="300" height="120" rx="12" transform="rotate(9 710 1280)"/><circle cx="420" cy="1480" r="70"/><rect x="700" y="1500" width="180" height="90" rx="10" transform="rotate(-20 790 1545)"/></g>
+  <text x="540" y="1000" text-anchor="middle" font-size="64" fill="#3d3732">exemplo: foto do antes</text>
+</svg>

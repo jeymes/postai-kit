@@ -1,0 +1,14 @@
+{
+  "molde": "Tutorial",
+  "gancho": "Pedir pelo site leva 30 segundos",
+  "destaqueGancho": "30 segundos",
+  "print": "exemplos/site.svg",
+  "proporcao": 3,
+  "passos": [
+    { "legenda": "Escolha o produto", "rolagem": 0.2, "toque": { "x": 0.25, "y": 0.45 } },
+    { "legenda": "Diga quantos quer", "rolagem": 0.48, "toque": { "x": 0.85, "y": 0.42 } },
+    { "legenda": "Pague no PIX e pronto", "rolagem": 1, "toque": { "x": 0.5, "y": 0.8 } }
+  ],
+  "qr": "https://suamarca.com.br",
+  "post": { "titulo": "Exemplo: como pedir", "legenda": "Pedir é rapidinho 👇 Link na bio. #padaria" }
+}

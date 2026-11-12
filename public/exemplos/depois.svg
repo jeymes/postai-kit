@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1920" viewBox="0 0 1080 1920" font-family="Helvetica, Arial, sans-serif">
+  <rect width="1080" height="1920" fill="#F4EEE6"/>
+  <rect x="0" y="1300" width="1080" height="620" fill="#E3D6C6"/>
+  <rect x="240" y="1150" width="600" height="180" rx="20" fill="#C9B79F"/>
+  <rect x="300" y="1060" width="140" height="90" rx="10" fill="#E8572A"/><circle cx="700" cy="1100" r="50" fill="#7FB07A"/>
+  <text x="540" y="1000" text-anchor="middle" font-size="64" fill="#7A6A58">exemplo: foto do depois</text>
+</svg>

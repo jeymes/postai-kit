@@ -1,0 +1,8 @@
+{
+  "molde": "Depoimento",
+  "depoimentos": [
+    { "texto": "Encomendei para o aniversário da minha mãe e todo mundo perguntou de onde era.", "nome": "Carla M.", "detalhe": "cliente desde 2023" },
+    { "texto": "Chegou quentinho e antes da hora. Virei cliente.", "nome": "Rafael S." }
+  ],
+  "post": { "titulo": "Exemplo: depoimentos", "legenda": "Quem prova, volta 💛 #depoimento" }
+}

@@ -1,0 +1,21 @@
+{
+  "nome": "Sua Marca",
+  "site": "suamarca.com.br",
+  "instagram": "@suamarca",
+  "cores": {
+    "fundo": "#FFF8F0",
+    "superficie": "#FFFFFF",
+    "texto": "#1F1A17",
+    "textoSuave": "#6B625B",
+    "destaque": "#E8572A",
+    "textoNoDestaque": "#FFFFFF"
+  },
+  "fontes": {
+    "titulo": "Bricolage Grotesque",
+    "texto": "Inter"
+  },
+  "logo": null,
+  "tom": "próximo e animado, frases curtas, sem gíria pesada",
+  "publico": "quem mora perto e compra pelo Instagram",
+  "chamada": "Peça pelo link da bio"
+}

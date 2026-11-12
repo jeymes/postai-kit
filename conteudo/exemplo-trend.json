@@ -1,0 +1,11 @@
+{
+  "molde": "Trend",
+  "cenas": [
+    { "texto": "Sexta-feira.", "fundo": "escuro" },
+    { "texto": "Café passado.", "fundo": "marca" },
+    { "texto": "Pão de queijo saindo.", "destaque": "Pão de queijo", "foto": "exemplos/produto.svg" },
+    { "texto": "E você ainda não pediu?", "fundo": "destaque" },
+    { "texto": "Corre.", "fundo": "escuro" }
+  ],
+  "post": { "titulo": "Exemplo: trend", "legenda": "Sexta pede 🧀 #sextou" }
+}

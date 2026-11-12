@@ -1,0 +1,11 @@
+{
+  "molde": "Lista",
+  "gancho": "3 erros que deixam o bolo solado",
+  "destaqueGancho": "bolo solado",
+  "itens": [
+    { "titulo": "Abrir o forno cedo", "texto": "Espere pelo menos 25 minutos." },
+    { "titulo": "Ovo direto da geladeira", "texto": "Tire 30 minutos antes." },
+    { "titulo": "Bater demais a farinha", "texto": "Misture só até sumir.", "foto": "exemplos/produto.svg" }
+  ],
+  "post": { "titulo": "Exemplo: bolo solado", "legenda": "Salva para não errar mais 🍰 #bolo #confeitaria" }
+}
