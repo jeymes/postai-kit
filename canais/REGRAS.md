@@ -24,7 +24,8 @@ O roteiro é um `conteudo/<data>-<assunto>.json` no molde **Conversa**. O format
 ## Fechamento
 
 - **Pronúncia:** inclua `"pronuncia"` para o nome do produto, se ele puder ser lido errado.
-- **CTAs:** `ctaInicial` (até 60 caracteres) e `ctaFinal` (até 80), feitos para o episódio.
+- **CTAs:** `ctaInicial` (até 28 caracteres, uma linha), `ctaFinal` (até 60, frase completa, sem @ nem "link na bio") e `botaoFinal` (até 24, ex.: "Link na bio 👆"), feitos para o episódio. O @ nunca aparece no vídeo.
+- **Movimento:** em cada cena os dois personagens têm `estados`, e ninguém repete a mesma pose e expressão em duas cenas seguidas.
 - **Capa:** `"capa"` com o `titulo` (até 6 palavras), o `destaque` e a pose e a expressão mais fortes de cada personagem, pelo id. Sem foto.
 - **Post:**
   - **título:** até 70 caracteres, com no máximo 1 emoji;

@@ -20,7 +20,9 @@ Leia `canais/<canal>/canal-postai.md` (o que o dono preencheu no Postaí; vale m
    - cenário diferente dos dois últimos episódios;
    - no máximo 2 sons;
    - `pronuncia` com o nome do produto;
-   - `ctaInicial` (até 60) e `ctaFinal` (até 80) presentes, feitos para este episódio (não genéricos) e sem prometer o que o produto não faz;
+   - `ctaInicial` com até 28 caracteres, `ctaFinal` com até 60 e `botaoFinal` com até 24, os três presentes, feitos para este episódio (não genéricos) e sem prometer o que o produto não faz;
+   - **leia cada CTA como frase:** completa, sem palavra faltando, com concordância certa (ex.: "Organize a lista do seu no Laços" está errado: falta "casamento"). Sem @ nem site no `ctaFinal` e no `botaoFinal`;
+   - **movimento:** toda cena tem `estados` para os dois personagens, e nenhum dos dois repete a mesma pose e expressão em duas cenas seguidas;
    - `capa` com título de até 6 palavras, destaque e a pose e expressão de cada personagem;
    - `post.legenda` com até 5 hashtags, incluindo as obrigatórias da bíblia.
 4. **Elenco:** se o canal tem a seção "Elenco", o `elenco` do roteiro traz 2 personagens copiados de lá sem mudança, e todo `quem` e toda chave de `estados` e da `capa` é um desses ids.

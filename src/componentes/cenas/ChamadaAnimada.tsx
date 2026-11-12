@@ -9,7 +9,7 @@ import { Texto } from "../texto/Texto";
 //   logo abaixo do título;
 // - CartaoDeChamada: o CTA do fim, um cartão que sobe por cima da cena (os
 //   personagens continuam aparecendo em cima), com o selo do logo, a chamada e
-//   um botão que pulsa com o @ ou o site.
+//   um botão que pulsa ("Link na bio 👆" ou o texto que o episódio pedir).
 // Sem logo na marca, o selo mostra a inicial do nome na cor de destaque.
 
 const SOMBRA = "0 14px 0 rgba(43,35,64,0.18)";
@@ -81,14 +81,13 @@ export const BalaoDeChamada: React.FC<{ texto: string; topo: number; sai?: numbe
 const CONFETES = ["#FFD84D", "#FF7096", "#7CC6FF", "#9FE39A", "#CDB4FF", "#FF9F1C", "#FFD84D", "#FF7096", "#7CC6FF", "#9FE39A"];
 
 /** CTA do fim: cartão que sobe por cima da cena, com selo, chamada e botão */
-export const CartaoDeChamada: React.FC<{ chamada?: string }> = ({ chamada }) => {
+export const CartaoDeChamada: React.FC<{ chamada?: string; botao?: string }> = ({ chamada, botao = "Link na bio 👆" }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const sobe = spring({ frame, fps, config: { damping: 14, stiffness: 120 } });
   const selo = spring({ frame: frame - 8, fps, config: { damping: 9, stiffness: 150 } });
-  const botao = spring({ frame: frame - 26, fps, config: { damping: 11 } });
+  const entraBotao = spring({ frame: frame - 26, fps, config: { damping: 11 } });
   const pulsa = 1 + 0.05 * Math.max(0, Math.sin((frame - 30) / 5));
-  const contato = marca.instagram || marca.site;
   const explosao = interpolate(frame, [8, 30], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
 
   return (
@@ -143,10 +142,10 @@ export const CartaoDeChamada: React.FC<{ chamada?: string }> = ({ chamada }) => 
         </div>
         <div style={{ fontFamily: fontes.titulo, fontWeight: 800, fontSize: 40, color: cores.destaque, letterSpacing: 2, textTransform: "uppercase" }}>{marca.nome}</div>
         <Texto texto={chamada ?? marca.chamada} inicio={14} tamanho={78} cor={TRACO} alinhamento="center" />
-        {contato && (
+        {botao && (
           <div
             style={{
-              scale: String(botao * pulsa),
+              scale: String(entraBotao * pulsa),
               display: "flex",
               alignItems: "center",
               gap: 16,
@@ -161,8 +160,7 @@ export const CartaoDeChamada: React.FC<{ chamada?: string }> = ({ chamada }) => 
               boxShadow: "0 8px 0 rgba(43,35,64,0.25)",
             }}
           >
-            <span>{contato}</span>
-            <span style={{ fontSize: 52 }}>👆</span>
+            <span>{botao}</span>
           </div>
         )}
       </div>

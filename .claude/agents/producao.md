@@ -25,7 +25,8 @@ Você é a produção de um canal animado: transforma o roteiro em áudio e víd
    `npx remotion ffmpeg -y -ss <segundo> -i out/<arquivo>/video.mp4 -frames:v 1 out/<arquivo>/conferir-<n>.jpg`
    nos segundos 1.7 (balão do CTA inicial), 25% e 60% da duração, 2 s antes do fim (cartão do CTA final) e 0.5 s antes do fim. Confira:
    - nada cortado, sobreposto ou fora do lugar; rostos à mostra;
-   - o balão do começo inteiro, com o logo; o cartão do fim inteiro, com o logo, a chamada e o botão, sem legenda vazando por baixo;
+   - o balão do começo inteiro, numa linha, com o logo; o cartão do fim inteiro, com o logo, a chamada (frase completa) e o botão, sem legenda vazando por baixo e sem @;
+   - os personagens mudam de pose entre os quadros (não ficam parados iguais);
    - nenhum texto de exemplo ("Sua Marca", "@suamarca", "suamarca.com.br"). Se aparecer, a marca do canal não foi baixada: rode `npm run canal -- canais/<canal>` e renderize de novo.
    Se algo estiver errado, diga o quê à coordenadora (ela chama a diretora de arte) em vez de mandar para aprovação.
 4. Leia `out/<arquivo>/info.json` e confira que existem o vídeo e a capa, que a duração ficou entre 10 e 60 s e que `post` tem título e legenda.

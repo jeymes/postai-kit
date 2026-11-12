@@ -115,8 +115,9 @@ export const conversaSchema = z.object({
     .array(z.object({ id: z.string(), nome: z.string(), descricao: z.string() }))
     .optional()
     .describe("Personagens que só este episódio precisa: a designer desenha em canais/<canal>/convidados/<id>.json"),
-  ctaInicial: z.string().max(60).optional().describe('Frase curta logo abaixo do título nos primeiros segundos, ex.: "Assista até o fim 👀"'),
-  ctaFinal: z.string().max(80).optional().describe('Chamada no cartão do fim do vídeo, ex.: "Organize o seu no Laços: link na bio"'),
+  ctaInicial: z.string().max(60).optional().describe('Balão curto (até 28 caracteres, uma linha) embaixo do título nos primeiros segundos, ex.: "Marca quem é assim 😂"'),
+  ctaFinal: z.string().max(80).optional().describe('Frase completa no cartão do fim, sem @ e sem "link na bio" (isso vai no botão), ex.: "Organize o seu casamento no Laços"'),
+  botaoFinal: z.string().max(24).optional().describe('Texto do botão do cartão do fim, ex.: "Link na bio 👆", "Baixe grátis 👆". Padrão: "Link na bio 👆"'),
   legendas: z.boolean().default(true),
   efeitos: z.boolean().default(true),
   vozes: z.record(z.string(), z.object({ voz: z.string(), velocidade: z.number().optional() })).optional(),
@@ -341,7 +342,7 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
         ))}
         {props.ctaFinal && (
           <Sequence from={fimDasFalas} layout="none" name="CTA final">
-            <CartaoDeChamada chamada={props.ctaFinal} />
+            <CartaoDeChamada chamada={props.ctaFinal} botao={props.botaoFinal} />
             <Som tipo="sucesso" em={2} />
           </Sequence>
         )}
