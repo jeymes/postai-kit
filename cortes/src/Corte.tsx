@@ -1,9 +1,7 @@
-import { loadFont } from "@remotion/google-fonts/Montserrat";
 import React from "react";
 import { AbsoluteFill, interpolate, OffthreadVideo, staticFile, useCurrentFrame } from "remotion";
+import { fontFamily } from "./fonte";
 import { type Legenda, Legendas } from "./Legendas";
-
-const { fontFamily } = loadFont("normal", { weights: ["700", "900"], subsets: ["latin", "latin-ext"] });
 
 export type PropsDoCorte = {
   /** Caminhos dentro de public/. O cortar já entrega o vídeo no tamanho certo (no "centro", já recortado em pé). */

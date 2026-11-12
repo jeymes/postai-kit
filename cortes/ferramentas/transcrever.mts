@@ -11,6 +11,7 @@
 //      opções: --modelo small|medium|large-v3   --idioma pt|en|auto
 import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { basename, extname, join, relative, resolve } from "node:path";
+import { avisar } from "./postai.ts";
 import {
   ENTRADA, PYTHON, RAIZ, TRABALHO, ffmpeg, infoDoVideo, lerJson, rodar, tempo, videosDaEntrada,
   type Origem, type Transcricao,
@@ -64,6 +65,9 @@ for (const arquivo of videos) {
   console.log(`\n▶ ${relativo}`);
   const info = infoDoVideo(arquivo);
   console.log(`  ${info.largura}x${info.altura}, ${tempo(info.duracaoSeg)}`);
+  const lateral = arquivo.slice(0, -extname(arquivo).length) + ".pedido.json";
+  const pedidoId = existsSync(lateral) ? lerJson<{ pedidoId: string }>(lateral).pedidoId : undefined;
+  await avisar(pedidoId, `Transcrevendo a fala (vídeo de ${Math.round(info.duracaoSeg / 60)} min; leva um tempo).`);
 
   const audio = join(destino, "audio.wav");
   ffmpeg(["-i", arquivo, "-vn", "-ac", "1", "-ar", "16000", audio]);
@@ -79,11 +83,10 @@ for (const arquivo of videos) {
       `Tempos em minutos:segundos. Nos cortes.json, use segundos (ex.: 01:02.5 = 62.5).\n\n` +
       linhas.join("\n") + "\n",
   );
-  const lateral = arquivo.slice(0, -extname(arquivo).length) + ".pedido.json";
-  const pedidoId = existsSync(lateral) ? lerJson<{ pedidoId: string }>(lateral).pedidoId : undefined;
   const origem: Origem = { id, arquivo, ...info, transcritoEm: new Date().toISOString(), pedidoId };
   writeFileSync(join(destino, "origem.json"), JSON.stringify(origem, null, 2));
   console.log(`  ✓ trabalho/${id}/transcricao.txt (${t.segmentos.length} frases)`);
+  await avisar(pedidoId, "Fala transcrita. Escolhendo os melhores trechos.");
   feitos++;
 }
 console.log(feitos ? `\n${feitos} vídeo(s) transcrito(s). Próximo passo: escolher os cortes (cortes.json).` : "\nNada novo para transcrever.");

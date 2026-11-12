@@ -8,7 +8,7 @@
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import { RAIZ, lerJson, pastaDoTrabalho, type Origem } from "./comum.ts";
-import { ferramenta } from "./postai.ts";
+import { avisar, ferramenta } from "./postai.ts";
 
 const pasta = pastaDoTrabalho(process.argv.slice(2).find((a) => !a.startsWith("--")));
 const origem = lerJson<Origem>(join(pasta, "origem.json"));
@@ -46,6 +46,7 @@ if (!faltam.length) {
 }
 
 console.log("Os cortes vão para o menu Cortes do Postaí, esperando a sua aprovação.");
+await avisar(origem.pedidoId, `Mandando ${faltam.length} ${faltam.length === 1 ? "corte" : "cortes"} para você aprovar.`);
 
 function urlDo(comando: string) {
   const url = /'(https:\/\/[^']+)'\s*$/.exec(comando)?.[1];

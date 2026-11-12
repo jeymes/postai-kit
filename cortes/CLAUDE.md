@@ -6,7 +6,7 @@ Os vídeos chegam de dois jeitos:
 - **Link no menu Cortes** (Google Drive, Dropbox, download direto): o `npm run buscar` baixa.
 - **Arquivo no computador:** a pessoa põe o vídeo em `entrada/` (solto ou numa subpasta).
 
-Converse e escreva em **português do Brasil**. Quando a pessoa pedir "faz os cortes", "processa os vídeos" ou parecido, siga a skill `fazer-cortes` do começo ao fim.
+Converse e escreva em **português do Brasil**. **Rodando como rotina na nuvem, nunca pergunte nem espere resposta:** decida sozinho e, se um vídeo travar, marque o erro dele e siga (detalhes na skill `fazer-cortes`). Quando a pessoa pedir "faz os cortes", "processa os vídeos" ou parecido, siga a skill `fazer-cortes` do começo ao fim.
 
 ## Regras fixas
 

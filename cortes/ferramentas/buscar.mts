@@ -13,7 +13,7 @@ import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import { ENTRADA, RAIZ, infoDoVideo } from "./comum.ts";
 import { linkDeDownload } from "./links.ts";
-import { ferramenta } from "./postai.ts";
+import { avisar, ferramenta } from "./postai.ts";
 
 type Pedido = {
   pedidoId: string;
@@ -93,15 +93,17 @@ for (const pedido of pedidos) {
     continue;
   }
   console.log(`▶ ${pedido.nome ?? pedido.link}`);
+  await avisar(pedido.pedidoId, "Baixando o vídeo.");
   try {
     const info = pedido.url ? baixarDoPostai(pedido.url, destino) : await baixar(pedido.link ?? "", destino);
-    await ferramenta("mudar_pedido_de_corte", { pedidoId: pedido.pedidoId, status: "processando", mensagem: "Baixado, fazendo os cortes." });
     console.log(`  ✓ ${Math.round(info.duracaoSeg / 60)} min, ${info.largura}x${info.altura}`);
     baixados++;
+    // O vídeo já está aqui: se o aviso falhar, segue assim mesmo (não é erro do vídeo).
+    await avisar(pedido.pedidoId, `Vídeo baixado (${Math.round(info.duracaoSeg / 60)} min).`);
   } catch (erro) {
     const mensagem = `Não deu para baixar: ${(erro as Error).message}`;
     console.error(`  ✗ ${mensagem}`);
-    await ferramenta("mudar_pedido_de_corte", { pedidoId: pedido.pedidoId, status: "erro", mensagem });
+    await ferramenta("mudar_pedido_de_corte", { pedidoId: pedido.pedidoId, status: "erro", mensagem }).catch(() => {});
   }
 }
 console.log(`\n${baixados} vídeo(s) baixado(s). Próximo passo: npm run transcrever`);

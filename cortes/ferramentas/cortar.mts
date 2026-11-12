@@ -15,6 +15,7 @@ import {
   FPS, RAIZ, doisDigitos, ffmpeg, lerJson, pastaDoTrabalho, tempo,
   type Origem, type PedidoDeCortes, type Transcricao,
 } from "./comum.ts";
+import { avisar } from "./postai.ts";
 
 const args = process.argv.slice(2);
 // Quantos quadros o Remotion monta ao mesmo tempo. Padrão: metade dos núcleos (com 8 GB, mais que isso fica mais lento).
@@ -58,6 +59,13 @@ rmSync(temporaria, { recursive: true, force: true });
 mkdirSync(temporaria, { recursive: true });
 
 const escolhidos = pedido.cortes.map((c, i) => ({ ...c, n: i + 1 })).filter((c) => !so || so.has(c.n));
+const total = escolhidos.length;
+await avisar(
+  origem.pedidoId,
+  previa
+    ? `Escolhi ${total} ${total === 1 ? "trecho" : "trechos"}: ${escolhidos.map((c) => `"${c.titulo}"`).join(", ")}. Conferindo o enquadramento.`.slice(0, 300)
+    : `Montando ${total} ${total === 1 ? "corte" : "cortes"} com legenda (uns 3 a 4 min cada).`,
+);
 
 // 1. Recorta cada trecho do vídeo original já no tamanho em que vai aparecer,
 // para o Remotion ler o mínimo possível (é o que mais pesa no tempo):
@@ -147,6 +155,7 @@ for (const c of escolhidos) {
   };
   writeFileSync(join(saida, "info.json"), JSON.stringify(info, null, 2));
   console.log(`\r  ✓ corte ${nome}: ${duracaoSeg} s, ${(info.video.tamanho / 1e6).toFixed(1)} MB`);
+  await avisar(origem.pedidoId, `Corte ${escolhidos.indexOf(c) + 1} de ${total} pronto: "${c.titulo}".`.slice(0, 300));
 }
 
 rmSync(temporaria, { recursive: true, force: true });

@@ -16,7 +16,7 @@ done
 export NODE_USE_ENV_PROXY=1
 
 # O Chromium da máquina já confia no certificado do proxy; o que o Remotion
-# baixa não (e as fontes do Google não carregam)
+# baixa não. As fontes já vêm no projeto (src/fontes), então isso é só reserva.
 if [ -z "$KIT_NAVEGADOR" ]; then
   for nav in /opt/pw-browsers/chromium "$(command -v chromium)" "$(command -v chromium-browser)" "$(command -v google-chrome)"; do
     if [ -n "$nav" ] && [ -f "$nav" ] && [ -x "$nav" ]; then

@@ -5,7 +5,11 @@ description: Transforma os vídeos pedidos no menu Cortes do Postaí ou postos e
 
 # Fazer cortes
 
-Responder em pt-BR. Seguir na ordem; parar e avisar se algum passo falhar.
+Responder em pt-BR. Seguir na ordem.
+
+**Na rotina (nuvem do Claude) ninguém está olhando: nunca pergunte nada nem espere resposta.** Decida sozinho o que achar melhor (quantos cortes, quais trechos, enquadramento) e siga. Se um passo falhar, tente resolver por uns 15 minutos sem mudar o código da fábrica; se não der, `npm run marcar -- <pedidoId> erro "<o problema em palavras simples>"` e passe para o próximo vídeo. Só pergunte quando a pessoa estiver conversando com você no computador dela.
+
+**Conte o andamento:** os comandos já avisam sozinhos (baixando, transcrevendo, montando cada corte, mandando). Quando você mesmo decidir algo importante ou mudar de plano, avise também: `npm run marcar -- <pedidoId> processando "<o que está fazendo, em até 20 palavras>"`. Isso aparece com a hora na tela Cortes do Postaí.
 
 Use só os comandos `npm run` desta pasta (a chave do `.env`). Nunca as ferramentas `mcp__postai__*`: podem ser de outra conta do Postaí. Se faltar o `.env` ou o `npm run instalar`, use a ferramenta `instalar_cortes` do conector.
 
@@ -52,7 +56,7 @@ O que faz um bom corte:
 
 ## 5. Mandar
 
-`npm run enviar -- trabalho/<id>`. Os cortes vão para o menu Cortes, esperando aprovação (e o pedido, se veio de um link, fica "Pronto"). Se um vídeo de link der erro no meio (transcrição, corte), avise: `npm run marcar -- <pedidoId> erro "o que houve"`.
+`npm run enviar -- trabalho/<id>`. Os cortes vão para o menu Cortes, esperando aprovação (e o pedido, se veio de um link, fica "Pronto"). Se um vídeo de link der erro no meio (transcrição, corte) e não se resolver, marque: `npm run marcar -- <pedidoId> erro "o que houve"`.
 
 ## 6. Resumir
 

@@ -19,15 +19,36 @@ const env = lerEnv();
 const URL_MCP = env.POSTAI_MCP_URL || "https://postaiwebapp.online/mcp";
 
 let id = 0;
+// Estas criam algo no Postaí: se a resposta se perder, repetir duplicaria.
+const NAO_REPETIR = new Set(["por_para_aprovacao"]);
+const espera = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/** Chama o Postaí. Se ele falhar por um instante (5xx ou queda de rede), tenta de novo até 3 vezes. */
+async function chamar(nome: string, corpo: string) {
+  const tentativas = NAO_REPETIR.has(nome) ? 1 : 4;
+  for (let n = 1; ; n++) {
+    try {
+      const resposta = await fetch(URL_MCP, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${env.POSTAI_CHAVE}` },
+        body: corpo,
+      });
+      if (resposta.status < 500 || n >= tentativas) return resposta;
+    } catch (erro) {
+      if (n >= tentativas) throw erro;
+    }
+    await espera(2000 * n);
+  }
+}
+
 export async function ferramenta<T = string>(nome: string, argumentos: Record<string, unknown> = {}): Promise<T> {
   if (!env.POSTAI_CHAVE) {
     throw new Error("Falta a POSTAI_CHAVE no .env. Peça ao Claude para usar a ferramenta instalar_cortes do Postaí (ou crie em Postaí > Criar com o Claude > Conectar).");
   }
-  const resposta = await fetch(URL_MCP, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${env.POSTAI_CHAVE}` },
-    body: JSON.stringify({ jsonrpc: "2.0", id: ++id, method: "tools/call", params: { name: nome, arguments: argumentos } }),
-  });
+  const resposta = await chamar(
+    nome,
+    JSON.stringify({ jsonrpc: "2.0", id: ++id, method: "tools/call", params: { name: nome, arguments: argumentos } }),
+  );
   if (resposta.status === 401) throw new Error("A chave do Postaí não vale mais. Crie outra e troque no .env.");
   if (!resposta.ok) throw new Error(`O Postaí respondeu ${resposta.status} em ${nome}.`);
   const dados = (await resposta.json()) as {
@@ -41,5 +62,18 @@ export async function ferramenta<T = string>(nome: string, argumentos: Record<st
     return JSON.parse(texto) as T;
   } catch {
     return texto as T;
+  }
+}
+
+/**
+ * Escreve uma linha no diário do pedido (a pessoa vê na tela Cortes, com a hora).
+ * Nunca para o trabalho: se o aviso não chegar, só mostra no terminal.
+ */
+export async function avisar(pedidoId: string | undefined, mensagem: string) {
+  if (!pedidoId) return;
+  try {
+    await ferramenta("mudar_pedido_de_corte", { pedidoId, status: "processando", mensagem });
+  } catch (erro) {
+    console.error(`  (não deu para avisar o Postaí: ${(erro as Error).message}; seguindo)`);
   }
 }
