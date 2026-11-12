@@ -7,14 +7,20 @@
 // Cortes. Só depois de
 // aprovado entra na fila do piloto.
 //
-// Uso: POSTAI_CHAVE=postai.xxx.yyy npm run aprovar -- conteudo/<peça>.json
+// Episódio animado: o roteiro vai junto (sem a narração), para o dono poder
+// pedir ajuste. Num ajuste, --substitui <corteId> troca o vídeo antigo pelo novo.
+//
+// Uso: POSTAI_CHAVE=postai.xxx.yyy npm run aprovar -- conteudo/<peça>.json [--substitui <corteId>]
 //      (POSTAI_URL troca o endereço; o padrão é o do Postaí)
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { basename, join } from "node:path";
 import { exigirChave, ferramenta } from "./postai.ts";
 
-const caminho = process.argv.slice(2).find((arg) => !arg.startsWith("--"));
+const args = process.argv.slice(2);
+const posSubstitui = args.indexOf("--substitui");
+const substitui = posSubstitui >= 0 ? args[posSubstitui + 1] : undefined;
+const caminho = args.find((arg, i) => !arg.startsWith("--") && i !== posSubstitui + 1);
 
 if (!caminho) {
   console.error("Uso: npm run aprovar -- conteudo/<peça>.json");
@@ -44,6 +50,12 @@ const legenda = info.post?.legenda?.trim();
 if (!titulo || !legenda) {
   console.error('A peça precisa de "post": { "titulo", "legenda" }.');
   process.exit(1);
+}
+
+// O roteiro guardado no Postaí não leva a narração (áudio e legendas): num
+// ajuste, a produção narra de novo.
+function semNarracao(p: { cenas?: Array<Record<string, unknown>> }) {
+  return { ...p, cenas: p.cenas?.map(({ narracao: _narracao, ...cena }) => cena) };
 }
 
 // O pedir_envio devolve um comando curl por arquivo; daqui só sai a URL assinada.
@@ -80,8 +92,9 @@ try {
     legenda,
     duracaoSeg: info.duracaoSeg ?? 0,
     ...(typeof peca.titulo === "string" ? { gancho: peca.titulo } : {}),
-    // Episódio do canal animado: o app pergunta "o que melhorar?" ao aprovar
-    ...(peca.molde === "Conversa" ? { origem: "animacao" } : {}),
+    // Episódio do canal animado: aparece na tela Animação, com "Pedir ajuste"
+    ...(peca.molde === "Conversa" ? { origem: "animacao", roteiro: JSON.stringify(semNarracao(peca)) } : {}),
+    ...(substitui ? { substitui } : {}),
   });
   console.log(`\nPronto: ${resposta}`);
   console.log(peca.molde === "Conversa" ? "Abra o Postaí, na tela Animação, para aprovar ou recusar." : "Abra o Postaí, no menu Cortes, para aprovar ou recusar.");

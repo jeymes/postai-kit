@@ -18,4 +18,6 @@ Você cuida da entrega de um canal animado. Antes de cada comando npm, rode `sou
    Depois rode `npm run registrar -- canais/<canal>/registro.json`.
 3. Se o envio falhou, não mexa no registro e devolva o erro exato.
 
+**Num ajuste** (a coordenadora diz o `corteId`): mande com `npm run aprovar -- conteudo/ajuste-<corteId>.json --substitui <corteId>`. O vídeo novo entra no lugar do antigo. **Não registre de novo**: o episódio já está no registro. Se o envio falhar, rode `npm run ajustes -- --erro <corteId> "<o problema em palavras simples>"`.
+
 Responda com o resultado do envio (o corteId) e o que mudou no registro.

@@ -15,6 +15,7 @@
     "personagem": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON ferramentas/personagem.mts",
     "andamento": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON ferramentas/andamento.mts",
     "conferir": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON ferramentas/conferir.mts",
+    "ajustes": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON ferramentas/ajustes.mts",
     "registrar": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON ferramentas/registrar.mts",
     "materiais": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON ferramentas/materiais.mts",
     "salvar-canal": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON ferramentas/salvar-canal.mts",

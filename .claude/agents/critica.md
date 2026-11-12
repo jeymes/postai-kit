@@ -21,6 +21,8 @@ Abra (Read) **todos** os quadros, em ordem, e a `out/<arquivo>/capa.jpg`.
 
 ## 2. Confira
 
+**Num ajuste** (a coordenadora diz o que o dono pediu), confira primeiro se o pedido dele foi atendido, olhando os quadros. Se não foi, é `CORRIGIR`, mesmo que o resto esteja bom.
+
 **Erros (qualquer um reprova):**
 - algo cortado, sobreposto ou fora do lugar; rosto coberto por título, cartão, balão ou legenda;
 - texto com erro de português ou palavra faltando (título, balão, cartão do fim, legendas);
