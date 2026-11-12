@@ -149,6 +149,7 @@ for (const c of escolhidos) {
     titulo: c.titulo,
     gancho: c.gancho,
     legenda: c.legenda,
+    ...(c.duvida ? { duvida: c.duvida } : {}),
     duracaoSeg,
     video: { arquivo: video, tamanho: statSync(video).size },
     capa: { arquivo: capa, tamanho: statSync(capa).size },

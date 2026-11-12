@@ -87,6 +87,8 @@ export type PedidoDeCortes = {
     /** Legenda do post, com até 5 hashtags. O crédito do canal entra sozinho no fim. */
     legenda: string;
     enquadramento?: Enquadramento;
+    /** Algo que você não conseguiu resolver e o dono deve conferir. Com isso, o corte nunca é aprovado sozinho. */
+    duvida?: string;
     /** Só no "centro": onde fica o centro do recorte, de 0 (esquerda) a 1 (direita). Padrão 0,5. */
     foco?: number;
   }>;

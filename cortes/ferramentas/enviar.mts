@@ -19,6 +19,7 @@ type Info = {
   gancho?: string;
   titulo: string;
   legenda: string;
+  duvida?: string;
   duracaoSeg: number;
   video: { arquivo: string; tamanho: number };
   capa: { arquivo: string; tamanho: number };
@@ -78,6 +79,7 @@ for (const info of faltam) {
     duracaoSeg: info.duracaoSeg,
     gancho: info.gancho ?? "",
     trecho: info.trecho,
+    ...(info.duvida ? { duvida: info.duvida } : {}),
   });
   const itemId = /(?:itemId|corteId) (\w+)/.exec(String(resposta))?.[1] ?? "?";
   enviados[String(info.corte)] = { itemId, em: new Date().toISOString() };

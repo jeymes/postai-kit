@@ -20,7 +20,12 @@ import { exigirChave, ferramenta } from "./postai.ts";
 const args = process.argv.slice(2);
 const posSubstitui = args.indexOf("--substitui");
 const substitui = posSubstitui >= 0 ? args[posSubstitui + 1] : undefined;
-const caminho = args.find((arg, i) => !arg.startsWith("--") && i !== posSubstitui + 1);
+// --duvida "<texto>": o que a crítica ainda pediu. O vídeo nunca é aprovado sozinho: espera o dono.
+const posDuvida = args.indexOf("--duvida");
+const duvida = posDuvida >= 0 ? args[posDuvida + 1] : undefined;
+const caminho = args.find(
+  (arg, i) => !arg.startsWith("--") && i !== posSubstitui + 1 && i !== posDuvida + 1,
+);
 
 if (!caminho) {
   console.error("Uso: npm run aprovar -- conteudo/<peça>.json");
@@ -95,6 +100,7 @@ try {
     // Episódio do canal animado: aparece na tela Animação, com "Pedir ajuste"
     ...(peca.molde === "Conversa" ? { origem: "animacao", roteiro: JSON.stringify(semNarracao(peca)) } : {}),
     ...(substitui ? { substitui } : {}),
+    ...(duvida ? { duvida } : {}),
   });
   console.log(`\nPronto: ${resposta}`);
   console.log(peca.molde === "Conversa" ? "Abra o Postaí, na tela Animação, para aprovar ou recusar." : "Abra o Postaí, no menu Cortes, para aprovar ou recusar.");

@@ -48,6 +48,7 @@ O que faz um bom corte:
 - **Gancho:** até 70 caracteres, a promessa do corte, sem entregar o final. Fica no topo do vídeo o tempo todo.
 - **Título:** até 100 caracteres, sem `<` nem `>`, que dê vontade de clicar. É o título do Short.
 - **Legenda:** uma pergunta ou frase curta para comentar e no máximo 3 hashtags (o Instagram aceita até 5).
+- **Dúvida (opcional):** se ficou algo que você não conseguiu resolver (a fala termina cortada, um trecho pode ofender, o rosto sai do quadro), ponha `"duvida": "<o que conferir>"` no corte. Ele espera o dono aprovar, mesmo com a aprovação automática ligada.
 - **Enquadramento:** `desfocado` (o vídeo inteiro no meio, com fundo desfocado) serve para qualquer vídeo. Use `centro` com `"foco"` de 0 a 1 só quando uma pessoa fala sozinha e sempre no mesmo lugar da tela (0,5 = no meio).
 
 ## 4. Conferir e renderizar
