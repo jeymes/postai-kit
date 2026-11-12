@@ -8,14 +8,15 @@
 //      npm run previa -- trabalho/<id>            só uma imagem de cada corte (rápido, para conferir o enquadramento)
 import { bundle } from "@remotion/bundler";
 import { renderMedia, renderStill, selectComposition } from "@remotion/renderer";
-import { existsSync, mkdirSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { cpus } from "node:os";
-import { join, relative } from "node:path";
+import { extname, join, relative } from "node:path";
 import {
-  FPS, RAIZ, doisDigitos, ffmpeg, lerJson, pastaDoTrabalho, tempo,
-  type Origem, type PedidoDeCortes, type Transcricao,
+  ARQUIVO_DA_CHAMADA, FPS, RAIZ, doisDigitos, ffmpeg, lerJson, pastaDoTrabalho, tempo,
+  type ChamadaGuardada, type Origem, type PedidoDeCortes, type Transcricao,
 } from "./comum.ts";
 import { avisar } from "./postai.ts";
+import { CHAMADA_SEG } from "../src/tempos.ts";
 
 const args = process.argv.slice(2);
 // Quantos quadros o Remotion monta ao mesmo tempo. Padrão: metade dos núcleos (com 8 GB, mais que isso fica mais lento).
@@ -33,6 +34,9 @@ if (!existsSync(arquivoDosCortes)) {
   process.exit(1);
 }
 const pedido = lerJson<PedidoDeCortes>(arquivoDosCortes);
+// A chamada do fim (CTA), se o dono ligou no Postaí (o buscar guardou). --sem-chamada pula.
+const chamada = !args.includes("--sem-chamada") && existsSync(ARQUIVO_DA_CHAMADA) ? lerJson<ChamadaGuardada>(ARQUIVO_DA_CHAMADA) : null;
+const extra = chamada ? CHAMADA_SEG : 0;
 
 // Confere tudo antes de gastar tempo renderizando
 const hashtags = (texto: string) => (texto.match(/#[\p{L}\p{N}_]+/gu) ?? []).length;
@@ -41,7 +45,7 @@ pedido.cortes.forEach((c, i) => {
   const n = i + 1;
   const duracao = c.fim - c.inicio;
   if (!(c.inicio >= 0 && c.fim <= origem.duracaoSeg + 0.5)) problemas.push(`corte ${n}: fora do vídeo (vai até ${tempo(origem.duracaoSeg)})`);
-  if (duracao < 10 || duracao > 90) problemas.push(`corte ${n}: ${duracao.toFixed(1)} s (precisa ter de 10 a 90 s; o Reels do Facebook vai até 90)`);
+  if (duracao < 10 || duracao + extra > 90) problemas.push(`corte ${n}: ${duracao.toFixed(1)} s (precisa ter de 10 a ${90 - extra} s; o Reels do Facebook vai até 90${extra ? `, e a chamada do fim usa ${extra} s` : ""})`);
   if (!c.titulo || c.titulo.length > 100 || /[<>]/.test(c.titulo)) problemas.push(`corte ${n}: título vazio, com mais de 100 caracteres ou com < >`);
   if (!c.gancho || c.gancho.length > 70) problemas.push(`corte ${n}: gancho vazio ou com mais de 70 caracteres`);
   const legenda = c.legenda;
@@ -57,6 +61,19 @@ const publico = join(RAIZ, "public");
 const temporaria = join(publico, origem.id);
 rmSync(temporaria, { recursive: true, force: true });
 mkdirSync(temporaria, { recursive: true });
+
+// O logo da chamada vai junto para o public/ do Remotion
+const dadosDaChamada = chamada
+  ? (() => {
+      const { logo, ...resto } = chamada;
+      if (logo && existsSync(logo)) {
+        const nome = `logo${extname(logo)}`;
+        copyFileSync(logo, join(temporaria, nome));
+        return { ...resto, logo: `${origem.id}/${nome}` };
+      }
+      return resto;
+    })()
+  : undefined;
 
 const escolhidos = pedido.cortes.map((c, i) => ({ ...c, n: i + 1 })).filter((c) => !so || so.has(c.n));
 const total = escolhidos.length;
@@ -96,7 +113,7 @@ for (const c of escolhidos) {
   const nome = doisDigitos(c.n);
   const saida = join(pasta, "cortes", nome);
   mkdirSync(saida, { recursive: true });
-  const duracaoSeg = Math.round((c.fim - c.inicio) * 100) / 100;
+  const duracaoSeg = Math.round((c.fim - c.inicio + extra) * 100) / 100;
   const legendas = transcricao.segmentos
     .flatMap((s) => s.palavras)
     .filter((p) => p.i >= c.inicio - 0.05 && p.f <= c.fim + 0.05 && p.p)
@@ -115,6 +132,7 @@ for (const c of escolhidos) {
     credito: "",
     enquadramento: enquadramentoDo(c),
     legendas,
+    ...(dadosDaChamada ? { chamada: dadosDaChamada } : {}),
   };
   const composicao = await selectComposition({ serveUrl: servido, id: "Corte", inputProps: props });
 

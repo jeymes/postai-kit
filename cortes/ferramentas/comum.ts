@@ -13,6 +13,18 @@ export const MODELOS = join(PASTA_PYTHON, "modelos");
 export const PYTHON = join(PASTA_PYTHON, "python", windows ? "Scripts" : "bin", windows ? "python.exe" : "python");
 export const EXTENSOES = [".mp4", ".mov", ".mkv", ".webm", ".m4v"];
 export const FPS = 30;
+/** A chamada do fim (CTA) que o dono montou no Postaí; o buscar grava, o cortar usa. */
+export const ARQUIVO_DA_CHAMADA = join(PASTA_PYTHON, "chamada.json");
+
+export type ChamadaGuardada = {
+  texto: string;
+  botao: string;
+  nome: string;
+  cor: string;
+  corDoTexto: string;
+  /** Arquivo do logo baixado em .cortes/, se o dono mandou */
+  logo?: string;
+};
 
 /** Roda um comando e para tudo se falhar. Devolve a saída (stdout). */
 export function rodar(programa: string, args: string[], { mostrar = false } = {}) {

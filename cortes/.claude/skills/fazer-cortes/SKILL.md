@@ -41,7 +41,7 @@ Leia o `trabalho/<id>/transcricao.txt` inteiro e escreva o `trabalho/<id>/cortes
 ```
 
 O que faz um bom corte:
-- **De 30 a 60 segundos** (aceita de 10 a 90). Um assunto só, que se entende sem o resto do vídeo.
+- **De 30 a 60 segundos** (aceita de 10 a 90). Se o dono ligou a chamada do fim no Postaí, o `cortar` acrescenta sozinho um cartão de 3,5 s (então o trecho vai até 86,5 s). Não escreva a chamada no gancho nem na legenda. Um assunto só, que se entende sem o resto do vídeo.
 - **Começa forte:** na frase que prende (uma pergunta, uma revelação, uma opinião forte, um número). Corte o "então, é..." do começo. Use o tempo de início da frase, uns 0,2 s antes.
 - **Termina fechado:** no fim de uma frase, de preferência numa conclusão. Nunca no meio da palavra.
 - **De 3 a 6 cortes por vídeo de 1 hora**, os melhores, sem repetir assunto. Prefira poucos e bons.

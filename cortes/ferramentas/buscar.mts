@@ -11,7 +11,7 @@ import { createWriteStream, existsSync, mkdirSync, renameSync, rmSync, writeFile
 import { join } from "node:path";
 import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
-import { ENTRADA, RAIZ, infoDoVideo } from "./comum.ts";
+import { ARQUIVO_DA_CHAMADA, ENTRADA, PASTA_PYTHON, RAIZ, infoDoVideo, type ChamadaGuardada } from "./comum.ts";
 import { linkDeDownload } from "./links.ts";
 import { avisar, ferramenta } from "./postai.ts";
 
@@ -76,7 +76,36 @@ async function baixar(link: string, destino: string) {
   return info;
 }
 
-const { pedidos } = await ferramenta<{ pedidos: Pedido[] }>("ver_pedidos_de_corte");
+type ChamadaDoPostai = Omit<ChamadaGuardada, "logo"> & { logoUrl?: string };
+const { pedidos, chamada } = await ferramenta<{ pedidos: Pedido[]; chamada?: ChamadaDoPostai | null }>("ver_pedidos_de_corte");
+await guardarChamada(chamada ?? null);
+
+/** Guarda a chamada do fim (e baixa o logo) para o cortar. Sem chamada, apaga a antiga. */
+async function guardarChamada(c: ChamadaDoPostai | null) {
+  mkdirSync(PASTA_PYTHON, { recursive: true });
+  if (!c) {
+    rmSync(ARQUIVO_DA_CHAMADA, { force: true });
+    return;
+  }
+  const { logoUrl, ...resto } = c;
+  let logo: string | undefined;
+  if (logoUrl) {
+    try {
+      const r = await fetch(logoUrl);
+      if (!r.ok) throw new Error(String(r.status));
+      const tipo = r.headers.get("content-type") ?? "";
+      const extensao = tipo.includes("png") ? "png" : tipo.includes("svg") ? "svg" : tipo.includes("webp") ? "webp" : "jpg";
+      logo = join(PASTA_PYTHON, `logo.${extensao}`);
+      writeFileSync(logo, Buffer.from(await r.arrayBuffer()));
+    } catch (erro) {
+      console.error(`  (não deu para baixar o logo da chamada: ${(erro as Error).message}; segue sem logo)`);
+      logo = undefined;
+    }
+  }
+  const guardada: ChamadaGuardada = { ...resto, ...(logo ? { logo } : {}) };
+  writeFileSync(ARQUIVO_DA_CHAMADA, JSON.stringify(guardada, null, 2));
+  console.log(`Chamada no fim dos cortes: "${guardada.texto}"${guardada.botao ? ` [${guardada.botao}]` : ""}`);
+}
 if (!pedidos.length) {
   console.log("Nenhum vídeo pedido no menu Cortes do Postaí.");
   process.exit(0);

@@ -1,5 +1,6 @@
 import React from "react";
-import { AbsoluteFill, interpolate, OffthreadVideo, staticFile, useCurrentFrame } from "remotion";
+import { AbsoluteFill, Freeze, interpolate, OffthreadVideo, Sequence, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
+import { Chamada, CHAMADA_SEG, type DadosDaChamada } from "./Chamada";
 import { fontFamily } from "./fonte";
 import { type Legenda, Legendas } from "./Legendas";
 
@@ -17,6 +18,8 @@ export type PropsDoCorte = {
   /** desfocado: o vídeo inteiro no meio, com ele mesmo desfocado no fundo. centro: o vídeo recortado em pé, na tela toda. */
   enquadramento: "desfocado" | "centro";
   legendas: Legenda[];
+  /** A chamada do fim (CTA), se o dono ligou. A duracaoSeg já conta os segundos dela. */
+  chamada?: DadosDaChamada;
 };
 
 const Gancho: React.FC<{ texto: string; credito: string }> = ({ texto, credito }) => {
@@ -49,12 +52,32 @@ const Gancho: React.FC<{ texto: string; credito: string }> = ({ texto, credito }
   );
 };
 
-export const Corte: React.FC<PropsDoCorte> = ({ video, fundo, largura, altura, gancho, credito, enquadramento, legendas }) => {
+export const Corte: React.FC<PropsDoCorte> = (props) => {
+  const { fps } = useVideoConfig();
+  if (!props.chamada) return <Trecho {...props} />;
+  // O trecho, e depois ele congelado (sem som), com o cartão da chamada por cima
+  const quadros = Math.max(1, Math.round((props.duracaoSeg - CHAMADA_SEG) * fps));
+  return (
+    <AbsoluteFill>
+      <Sequence durationInFrames={quadros}>
+        <Trecho {...props} />
+      </Sequence>
+      <Sequence from={quadros}>
+        <Freeze frame={quadros - 1}>
+          <Trecho {...props} legendas={[]} mudo />
+        </Freeze>
+        <Chamada chamada={props.chamada} />
+      </Sequence>
+    </AbsoluteFill>
+  );
+};
+
+const Trecho: React.FC<PropsDoCorte & { mudo?: boolean }> = ({ video, fundo, largura, altura, gancho, credito, enquadramento, legendas, mudo }) => {
   const fonte = staticFile(video);
   if (enquadramento === "centro") {
     return (
       <AbsoluteFill style={{ backgroundColor: "#000" }}>
-        <OffthreadVideo src={fonte} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+        <OffthreadVideo src={fonte} muted={mudo} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
         <AbsoluteFill style={{ background: "linear-gradient(rgba(0,0,0,0.45), transparent 22%, transparent 60%, rgba(0,0,0,0.35))" }} />
         <AbsoluteFill style={{ top: 170 }}>
           <Gancho texto={gancho} credito={credito} />
@@ -77,7 +100,7 @@ export const Corte: React.FC<PropsDoCorte> = ({ video, fundo, largura, altura, g
         style={{ width: "100%", height: "100%", objectFit: "cover", filter: "blur(30px) brightness(0.55)", scale: "1.15" }}
       />
       <div style={{ position: "absolute", left: 0, top: topo, width: 1080, height: alturaDoVideo }}>
-        <OffthreadVideo src={fonte} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+        <OffthreadVideo src={fonte} muted={mudo} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
       </div>
       <AbsoluteFill style={{ top: Math.max(140, topo - 330) }}>
         <Gancho texto={gancho} credito={credito} />
