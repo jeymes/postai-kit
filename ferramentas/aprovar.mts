@@ -3,7 +3,8 @@
 // POSTAI_CHAVE. É o caminho da rotina na nuvem; no computador, o Claude usa o
 // conector (pedir_envio + por_para_aprovacao), que faz o mesmo.
 //
-// O vídeo aparece no menu Cortes do app esperando aprovação; só depois de
+// Episódio animado: aparece na tela Animação ("Para aprovar"); vídeo comum, em
+// Cortes. Só depois de
 // aprovado entra na fila do piloto.
 //
 // Uso: POSTAI_CHAVE=postai.xxx.yyy npm run aprovar -- conteudo/<peça>.json
@@ -83,7 +84,7 @@ try {
     ...(peca.molde === "Conversa" ? { origem: "animacao" } : {}),
   });
   console.log(`\nPronto: ${resposta}`);
-  console.log("Abra o Postaí, no menu Cortes, para aprovar ou recusar.");
+  console.log(peca.molde === "Conversa" ? "Abra o Postaí, na tela Animação, para aprovar ou recusar." : "Abra o Postaí, no menu Cortes, para aprovar ou recusar.");
 } catch (erro) {
   console.error(`\n${erro instanceof Error ? erro.message : String(erro)}`);
   process.exit(1);

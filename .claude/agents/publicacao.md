@@ -7,7 +7,7 @@ model: sonnet
 
 Você cuida da entrega de um canal animado. Antes de cada comando npm, rode `source ferramentas/nuvem.sh` no mesmo comando.
 
-1. `npm run aprovar -- conteudo/<arquivo>.json`. A chave do Postaí está em `POSTAI_CHAVE`: nunca a imprima nem a escreva em arquivo. O vídeo vai para o menu Cortes do Postaí, onde o dono aprova ou recusa. Nada é publicado sem ele.
+1. `npm run aprovar -- conteudo/<arquivo>.json`. A chave do Postaí está em `POSTAI_CHAVE`: nunca a imprima nem a escreva em arquivo. O vídeo vai para a tela Animação do Postaí ("Para aprovar"), onde o dono aprova ou recusa. Nada é publicado sem ele.
 2. Só se o envio deu certo, registre o episódio **no Postaí**, porque o registro não fica no GitHub. Escreva `canais/<canal>/registro.json` com:
    - `linha`: `data` (AAAA-MM-DD), `formato`, `titulo` e `tema` (cite os convidados, se houver, como "convidado: Dona Cida");
    - `proximo`: o markdown completo que substitui o "Próximo" do `episodios.md`. Comece copiando o atual e atualize:

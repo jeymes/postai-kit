@@ -50,7 +50,7 @@ export function quadrosDaFala(cena: CenaNarrada) {
 }
 
 /** Conversa: respiro antes da primeira fala, entre as falas e no fim */
-export const CONVERSA = { inicio: 20, entreFalas: 12, fim: 45, ctaFinal: 80 } as const;
+export const CONVERSA = { inicio: 20, entreFalas: 12, fim: 45, ctaFinal: 105 } as const;
 
 /** Tempo estimado de cada palavra (antes da voz): curtas ~0,2 s, longas ~0,5 s, pausa na pontuação */
 export function estimarPalavras(fala: string) {
@@ -118,8 +118,12 @@ export function iniciosDasCenas(molde: string, c: Conteudo) {
 }
 
 /** Um quadro perto do fim de cada cena, quando tudo já entrou: para a prévia */
-export const quadrosDaPrevia = (molde: string, c: Conteudo) =>
-  cenasDoMolde(molde, c).map((d, i) => iniciosDasCenas(molde, c)[i] + Math.round(d * 0.75));
+export const quadrosDaPrevia = (molde: string, c: Conteudo) => {
+  const quadros = cenasDoMolde(molde, c).map((d, i) => iniciosDasCenas(molde, c)[i] + Math.round(d * 0.75));
+  // Na Conversa, o primeiro quadro mostra o balão do CTA inicial já inteiro
+  if (molde === "Conversa" && c.ctaInicial) quadros[0] = 50;
+  return quadros;
+};
 
 export const MOLDES_DE_VIDEO = [
   "Oferta",

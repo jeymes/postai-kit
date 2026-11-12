@@ -9,7 +9,7 @@ import { ELENCO } from "../componentes/personagens/elenco";
 import { PENTEADOS, type Visual } from "../componentes/personagens/Boneco";
 import { Legendas, type Legenda } from "../componentes/texto/Legendas";
 import { Texto } from "../componentes/texto/Texto";
-import { ChamadaFinal } from "../componentes/cenas/ChamadaFinal";
+import { BalaoDeChamada, CartaoDeChamada } from "../componentes/cenas/ChamadaAnimada";
 import { cores, fontes } from "../nucleo/marca";
 import { CONVERSA, estimarPalavras, FPS, quadrosDaFalaConversa } from "./tempos";
 
@@ -175,21 +175,6 @@ function momentosDe(quem: string, linha: Linha): Momento[] {
   return momentos;
 }
 
-// CTA inicial: aparece embaixo do título no começo e sai antes da primeira virada
-const CtaInicial: React.FC<{ texto: string; topo: number }> = ({ texto, topo }) => {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-  const dentro = spring({ frame: frame - 10, fps, config: { damping: 13 } });
-  const fora = spring({ frame: frame - 110, fps, config: { damping: 20 } });
-  const p = dentro * (1 - fora);
-  if (p <= 0.01) return null;
-  return (
-    <div style={{ position: "absolute", top: topo, left: 0, right: 0, display: "flex", justifyContent: "center", opacity: p, scale: String(0.85 + 0.15 * p) }}>
-      <div style={{ background: TRACO, color: "#FFFFFF", fontFamily: fontes.titulo, fontWeight: 800, fontSize: 40, padding: "10px 28px", borderRadius: 40 }}>{texto}</div>
-    </div>
-  );
-};
-
 const TituloPov: React.FC<{ titulo: string; parte?: string }> = ({ titulo, parte }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
@@ -330,7 +315,7 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
           })}
         </AbsoluteFill>
         <TituloPov titulo={props.titulo} parte={props.parte} />
-        {props.ctaInicial && <CtaInicial texto={props.ctaInicial} topo={props.parte ? 450 : 395} />}
+        {props.ctaInicial && <BalaoDeChamada texto={props.ctaInicial} topo={props.parte ? 450 : 395} />}
         {props.cartao && (
           <Cartao
             cartao={props.cartao}
@@ -339,7 +324,11 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
             contaDe={naCena(props.cartao.contaNa ?? props.cartao.entra)}
           />
         )}
-        {props.legendas && <Legendas legendas={legendas} tamanho={68} style={{ top: 1730, padding: "0 70px" }} />}
+        {props.legendas && (
+          <Sequence durationInFrames={props.ctaFinal ? fimDasFalas : undefined} layout="none" name="Legendas">
+            <Legendas legendas={legendas} tamanho={68} style={{ top: 1730, padding: "0 70px" }} />
+          </Sequence>
+        )}
         {linha.map(({ cena, inicio }, i) => (
           <React.Fragment key={i}>
             {cena.narracao && (
@@ -352,9 +341,7 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
         ))}
         {props.ctaFinal && (
           <Sequence from={fimDasFalas} layout="none" name="CTA final">
-            <AbsoluteFill>
-              <ChamadaFinal chamada={props.ctaFinal} />
-            </AbsoluteFill>
+            <CartaoDeChamada chamada={props.ctaFinal} />
             <Som tipo="sucesso" em={2} />
           </Sequence>
         )}

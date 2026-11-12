@@ -28,6 +28,7 @@ public/marca/fonte-3d.json
 public/avatar
 
 # Canal animado baixado do Postaí a cada episódio (npm run canal)
+public/marca/logo-canal.png
 canais/*/canal-postai.md
 canais/*/materiais/
 canais/*/canal-montado.json

@@ -5,7 +5,8 @@
 // pode ter anotado um aprendizado novo.
 //
 // Uso: POSTAI_CHAVE=postai.xxx.yyy npm run canal -- canais/<canal>
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
 import { join } from "node:path";
 import { exigirChave, ferramenta } from "./postai.ts";
 
@@ -26,11 +27,16 @@ try {
   try {
     writeFileSync(join(pasta, "episodios.md"), `${await ferramenta("ver_episodios")}\n`);
     console.log(`Registro de episódios em ${join(pasta, "episodios.md")}.`);
-    const marca = JSON.parse(await ferramenta("ver_marca"));
-    if (marca) {
+    const { logoUrl, ...marca } = JSON.parse(await ferramenta("ver_marca")) ?? {};
+    if (marca.nome) {
       const atual = JSON.parse(readFileSync("marca/marca.json", "utf8"));
       writeFileSync("marca/marca.json", `${JSON.stringify({ ...atual, ...marca, cores: { ...atual.cores, ...marca.cores } }, null, 2)}\n`);
       console.log(`Marca do canal: ${marca.nome}.`);
+    }
+    // O logo que a pessoa enviou no Postaí (curl: na nuvem passa pelo proxy)
+    if (logoUrl) {
+      const baixou = spawnSync("curl", ["-sSfL", "-o", join(pasta, "logo.png"), logoUrl], { stdio: "inherit" });
+      console.log(baixou.status === 0 ? "Logo do canal baixado do Postaí." : "Não consegui baixar o logo: sigo sem ele.");
     }
   } catch (erro) {
     console.log(`Registro ou marca não baixados: ${erro instanceof Error ? erro.message : String(erro)}`);
@@ -42,6 +48,15 @@ try {
   } catch (erro) {
     // Postaí sem o ver_elenco ainda: segue sem o elenco.json (a cena usa o visual)
     console.log(`Elenco não baixado: ${erro instanceof Error ? erro.message : String(erro)}`);
+  }
+  // O logo do canal (canais/<canal>/logo.png) vai para os CTAs e a capa
+  const logo = join(pasta, "logo.png");
+  if (existsSync(logo)) {
+    mkdirSync("public/marca", { recursive: true });
+    copyFileSync(logo, "public/marca/logo-canal.png");
+    const atual = JSON.parse(readFileSync("marca/marca.json", "utf8"));
+    writeFileSync("marca/marca.json", `${JSON.stringify({ ...atual, logo: "marca/logo-canal.png" }, null, 2)}\n`);
+    console.log("Logo do canal copiado para public/marca/logo-canal.png.");
   }
   if (/ainda não montou/.test(texto)) console.log("Atenção: o dono ainda não preencheu a tela Animação.");
 } catch (erro) {
