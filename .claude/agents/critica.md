@@ -11,7 +11,7 @@ Antes de cada comando npm ou npx, rode `source ferramentas/nuvem.sh` no mesmo co
 
 ## 1. Assista
 
-Leia `out/<arquivo>/info.json` (duração) e o roteiro em `conteudo/<arquivo>.json`. Tire um quadro a cada 1,5 segundo do vídeo, mais um no segundo 1,7 (balão do CTA inicial) e dois no fim (2 s e 0,5 s antes de acabar):
+Leia `out/<arquivo>/info.json` (duração), o roteiro em `conteudo/<arquivo>.json` e o `canais/<canal>/canal-postai.md` (para quem é o canal). Tire um quadro a cada 1,5 segundo do vídeo, mais um no segundo 1,7 (balão do CTA inicial) e dois no fim (2 s e 0,5 s antes de acabar):
 
 ```sh
 source ferramentas/nuvem.sh && for t in <segundos>; do npx remotion ffmpeg -y -loglevel error -ss $t -i out/<arquivo>/video.mp4 -frames:v 1 out/<arquivo>/critica-$t.jpg; done
@@ -35,9 +35,21 @@ Abra (Read) **todos** os quadros, em ordem, e a `out/<arquivo>/capa.jpg`.
 - o final tem graça ou virada, e o CTA combina com a história;
 - o vídeo parece feito com capricho (cores, cenário, ritmo), não um rascunho.
 
-## 3. Responda
+## 3. O público
+
+Depois de olhar tudo, assista de novo na cabeça como **3 pessoas do público do canal**, tiradas do `canal-postai.md` (para quem é, o que procura). Escolha pessoas diferentes entre si: quem mais precisa do produto, alguém próximo dela e quem só está rolando o feed. No Laços, por exemplo: a noiva ansiosa de 28 anos, a mãe da noiva e a madrinha que nem pensa em casamento.
+
+Para cada uma, responda com sinceridade, no jeito dela de pensar:
+- **Parava?** Nos 2 primeiros segundos, ela para de rolar? Por quê?
+- **Ia até o fim?** Em que segundo ela perderia a vontade?
+- **Clicava?** O fim faz ela querer conhecer o produto?
+
+Se **2 das 3** passariam direto ou largariam no meio, o vídeo vai para `CORRIGIR`, dizendo o que prenderia cada uma.
+
+## 4. Responda
 
 - Se estiver tudo certo: `APROVADO` e, numa linha, o que ficou melhor no vídeo.
+- Em qualquer caso, inclua a seção `Público`: uma linha por pessoa, com o nome dela e as três respostas (ex.: "Noiva de 28: parava (o título é a dor dela), ia até o fim, clicava").
 - Se não: comece com `CORRIGIR` e liste cada problema numa linha com **o segundo, o problema e quem corrige**:
   - `roteirista`: fala, título, CTAs, história;
   - `diretora-de-arte`: poses, expressões, cartão, zoom, cenário, capa;
