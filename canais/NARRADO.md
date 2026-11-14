@@ -1,6 +1,8 @@
-# Canal narrado: como sai cada vídeo (molde Documentario)
+# Canal dark: como sai cada vídeo (molde Documentario)
 
-Vale quando o `canais/<canal>/canal-postai.md` diz **ESTILO: NARRADO**. O vídeo é longo (8 a 15 minutos), deitado
+Vale para a rotina do **Canal dark** (tela Canal dark do Postaí, pasta `canais/dark`). O arquivo `.postai-canal`
+com `dark`, que a rotina grava no começo, faz todas as chamadas ao Postaí irem para o Canal dark, separado da Animação.
+O `canal-postai.md` diz **ESTILO: NARRADO**. O vídeo é longo (8 a 15 minutos), deitado
 (1920×1080) e sai **só no YouTube**: uma voz conta uma história sobre pinturas, mapas e fotos que se movem devagar,
 com capítulos, legenda e um cartão no fim. O formato está no `documentarioSchema` de `src/moldes/Documentario.tsx`
 e um exemplo em `conteudo/exemplo-documentario.json`.
@@ -26,7 +28,7 @@ genéricos". Monetiza quando **cada vídeo tem história, foco e conceito própr
 | `critica-narrado` | assiste por amostras, ouve o começo e decide se está bom para o dono |
 | `publicacao` | manda para aprovação e registra o episódio (o mesmo de sempre) |
 
-## Passo a passo da coordenadora (no lugar dos passos 4 a 10 da rotina)
+## Passo a passo da coordenadora
 
 Conte o andamento de cada agente como sempre (`npm run andamento`). Antes de cada comando npm, `source ferramentas/nuvem.sh`.
 

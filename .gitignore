@@ -37,3 +37,6 @@ canais/*/elenco.json
 canais/*/convidados/
 canais/*/episodios.md
 canais/*/registro.json
+
+# De qual canal é a rotina (a do Canal dark grava "dark")
+.postai-canal
