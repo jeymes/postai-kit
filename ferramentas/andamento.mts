@@ -121,7 +121,7 @@ if (!process.env.POSTAI_CHAVE) {
 const fim = agente === "coordenadora" && (status === "feito" || status === "erro");
 const consumo = fim ? somarConsumo() : null;
 try {
-  await ferramenta("contar_andamento", {
+  const resposta = await ferramenta("contar_andamento", {
     agente,
     status,
     mensagem: resto.join(" ").slice(0, 200),
@@ -129,6 +129,11 @@ try {
     ...(consumo ? { consumo } : {}),
   });
   const total = consumo ? consumo.entrada + consumo.saida + consumo.cacheCriado + consumo.cacheLido : 0;
+  // O dono clicou em Parar no Postaí: a coordenadora precisa ver isto
+  if (resposta.includes("PARE AGORA")) {
+    console.log(`\n${resposta}\n`);
+    process.exit(0);
+  }
   console.log(`Andamento: ${agente} ${status}.${consumo ? ` Tokens desta execução: ${total}.` : ""}`);
 } catch (erro) {
   console.log(`(andamento não registrado: ${erro instanceof Error ? erro.message : String(erro)})`);
