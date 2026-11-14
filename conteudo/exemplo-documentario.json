@@ -1,0 +1,96 @@
+{
+  "molde": "Documentario",
+  "cenas": [
+    {
+      "fala": "Imagine acordar numa cidade de sessenta mil pessoas e descobrir que, a partir de hoje, ela é a capital de um império.",
+      "foto": "fotos/familia-real/baia.jpg",
+      "capitulo": "Introdução",
+      "busca": "Rio de Janeiro Guanabara bay 19th century"
+    },
+    {
+      "fala": "Foi isso que aconteceu com o Rio de Janeiro em março de 1808. E tudo começou com uma fuga às pressas, do outro lado do oceano.",
+      "foto": "fotos/familia-real/rio.jpg",
+      "busca": "Rio de Janeiro 19th century painting"
+    },
+    {
+      "fala": "Nesta história, uma rainha que não podia governar, um príncipe que odiava decidir, e uma travessia que quase deu errado.",
+      "foto": "fotos/familia-real/embarque.jpg",
+      "busca": "embarkation Portuguese royal family 1807"
+    },
+    {
+      "fala": "Fica até o final, porque o jeito como essa história termina explica muito do Brasil de hoje.",
+      "foto": "fotos/familia-real/aclamacao.jpg",
+      "busca": "acclamation Dom João VI Rio de Janeiro"
+    },
+    {
+      "fala": "No começo do século dezenove, a Europa inteira girava em torno de um homem: Napoleão Bonaparte.",
+      "foto": "fotos/familia-real/napoleao-retrato.jpg",
+      "capitulo": "O cerco de Napoleão",
+      "inteira": true,
+      "busca": "Napoleon portrait"
+    },
+    {
+      "fala": "Ele queria sufocar a Inglaterra, sua grande inimiga, fechando todos os portos do continente aos navios ingleses.",
+      "foto": "fotos/familia-real/goya.jpg",
+      "busca": "Napoleon invasion Portugal 1807"
+    },
+    {
+      "fala": "Era o Bloqueio Continental. E Portugal tinha um problema sério: a Inglaterra era sua aliada mais antiga e sua maior parceira comercial.",
+      "foto": "fotos/familia-real/lisboa.jpg",
+      "busca": "Lisbon 18th century painting"
+    },
+    {
+      "fala": "Se obedecesse a Napoleão, perdia a proteção inglesa. Se desobedecesse, seria invadido.",
+      "foto": "fotos/familia-real/invasao.jpg",
+      "movimento": "aproximar",
+      "busca": "Napoleon army city painting"
+    },
+    {
+      "fala": "Durante meses, o governo português tentou agradar os dois lados ao mesmo tempo. Não deu certo.",
+      "foto": "fotos/familia-real/lisboa.jpg",
+      "movimento": "direita",
+      "busca": "Lisbon 18th century painting"
+    },
+    {
+      "fala": "Em novembro de 1807, as tropas francesas do general Junot já marchavam em direção a Lisboa.",
+      "foto": "fotos/familia-real/goya.jpg",
+      "movimento": "afastar",
+      "texto": "Novembro de 1807",
+      "busca": "Napoleon invasion Portugal 1807"
+    },
+    {
+      "fala": "Quem governava Portugal, na prática, era o príncipe regente, dom João.",
+      "foto": "fotos/familia-real/djoao.jpg",
+      "capitulo": "O príncipe que não queria decidir",
+      "inteira": true,
+      "busca": "Dom João VI portrait"
+    },
+    {
+      "fala": "A rainha, sua mãe, dona Maria primeira, tinha sido afastada do governo por problemas de saúde mental.",
+      "foto": "fotos/familia-real/maria.jpg",
+      "inteira": true,
+      "busca": "Maria I of Portugal portrait"
+    }
+  ],
+  "voz": "pm_alex",
+  "pronuncia": {
+    "Junot": "Junô",
+    "Tejo": "Têjo"
+  },
+  "encerramento": "Inscreva-se para a história de Carlota Joaquina",
+  "capa": {
+    "titulo": "A fuga que transformou o Rio em capital de um império",
+    "destaque": "capital",
+    "foto": "fotos/familia-real/embarque.jpg"
+  },
+  "post": {
+    "titulo": "A fuga da família real para o Brasil: como o Rio virou capital de um império",
+    "legenda": "Em 1807, fugindo de Napoleão, a corte portuguesa inteira atravessou o oceano e transformou o Rio de Janeiro na capital de um império.\n\nImagens: obras em domínio público do Wikimedia Commons."
+  },
+  "fontes": [
+    {
+      "titulo": "Transferência da corte portuguesa para o Brasil (Wikipédia)",
+      "url": "https://pt.wikipedia.org/wiki/Transfer%C3%AAncia_da_corte_portuguesa_para_o_Brasil"
+    }
+  ]
+}

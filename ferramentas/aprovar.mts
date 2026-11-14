@@ -10,6 +10,9 @@
 // Episódio animado: o roteiro vai junto (sem a narração), para o dono poder
 // pedir ajuste. Num ajuste, --substitui <corteId> troca o vídeo antigo pelo novo.
 //
+// Canal narrado (molde Documentario): vai como vídeo longo (só YouTube) para a
+// tela Animação, com os capítulos no fim da descrição.
+//
 // Uso: POSTAI_CHAVE=postai.xxx.yyy npm run aprovar -- conteudo/<peça>.json [--substitui <corteId>]
 //      (POSTAI_URL troca o endereço; o padrão é o do Postaí)
 import { spawnSync } from "node:child_process";
@@ -34,7 +37,7 @@ if (!caminho) {
 exigirChave();
 
 type Arquivo = { arquivo: string; tipo: string; tamanho: number };
-type Info = { duracaoSeg: number | null; arquivos: Arquivo[]; post: { titulo?: string; legenda?: string } | null };
+type Info = { duracaoSeg: number | null; arquivos: Arquivo[]; post: { titulo?: string; legenda?: string } | null; capitulos?: string };
 
 const pasta = join("out", basename(caminho, ".json"));
 const arquivoDeInfo = join(pasta, "info.json");
@@ -51,7 +54,9 @@ if (!video) {
   process.exit(1);
 }
 const titulo = info.post?.titulo?.trim();
-const legenda = info.post?.legenda?.trim();
+// Vídeo longo: os capítulos ("00:00 Título") no fim da descrição viram os capítulos do YouTube
+const legenda = [info.post?.legenda?.trim(), info.capitulos].filter(Boolean).join("\n\n");
+const doCanal = peca.molde === "Conversa" || peca.molde === "Documentario";
 if (!titulo || !legenda) {
   console.error('A peça precisa de "post": { "titulo", "legenda" }.');
   process.exit(1);
@@ -97,13 +102,15 @@ try {
     legenda,
     duracaoSeg: info.duracaoSeg ?? 0,
     ...(typeof peca.titulo === "string" ? { gancho: peca.titulo } : {}),
-    // Episódio do canal animado: aparece na tela Animação, com "Pedir ajuste"
-    ...(peca.molde === "Conversa" ? { origem: "animacao", roteiro: JSON.stringify(semNarracao(peca)) } : {}),
+    // Episódio do canal (animado ou narrado): aparece na tela Animação, com "Pedir ajuste"
+    ...(doCanal ? { origem: "animacao", roteiro: JSON.stringify(semNarracao(peca)) } : {}),
+    // Narrado: vídeo longo e deitado, só no YouTube
+    ...(peca.molde === "Documentario" ? { longo: true } : {}),
     ...(substitui ? { substitui } : {}),
     ...(duvida ? { duvida } : {}),
   });
   console.log(`\nPronto: ${resposta}`);
-  console.log(peca.molde === "Conversa" ? "Abra o Postaí, na tela Animação, para aprovar ou recusar." : "Abra o Postaí, no menu Cortes, para aprovar ou recusar.");
+  console.log(doCanal ? "Abra o Postaí, na tela Animação, para aprovar ou recusar." : "Abra o Postaí, no menu Cortes, para aprovar ou recusar.");
 } catch (erro) {
   console.error(`\n${erro instanceof Error ? erro.message : String(erro)}`);
   process.exit(1);

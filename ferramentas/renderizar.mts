@@ -1,6 +1,7 @@
 // Transforma uma peça (conteudo/<nome>.json) em arquivos prontos para o Postaí,
 // em out/<nome>/:
 //   vídeo (Oferta, Lista, Tutorial, AntesDepois, Depoimento, Trend, Narrado, Vitrine3D): video.mp4 + capa.jpg
+//   Documentario (vídeo longo, deitado): video.mp4 + capa.jpg (1280×720, do YouTube) + os capítulos
 //   Carrossel: slide-01.jpg, slide-02.jpg... (JPEG, como o Instagram pede)
 // e um info.json com o tamanho de cada arquivo, a duração do vídeo e o texto
 // do post, que é o que o Claude passa para o pedir_envio e o por_na_fila.
@@ -11,7 +12,7 @@
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { basename, join } from "node:path";
-import { duracaoDoMolde, FPS, MOLDES_3D, MOLDES_DE_VIDEO, QUADROS_DA_IMAGEM, quadrosDaPrevia } from "../src/moldes/tempos.ts";
+import { duracaoDoMolde, FPS, iniciosDasCenas, MOLDES_3D, MOLDES_DE_VIDEO, QUADROS_DA_IMAGEM, quadrosDaPrevia } from "../src/moldes/tempos.ts";
 import { fonte3dDesatualizada, prepararFonte3d } from "./fonte-3d.mts";
 
 const MOLDES = [...MOLDES_DE_VIDEO, "Carrossel"];
@@ -31,7 +32,7 @@ if (!MOLDES.includes(molde)) {
   process.exit(1);
 }
 
-if (molde === "Narrado" && !previa && props.cenas.some((c: { narracao?: unknown }) => !c.narracao)) {
+if ((molde === "Narrado" || molde === "Documentario") && !previa && props.cenas.some((c: { narracao?: unknown }) => !c.narracao)) {
   console.error(`Falta a voz de alguma cena. Rode antes: npm run narrar -- ${caminho}`);
   process.exit(1);
 }
@@ -83,9 +84,32 @@ function capaPadrao() {
   };
 }
 
+/**
+ * Capítulos para a descrição do YouTube ("00:00 Título", um por linha), pelo
+ * começo de cada cena com "capitulo". O YouTube só mostra com 3 ou mais, o
+ * primeiro em 00:00 e cada um com 10 s ou mais; senão, null.
+ */
+function capitulosDoYouTube() {
+  const inicios = iniciosDasCenas(molde, props);
+  const lista = (props.cenas as Array<{ capitulo?: string }>)
+    .map((cena, i) => (cena.capitulo ? { titulo: cena.capitulo, seg: Math.floor(inicios[i] / FPS) } : null))
+    .filter((c) => c !== null);
+  if (lista.length < 3) return null;
+  lista[0].seg = 0;
+  if (lista.some((c, i) => i > 0 && c.seg - lista[i - 1].seg < 10)) return null;
+  const hora = (seg: number) => {
+    const h = Math.floor(seg / 3600);
+    const m = String(Math.floor((seg % 3600) / 60)).padStart(2, "0");
+    const s = String(seg % 60).padStart(2, "0");
+    return h ? `${h}:${m}:${s}` : `${m}:${s}`;
+  };
+  return lista.map((c) => `${hora(c.seg)} ${c.titulo}`).join("\n");
+}
+
 const tamanho = (arquivo: string) => statSync(arquivo).size;
 const arquivos: Array<{ arquivo: string; tipo: string; tamanho: number }> = [];
 let duracaoSeg: number | null = null;
+let capitulos: string | null = null;
 
 if (molde === "Carrossel") {
   // O carrossel já é feito de imagens: a prévia são os próprios slides.
@@ -104,18 +128,25 @@ if (molde === "Carrossel") {
   duracaoSeg = Math.round((duracaoDoMolde(molde, props) / FPS) * 10) / 10;
   const video = join(saida, "video.mp4");
   writeFileSync(arquivoDeProps, JSON.stringify(props));
-  remotion("render", molde, video, "--codec=h264", "--crf=20");
+  // Vídeo longo: taxa fixa de 6 Mbps (o YouTube recomenda 8 para 1080p), uns
+  // 450 MB em 10 minutos, abaixo do limite de 1 GB do Postaí. Pintura e foto se
+  // movendo comprimem mal com o crf: 10 minutos passariam de 600 MB.
+  remotion("render", molde, video, "--codec=h264", ...(molde === "Documentario" ? ["--video-bitrate=6M", "--audio-bitrate=192k"] : ["--crf=20"]));
   arquivos.push({ arquivo: video, tipo: "video/mp4", tamanho: tamanho(video) });
 
   const destinoDaCapa = join(saida, "capa.jpg");
   // Vídeo animado: a capa é a cena com os personagens
   if (molde === "Conversa") imagem("CapaConversa", { ...props, capa: capa ?? {} }, destinoDaCapa);
+  else if (molde === "Documentario") {
+    imagem("CapaDoDocumentario", capa ?? capaPadrao(), destinoDaCapa);
+    capitulos = capitulosDoYouTube();
+  }
   else imagem("Capa", capa ?? capaPadrao(), destinoDaCapa);
   arquivos.push({ arquivo: destinoDaCapa, tipo: "image/jpeg", tamanho: tamanho(destinoDaCapa) });
 }
 
 rmSync(arquivoDeProps, { force: true });
-const info = { molde, previa, duracaoSeg, arquivos, post: post ?? null };
+const info = { molde, previa, duracaoSeg, arquivos, post: post ?? null, ...(capitulos ? { capitulos } : {}) };
 writeFileSync(join(saida, "info.json"), JSON.stringify(info, null, 2));
 console.log(`\nPronto: ${saida}/`);
 console.log(JSON.stringify(info, null, 2));

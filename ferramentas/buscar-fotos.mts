@@ -8,7 +8,10 @@
 //       → 4 opções de cada em public/fotos/_candidatos/ (cafe-1.jpg ... cafe-4.jpg) para olhar
 //   npm run buscar-fotos -- cafe="coffee cup on wooden table"#3 pao="bread loaf bakery"#1
 //       → grava public/fotos/cafe.jpg (3ª opção) e pao.jpg (1ª), anota em public/fotos/CREDITOS.md
-// Opções: --pasta outra (dentro de public/), --fonte stocksnap (fotos de produto mais limpas)
+// Opções: --pasta outra (dentro de public/), --fonte stocksnap (fotos de produto mais limpas),
+//   --deitadas (só fotos deitadas, gravadas com 1920 px de largura: para o Documentario),
+//   --fonte commons (Wikimedia Commons: pinturas, mapas e fotos antigas; só domínio público e CC0;
+//   melhor para história e com termos gerais, ex. "Rio de Janeiro 19th century painting")
 // Limite da API sem chave: 20 buscas por minuto, 200 por dia.
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -33,6 +36,7 @@ const flag = (nome: string) => {
 const pasta = opcao("pasta") ?? "fotos";
 const fonte = opcao("fonte");
 const candidatos = flag("candidatos");
+const deitadas = flag("deitadas");
 if (args.length === 0) {
   console.error('Uso: npm run buscar-fotos -- [--candidatos] arquivo="termo em inglês"[#n] ...');
   process.exit(1);
@@ -47,10 +51,53 @@ const destino = join("public", pasta);
 const pastaCandidatos = join(destino, "_candidatos");
 mkdirSync(candidatos ? pastaCandidatos : destino, { recursive: true });
 
+const AGENTE = "postai-estudio/1.0 (https://github.com/jeymes/postai-kit)";
+
+/** Wikimedia Commons: só domínio público e CC0 (sem crédito obrigatório nem "compartilha igual") */
+async function buscarNoCommons(termo: string): Promise<Foto[]> {
+  const url = new URL("https://commons.wikimedia.org/w/api.php");
+  for (const [k, v] of Object.entries({
+    action: "query",
+    format: "json",
+    generator: "search",
+    gsrnamespace: "6",
+    gsrlimit: "50",
+    gsrsearch: `${termo} filetype:bitmap`,
+    prop: "imageinfo",
+    iiprop: "url|size|extmetadata",
+    iiurlwidth: "1920",
+    iiextmetadatafilter: "LicenseShortName",
+  }))
+    url.searchParams.set(k, v);
+  const resp = await fetch(url, { headers: { "User-Agent": AGENTE } });
+  if (!resp.ok) throw new Error(`O Commons respondeu ${resp.status} para "${termo}"`);
+  type Pagina = {
+    pageid: number;
+    index: number;
+    imageinfo?: Array<{ width: number; height: number; thumburl?: string; url: string; descriptionurl: string; extmetadata?: { LicenseShortName?: { value?: string } } }>;
+  };
+  const dados = (await resp.json()) as { query?: { pages?: Record<string, Pagina> } };
+  return Object.values(dados.query?.pages ?? {})
+    .sort((a, b) => a.index - b.index)
+    .flatMap((p) => {
+      const info = p.imageinfo?.[0];
+      const licenca = info?.extmetadata?.LicenseShortName?.value ?? "";
+      if (!info || !/^(public domain|pd|cc0)/i.test(licenca)) return [];
+      return [{ id: String(p.pageid), url: info.thumburl ?? info.url, source: "wikimedia", foreign_landing_url: info.descriptionurl, width: info.width, height: info.height }];
+    })
+    .filter(filtroDeTamanho);
+}
+
+const filtroDeTamanho = (f: Foto) =>
+  deitadas
+    ? f.width >= 1280 && f.width / f.height >= 1.25 && f.width / f.height <= 2.2
+    : Math.min(f.width, f.height) >= 800 && Math.max(f.width, f.height) / Math.min(f.width, f.height) <= 1.8;
+
 async function buscar(termo: string): Promise<Foto[]> {
+  if (fonte === "commons") return buscarNoCommons(termo);
   const url = new URL("https://api.openverse.org/v1/images/");
   url.searchParams.set("q", termo);
-  url.searchParams.set("license", "cc0");
+  url.searchParams.set("license", deitadas ? "cc0,pdm" : "cc0");
   url.searchParams.set("category", "photograph");
   url.searchParams.set("page_size", "20");
   if (fonte) url.searchParams.set("source", fonte);
@@ -58,17 +105,18 @@ async function buscar(termo: string): Promise<Foto[]> {
   if (!resp.ok) throw new Error(`Openverse respondeu ${resp.status} para "${termo}"`);
   const { results } = (await resp.json()) as { results: Foto[] };
   // Grandes o bastante e não muito compridas
-  return results.filter((f) => Math.min(f.width, f.height) >= 800 && Math.max(f.width, f.height) / Math.min(f.width, f.height) <= 1.8);
+  return results.filter(filtroDeTamanho);
 }
 
 /** Baixa e grava em JPEG, com o lado menor em 1080 px */
 async function baixar(foto: Foto, saida: string) {
-  const resp = await fetch(foto.url, { headers: { "User-Agent": "postai-estudio/1.0" } });
+  const resp = await fetch(foto.url, { headers: { "User-Agent": AGENTE } });
   if (!resp.ok) throw new Error(`Não baixou ${foto.url} (${resp.status})`);
-  // O ffmpeg reconhece a imagem pela extensão
-  const bruto = saida.replace(/\.jpg$/, ".bruto.jpg");
+  // O ffmpeg reconhece a imagem pela extensão (o Commons tem PNG e TIFF também)
+  const extensao = new URL(foto.url).pathname.match(/\.(jpe?g|png|webp|tiff?|gif)$/i)?.[1].toLowerCase() ?? "jpg";
+  const bruto = saida.replace(/\.jpg$/, `.bruto.${extensao}`);
   writeFileSync(bruto, Buffer.from(await resp.arrayBuffer()));
-  const escala = foto.width > foto.height ? "scale=-2:1080" : "scale=1080:-2";
+  const escala = deitadas ? "scale='min(1920,iw)':-2" : foto.width > foto.height ? "scale=-2:1080" : "scale=1080:-2";
   const r = spawnSync("npx", ["remotion", "ffmpeg", "-y", "-loglevel", "error", "-i", bruto, "-vf", escala, "-q:v", "3", saida], {
     stdio: "inherit",
     shell: process.platform === "win32",
@@ -111,9 +159,9 @@ if (!candidatos && creditos.length > 0) {
     [
       `# Fotos de domínio público (${pasta})`,
       "",
-      "Licença CC0 (uso comercial sem crédito obrigatório), baixadas pelo Openverse com o ferramentas/buscar-fotos.mts.",
+      "Licença CC0 ou domínio público (uso comercial sem crédito obrigatório), baixadas pelo Openverse ou pelo Wikimedia Commons com o ferramentas/buscar-fotos.mts.",
       "",
-      "| Arquivo | Fonte | Original | Openverse |",
+      "| Arquivo | Fonte | Original | Id |",
       "| --- | --- | --- | --- |",
       ...antigas,
       ...novas,

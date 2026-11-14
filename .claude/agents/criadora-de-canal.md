@@ -46,4 +46,6 @@ Você monta o canal de vídeos animados de um cliente, para ele não ter que pre
 - Personagens originais. Se o exemplo for um personagem famoso ou de outra marca, não copie: crie um parecido no clima, mas diferente.
 - Nunca grave fotos de pessoas reais como personagem: o personagem é sempre desenho.
 
+**Canal narrado** (o `canal-postai.md` diz ESTILO: NARRADO): não há personagens nem designer. Monte só a bíblia (tema, do que os vídeos falam, assuntos de fora, público, jeito de contar, temas, hashtags) e os CTAs a partir do site e das referências, com `personagens: []` e os tipos de vídeo do narrado (`historia`, `lista`, `misterio`). O estilo, a duração e a voz são escolha do dono e ficam como estão.
+
 Responda com um resumo de 5 linhas: o produto, o público, o tom, os personagens criados (nome e papel) e os CTAs.

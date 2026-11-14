@@ -4,6 +4,7 @@ import { AntesDepois, antesDepoisExemplo, antesDepoisSchema } from "./moldes/Ant
 import { Capa, capaExemplo, capaSchema } from "./moldes/Capa";
 import { Carrossel, carrosselExemplo, carrosselSchema } from "./moldes/Carrossel";
 import { CapaConversa, Conversa, conversaExemplo, conversaSchema, FichaDoPersonagem } from "./moldes/Conversa";
+import { CapaDoDocumentario, capaDocumentarioExemplo, capaDocumentarioSchema, Documentario, documentarioExemplo, documentarioSchema } from "./moldes/Documentario";
 import { Depoimento, depoimentoExemplo, depoimentoSchema } from "./moldes/Depoimento";
 import { Lista, listaExemplo, listaSchema } from "./moldes/Lista";
 import { MeusMoldes } from "./moldes/meus";
@@ -82,6 +83,29 @@ export const RemotionRoot: React.FC = () => (
         {...video}
         durationInFrames={duracaoDoMolde("Conversa", conversaExemplo)}
         {...duracao("Conversa", conversaSchema)}
+      />
+    </Folder>
+    <Folder name="Longos">
+      <Composition
+        id="Documentario"
+        component={Documentario}
+        schema={documentarioSchema}
+        defaultProps={documentarioExemplo}
+        width={1920}
+        height={1080}
+        fps={FPS}
+        durationInFrames={duracaoDoMolde("Documentario", documentarioExemplo)}
+        {...duracao("Documentario", documentarioSchema)}
+      />
+      <Composition
+        id="CapaDoDocumentario"
+        component={CapaDoDocumentario}
+        schema={capaDocumentarioSchema}
+        defaultProps={capaDocumentarioExemplo}
+        width={1280}
+        height={720}
+        fps={FPS}
+        durationInFrames={QUADROS_DA_IMAGEM}
       />
     </Folder>
     <Folder name="Meus">

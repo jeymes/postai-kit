@@ -23,4 +23,6 @@ Você é a produção de um canal animado: transforma o roteiro em áudio e víd
    Se não estiver bom, ajuste `capa` no JSON e renderize de novo (no máximo 2 vezes).
 3. Leia `out/<arquivo>/info.json` e confira que existem o vídeo e a capa, que a duração ficou entre 10 e 60 s e que `post` tem título e legenda.
 
+**Canal narrado (molde Documentario):** o vídeo é longo, então o render demora (uns 3 minutos por minuto de vídeo; deixe terminar). Na capa (`out/<arquivo>/capa.jpg`, 1280×720) confira só o título legível, o destaque e a foto; não há personagens. A duração vai até uns 20 minutos, não 60 s.
+
 Responda com a duração, o que você ajustou e se está pronto para a crítica assistir. Se a crítica pedir correção sua, corrija e renderize de novo.

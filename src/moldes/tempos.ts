@@ -6,6 +6,9 @@ import { CENAS_DOS_MEUS_MOLDES } from "./meus/tempos.ts";
 
 export const FPS = 30;
 
+/** Cartão final do Documentario (vídeo longo), em quadros */
+export const QUADROS_DO_ENCERRAMENTO = 150;
+
 // Capa e carrossel são imagens: a composição dura 3 s (para ver a entrada no
 // Studio) e a imagem sai do último quadro, com tudo já no lugar.
 export const QUADROS_DA_IMAGEM = 90;
@@ -94,6 +97,8 @@ export function cenasDoMolde(molde: string, c: Conteudo): number[] {
       return [TEMPOS.abertura3d, ...((c.produtos as unknown[] | undefined) ?? []).map(() => TEMPOS.produto3d), TEMPOS.chamada];
     case "Narrado":
       return [...((c.cenas ?? []) as CenaNarrada[]).map(quadrosDaFala), TEMPOS.chamada];
+    case "Documentario":
+      return [...((c.cenas ?? []) as CenaNarrada[]).map(quadrosDaFala), ...(c.encerramento ? [QUADROS_DO_ENCERRAMENTO] : [])];
     case "Conversa":
       return [CONVERSA.inicio, ...((c.cenas ?? []) as CenaNarrada[]).map((cena) => quadrosDaFalaConversa(cena) + CONVERSA.entreFalas), CONVERSA.fim, ...(c.ctaFinal ? [CONVERSA.ctaFinal] : [])];
     default: {
@@ -119,7 +124,13 @@ export function iniciosDasCenas(molde: string, c: Conteudo) {
 
 /** Um quadro perto do fim de cada cena, quando tudo já entrou: para a prévia */
 export const quadrosDaPrevia = (molde: string, c: Conteudo) => {
-  const quadros = cenasDoMolde(molde, c).map((d, i) => iniciosDasCenas(molde, c)[i] + Math.round(d * 0.75));
+  const inicios = iniciosDasCenas(molde, c);
+  let quadros = cenasDoMolde(molde, c).map((d, i) => inicios[i] + Math.round(d * 0.75));
+  // Vídeo longo: no máximo 12 quadros, espalhados pelo vídeo
+  if (molde === "Documentario" && quadros.length > 12) {
+    const passo = quadros.length / 12;
+    quadros = Array.from({ length: 12 }, (_, i) => quadros[Math.floor(i * passo)]);
+  }
   // Na Conversa, o primeiro quadro mostra o balão do CTA inicial já inteiro
   if (molde === "Conversa" && c.ctaInicial) quadros[0] = 50;
   return quadros;
@@ -133,6 +144,7 @@ export const MOLDES_DE_VIDEO = [
   "Depoimento",
   "Trend",
   "Narrado",
+  "Documentario",
   "Vitrine3D",
   "Conversa",
   ...Object.keys(CENAS_DOS_MEUS_MOLDES),
