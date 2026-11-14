@@ -19,6 +19,9 @@ const FERRAMENTAS_DOS_CANAIS = new Set([
   "salvar_canal_animado",
   "ver_ajustes",
   "por_para_aprovacao",
+  "ver_pauta",
+  "salvar_pauta",
+  "pegar_da_pauta",
 ]);
 
 export function exigirChave() {
