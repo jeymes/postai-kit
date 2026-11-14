@@ -3,8 +3,19 @@
 // endereço; o padrão é o do Postaí). Usado pelo aprovar e pelo canal.
 
 import { existsSync, readFileSync } from "node:fs";
+import { homedir } from "node:os";
+import { join } from "node:path";
 
 const URL_DO_POSTAI = process.env.POSTAI_URL || "https://postaiwebapp.online/mcp";
+
+// O passe do Postaí: a cada vídeo, o Postaí manda no pedido um acesso de 12 horas
+// só desta conta, e a coordenadora grava em ~/.postai-passe. Com ele, o ambiente
+// da rotina não precisa de chave. Se existir, vale mais que a POSTAI_CHAVE.
+const PASSE = join(homedir(), ".postai-passe");
+if (existsSync(PASSE)) {
+  const passe = readFileSync(PASSE, "utf8").trim();
+  if (/^pta\.[A-Za-z0-9]+\.[A-Za-z0-9_-]+$/.test(passe)) process.env.POSTAI_CHAVE = passe;
+}
 
 // De qual canal é esta rotina: a Animação (padrão) ou o Canal dark. A rotina do
 // Canal dark grava "dark" no arquivo .postai-canal (ou POSTAI_CANAL=dark), e
@@ -26,7 +37,7 @@ const FERRAMENTAS_DOS_CANAIS = new Set([
 
 export function exigirChave() {
   if (process.env.POSTAI_CHAVE) return;
-  console.error("Falta a chave do Postaí em POSTAI_CHAVE (Postaí > Criar com o Claude > Conectar > Criar chave).");
+  console.error("Falta o acesso ao Postaí: grave o passe que veio no pedido (printf '%s' '<passe>' > ~/.postai-passe) ou ponha a chave em POSTAI_CHAVE.");
   process.exit(1);
 }
 

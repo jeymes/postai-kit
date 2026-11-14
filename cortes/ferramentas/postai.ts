@@ -1,5 +1,6 @@
 // Conversa com o conector do Postaí (/mcp), com a chave do .env.
 import { existsSync, readFileSync } from "node:fs";
+import { homedir } from "node:os";
 import { join } from "node:path";
 import { RAIZ } from "./comum.ts";
 
@@ -12,7 +13,15 @@ function lerEnv() {
       if (m) env[m[1]] = m[2].replace(/^["']|["']$/g, "");
     }
   }
-  return { ...env, ...process.env } as Record<string, string | undefined>;
+  const tudo = { ...env, ...process.env } as Record<string, string | undefined>;
+  // O passe do Postaí (rotina na nuvem): um acesso de 12 horas só desta conta,
+  // que vem no pedido e a rotina grava em ~/.postai-passe. Vale mais que a chave.
+  const passe = join(homedir(), ".postai-passe");
+  if (existsSync(passe)) {
+    const texto = readFileSync(passe, "utf8").trim();
+    if (/^pta\.[A-Za-z0-9]+\.[A-Za-z0-9_-]+$/.test(texto)) tudo.POSTAI_CHAVE = texto;
+  }
+  return tudo;
 }
 
 const env = lerEnv();
