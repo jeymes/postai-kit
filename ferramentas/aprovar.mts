@@ -26,9 +26,9 @@ const substitui = posSubstitui >= 0 ? args[posSubstitui + 1] : undefined;
 // --duvida "<texto>": o que a crítica ainda pediu. O vídeo nunca é aprovado sozinho: espera o dono.
 const posDuvida = args.indexOf("--duvida");
 const duvida = posDuvida >= 0 ? args[posDuvida + 1] : undefined;
-const caminho = args.find(
-  (arg, i) => !arg.startsWith("--") && i !== posSubstitui + 1 && i !== posDuvida + 1,
-);
+// O caminho é o que não é opção nem valor de opção (posição -1 = a opção não veio)
+const valores = new Set([posSubstitui, posDuvida].filter((pos) => pos >= 0).map((pos) => pos + 1));
+const caminho = args.find((arg, i) => !arg.startsWith("--") && !valores.has(i));
 
 if (!caminho) {
   console.error("Uso: npm run aprovar -- conteudo/<peça>.json");

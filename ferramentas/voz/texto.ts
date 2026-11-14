@@ -72,6 +72,17 @@ export type Palavra = { original: string; falado: string };
 
 /** O roteiro em palavras, cada uma com o que a voz lê */
 export function falar(roteiro: string, pronuncia: Record<string, string> = {}): Palavra[] {
+  // Nome composto ("Millar Burrows": "Mílar Bárrous"): a voz lê palavra por
+  // palavra, então cada palavra ganha a sua pronúncia (quando os dois lados têm
+  // o mesmo número de palavras)
+  const porPalavra: Record<string, string> = {};
+  for (const [escrito, falado] of Object.entries(pronuncia)) {
+    const de = escrito.trim().split(/\s+/);
+    const para = falado.trim().split(/\s+/);
+    if (de.length > 1 && de.length === para.length) de.forEach((palavra, i) => (porPalavra[palavra] = para[i]));
+    else porPalavra[escrito] = falado;
+  }
+  pronuncia = porPalavra;
   // "R$ 12,90" é uma palavra só
   const palavras = roteiro.replace(/R\$\s+(?=\d)/g, "R$").split(/\s+/).filter(Boolean);
   return palavras.map((original) => ({ original, falado: falarPalavra(original, pronuncia) }));
