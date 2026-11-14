@@ -28,7 +28,9 @@ source ferramentas/nuvem.sh && npm run buscar-fotos -- --fonte commons --deitada
 ## 2. Olhe cada candidata (obrigatório)
 
 A busca erra: traz o Napoleão III no lugar do Napoleão, a Maria I da Inglaterra no lugar da de Portugal, foto de hoje
-num vídeo sobre 1808. **Abra (Read) cada candidata** em `public/fotos/<peça>/_candidatos/` e escolha só a que:
+num vídeo sobre 1808. **Leia primeiro o nome do arquivo** de cada opção (o `buscar-fotos` mostra; ex.:
+`Napoleon_III_...` já sai), e **abra (Read) só as candidatas que sobrarem**, em `public/fotos/<peça>/_candidatos/`.
+Elas vêm com 480 px, para gastar pouco. Escolha só a que:
 
 - mostra **a pessoa, o lugar ou a época certa** da cena (na dúvida, não use);
 - não é anacrônica (nada de foto moderna, prédio de outra época, Pedro II no lugar de Pedro I);
@@ -41,6 +43,7 @@ num vídeo sobre 1808. **Abra (Read) cada candidata** em `public/fotos/<peça>/_
 source ferramentas/nuvem.sh && npm run buscar-fotos -- --fonte commons --deitadas --pasta fotos/<peça> nome1="mesmo termo"#3 ...
 ```
 
+Na dúvida sobre uma (rosto pequeno, texto), abra a imagem grande gravada antes de pô-la no roteiro.
 Ponha `"foto": "fotos/<peça>/<nome>.jpg"` em cada cena (e `"inteira": true` nos retratos e mapas). Regras:
 
 - toda cena com foto; a mesma imagem no máximo 3 vezes no vídeo, e com `movimento` diferente quando repetir em cenas

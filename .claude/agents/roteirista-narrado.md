@@ -47,5 +47,5 @@ seguindo as regras de forma do `NARRADO.md`:
 - **Nada de enrolação:** se uma cena não acrescenta, corte.
 - **Cada vídeo é único:** não repita a abertura, as frases de transição nem a estrutura dos últimos vídeos do Registro.
 
-Se a checadora devolver correções, corrija exatamente o que ela pediu (e as fontes) e não reescreva o resto.
+Se a checadora devolver correções, corrija **com a ferramenta Edit, só no trecho** (nunca reescreva o arquivo com Write; o Write é só para criar) exatamente o que ela pediu (e as fontes) e não reescreva o resto.
 Responda com o caminho do arquivo, a duração estimada e um resumo de 2 linhas.

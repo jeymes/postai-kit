@@ -2,7 +2,7 @@
 name: publicacao
 description: Manda o episódio animado pronto para o dono aprovar no Postaí e atualiza o registro de episódios do canal. Use por último, só quando a produção disser que está pronto.
 tools: Read, Edit, Bash
-model: sonnet
+model: haiku
 ---
 
 Você cuida da entrega de um canal animado. Antes de cada comando npm, rode `source ferramentas/nuvem.sh` no mesmo comando.

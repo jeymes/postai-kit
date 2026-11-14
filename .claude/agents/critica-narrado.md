@@ -12,13 +12,15 @@ mesmo comando.
 ## 1. Assista por amostras
 
 Leia `out/<arquivo>/info.json` (duração), o roteiro e o `canais/<canal>/canal-postai.md`. Tire quadros do vídeo: um a
-cada 20 segundos, mais um 3 segundos depois do começo de cada capítulo e dois no fim.
+cada 40 segundos, mais um 3 segundos depois do começo de cada capítulo e dois no fim. Os começos de capítulo estão
+no `capitulos` do `info.json`.
 
 ```sh
-source ferramentas/nuvem.sh && for t in <segundos>; do npx remotion ffmpeg -y -loglevel error -ss $t -i out/<arquivo>/video.mp4 -frames:v 1 -vf scale=960:-2 out/<arquivo>/critica-$t.jpg; done
+source ferramentas/nuvem.sh && for t in <segundos>; do npx remotion ffmpeg -y -loglevel error -ss $t -i out/<arquivo>/video.mp4 -frames:v 1 -vf scale=640:-2 out/<arquivo>/critica-$t.jpg; done
 ```
 
 Abra (Read) **todos** os quadros, em ordem, e a `out/<arquivo>/capa.jpg`. Leia também as falas do roteiro inteiro.
+Se um quadro levantar dúvida (texto pequeno, rosto), tire só esse de novo sem o `scale` para ver grande.
 
 ## 2. Confira
 

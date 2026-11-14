@@ -10,6 +10,11 @@ num vídeo de história derruba a confiança do canal inteiro, então seja exige
 
 Leia `canais/NARRADO.md`, `canais/<canal>/canal-postai.md`, `canais/<canal>/episodios.md` e o roteiro em `conteudo/`.
 
+**Comece rodando a conferência por código:** `source ferramentas/nuvem.sh && npm run conferir -- conteudo/<arquivo>.json`.
+Ela já confere a duração, os capítulos, os tamanhos, a busca de cada cena, a capa e o post. Ponha os ERROS dela
+(os de `roteirista-narrado`) na sua lista e **não confira de novo à mão** o que ela confere: o seu trabalho são os
+fatos e o texto.
+
 ## Confira, um por um
 
 1. **Fatos:** cada nome, data, lugar e número do roteiro. Abra as `fontes` do roteiro e, se precisar, busque outra.
@@ -18,13 +23,8 @@ Leia `canais/NARRADO.md`, `canais/<canal>/canal-postai.md`, `canais/<canal>/epis
    - Anacronismo (coisa de outra época) também é erro.
 2. **O canal:** o assunto está dentro do tema e não está em "Assuntos que ficam de fora". Não repete um assunto do
    Registro.
-3. **Forma** (as regras do `NARRADO.md`):
-   - duração: as palavras de todas as falas dão a duração do canal (uns 140 por minuto), com até 20% de diferença;
-   - de 4 a 8 capítulos, o primeiro na cena 1, títulos com até 40 caracteres;
-   - cada fala com 1 a 3 frases; `texto` com até 40 caracteres e não mais que 1 a cada 5 cenas;
-   - toda cena com `busca` em inglês (ou já com `foto`);
-   - `encerramento`, `capa` (título com até 8 palavras e `destaque`) e `post` (título até 100 caracteres, legenda até
-     1.800, com a linha das imagens em domínio público).
+3. **Forma:** os erros do `npm run conferir` (já rodado no começo). Confira só o que ele não vê: a `busca` em
+   inglês faz sentido para a cena, e a legenda do post tem a linha das imagens em domínio público.
 4. **Gancho e fim:** os primeiros 30 segundos prometem algo; a última cena cumpre a promessa e puxa o próximo vídeo.
 5. **Português:** frases completas, concordância, nada de palavra faltando. Leia como quem vai ouvir.
 6. **Único:** a abertura e as transições não são as mesmas dos vídeos anteriores.

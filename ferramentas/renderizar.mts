@@ -9,6 +9,7 @@
 // Uso:
 //   npm run previa -- conteudo/<nome>.json       um quadro de cada cena (rápido, para conferir)
 //   npm run renderizar -- conteudo/<nome>.json   o vídeo ou as imagens finais
+//   (--detalhes mostra o progresso do Remotion; sem ele, só o resumo ou o erro)
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { basename, join } from "node:path";
@@ -57,12 +58,22 @@ const saida = join("out", nome);
 mkdirSync(saida, { recursive: true });
 const arquivoDeProps = join(saida, ".props.json");
 
+// O Remotion imprime uma linha de progresso por quadro (um vídeo de 6 min deu
+// 11 mil linhas): isso enche o contexto do Claude à toa. A saída fica guardada
+// e só aparece, em 15 linhas, se der erro. --detalhes mostra tudo.
+const detalhes = args.includes("--detalhes");
 function remotion(...comando: string[]) {
   const resultado = spawnSync("npx", ["remotion", ...comando, ...gl, `--props=${arquivoDeProps}`], {
-    stdio: "inherit",
+    stdio: detalhes ? "inherit" : "pipe",
+    encoding: "utf8",
+    maxBuffer: 512 * 1024 * 1024,
     shell: process.platform === "win32",
   });
   if (resultado.status !== 0) {
+    const saida = `${resultado.stdout ?? ""}\n${resultado.stderr ?? ""}`
+      .split("\n")
+      .filter((linha) => linha.trim() && !/^(Rendered|Encoded|Bundled|Bundling|Getting composition)/.test(linha.trim()));
+    console.error(saida.slice(-15).join("\n"));
     console.error(`\nFalhou: npx remotion ${comando.join(" ")}`);
     process.exit(resultado.status ?? 1);
   }

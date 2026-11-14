@@ -33,11 +33,14 @@ genéricos". Monetiza quando **cada vídeo tem história, foco e conceito própr
 Conte o andamento de cada agente como sempre (`npm run andamento`). Antes de cada comando npm, `source ferramentas/nuvem.sh`.
 
 1. **roteirista-narrado:** escrever o vídeo de hoje. Ela responde com o caminho do arquivo e o resumo.
-2. **checadora:** conferir. Se vier CORRIGIR, volte para a roteirista com a lista (no máximo 3 voltas). Só siga com APROVADO.
-3. **pesquisadora-de-imagens:** imagens de todas as cenas.
-4. **producao:** narrar (`npm run narrar`). Confira a duração total: se ficou mais de 20% longe da duração do canal,
+2. **checadora:** conferir (ela começa pelo `npm run conferir`, que confere a forma por código, e cuida dos fatos).
+   Se vier CORRIGIR, volte para a roteirista com a lista (no máximo 3 voltas). Só siga com APROVADO.
+3. **pesquisadora-de-imagens:** imagens de todas as cenas. Depois rode `npm run conferir -- conteudo/<arquivo>.json`:
+   os erros de imagem (cena sem foto, imagem em mais de 3 cenas) voltam para ela.
+4. **producao:** narrar (`npm run narrar`), **em segundo plano** (ver `producao.md`: o vídeo longo passa dos 10 minutos
+   que um comando pode durar). Confira a duração total: se ficou mais de 20% longe da duração do canal,
    volte para a roteirista cortar ou acrescentar cenas (ela mantém as fontes) e narre de novo.
-5. **producao:** `npm run previa` e depois renderizar (`npm run renderizar`). O vídeo longo demora: uns 4 a 5 minutos de
+5. **producao:** `npm run previa` e depois renderizar (`npm run renderizar`), também em segundo plano. O vídeo longo demora: uns 4 a 5 minutos de
    narração e render por minuto de vídeo (num Mac M1, 6 minutos levaram 26). Não pare no meio.
 6. **critica-narrado:** assistir. Se vier CORRIGIR, mande cada item para quem ela disse e renderize de novo (no máximo
    2 voltas). Se ainda ficar algo, a publicação usa `--duvida`.

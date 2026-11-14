@@ -14,7 +14,7 @@ Antes de cada comando npm ou npx, rode `source ferramentas/nuvem.sh` no mesmo co
 Leia `out/<arquivo>/info.json` (duração), o roteiro em `conteudo/<arquivo>.json` e o `canais/<canal>/canal-postai.md` (para quem é o canal). Tire um quadro a cada 1,5 segundo do vídeo, mais um no segundo 1,7 (balão do CTA inicial) e dois no fim (2 s e 0,5 s antes de acabar):
 
 ```sh
-source ferramentas/nuvem.sh && for t in <segundos>; do npx remotion ffmpeg -y -loglevel error -ss $t -i out/<arquivo>/video.mp4 -frames:v 1 out/<arquivo>/critica-$t.jpg; done
+source ferramentas/nuvem.sh && for t in <segundos>; do npx remotion ffmpeg -y -loglevel error -ss $t -i out/<arquivo>/video.mp4 -frames:v 1 -vf scale=540:-2 out/<arquivo>/critica-$t.jpg; done
 ```
 
 Abra (Read) **todos** os quadros, em ordem, e a `out/<arquivo>/capa.jpg`.

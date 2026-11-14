@@ -24,3 +24,5 @@ Antes de cada comando npm, rode `source ferramentas/nuvem.sh` no mesmo comando (
 5. Confira a `capa` do JSON: título de até 6 palavras, o `destaque` numa palavra forte e as expressões mais marcantes do episódio para cada personagem.
 
 Nunca mude `fala`, `quem` ou `narracao`. Responda com o que você ajustou (ou "sem ajustes") e o número de rodadas.
+
+Mude o roteiro **com a ferramenta Edit, só nos campos que precisa** (pose, expressão, cartão, cenário, capa): nunca reescreva o arquivo inteiro.

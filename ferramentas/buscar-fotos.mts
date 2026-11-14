@@ -108,15 +108,22 @@ async function buscar(termo: string): Promise<Foto[]> {
   return results.filter(filtroDeTamanho);
 }
 
-/** Baixa e grava em JPEG, com o lado menor em 1080 px */
-async function baixar(foto: Foto, saida: string) {
+/** Baixa e grava em JPEG, com o lado menor em 1080 px (candidata: 480 px de largura, só para olhar) */
+async function baixar(foto: Foto, saida: string, pequena = false) {
   const resp = await fetch(foto.url, { headers: { "User-Agent": AGENTE } });
   if (!resp.ok) throw new Error(`Não baixou ${foto.url} (${resp.status})`);
   // O ffmpeg reconhece a imagem pela extensão (o Commons tem PNG e TIFF também)
   const extensao = new URL(foto.url).pathname.match(/\.(jpe?g|png|webp|tiff?|gif)$/i)?.[1].toLowerCase() ?? "jpg";
   const bruto = saida.replace(/\.jpg$/, `.bruto.${extensao}`);
   writeFileSync(bruto, Buffer.from(await resp.arrayBuffer()));
-  const escala = deitadas ? "scale='min(1920,iw)':-2" : foto.width > foto.height ? "scale=-2:1080" : "scale=1080:-2";
+  // Candidata pequena: o Claude olha cada uma, e imagem grande custa uns 5 vezes mais
+  const escala = pequena
+    ? "scale='min(480,iw)':-2"
+    : deitadas
+      ? "scale='min(1920,iw)':-2"
+      : foto.width > foto.height
+        ? "scale=-2:1080"
+        : "scale=1080:-2";
   const r = spawnSync("npx", ["remotion", "ffmpeg", "-y", "-loglevel", "error", "-i", bruto, "-vf", escala, "-q:v", "3", saida], {
     stdio: "inherit",
     shell: process.platform === "win32",
@@ -135,8 +142,10 @@ for (const item of itens) {
   }
   if (candidatos) {
     const opcoes = fotos.slice(0, 4);
-    for (const [i, foto] of opcoes.entries()) await baixar(foto, join(pastaCandidatos, `${item.arquivo}-${i + 1}.jpg`));
-    console.log(`• ${item.arquivo}: ${opcoes.length} opções em ${pastaCandidatos}/${item.arquivo}-N.jpg`);
+    for (const [i, foto] of opcoes.entries()) await baixar(foto, join(pastaCandidatos, `${item.arquivo}-${i + 1}.jpg`), true);
+    // O nome do arquivo no Commons ajuda a saber quem é (ex.: Napoleon_I_of_France_by_...)
+    const nomes = opcoes.map((foto, i) => `${i + 1}: ${decodeURIComponent(foto.foreign_landing_url.split("/").pop() ?? "").replace(/^File:/, "").slice(0, 70)}`);
+    console.log(`• ${item.arquivo}: ${opcoes.length} opções em ${pastaCandidatos}/${item.arquivo}-N.jpg (480 px)\n    ${nomes.join("\n    ")}`);
   } else {
     const foto = fotos[item.escolha - 1];
     if (!foto) throw new Error(`${item.arquivo}: só há ${fotos.length} opções para "${item.termo}"`);
