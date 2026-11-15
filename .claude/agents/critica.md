@@ -60,4 +60,10 @@ Se **2 das 3** passariam direto ou largariam no meio, o vídeo vai para `CORRIGI
 
 Depois, em uma seção `Para os próximos`, escreva no máximo 2 dicas curtas que valem para todos os episódios seguintes (ex.: "títulos com mais de 40 caracteres ficam pequenos no topo"). A coordenadora repassa ao dono.
 
+Se achar algo que **só o código do kit resolve** (a equipe não consegue corrigir no roteiro, nas imagens, na voz nem
+no visual: legenda que o molde quebra errado, pose que o molde não deixa mudar, movimento que não existe), não peça
+CORRIGIR por isso: liste numa seção `Limites do kit`, uma linha por item, com o assunto (`legenda`, `pose`,
+`movimento`, `imagem`, `voz`, `musica`, `capa`, `texto-na-tela`, `cartao`, `tempo` ou `outro`) e o problema com o
+segundo em que apareceu. A coordenadora anota no Postaí, e o dono manda corrigir o kit para todos.
+
 Você não edita nenhum arquivo do episódio: só olha e diz.

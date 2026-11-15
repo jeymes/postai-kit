@@ -1,6 +1,6 @@
 import { Audio } from "@remotion/media";
 import React from "react";
-import { AbsoluteFill, Img, interpolate, Loop, Sequence, Series, staticFile, useCurrentFrame } from "remotion";
+import { AbsoluteFill, Easing, Img, interpolate, Loop, Sequence, Series, staticFile, useCurrentFrame } from "remotion";
 import { z } from "zod";
 import { arquivo } from "../componentes/base";
 import { Legendas } from "../componentes/texto/Legendas";
@@ -24,7 +24,7 @@ const narracaoSchema = z
   .passthrough()
   .describe("Preenchido pelo npm run narrar (não editar à mão)");
 
-export const MOVIMENTOS = ["aproximar", "afastar", "esquerda", "direita"] as const;
+export const MOVIMENTOS = ["aproximar", "esquerda", "afastar", "direita", "subir", "diagonal", "descer"] as const;
 
 export const documentarioSchema = z.object({
   cenas: z
@@ -34,7 +34,10 @@ export const documentarioSchema = z.object({
         foto: z.string().optional().describe("Foto deitada em public/ (fotos/<peça>/<nome>.jpg)"),
         capitulo: z.string().optional().describe("Abre um capítulo: o título aparece num cartão no começo da cena"),
         texto: z.string().optional().describe("Texto curto na tela (data, lugar, número): até 40 caracteres"),
-        movimento: z.enum(MOVIMENTOS).optional().describe("Como a foto se move (padrão: alterna sozinho)"),
+        movimento: z
+          .enum(MOVIMENTOS)
+          .optional()
+          .describe("Como a foto se move: aproximar, afastar, esquerda, direita, subir, descer ou diagonal (padrão: alterna sozinho)"),
         inteira: z.boolean().optional().describe("Mostra a imagem inteira, sem cortar (retrato em pé, mapa), sobre ela mesma desfocada"),
         narracao: narracaoSchema.optional(),
       }),
@@ -45,8 +48,11 @@ export const documentarioSchema = z.object({
   velocidade: z.number().min(0.7).max(1.4).default(1),
   pronuncia: z.record(z.string(), z.string()).optional().describe('Como a voz deve ler uma palavra: {"Tiradentes": "Tiradêntes"}'),
   legendas: z.boolean().default(true),
-  musica: z.string().optional().describe("Música calma em public/, repetida baixinho por baixo da voz"),
-  volumeMusica: z.number().min(0).max(0.5).default(0.08),
+  musica: z
+    .string()
+    .optional()
+    .describe("Música calma em public/, repetida baixinho por baixo da voz: musica/calma-esperanca.mp3, calma-reflexao.mp3 ou calma-drama.mp3"),
+  volumeMusica: z.number().min(0).max(0.5).default(0.15),
   /** Frase do cartão final (ex.: "Inscreva-se para a parte 2"). Sem ela, o vídeo termina na última cena. */
   encerramento: z.string().optional(),
 });
@@ -67,26 +73,33 @@ export const documentarioExemplo: Documentario = {
   voz: "pm_alex",
   velocidade: 1,
   legendas: true,
-  volumeMusica: 0.08,
+  volumeMusica: 0.15,
   encerramento: "Inscreva-se para a parte 2",
 };
 
-/** Fade de entrada de cada cena (sobre o preto), em quadros */
-const FADE = 12;
+/** Mistura de uma cena com a anterior, em quadros (no começo de capítulo: entrada do preto, mais longa) */
+const MISTURA = 18;
+const ENTRADA_DO_CAPITULO = 24;
+
+// Movimento de câmera de cinema: começa e termina devagar
+const cinema = Easing.bezier(0.45, 0, 0.55, 1);
 
 const movimentoDa = (cena: Cena, indice: number) => cena.movimento ?? MOVIMENTOS[indice % MOVIMENTOS.length];
 
-/** Foto em tela cheia com zoom e deslize lentos (ken burns), do começo ao fim da cena */
-const FotoEmMovimento: React.FC<{ src: string; duracao: number; movimento: (typeof MOVIMENTOS)[number]; inteira?: boolean }> = ({
+/** Foto em tela cheia com zoom e deslize lentos (ken burns), do começo ao fim da cena. `parada`: fica no fim do movimento (a cena anterior, na mistura) */
+const FotoEmMovimento: React.FC<{ src: string; duracao: number; movimento: (typeof MOVIMENTOS)[number]; inteira?: boolean; parada?: boolean }> = ({
   src,
   duracao,
   movimento,
   inteira,
+  parada,
 }) => {
   const frame = useCurrentFrame();
-  const t = interpolate(frame, [0, duracao], [0, 1], { extrapolateRight: "clamp" });
-  const escala = movimento === "afastar" ? 1.18 - 0.12 * t : movimento === "aproximar" ? 1.06 + 0.12 * t : 1.14;
-  const x = movimento === "esquerda" ? 3 - 6 * t : movimento === "direita" ? -3 + 6 * t : 0;
+  const t = parada ? 1 : interpolate(frame, [0, duracao], [0, 1], { extrapolateRight: "clamp", easing: cinema });
+  const escala =
+    movimento === "afastar" ? 1.18 - 0.12 * t : movimento === "aproximar" ? 1.06 + 0.12 * t : movimento === "diagonal" ? 1.08 + 0.1 * t : 1.14;
+  const x = movimento === "esquerda" ? 3 - 6 * t : movimento === "direita" ? -3 + 6 * t : movimento === "diagonal" ? -2 + 4 * t : 0;
+  const y = movimento === "subir" ? 3 - 6 * t : movimento === "descer" ? -3 + 6 * t : movimento === "diagonal" ? 2 - 4 * t : 0;
   if (inteira) {
     // Retrato ou mapa: a imagem inteira no meio, com zoom bem leve, e ela mesma desfocada no fundo
     const leve = 1 + (escala - 1) * 0.4;
@@ -106,7 +119,7 @@ const FotoEmMovimento: React.FC<{ src: string; duracao: number; movimento: (type
     <AbsoluteFill style={{ overflow: "hidden", backgroundColor: "#000" }}>
       <Img
         src={arquivo(src)}
-        style={{ width: "100%", height: "100%", objectFit: "cover", transform: `scale(${escala}) translateX(${x}%)` }}
+        style={{ width: "100%", height: "100%", objectFit: "cover", transform: `scale(${escala}) translate(${x}%, ${y}%)` }}
       />
     </AbsoluteFill>
   );
@@ -180,9 +193,21 @@ const TextoNaTela: React.FC<{ texto: string; inicio: number }> = ({ texto, inici
 const CenaDoDocumentario: React.FC<{ cena: Cena; indice: number; props: Documentario }> = ({ cena, indice, props }) => {
   const frame = useCurrentFrame();
   const duracao = quadrosDaFala(cena);
-  const fade = interpolate(frame, [0, FADE], [0, 1], { extrapolateRight: "clamp" });
+  // Dentro do capítulo, a foto nova se mistura com a anterior; no começo de capítulo, entra do preto
+  const anterior = indice > 0 && !cena.capitulo ? props.cenas[indice - 1] : undefined;
+  const entrada = anterior?.foto ? MISTURA : ENTRADA_DO_CAPITULO;
+  const fade = interpolate(frame, [0, entrada], [0, 1], { extrapolateRight: "clamp", easing: cinema });
   return (
     <AbsoluteFill style={{ backgroundColor: "#000" }}>
+      {anterior?.foto && frame < entrada && (
+        <FotoEmMovimento
+          src={anterior.foto}
+          duracao={quadrosDaFala(anterior)}
+          movimento={movimentoDa(anterior, indice - 1)}
+          inteira={anterior.inteira}
+          parada
+        />
+      )}
       <AbsoluteFill style={{ opacity: fade }}>
         {cena.foto ? <FotoEmMovimento src={cena.foto} duracao={duracao} movimento={movimentoDa(cena, indice)} inteira={cena.inteira} /> : <FundoSemFoto />}
         {/* Escurece as bordas e o pé, para a legenda e o texto lerem bem */}
@@ -195,7 +220,7 @@ const CenaDoDocumentario: React.FC<{ cena: Cena; indice: number; props: Document
             <Audio src={staticFile(cena.narracao.audio)} />
           </Sequence>
           {props.legendas && (
-            <Legendas legendas={cena.narracao.legendas} atraso={TEMPOS.antesDaFala} tamanho={44} caixa style={{ top: 920, padding: "0 260px" }} />
+            <Legendas legendas={cena.narracao.legendas} atraso={TEMPOS.antesDaFala} tamanho={44} caixa largura={1400} style={{ top: 920, padding: "0 260px" }} />
           )}
         </>
       )}

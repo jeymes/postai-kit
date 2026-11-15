@@ -88,6 +88,10 @@ export const conversaSchema = z.object({
           .record(z.string(), estadoSchema)
           .optional()
           .describe('Pose e expressão de cada personagem nesta fala, pelo id: {"bia": {...}}. Quem não aparece fica como estava'),
+        meio: z
+          .record(z.string(), estadoSchema)
+          .optional()
+          .describe("Muda a pose ou a expressão no meio da fala (na metade das palavras), pelo id. Use em falas com mais de 3 s, para ninguém ficar parado"),
         noiva: estadoSchema.optional().describe("Jeito antigo (só a Bia e a Lu): prefira estados"),
         organizadora: estadoSchema.optional(),
         som: z.enum(nomesDosSons).optional().describe("Efeito sonoro no começo da fala"),
@@ -146,13 +150,13 @@ function linhaDoTempo(cenas: Cena[]) {
     let legendas: Legenda[];
     let boca: FormaDaBoca[] | undefined;
     if (cena.narracao) {
-      legendas = cena.narracao.legendas.map((l) => ({ ...l, inicioMs: l.inicioMs + (inicio / FPS) * 1000, fimMs: l.fimMs + (inicio / FPS) * 1000 }));
+      legendas = cena.narracao.legendas.map((l, n) => ({ ...l, inicioMs: l.inicioMs + (inicio / FPS) * 1000, fimMs: l.fimMs + (inicio / FPS) * 1000, nova: n === 0 }));
       palavras = cena.narracao.legendas.map((l) => ({ inicio: inicio + Math.round((l.inicioMs / 1000) * FPS), fim: inicio + Math.round((l.fimMs / 1000) * FPS) }));
       boca = cena.narracao.boca?.map((b) => ({ quadro: inicio + Math.round(b.inicio * FPS), forma: b.forma }));
     } else {
       const estimadas = estimarPalavras(cena.fala);
       palavras = estimadas.map((p) => ({ inicio: inicio + p.inicio, fim: inicio + p.fim - 1 }));
-      legendas = estimadas.map((p) => ({ texto: p.texto, inicioMs: ((inicio + p.inicio) / FPS) * 1000, fimMs: ((inicio + p.fim) / FPS) * 1000 }));
+      legendas = estimadas.map((p, n) => ({ texto: p.texto, inicioMs: ((inicio + p.inicio) / FPS) * 1000, fimMs: ((inicio + p.fim) / FPS) * 1000, nova: n === 0 }));
     }
     quadro += quadrosDaFalaConversa(cena) + CONVERSA.entreFalas;
     return { cena, inicio, palavras, legendas, boca };
@@ -169,9 +173,13 @@ function estadoNaCena(cena: Cena, id: string): Estado | undefined {
 
 function momentosDe(quem: string, linha: Linha): Momento[] {
   const momentos: Momento[] = [{ em: 0, pose: "normal", expressao: "neutra" }];
-  for (const { cena, inicio } of linha) {
+  for (const { cena, inicio, palavras } of linha) {
     const estado = estadoNaCena(cena, quem);
     if (estado) momentos.push({ em: Math.max(1, inicio - 6), ...estado });
+    // A virada no meio da fala: no começo da palavra do meio
+    const meio = cena.meio?.[quem];
+    const palavraDoMeio = palavras[Math.floor(palavras.length / 2)];
+    if (meio && palavraDoMeio) momentos.push({ em: Math.max(inicio + 1, palavraDoMeio.inicio - 4), ...meio });
   }
   return momentos;
 }
@@ -327,7 +335,7 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
         )}
         {props.legendas && (
           <Sequence durationInFrames={props.ctaFinal ? fimDasFalas : undefined} layout="none" name="Legendas">
-            <Legendas legendas={legendas} tamanho={68} style={{ top: 1730, padding: "0 70px" }} />
+            <Legendas legendas={legendas} tamanho={68} largura={940} style={{ top: 1730, padding: "0 70px" }} />
           </Sequence>
         )}
         {linha.map(({ cena, inicio }, i) => (

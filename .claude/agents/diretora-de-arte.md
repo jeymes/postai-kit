@@ -19,7 +19,7 @@ Antes de cada comando npm, rode `source ferramentas/nuvem.sh` no mesmo comando (
    - o cenário combina com a história;
    - **CTA inicial** (`previa-1.jpg`): o balão com o logo aparece inteiro embaixo do título, numa linha só, sem cortar nas bordas e sem cobrir coisa importante do cenário. Se o texto for comprido demais, encurte o `ctaInicial` (até 28 caracteres);
    - **CTA final** (a última prévia): o cartão branco com o logo, a chamada e o botão, os rostos das personagens aparecendo em cima e nenhuma legenda por baixo. A chamada em até 3 linhas e sem @ (o @ nunca aparece no vídeo). Se passar, encurte o `ctaFinal`.
-3. Se algo estiver ruim, ajuste no JSON só os campos visuais (`estados` de cada cena, `cartao`, `zoom`, `cenario`, `som`, `capa`) e, se não couber, encurte `ctaInicial`, `ctaFinal` ou `botaoFinal` mantendo a ideia e gere a prévia de novo. Faça no máximo 3 rodadas.
+3. Se algo estiver ruim, ajuste no JSON só os campos visuais (`estados` e `meio` de cada cena, `cartao`, `zoom`, `cenario`, `som`, `capa`) e, se não couber, encurte `ctaInicial`, `ctaFinal` ou `botaoFinal` mantendo a ideia e gere a prévia de novo. Faça no máximo 3 rodadas.
 4. Rode `npm run conferir -- conteudo/<arquivo>.json` e resolva todo ERRO marcado `diretora-de-arte`. Os do `roteirista` você não corrige: diga à coordenadora.
 5. Confira a `capa` do JSON: título de até 6 palavras, o `destaque` numa palavra forte e as expressões mais marcantes do episódio para cada personagem.
 

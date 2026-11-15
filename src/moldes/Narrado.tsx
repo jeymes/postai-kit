@@ -163,6 +163,7 @@ const CenaNarrada: React.FC<{ cena: Cena; anterior?: Cena; props: Narrado }> = (
               atraso={TEMPOS.antesDaFala}
               tamanho={soLegenda ? 104 : 74}
               caixa={telaCheia}
+              largura={noCanto ? 660 : 900}
               style={{
                 top: soLegenda ? 760 : 1330,
                 padding: noCanto ? "0 80px 0 340px" : "0 90px",

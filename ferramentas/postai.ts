@@ -28,6 +28,7 @@ const FERRAMENTAS_DOS_CANAIS = new Set([
   "ver_marca",
   "contar_andamento",
   "conferir_parada",
+  "anotar_limite_do_kit",
   "salvar_canal_animado",
   "ver_ajustes",
   "por_para_aprovacao",

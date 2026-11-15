@@ -17,7 +17,7 @@ if (!arquivo || !existsSync(arquivo)) {
 }
 
 type Estado = { pose?: string; expressao?: string };
-type Cena = { quem?: string; fala?: string; estados?: Record<string, Estado>; narracao?: unknown } & Record<string, unknown>;
+type Cena = { quem?: string; fala?: string; estados?: Record<string, Estado>; meio?: Record<string, Estado>; narracao?: unknown } & Record<string, unknown>;
 type Peca = {
   molde?: string;
   titulo?: string;
@@ -160,11 +160,15 @@ for (const id of ids) {
     } else if (anterior && atual.pose === anterior.pose && atual.expressao === anterior.expressao) {
       erro("diretora-de-arte", `cena ${i + 1}: "${id}" repete ${atual.pose}/${atual.expressao} da cena ${i}; mude a pose ou a expressão`);
     }
-    anterior = atual ?? anterior;
+    // Com a virada no meio da fala, a cena termina na pose do meio
+    anterior = cena.meio?.[id] ?? atual ?? anterior;
   });
 }
 for (const cena of cenas) {
   if (cena.quem && !ids.includes(cena.quem)) erro("roteirista", `"${cena.quem}" fala, mas não está no elenco (${ids.join(", ")})`);
+  for (const id of Object.keys(cena.meio ?? {})) {
+    if (!ids.includes(id)) erro("diretora-de-arte", `"${id}" em meio, mas não está no elenco (${ids.join(", ")})`);
+  }
 }
 
 // ---- Narração: ou todas as falas, ou nenhuma ----

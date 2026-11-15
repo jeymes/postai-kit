@@ -49,3 +49,9 @@ dizendo o que prenderia.
 **APROVADO** ou **CORRIGIR**, com a lista numerada: o segundo, o problema e quem corrige (`roteirista-narrado` para
 texto, `pesquisadora-de-imagens` para imagem, `producao` para voz e vídeo). Se aprovar, até 3 dicas "Para os
 próximos".
+
+Se achar algo que **só o código do kit resolve** (a equipe não consegue corrigir no roteiro, nas imagens, na voz nem
+no visual: legenda que o molde quebra errado, pose que o molde não deixa mudar, movimento que não existe), não peça
+CORRIGIR por isso: liste numa seção `Limites do kit`, uma linha por item, com o assunto (`legenda`, `pose`,
+`movimento`, `imagem`, `voz`, `musica`, `capa`, `texto-na-tela`, `cartao`, `tempo` ou `outro`) e o problema com o
+segundo em que apareceu. A coordenadora anota no Postaí, e o dono manda corrigir o kit para todos.

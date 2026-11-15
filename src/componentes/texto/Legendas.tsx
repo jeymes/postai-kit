@@ -1,13 +1,13 @@
-import { createTikTokStyleCaptions } from "@remotion/captions";
 import React, { useMemo } from "react";
 import { AbsoluteFill, interpolate, useCurrentFrame, useVideoConfig } from "remotion";
 import { cores, fontes } from "../../nucleo/marca";
+import { paginar, type Legenda } from "./paginar";
 
 // Legenda animada da narração, no estilo das redes: poucas palavras por vez e
 // a palavra que está sendo dita numa etiqueta na cor de destaque. O tempo de cada
 // palavra vem do `npm run narrar` (o Whisper escuta a voz).
 
-export type Legenda = { texto: string; inicioMs: number; fimMs: number };
+export type { Legenda } from "./paginar";
 
 export const Legendas: React.FC<{
   legendas: Legenda[];
@@ -16,19 +16,16 @@ export const Legendas: React.FC<{
   tamanho?: number;
   /** Numa caixa clara: para ler em cima de vídeo ou foto */
   caixa?: boolean;
+  /** A largura livre para a legenda, em px (a tela menos as margens): define quantas letras cabem numa linha */
+  largura?: number;
   style?: React.CSSProperties;
-}> = ({ legendas, atraso = 0, tamanho = 76, caixa = false, style }) => {
+}> = ({ legendas, atraso = 0, tamanho = 76, caixa = false, largura = 940, style }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const agora = ((frame - atraso) / fps) * 1000;
-  const { pages } = useMemo(
-    () =>
-      createTikTokStyleCaptions({
-        captions: legendas.map((l) => ({ text: ` ${l.texto}`, startMs: l.inicioMs, endMs: l.fimMs, timestampMs: null, confidence: null })),
-        combineTokensWithinMilliseconds: 1100,
-      }),
-    [legendas],
-  );
+  // Letras que cabem numa linha nesta fonte (grossa: ~0,62 da altura por letra), menos a caixa e a etiqueta
+  const maxLetras = Math.max(8, Math.floor((largura - (caixa ? tamanho * 0.7 : 0)) / (tamanho * 0.62)));
+  const pages = useMemo(() => paginar(legendas, maxLetras), [legendas, maxLetras]);
   // A página fica até a próxima começar (sem piscar entre uma e outra)
   const pagina = pages.filter((p) => p.startMs <= agora).pop();
   if (!pagina) return null;
@@ -40,7 +37,8 @@ export const Legendas: React.FC<{
         style={{
           scale: String(entrada),
           display: "flex",
-          flexWrap: "wrap",
+          flexWrap: "nowrap",
+          whiteSpace: "nowrap",
           justifyContent: "center",
           gap: `0 ${tamanho * 0.28}px`,
           fontFamily: fontes.titulo,

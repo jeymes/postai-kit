@@ -64,6 +64,14 @@ Num **ajuste** pedido pelo dono, o roteiro guardado vem em `conteudo/ajuste-<cor
 - **Texto na tela** (`texto`): só data, lugar ou número, até 40 caracteres, e no máximo 1 a cada 5 cenas.
 - **Imagens:** toda cena tem `foto`. Uma imagem pode voltar em cenas seguidas com `movimento` diferente, mas não mais
   que 3 vezes no vídeo. Retrato em pé ou mapa: `"inteira": true`.
+- **Movimento:** sem `movimento`, a câmera alterna sozinha entre aproximar, esquerda, afastar, direita, subir, diagonal
+  e descer. Escolha à mão quando ajuda a história: `aproximar` num rosto ou num detalhe importante, `subir` numa
+  figura alta (um gigante, uma torre), `descer` do céu para a cena, `afastar` para revelar o lugar. Dentro do capítulo, a
+  foto nova se mistura com a anterior; no começo de capítulo, entra do escuro com o título.
+- **Música:** ponha sempre `musica` com uma das calmas do kit, pelo tom da história, e `volumeMusica` 0.15:
+  `musica/calma-esperanca.mp3` (fé, milagre, final feliz), `musica/calma-reflexao.mp3` (ensino, parábola, oração,
+  perdão) ou `musica/calma-drama.mp3` (batalha, perigo, provação, mistério). Se a crítica disser que a música atrapalha
+  a voz, baixe para 0.1.
 - **Fim:** a última cena fecha a pergunta do começo e puxa o próximo vídeo. `encerramento` com até 50 caracteres
   (ex.: "Inscreva-se para a parte 2").
 - **Pronúncia:** nomes estrangeiros e siglas em `pronuncia`.

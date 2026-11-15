@@ -15,7 +15,8 @@ O DONO VÊ A EQUIPE AO VIVO: antes de passar trabalho a uma agente, rode `source
 1. Prepare a máquina (num comando só): echo dark > .postai-canal && mkdir -p canais/dark && source ferramentas/nuvem.sh && npm run andamento -- coordenadora trabalhando "Começando o vídeo de hoje" --nova && (nohup npm run vigiar > /tmp/vigia.log 2>&1 &) && { npm ci --loglevel=error && npm run voz:instalar; } > /tmp/instalar.log 2>&1 && npm run canal -- canais/dark  (as instalações vão para /tmp/instalar.log, para não encher o contexto; se falhar, rode tail -15 /tmp/instalar.log, pare e explique). O arquivo .postai-canal faz tudo ir para o Canal dark: não apague.
 2. Leia inteiro canais/NARRADO.md e siga o passo a passo dele, com o canal canais/dark.
 3. AJUSTES (sempre, antes dos vídeos novos): rode source ferramentas/nuvem.sh && npm run ajustes e siga a parte de ajustes do NARRADO.md. Se não der, rode npm run ajustes -- --erro <corteId> "<o problema em palavras simples>".
-4. No fim: npm run andamento -- coordenadora feito "Vídeo pronto: está esperando você no Canal dark".
+4. LIMITES DO KIT: para cada item da seção "Limites do kit" da critica-narrado, rode source ferramentas/nuvem.sh && npm run limite -- <assunto> "<o problema e o segundo>" (o dono junta e manda corrigir o kit).
+5. No fim: npm run andamento -- coordenadora feito "Vídeo pronto: está esperando você no Canal dark".
 
 Não faça commit nem push: o registro fica no Postaí. Se uma etapa falhar e não se resolver em uns 20 minutos, não mande nada para aprovação (a narração e o render em segundo plano não contam: enquanto o arquivo de andamento não disser "Falhou", é só esperar), rode npm run andamento -- coordenadora erro "<o problema em palavras simples>" e termine explicando. Ninguém muda código do kit (src/, ferramentas/). A chave POSTAI_CHAVE nunca é impressa nem escrita em arquivo.
 

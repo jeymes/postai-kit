@@ -17,6 +17,7 @@ O roteiro é um `conteudo/<data>-<assunto>.json` no molde **Conversa**. O format
 - **Poses:** `normal`, `cintura`, `celular`, `cabeca`, `explicando`, `comemorando`, `pensando`.
 - **Expressões:** `neutra`, `feliz`, `radiante`, `preocupada`, `surpresa`, `brava`, `sem-graca`.
 - Em toda cena, os dois personagens têm pose e expressão em `estados`, e cada um muda pelo menos uma das duas de uma cena para a outra. Quem escuta também reage.
+- Fala com mais de 3 segundos (umas 9 palavras ou mais): ponha também `meio` (mesmo formato de `estados`), com a pose ou a expressão que muda na metade da fala, para ninguém ficar parado. Ex.: quem fala passa de `explicando` para `celular` quando mostra o app; quem ouve passa de `surpresa` para `feliz`.
 - **Cartão:** use quando alguém mostra algo do produto, com no máximo 3 itens e nomes comuns inventados.
 - **Zoom:** opcional, em quem revela a solução.
 - **Sons:** no máximo 2 por vídeo (`notificacao` quando o celular aparece, `sucesso` na virada, `alerta` no pânico).
