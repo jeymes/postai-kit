@@ -27,6 +27,7 @@ const FERRAMENTAS_DOS_CANAIS = new Set([
   "registrar_episodio",
   "ver_marca",
   "contar_andamento",
+  "conferir_parada",
   "salvar_canal_animado",
   "ver_ajustes",
   "por_para_aprovacao",
