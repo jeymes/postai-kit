@@ -11,14 +11,32 @@
 // Opções: --pasta outra (dentro de public/), --fonte stocksnap (fotos de produto mais limpas),
 //   --deitadas (só fotos deitadas, gravadas com 1920 px de largura: para o Documentario),
 //   --fonte commons (Wikimedia Commons: pinturas, mapas e fotos antigas; só domínio público e CC0;
-//   melhor para história e com termos gerais, ex. "Rio de Janeiro 19th century painting")
-// Limite da API sem chave: 20 buscas por minuto, 200 por dia.
+//   melhor para história e com termos gerais, ex. "Rio de Janeiro 19th century painting"),
+//   --fonte museus (ao mesmo tempo no Art Institute of Chicago, no Cleveland Museum of Art, no
+//   Commons e no Openverse, só domínio público e CC0, sem chave; os museus vêm primeiro: as
+//   imagens são escaneadas por eles, em alta resolução; o melhor para o Canal dark)
+// As opções de cada item ficam em _candidatos/<item>.json: a escolha (#n) pega exatamente a que
+// foi vista, sem buscar de novo. Limite do Openverse sem chave: 20 buscas por minuto, 200 por dia.
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { ferramenta } from "./postai.ts";
 
-type Foto = { id: string; url: string; source: string; foreign_landing_url: string; width: number; height: number };
+type Foto = {
+  id: string;
+  /** A imagem grande, que vai para o vídeo */
+  url: string;
+  /** Uma versão pequena, só para olhar (sem ela, usa a grande) */
+  previa?: string;
+  source: string;
+  foreign_landing_url: string;
+  width: number;
+  height: number;
+  /** O nome da obra, quando o acervo dá (ajuda a saber quem é) */
+  titulo?: string;
+  /** Cabeçalhos que o acervo exige para baixar */
+  cabecalhos?: Record<string, string>;
+};
 
 const args = process.argv.slice(2);
 const opcao = (nome: string) => {
@@ -60,9 +78,9 @@ const espera = (ms: number) => new Promise((pronto) => setTimeout(pronto, ms));
  * fetch que espera e tenta de novo quando o site pede calma (429, comum no
  * Wikimedia vindo da nuvem) ou cai (5xx), em vez de desistir na primeira.
  */
-async function pedir(url: string | URL, tentativas = 5): Promise<Response> {
+async function pedir(url: string | URL, cabecalhos: Record<string, string> = { "User-Agent": AGENTE }, tentativas = 5): Promise<Response> {
   for (let vez = 1; ; vez++) {
-    const resp = await fetch(url, { headers: { "User-Agent": AGENTE } });
+    const resp = await fetch(url, { headers: cabecalhos });
     if ((resp.status !== 429 && resp.status < 500) || vez >= tentativas) return resp;
     const pedido = Number(resp.headers.get("retry-after"));
     const ms = Math.min(60_000, (pedido > 0 ? pedido : 5 * 2 ** (vez - 1)) * 1000);
@@ -118,9 +136,146 @@ async function buscarNoCommons(termo: string): Promise<Foto[]> {
       const info = p.imageinfo?.[0];
       const licenca = info?.extmetadata?.LicenseShortName?.value ?? "";
       if (!info || !/^(public domain|pd|cc0)/i.test(licenca)) return [];
-      return [{ id: String(p.pageid), url: info.thumburl ?? info.url, source: "wikimedia", foreign_landing_url: info.descriptionurl, width: info.width, height: info.height }];
+      const url = info.thumburl ?? info.url;
+      // A prévia na miniatura de 500 px (tamanho padrão do Wikimedia): sai rápido e não gasta o limite
+      const previa = url.replace(/\/\d+px-([^/]+)$/, "/500px-$1");
+      return [{ id: String(p.pageid), url, previa, source: "wikimedia", foreign_landing_url: info.descriptionurl, width: info.width, height: info.height }];
     })
     .filter(filtroDeTamanho);
+}
+
+// A busca dos museus também procura no nome do artista e em palavras soltas
+// ("David sling" trazia obras do pintor David Lucas; "King Saul", moedas). Por
+// isso o nome da obra precisa ter as palavras importantes da busca (todas, ou
+// 2 delas quando há 3 ou mais).
+const GERAIS = new Set(
+  "a an and the of in on at with by for from to painting paintings portrait king queen ancient old art scene view century map photo photograph engraving drawing biblical bible dramatic".split(" "),
+);
+const semAcento = (texto: string) => texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+function tituloCombina(termo: string, titulo: string) {
+  const importantes = semAcento(termo)
+    .split(/[^a-z0-9]+/)
+    .filter((p) => p.length > 2 && !GERAIS.has(p) && !/^\d+(th|st|nd|rd)?$/.test(p));
+  if (importantes.length === 0) return true;
+  const nome = semAcento(titulo);
+  const achadas = importantes.filter((p) => nome.includes(p)).length;
+  return achadas >= Math.min(importantes.length, 2);
+}
+
+// O Art Institute bloqueia User-Agent de programa; pede o seu próprio cabeçalho.
+const CABECALHOS_DO_AIC = { "AIC-User-Agent": AGENTE };
+
+/** Art Institute of Chicago: pinturas em domínio público, pelo IIIF (até 1686 px) */
+async function buscarNoAIC(termo: string): Promise<Foto[]> {
+  const url = new URL("https://api.artic.edu/api/v1/artworks/search");
+  url.searchParams.set("q", termo);
+  url.searchParams.set("limit", "20");
+  url.searchParams.set("fields", "id,title,image_id,thumbnail,artist_title");
+  url.searchParams.set("query[term][is_public_domain]", "true");
+  const resp = await pedir(url, CABECALHOS_DO_AIC);
+  if (!resp.ok) throw new Error(`O Art Institute respondeu ${resp.status} para "${termo}"`);
+  type Obra = { id: number; title?: string; image_id?: string | null; thumbnail?: { width?: number; height?: number } | null; artist_title?: string | null };
+  const { data } = (await resp.json()) as { data?: Obra[] };
+  return (data ?? [])
+    .flatMap((o) => {
+      if (!o.image_id || !o.thumbnail?.width || !o.thumbnail.height || !tituloCombina(termo, o.title ?? "")) return [];
+      const iiif = `https://www.artic.edu/iiif/2/${o.image_id}/full`;
+      // O IIIF entrega até 1686 px de largura; a altura e a largura do original vêm na thumbnail
+      const escala = Math.min(1, 1686 / o.thumbnail.width);
+      return [{
+        id: String(o.id),
+        url: `${iiif}/1686,/0/default.jpg`,
+        previa: `${iiif}/600,/0/default.jpg`,
+        source: "artic",
+        foreign_landing_url: `https://www.artic.edu/artworks/${o.id}`,
+        width: Math.round(o.thumbnail.width * escala),
+        height: Math.round(o.thumbnail.height * escala),
+        titulo: [o.title, o.artist_title].filter(Boolean).join(", "),
+        cabecalhos: CABECALHOS_DO_AIC,
+      }];
+    })
+    .filter(filtroDeTamanho);
+}
+
+/** Cleveland Museum of Art: só CC0, com a versão de impressão (até uns 3400 px) */
+async function buscarNoCleveland(termo: string): Promise<Foto[]> {
+  const url = new URL("https://openaccess-api.clevelandart.org/api/artworks/");
+  url.searchParams.set("q", termo);
+  url.searchParams.set("cc0", "1");
+  url.searchParams.set("has_image", "1");
+  url.searchParams.set("limit", "20");
+  const resp = await pedir(url);
+  if (!resp.ok) throw new Error(`O Cleveland respondeu ${resp.status} para "${termo}"`);
+  type Imagem = { url: string; width: number | string; height: number | string };
+  type Obra = { id: number; title?: string; url?: string; images?: { web?: Imagem; print?: Imagem } | null; creators?: Array<{ description?: string }> };
+  const { data } = (await resp.json()) as { data?: Obra[] };
+  return (data ?? [])
+    .flatMap((o) => {
+      const grande = o.images?.print ?? o.images?.web;
+      if (!grande || !tituloCombina(termo, o.title ?? "")) return [];
+      return [{
+        id: String(o.id),
+        url: grande.url,
+        previa: o.images?.web?.url,
+        source: "clevelandart",
+        foreign_landing_url: o.url ?? `https://www.clevelandart.org/art/${o.id}`,
+        width: Number(grande.width),
+        height: Number(grande.height),
+        titulo: [o.title, o.creators?.[0]?.description?.split("(")[0].trim()].filter(Boolean).join(", "),
+      }];
+    })
+    .filter(filtroDeTamanho);
+}
+
+// Quanto cada acervo vale na ordem: os museus escaneiam as próprias obras (alta
+// resolução, licença certa); o resto do Openverse (Flickr etc.) é mais variado.
+const PESO: Record<string, number> = {
+  artic: 4,
+  clevelandart: 4,
+  met: 3,
+  smithsonian: 3,
+  rijksmuseum: 3,
+  nga: 3,
+  wikimedia: 2,
+};
+const pesoDe = (f: Foto) => PESO[f.source] ?? (f.source.startsWith("smithsonian") ? 3 : 1);
+
+/**
+ * Todos os acervos ao mesmo tempo. Um que falhar não atrapalha os outros. A
+ * ordem alterna os acervos (o 1º de cada, depois o 2º de cada...), do mais
+ * confiável para o menos, e mantém a ordem de relevância de cada um.
+ */
+async function buscarNosMuseus(termo: string): Promise<Foto[]> {
+  const nomes = ["Art Institute", "Cleveland", "Commons", "Openverse"];
+  const resultados = await Promise.allSettled([buscarNoAIC(termo), buscarNoCleveland(termo), buscarNoCommons(termo), buscarNoOpenverse(termo, false)]);
+  const listas: Foto[][] = [];
+  for (const [i, r] of resultados.entries()) {
+    if (r.status === "fulfilled") listas.push(r.value);
+    else console.log(`  (${nomes[i]} não respondeu: ${r.reason instanceof Error ? r.reason.message : String(r.reason)})`);
+  }
+  // O Openverse mistura acervos: separa cada um, para alternar e pesar certo
+  const grupos = new Map<string, Foto[]>();
+  for (const foto of listas.flat()) grupos.set(foto.source, [...(grupos.get(foto.source) ?? []), foto]);
+  const ordem = [...grupos.values()].sort((a, b) => pesoDe(b[0]) - pesoDe(a[0]));
+  const vistas = new Set<string>();
+  const juntas: Foto[] = [];
+  for (let i = 0; ordem.some((g) => i < g.length); i++) {
+    for (const grupo of ordem) {
+      const foto = grupo[i];
+      if (!foto) continue;
+      // A mesma imagem pode vir do Commons e do Openverse, com endereços diferentes: compara também o nome
+      const endereco = foto.foreign_landing_url.replace(/^https?:\/\/(www\.)?/, "").toLowerCase();
+      const nome = semAcento(foto.titulo || decodeURIComponent(foto.foreign_landing_url.split("/").pop() ?? ""))
+        .replace(/^file:/, "")
+        .replace(/\.(jpe?g|png|tiff?|webp|gif)$/, "")
+        .replace(/[^a-z0-9]/g, "");
+      if (vistas.has(endereco) || (nome.length > 8 && vistas.has(nome))) continue;
+      vistas.add(endereco);
+      if (nome.length > 8) vistas.add(nome);
+      juntas.push(foto);
+    }
+  }
+  return juntas;
 }
 
 const filtroDeTamanho = (f: Foto) =>
@@ -128,30 +283,49 @@ const filtroDeTamanho = (f: Foto) =>
     ? f.width >= 1280 && f.width / f.height >= 1.25 && f.width / f.height <= 2.2
     : Math.min(f.width, f.height) >= 800 && Math.max(f.width, f.height) / Math.min(f.width, f.height) <= 1.8;
 
-async function buscar(termo: string): Promise<Foto[]> {
-  if (fonte === "commons") return buscarNoCommons(termo);
+/** Openverse: só fotos (padrão) ou qualquer imagem em domínio público e CC0 (nos museus) */
+async function buscarNoOpenverse(termo: string, soFotos = true): Promise<Foto[]> {
   const url = new URL("https://api.openverse.org/v1/images/");
   url.searchParams.set("q", termo);
-  url.searchParams.set("license", deitadas ? "cc0,pdm" : "cc0");
-  url.searchParams.set("category", "photograph");
+  url.searchParams.set("license", deitadas || !soFotos ? "cc0,pdm" : "cc0");
+  if (soFotos) url.searchParams.set("category", "photograph");
   url.searchParams.set("page_size", "20");
-  if (fonte) url.searchParams.set("source", fonte);
+  if (fonte && fonte !== "museus") url.searchParams.set("source", fonte);
   const resp = await pedir(url);
   if (!resp.ok) throw new Error(`Openverse respondeu ${resp.status} para "${termo}"`);
-  const { results } = (await resp.json()) as { results: Foto[] };
+  const { results } = (await resp.json()) as { results: Array<Foto & { title?: string }> };
   // Grandes o bastante e não muito compridas
-  return results.filter(filtroDeTamanho);
+  // O rawpixel diz ter 5000 px, mas entrega um WebP de 1024 px: fica de fora
+  return results
+    .filter((r) => r.source !== "rawpixel")
+    .map((r) => ({ id: r.id, url: r.url, previa: `https://api.openverse.org/v1/images/${r.id}/thumb/`, source: r.source, foreign_landing_url: r.foreign_landing_url, width: r.width, height: r.height, titulo: r.title }))
+    .filter(filtroDeTamanho);
+}
+
+async function buscar(termo: string): Promise<Foto[]> {
+  if (fonte === "commons") return buscarNoCommons(termo);
+  if (fonte === "museus") return buscarNosMuseus(termo);
+  return buscarNoOpenverse(termo);
 }
 
 /** Baixa e grava em JPEG, com o lado menor em 1080 px (candidata: 480 px de largura, só para olhar) */
 async function baixar(foto: Foto, saida: string, pequena = false) {
-  // A prévia do Commons vem na miniatura de 500 px (tamanho padrão do Wikimedia):
-  // sai rápido e não gasta o limite, que a de 1920 px esgotava.
-  const url = pequena && foto.source === "wikimedia" ? foto.url.replace(/\/\d+px-([^/]+)$/, "/500px-$1") : foto.url;
-  const resp = await pedir(url);
+  // A prévia vem na versão pequena do acervo: sai rápido e não gasta o limite
+  let url = pequena && foto.previa ? foto.previa : foto.url;
+  let resp = await pedir(url, foto.cabecalhos);
+  // A versão pequena falhou (o Openverse às vezes não gera): tenta a grande
+  if (!resp.ok && url !== foto.url) {
+    url = foto.url;
+    resp = await pedir(url, foto.cabecalhos);
+  }
   if (!resp.ok) throw new Error(`Não baixou ${url} (${resp.status})`);
   // O ffmpeg reconhece a imagem pela extensão (o Commons tem PNG e TIFF também)
-  const extensao = new URL(url).pathname.match(/\.(jpe?g|png|webp|tiff?|gif)$/i)?.[1].toLowerCase() ?? "jpg";
+  // O tipo vem da resposta (o nome pode mentir: .jpg que é WebP) e, sem ele, do nome
+  const tipo = resp.headers.get("content-type") ?? "";
+  const extensao =
+    tipo.match(/image\/(jpeg|png|webp|tiff|gif)/)?.[1].replace("jpeg", "jpg") ??
+    new URL(url).pathname.match(/\.(jpe?g|png|webp|tiff?|gif)$/i)?.[1].toLowerCase() ??
+    "jpg";
   const bruto = saida.replace(/\.jpg$/, `.bruto.${extensao}`);
   writeFileSync(bruto, Buffer.from(await resp.arrayBuffer()));
   // Candidata pequena: o Claude olha cada uma, e imagem grande custa uns 5 vezes mais
@@ -174,7 +348,14 @@ const creditos: { arquivo: string; foto: Foto }[] = [];
 // Um item que falha não derruba os outros: ele sai com ✗ e o resto segue.
 for (const [n, item] of itens.entries()) {
   try {
-    const fotos = await buscar(item.termo);
+    // A escolha (#n) usa as opções guardadas na busca das candidatas: é a mesma imagem que foi vista
+    const guardadas = join(pastaCandidatos, `${item.arquivo}.json`);
+    let fotos: Foto[] | null = null;
+    if (!candidatos && existsSync(guardadas)) {
+      const salvo = JSON.parse(readFileSync(guardadas, "utf8")) as { termo: string; fotos: Foto[] };
+      if (salvo.termo === item.termo) fotos = salvo.fotos;
+    }
+    fotos ??= await buscar(item.termo);
     if (fotos.length === 0) {
       console.error(`✗ ${item.arquivo}: nada em CC0 para "${item.termo}" (tente outro termo em inglês)`);
       process.exitCode = 1;
@@ -183,7 +364,8 @@ for (const [n, item] of itens.entries()) {
     if (candidatos) {
       // Cada opção que não baixar é só pulada (as outras servem)
       const opcoes: Foto[] = [];
-      for (const foto of fotos.slice(0, 4)) {
+      // Nos museus vêm 6 (mais acervos, mais escolha); nos outros, 4
+      for (const foto of fotos.slice(0, fonte === "museus" ? 6 : 4)) {
         try {
           await baixar(foto, join(pastaCandidatos, `${item.arquivo}-${opcoes.length + 1}.jpg`), true);
           opcoes.push(foto);
@@ -193,8 +375,12 @@ for (const [n, item] of itens.entries()) {
         await espera(500);
       }
       if (opcoes.length === 0) throw new Error(`nenhuma opção baixou para "${item.termo}"`);
-      // O nome do arquivo no Commons ajuda a saber quem é (ex.: Napoleon_I_of_France_by_...)
-      const nomes = opcoes.map((foto, i) => `${i + 1}: ${decodeURIComponent(foto.foreign_landing_url.split("/").pop() ?? "").replace(/^File:/, "").slice(0, 70)}`);
+      writeFileSync(guardadas, JSON.stringify({ termo: item.termo, fotos: opcoes }, null, 2));
+      // O nome da obra (ou do arquivo no Commons) ajuda a saber quem é (ex.: Napoleon_I_of_France_by_...)
+      const nomes = opcoes.map((foto, i) => {
+        const nome = foto.titulo || decodeURIComponent(foto.foreign_landing_url.split("/").pop() ?? "").replace(/^File:/, "");
+        return `${i + 1}: ${nome.slice(0, 70)} (${foto.source}, ${foto.width}×${foto.height})`;
+      });
       console.log(`• ${item.arquivo}: ${opcoes.length} opções em ${pastaCandidatos}/${item.arquivo}-N.jpg (480 px)\n    ${nomes.join("\n    ")}`);
     } else {
       const foto = fotos[item.escolha - 1];
@@ -224,7 +410,7 @@ if (!candidatos && creditos.length > 0) {
     [
       `# Fotos de domínio público (${pasta})`,
       "",
-      "Licença CC0 ou domínio público (uso comercial sem crédito obrigatório), baixadas pelo Openverse ou pelo Wikimedia Commons com o ferramentas/buscar-fotos.mts.",
+      "Licença CC0 ou domínio público (uso comercial sem crédito obrigatório), baixadas do Openverse, do Wikimedia Commons, do Art Institute of Chicago ou do Cleveland Museum of Art com o ferramentas/buscar-fotos.mts.",
       "",
       "| Arquivo | Fonte | Original | Id |",
       "| --- | --- | --- | --- |",

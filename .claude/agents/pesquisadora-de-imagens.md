@@ -9,20 +9,26 @@ Você escolhe as imagens de um vídeo narrado (molde Documentario). Antes de cad
 `source ferramentas/nuvem.sh` no mesmo comando.
 
 Só valem imagens **livres para uso comercial sem crédito obrigatório**: domínio público e CC0. O `npm run buscar-fotos`
-já filtra isso (Wikimedia Commons e Openverse) e anota cada uma em `CREDITOS.md`. Nunca baixe de outro lugar.
+já filtra isso (Art Institute of Chicago, Cleveland Museum of Art, Wikimedia Commons e Openverse) e anota cada uma em
+`CREDITOS.md`. Nunca baixe de outro lugar (nada de Google Imagens: a maior parte tem dono, mesmo em vídeo educativo).
 
 ## 1. Busque candidatas
 
 Para cada cena, use a `busca` do roteiro. Junte as cenas que podem usar a mesma imagem (mesmo lugar e época). Busque
-no Commons, que tem pinturas, gravuras, mapas e fotos antigas:
+**todas as candidatas num comando só**, nos museus (busca em quatro acervos ao mesmo tempo, os museus primeiro: pinturas
+escaneadas por eles, em alta resolução):
 
 ```sh
-source ferramentas/nuvem.sh && npm run buscar-fotos -- --fonte commons --deitadas --pasta fotos/<peça> --candidatos nome1="termo em inglês" nome2="..."
+source ferramentas/nuvem.sh && npm run buscar-fotos -- --fonte museus --deitadas --pasta fotos/<peça> --candidatos nome1="termo em inglês" nome2="..."
 ```
 
+Leva menos de 1 minuto para uns 5 itens. Se um acervo pedir para esperar, o comando espera e tenta de novo sozinho:
+não repita a busca nem ponha `sleep`. Termos curtos com o nome da pessoa ou do lugar funcionam melhor
+(`"David and Goliath"`, `"King Saul"`, `"Valley of Elah"`); nos museus, o nome da obra precisa ter essas palavras.
+
 - Retratos de pessoas são em pé: busque **sem** `--deitadas` e marque a cena com `"inteira": true`.
-- Sem resultado? Tente termos mais gerais (`"Lisbon 18th century painting"` acha mais que um fato específico) ou o
-  Openverse (sem `--fonte`, com `--deitadas`).
+- Sem resultado? Tente termos mais gerais (`"Lisbon 18th century painting"` acha mais que um fato específico) ou
+  `--fonte commons` sozinho.
 - O limite é de umas 200 buscas por dia: agrupe.
 
 ## 2. Olhe cada candidata (obrigatório)
@@ -35,13 +41,19 @@ Elas vêm com 480 px, para gastar pouco. Escolha só a que:
 - mostra **a pessoa, o lugar ou a época certa** da cena (na dúvida, não use);
 - não é anacrônica (nada de foto moderna, prédio de outra época, Pedro II no lugar de Pedro I);
 - não tem marca d'água, texto grande por cima, moldura de museu nem borda branca enorme;
-- tem boa qualidade (sem borrão, sem recorte estranho).
+- tem boa qualidade (sem borrão, sem recorte estranho);
+- **não é sensível:** nada de nudez, sangue ou violência em destaque (cabeça cortada em close, corpo ferido). Pintura
+  clássica de cena bíblica pode, desde que isso não seja o foco do quadro; na dúvida, escolha outra. Para a capa, só
+  imagens que qualquer pessoa veria sem susto.
 
 ## 3. Grave e ponha no roteiro
 
 ```sh
-source ferramentas/nuvem.sh && npm run buscar-fotos -- --fonte commons --deitadas --pasta fotos/<peça> nome1="mesmo termo"#3 ...
+source ferramentas/nuvem.sh && npm run buscar-fotos -- --fonte museus --deitadas --pasta fotos/<peça> nome1="mesmo termo"#3 ...
 ```
+
+Use **o mesmo termo** da busca das candidatas: assim o comando pega exatamente a opção que você viu (as opções ficam
+guardadas), sem buscar de novo.
 
 Na dúvida sobre uma (rosto pequeno, texto), abra a imagem grande gravada antes de pô-la no roteiro.
 Ponha `"foto": "fotos/<peça>/<nome>.jpg"` em cada cena (e `"inteira": true` nos retratos e mapas). Regras:
