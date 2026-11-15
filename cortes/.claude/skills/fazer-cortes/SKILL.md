@@ -33,21 +33,21 @@ Leia o `trabalho/<id>/transcricao.txt` inteiro e escreva o `trabalho/<id>/cortes
       "inicio": 62.5,
       "fim": 118.0,
       "gancho": "Ele largou tudo com 40 anos",
-      "titulo": "Ele largou o emprego com 40 anos e olha no que deu",
-      "legenda": "Você teria coragem? 👀\n\n#podcast #carreira #cortes"
+      "titulo": "Largou o emprego aos 40. Olha no que deu",
+      "legenda": "Você teria coragem? 👀\n\n#mudancadecarreira #podcast #cortes"
     }
   ]
 }
 ```
 
 O que faz um bom corte:
-- **De 30 a 60 segundos** (aceita de 10 a 90). Se o dono ligou a chamada do fim no Postaí, o `cortar` acrescenta sozinho um cartão de 3,5 s (então o trecho vai até 86,5 s). Não escreva a chamada no gancho nem na legenda. Um assunto só, que se entende sem o resto do vídeo.
-- **Começa forte:** na frase que prende (uma pergunta, uma revelação, uma opinião forte, um número). Corte o "então, é..." do começo. Use o tempo de início da frase, uns 0,2 s antes.
+- **De 20 a 45 segundos** (aceita de 10 a 90). Corte curto é assistido mais vezes até o fim, e é isso que faz a rede mostrar para mais gente. Só passe de 45 s se a história precisar. Se o dono ligou a chamada do fim no Postaí, o `cortar` acrescenta sozinho um cartão de 3,5 s (então o trecho vai até 86,5 s). Não escreva a chamada no gancho nem na legenda. Um assunto só, que se entende sem o resto do vídeo.
+- **Começa no impacto:** o primeiro segundo já é a frase que prende (uma pergunta, uma revelação, uma opinião forte, um número). Nunca comece pela cena montando o contexto: se a frase forte vem depois de 5 s de conversa, comece nela. Corte o "então, é..." do começo. Use o tempo de início da frase, uns 0,2 s antes.
 - **Termina fechado:** no fim de uma frase, de preferência numa conclusão. Nunca no meio da palavra.
 - **De 3 a 6 cortes por vídeo de 1 hora**, os melhores, sem repetir assunto. Prefira poucos e bons.
-- **Gancho:** até 70 caracteres, a promessa do corte, sem entregar o final. Fica no topo do vídeo o tempo todo.
-- **Título:** até 100 caracteres, sem `<` nem `>`, que dê vontade de clicar. É o título do Short.
-- **Legenda:** uma pergunta ou frase curta para comentar e no máximo 3 hashtags (o Instagram aceita até 5).
+- **Gancho:** até 40 caracteres (o máximo é 70), a promessa do corte, sem entregar o final. Fica no topo do vídeo o tempo todo e é o que segura quem está rolando o feed.
+- **Título:** até 60 caracteres (o máximo é 100), sem `<` nem `>`, com o mais forte nas **primeiras palavras**, porque o Shorts e o Reels mostram só o começo. Ex.: "Só Deus poderia curá-la. E Ele estava ali", e não "Somente Deus poderia curá-la. E aqui está o Senhor: a emoção de Nicodemos".
+- **Legenda:** uma pergunta que se responde com uma palavra ("Você crê? Comente amém") e no máximo 3 hashtags, com pelo menos 1 do assunto do corte (#salomão, #provérbios, #carreira), nunca só as gerais (#fé, #reflexão).
 - **Dúvida (opcional):** se ficou algo que você não conseguiu resolver (a fala termina cortada, um trecho pode ofender, o rosto sai do quadro), ponha `"duvida": "<o que conferir>"` no corte. Ele espera o dono aprovar, mesmo com a aprovação automática ligada.
 - **Enquadramento:** `desfocado` (o vídeo inteiro no meio, com fundo desfocado) serve para qualquer vídeo. Use `centro` com `"foco"` de 0 a 1 só quando uma pessoa fala sozinha e sempre no mesmo lugar da tela (0,5 = no meio).
 

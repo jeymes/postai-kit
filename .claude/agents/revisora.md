@@ -24,7 +24,8 @@ Leia `canais/<canal>/canal-postai.md` (o que o dono preencheu no Postaí; vale m
    - **leia cada CTA como frase:** completa, sem palavra faltando, com concordância certa (ex.: "Organize a lista do seu no Laços" está errado: falta "casamento"). Sem @ nem site no `ctaFinal` e no `botaoFinal`;
    - **movimento:** toda cena tem `estados` para os dois personagens, e nenhum dos dois repete a mesma pose e expressão em duas cenas seguidas;
    - `capa` com título de até 6 palavras, destaque e a pose e expressão de cada personagem;
-   - `post.legenda` com até 5 hashtags, incluindo as obrigatórias da bíblia.
+   - `post.titulo` com até 60 caracteres e o mais forte nas primeiras palavras;
+   - `post.legenda` terminando numa pergunta que se responde com uma palavra, com até 4 hashtags: as obrigatórias da bíblia e pelo menos 1 do assunto deste episódio.
 4. **Elenco:** se o canal tem a seção "Elenco", o `elenco` do roteiro traz 2 personagens copiados de lá sem mudança, e todo `quem` e toda chave de `estados` e da `capa` é um desses ids.
 5. **Campos válidos:** `quem`, poses, expressões, cenário e sons existem no `conversaSchema` de `src/moldes/Conversa.tsx`.
 6. **Graça e ritmo:** o gancho prende, a última fala tem virada ou gancho, cada personagem fala do seu jeito e nenhuma fala soa como anúncio.

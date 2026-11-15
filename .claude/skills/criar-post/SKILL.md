@@ -30,7 +30,7 @@ Escreva no tom do `marca.json`:
   ("Sexta sem pão de queijo quentinho?"). Marque 1 a 3 palavras em `destaqueGancho`.
 - Frases curtas: título de item com até umas 6 palavras, texto de apoio com uma frase.
 - **Nada inventado** (preço, horário, promoção): só o que está no site ou o que o dono disse.
-- **post.legenda**: 1 a 3 frases, a chamada e até 5 hashtags (o Instagram aceita no máximo 5).
+- **post.legenda**: 1 a 3 frases, terminando numa pergunta fácil de responder ou na chamada, e até 4 hashtags, com pelo menos 1 do assunto do post (nunca só as gerais).
 - **post.titulo**: curto, só para o dono achar o post no app.
 
 Fotos: as do dono em `public/produtos/`; sem foto, `npm run buscar-fotos` (CC0) e olhe as opções

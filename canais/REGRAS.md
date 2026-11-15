@@ -27,8 +27,8 @@ O roteiro é um `conteudo/<data>-<assunto>.json` no molde **Conversa**. O format
 - **CTAs:** `ctaInicial` (até 28 caracteres, uma linha), `ctaFinal` (até 60, frase completa, sem @ nem "link na bio") e `botaoFinal` (até 24, ex.: "Link na bio 👆"), feitos para o episódio. O @ nunca aparece no vídeo.
 - **Capa:** `"capa"` com o `titulo` (até 6 palavras), o `destaque` e a pose e a expressão mais fortes de cada personagem, pelo id. Sem foto.
 - **Post:**
-  - **título:** até 70 caracteres, com no máximo 1 emoji;
-  - **legenda:** 1 ou 2 frases e **até 5 hashtags**, incluindo as do canal.
+  - **título:** até 60 caracteres, com o mais forte nas **primeiras palavras** (o Shorts e o Reels mostram só o começo) e no máximo 1 emoji. Ex.: "Só Deus poderia curá-la. E Ele estava ali", e não "Somente Deus poderia curá-la. E aqui está o Senhor: a emoção de Nicodemos";
+  - **legenda:** 1 ou 2 frases, terminando numa pergunta que se responde com uma palavra ("Você crê? Comente amém"), e **até 4 hashtags**: as obrigatórias do canal e pelo menos 1 do assunto deste vídeo (ex.: #listadeconvidados, #salomão), nunca só as gerais (#fé, #casamento).
 
 ## Conferência automática
 

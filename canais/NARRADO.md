@@ -69,7 +69,8 @@ Num **ajuste** pedido pelo dono, o roteiro guardado vem em `conteudo/ajuste-<cor
 - **Pronúncia:** nomes estrangeiros e siglas em `pronuncia`.
 - **Capa:** `capa.titulo` com até 8 palavras, que dá vontade de clicar sem mentir; `destaque` numa palavra forte;
   `foto` a imagem mais marcante.
-- **Post:** `post.titulo` com até 100 caracteres (o título do YouTube, com a palavra-chave no começo) e
+- **Post:** `post.titulo` com até 70 caracteres (o título do YouTube: a palavra-chave e o mais curioso nas
+  primeiras palavras, porque a busca e a tela inicial cortam o resto) e
   `post.legenda` com 2 ou 3 parágrafos sobre o vídeo, as fontes principais e, por último, a linha
   "Imagens: obras em domínio público (Wikimedia Commons e Openverse)." Até 1.800 caracteres: o `aprovar` acrescenta
   os capítulos.
