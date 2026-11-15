@@ -22,6 +22,7 @@
 // foi vista, sem buscar de novo. Limite do Openverse sem chave: 20 buscas por minuto, 200 por dia.
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { ferramenta } from "./postai.ts";
 
@@ -77,16 +78,52 @@ const AGENTE = "postai-estudio/1.0 (https://github.com/jeymes/postai-kit)";
 
 const espera = (ms: number) => new Promise((pronto) => setTimeout(pronto, ms));
 
+// Site que bloqueia a máquina (429 seguidos, como o Wikimedia na nuvem) fica de
+// fora por 10 minutos, anotado num arquivo para valer também nas próximas
+// buscas: os outros acervos cobrem, e a busca não fica parada esperando.
+const CANSADOS = join(tmpdir(), "postai-sites-cansados.json");
+const PAUSA_MS = 10 * 60 * 1000;
+const grupo = (url: string | URL) => {
+  const host = new URL(String(url)).host;
+  return host.endsWith("wikimedia.org") ? "wikimedia" : host;
+};
+function lerCansados(): Record<string, number> {
+  try {
+    return JSON.parse(readFileSync(CANSADOS, "utf8")) as Record<string, number>;
+  } catch {
+    return {};
+  }
+}
+function cansado(url: string | URL) {
+  return (lerCansados()[grupo(url)] ?? 0) > Date.now();
+}
+function marcarCansado(url: string | URL) {
+  const todos = lerCansados();
+  todos[grupo(url)] = Date.now() + PAUSA_MS;
+  try {
+    writeFileSync(CANSADOS, JSON.stringify(todos));
+  } catch {
+    // sem o arquivo, vale só nesta busca
+  }
+  console.log(`  (${grupo(url)} está bloqueando esta máquina: sigo sem ele pelos próximos 10 minutos)`);
+}
+
 /**
- * fetch que espera e tenta de novo quando o site pede calma (429, comum no
- * Wikimedia vindo da nuvem) ou cai (5xx), em vez de desistir na primeira.
+ * fetch que tenta de novo quando o site pede calma (429) ou cai (5xx). Depois
+ * de 2 bloqueios seguidos, desiste do site por 10 minutos (ver CANSADOS).
  */
-async function pedir(url: string | URL, cabecalhos: Record<string, string> = { "User-Agent": AGENTE }, tentativas = 5): Promise<Response> {
+async function pedir(url: string | URL, cabecalhos: Record<string, string> = { "User-Agent": AGENTE }, tentativas = 3): Promise<Response> {
+  if (cansado(url)) return new Response(null, { status: 429 });
   for (let vez = 1; ; vez++) {
     const resp = await fetch(url, { headers: cabecalhos });
-    if ((resp.status !== 429 && resp.status < 500) || vez >= tentativas) return resp;
+    if (resp.status !== 429 && resp.status < 500) return resp;
+    if (resp.status === 429 && vez >= 2) {
+      marcarCansado(url);
+      return resp;
+    }
+    if (vez >= tentativas) return resp;
     const pedido = Number(resp.headers.get("retry-after"));
-    const ms = Math.min(60_000, (pedido > 0 ? pedido : 5 * 2 ** (vez - 1)) * 1000);
+    const ms = Math.min(10_000, (pedido > 0 ? pedido : 3 * vez) * 1000);
     console.log(`  (${new URL(String(url)).host} pediu para esperar: tento de novo em ${Math.round(ms / 1000)} s)`);
     await espera(ms);
   }
@@ -296,6 +333,8 @@ async function buscarNosMuseus(termo: string): Promise<Foto[]> {
         .replace(/\.(jpe?g|png|tiff?|webp|gif)$/, "")
         .replace(/[^a-z0-9]/g, "");
       if (vistas.has(endereco) || (nome.length > 8 && vistas.has(nome))) continue;
+      // Imagem de um site que está bloqueando a máquina não baixaria: dá a vaga para outra
+      if (cansado(foto.url) || (foto.previa && cansado(foto.previa))) continue;
       vistas.add(endereco);
       if (nome.length > 8) vistas.add(nome);
       juntas.push(foto);
