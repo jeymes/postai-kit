@@ -14,7 +14,10 @@
 //   melhor para história e com termos gerais, ex. "Rio de Janeiro 19th century painting"),
 //   --fonte museus (ao mesmo tempo no Art Institute of Chicago, no Cleveland Museum of Art, no
 //   Commons e no Openverse, só domínio público e CC0, sem chave; os museus vêm primeiro: as
-//   imagens são escaneadas por eles, em alta resolução; o melhor para o Canal dark)
+//   imagens são escaneadas por eles, em alta resolução; o melhor para o Canal dark; na rotina
+//   da nuvem entra também o Pixabay, com fotos modernas de lugares e paisagens),
+//   --fonte pixabay (fotos e ilustrações modernas do Pixabay, uso comercial sem crédito; passa pelo
+//   Postaí, que tem a chave: precisa do passe da rotina ou da POSTAI_CHAVE)
 // As opções de cada item ficam em _candidatos/<item>.json: a escolha (#n) pega exatamente a que
 // foi vista, sem buscar de novo. Limite do Openverse sem chave: 20 buscas por minuto, 200 por dia.
 import { spawnSync } from "node:child_process";
@@ -227,6 +230,21 @@ async function buscarNoCleveland(termo: string): Promise<Foto[]> {
     .filter(filtroDeTamanho);
 }
 
+/** Pixabay: a busca passa pelo Postaí (a chave fica lá); fotos com até 1280 px */
+async function buscarNoPixabay(termo: string): Promise<Foto[]> {
+  if (!process.env.POSTAI_CHAVE) throw new Error("sem o passe do Postaí (o Pixabay passa pelo Postaí)");
+  const texto = await ferramenta("buscar_no_pixabay", { q: termo, tipo: "foto", orientacao: deitadas ? "horizontal" : "all", porPagina: 20 });
+  let resultados: Array<{ id: string; pagina: string; largura: number; altura: number; previa: string; url: string; tags: string }>;
+  try {
+    resultados = (JSON.parse(texto) as { resultados: typeof resultados }).resultados;
+  } catch {
+    throw new Error(texto.slice(0, 160));
+  }
+  return resultados
+    .map((r) => ({ id: r.id, url: r.url, previa: r.previa, source: "pixabay", foreign_landing_url: r.pagina, width: r.largura, height: r.altura, titulo: r.tags }))
+    .filter(filtroDeTamanho);
+}
+
 // Quanto cada acervo vale na ordem: os museus escaneiam as próprias obras (alta
 // resolução, licença certa); o resto do Openverse (Flickr etc.) é mais variado.
 const PESO: Record<string, number> = {
@@ -237,6 +255,7 @@ const PESO: Record<string, number> = {
   rijksmuseum: 3,
   nga: 3,
   wikimedia: 2,
+  pixabay: 1.5,
 };
 const pesoDe = (f: Foto) => PESO[f.source] ?? (f.source.startsWith("smithsonian") ? 3 : 1);
 
@@ -246,8 +265,15 @@ const pesoDe = (f: Foto) => PESO[f.source] ?? (f.source.startsWith("smithsonian"
  * confiável para o menos, e mantém a ordem de relevância de cada um.
  */
 async function buscarNosMuseus(termo: string): Promise<Foto[]> {
-  const nomes = ["Art Institute", "Cleveland", "Commons", "Openverse"];
-  const resultados = await Promise.allSettled([buscarNoAIC(termo), buscarNoCleveland(termo), buscarNoCommons(termo), buscarNoOpenverse(termo, false)]);
+  const nomes = ["Art Institute", "Cleveland", "Commons", "Openverse", "Pixabay"];
+  const resultados = await Promise.allSettled([
+    buscarNoAIC(termo),
+    buscarNoCleveland(termo),
+    buscarNoCommons(termo),
+    buscarNoOpenverse(termo, false),
+    // Sem o passe (no computador, sem a rotina), o Pixabay fica de fora sem avisar
+    process.env.POSTAI_CHAVE ? buscarNoPixabay(termo) : Promise.resolve([]),
+  ]);
   const listas: Foto[][] = [];
   for (const [i, r] of resultados.entries()) {
     if (r.status === "fulfilled") listas.push(r.value);
@@ -305,6 +331,7 @@ async function buscarNoOpenverse(termo: string, soFotos = true): Promise<Foto[]>
 async function buscar(termo: string): Promise<Foto[]> {
   if (fonte === "commons") return buscarNoCommons(termo);
   if (fonte === "museus") return buscarNosMuseus(termo);
+  if (fonte === "pixabay") return buscarNoPixabay(termo);
   return buscarNoOpenverse(termo);
 }
 

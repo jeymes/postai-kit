@@ -1,4 +1,4 @@
-import { Audio } from "@remotion/media";
+import { Audio, Video } from "@remotion/media";
 import React from "react";
 import { AbsoluteFill, Easing, Img, interpolate, Loop, Sequence, Series, staticFile, useCurrentFrame } from "remotion";
 import { z } from "zod";
@@ -32,6 +32,10 @@ export const documentarioSchema = z.object({
       z.object({
         fala: z.string().describe("O que a voz diz nesta cena: 2 a 4 frases (uns 10 a 20 s)"),
         foto: z.string().optional().describe("Foto deitada em public/ (fotos/<peça>/<nome>.jpg)"),
+        video: z
+          .string()
+          .optional()
+          .describe("Vídeo de fundo deitado em public/ (videos/<peça>/<nome>.mp4), mudo e repetido, no lugar da foto: para paisagem, céu, deserto, mar"),
         capitulo: z.string().optional().describe("Abre um capítulo: o título aparece num cartão no começo da cena"),
         texto: z.string().optional().describe("Texto curto na tela (data, lugar, número): até 40 caracteres"),
         movimento: z
@@ -209,7 +213,15 @@ const CenaDoDocumentario: React.FC<{ cena: Cena; indice: number; props: Document
         />
       )}
       <AbsoluteFill style={{ opacity: fade }}>
-        {cena.foto ? <FotoEmMovimento src={cena.foto} duracao={duracao} movimento={movimentoDa(cena, indice)} inteira={cena.inteira} /> : <FundoSemFoto />}
+        {cena.video ? (
+          <AbsoluteFill style={{ overflow: "hidden", backgroundColor: "#000" }}>
+            <Video src={arquivo(cena.video)} muted loop objectFit="cover" style={{ width: "100%", height: "100%" }} />
+          </AbsoluteFill>
+        ) : cena.foto ? (
+          <FotoEmMovimento src={cena.foto} duracao={duracao} movimento={movimentoDa(cena, indice)} inteira={cena.inteira} />
+        ) : (
+          <FundoSemFoto />
+        )}
         {/* Escurece as bordas e o pé, para a legenda e o texto lerem bem */}
         <AbsoluteFill style={{ background: "linear-gradient(180deg, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0) 30%, rgba(0,0,0,0) 60%, rgba(0,0,0,0.55) 100%)" }} />
       </AbsoluteFill>

@@ -53,7 +53,7 @@ function resultado(): never {
 
 // ---- Documentario (Canal dark): a forma, por código. Os fatos ficam com a checadora ----
 if (peca.molde === "Documentario") {
-  type CenaLonga = { fala?: string; foto?: string; busca?: string; capitulo?: string; texto?: string; narracao?: { duracaoSeg?: number } };
+  type CenaLonga = { fala?: string; foto?: string; video?: string; busca?: string; capitulo?: string; texto?: string; narracao?: { duracaoSeg?: number } };
   const doc = peca as unknown as {
     cenas?: CenaLonga[];
     encerramento?: string;
@@ -89,11 +89,12 @@ if (peca.molde === "Documentario") {
       if (desdeOTexto < 5) aviso("roteirista-narrado", `cena ${n}: texto na tela a menos de 5 cenas do anterior`);
       desdeOTexto = 0;
     } else desdeOTexto++;
-    if (!c.foto && !c.busca) erro("roteirista-narrado", `cena ${n}: sem busca de imagem`);
+    if (!c.foto && !c.video && !c.busca) erro("roteirista-narrado", `cena ${n}: sem busca de imagem`);
     if (c.foto && !existsSync(`public/${c.foto}`)) erro("pesquisadora-de-imagens", `cena ${n}: a imagem ${c.foto} não existe em public/`);
+    if (c.video && !existsSync(`public/${c.video}`)) erro("pesquisadora-de-imagens", `cena ${n}: o vídeo ${c.video} não existe em public/`);
   });
-  const semFoto = longas.filter((c) => !c.foto).length;
-  if (semFoto) erro("pesquisadora-de-imagens", `${semFoto} cena(s) sem foto`);
+  const semFoto = longas.filter((c) => !c.foto && !c.video).length;
+  if (semFoto) erro("pesquisadora-de-imagens", `${semFoto} cena(s) sem foto nem vídeo`);
   const usos = new Map<string, number>();
   for (const c of longas) if (c.foto) usos.set(c.foto, (usos.get(c.foto) ?? 0) + 1);
   for (const [foto, vezes] of usos) if (vezes > 3) erro("pesquisadora-de-imagens", `${foto} aparece em ${vezes} cenas (no máximo 3)`);

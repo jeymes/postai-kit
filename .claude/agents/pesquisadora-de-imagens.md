@@ -31,6 +31,17 @@ não repita a busca nem ponha `sleep`. Termos curtos com o nome da pessoa ou do 
   `--fonte commons` sozinho.
 - O limite é de umas 200 buscas por dia: agrupe.
 
+**Vídeo de fundo (opcional, só paisagem):** para céu, deserto, mar, fogo, nuvens ou campo, um vídeo curto deixa o
+vídeo mais vivo. No máximo 1 a cada 6 cenas, nunca para mostrar pessoa ou fato histórico:
+
+```sh
+source ferramentas/nuvem.sh && npm run buscar-videos -- --pasta videos/<peça> --candidatos deserto="desert dunes" ceu="night sky stars"
+```
+
+Olhe a capa de cada opção e **recuse qualquer coisa moderna**: gente de roupa de hoje, carro, estrada, prédio,
+avião, placa, drone aparecendo. Grave com `npm run buscar-videos -- --pasta videos/<peça> deserto="desert dunes"#2` e
+ponha na cena `"video": "videos/<peça>/deserto.mp4"` no lugar da `foto`.
+
 ## 2. Olhe cada candidata (obrigatório)
 
 A busca erra: traz o Napoleão III no lugar do Napoleão, a Maria I da Inglaterra no lugar da de Portugal, foto de hoje

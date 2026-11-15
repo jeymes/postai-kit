@@ -64,6 +64,8 @@ Num **ajuste** pedido pelo dono, o roteiro guardado vem em `conteudo/ajuste-<cor
 - **Texto na tela** (`texto`): só data, lugar ou número, até 40 caracteres, e no máximo 1 a cada 5 cenas.
 - **Imagens:** toda cena tem `foto`. Uma imagem pode voltar em cenas seguidas com `movimento` diferente, mas não mais
   que 3 vezes no vídeo. Retrato em pé ou mapa: `"inteira": true`.
+- **Vídeo de fundo:** uma cena pode ter `video` (paisagem do Pixabay: céu, deserto, mar, fogo) no lugar da `foto`, no
+  máximo 1 a cada 6 cenas e sem nada moderno na tela. A pesquisadora busca com `npm run buscar-videos`.
 - **Movimento:** sem `movimento`, a câmera alterna sozinha entre aproximar, esquerda, afastar, direita, subir, diagonal
   e descer. Escolha à mão quando ajuda a história: `aproximar` num rosto ou num detalhe importante, `subir` numa
   figura alta (um gigante, uma torre), `descer` do céu para a cena, `afastar` para revelar o lugar. Dentro do capítulo, a
