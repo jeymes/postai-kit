@@ -16,6 +16,7 @@
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { ferramenta } from "./postai.ts";
 
 type Foto = { id: string; url: string; source: string; foreign_landing_url: string; width: number; height: number };
 
@@ -53,6 +54,40 @@ mkdirSync(candidatos ? pastaCandidatos : destino, { recursive: true });
 
 const AGENTE = "postai-estudio/1.0 (https://github.com/jeymes/postai-kit)";
 
+const espera = (ms: number) => new Promise((pronto) => setTimeout(pronto, ms));
+
+/**
+ * fetch que espera e tenta de novo quando o site pede calma (429, comum no
+ * Wikimedia vindo da nuvem) ou cai (5xx), em vez de desistir na primeira.
+ */
+async function pedir(url: string | URL, tentativas = 5): Promise<Response> {
+  for (let vez = 1; ; vez++) {
+    const resp = await fetch(url, { headers: { "User-Agent": AGENTE } });
+    if ((resp.status !== 429 && resp.status < 500) || vez >= tentativas) return resp;
+    const pedido = Number(resp.headers.get("retry-after"));
+    const ms = Math.min(60_000, (pedido > 0 ? pedido : 5 * 2 ** (vez - 1)) * 1000);
+    console.log(`  (${new URL(String(url)).host} pediu para esperar: tento de novo em ${Math.round(ms / 1000)} s)`);
+    await espera(ms);
+  }
+}
+
+// Na rotina do Canal dark, conta na tela do Postaí quantos itens já foram:
+// a busca leva minutos e, sem isso, o dono só vê "trabalhando".
+const NA_ROTINA_DARK = existsSync(".postai-canal") && readFileSync(".postai-canal", "utf8").trim() === "dark";
+async function contarNaTela(feitos: number) {
+  if (!NA_ROTINA_DARK || !process.env.POSTAI_CHAVE) return;
+  try {
+    await ferramenta("contar_andamento", {
+      agente: "pesquisadora-de-imagens",
+      status: "trabalhando",
+      mensagem: `${candidatos ? "Procurando opções de imagem" : "Baixando as imagens"}: ${feitos} de ${itens.length}`,
+      progresso: true,
+    });
+  } catch {
+    // a tela é só um aviso: a busca segue
+  }
+}
+
 /** Wikimedia Commons: só domínio público e CC0 (sem crédito obrigatório nem "compartilha igual") */
 async function buscarNoCommons(termo: string): Promise<Foto[]> {
   const url = new URL("https://commons.wikimedia.org/w/api.php");
@@ -69,7 +104,7 @@ async function buscarNoCommons(termo: string): Promise<Foto[]> {
     iiextmetadatafilter: "LicenseShortName",
   }))
     url.searchParams.set(k, v);
-  const resp = await fetch(url, { headers: { "User-Agent": AGENTE } });
+  const resp = await pedir(url);
   if (!resp.ok) throw new Error(`O Commons respondeu ${resp.status} para "${termo}"`);
   type Pagina = {
     pageid: number;
@@ -101,7 +136,7 @@ async function buscar(termo: string): Promise<Foto[]> {
   url.searchParams.set("category", "photograph");
   url.searchParams.set("page_size", "20");
   if (fonte) url.searchParams.set("source", fonte);
-  const resp = await fetch(url, { headers: { "User-Agent": "postai-estudio/1.0" } });
+  const resp = await pedir(url);
   if (!resp.ok) throw new Error(`Openverse respondeu ${resp.status} para "${termo}"`);
   const { results } = (await resp.json()) as { results: Foto[] };
   // Grandes o bastante e não muito compridas
@@ -110,10 +145,13 @@ async function buscar(termo: string): Promise<Foto[]> {
 
 /** Baixa e grava em JPEG, com o lado menor em 1080 px (candidata: 480 px de largura, só para olhar) */
 async function baixar(foto: Foto, saida: string, pequena = false) {
-  const resp = await fetch(foto.url, { headers: { "User-Agent": AGENTE } });
-  if (!resp.ok) throw new Error(`Não baixou ${foto.url} (${resp.status})`);
+  // A prévia do Commons vem na miniatura de 500 px (tamanho padrão do Wikimedia):
+  // sai rápido e não gasta o limite, que a de 1920 px esgotava.
+  const url = pequena && foto.source === "wikimedia" ? foto.url.replace(/\/\d+px-([^/]+)$/, "/500px-$1") : foto.url;
+  const resp = await pedir(url);
+  if (!resp.ok) throw new Error(`Não baixou ${url} (${resp.status})`);
   // O ffmpeg reconhece a imagem pela extensão (o Commons tem PNG e TIFF também)
-  const extensao = new URL(foto.url).pathname.match(/\.(jpe?g|png|webp|tiff?|gif)$/i)?.[1].toLowerCase() ?? "jpg";
+  const extensao = new URL(url).pathname.match(/\.(jpe?g|png|webp|tiff?|gif)$/i)?.[1].toLowerCase() ?? "jpg";
   const bruto = saida.replace(/\.jpg$/, `.bruto.${extensao}`);
   writeFileSync(bruto, Buffer.from(await resp.arrayBuffer()));
   // Candidata pequena: o Claude olha cada uma, e imagem grande custa uns 5 vezes mais
@@ -133,25 +171,43 @@ async function baixar(foto: Foto, saida: string, pequena = false) {
 }
 
 const creditos: { arquivo: string; foto: Foto }[] = [];
-for (const item of itens) {
-  const fotos = await buscar(item.termo);
-  if (fotos.length === 0) {
-    console.error(`✗ ${item.arquivo}: nada em CC0 para "${item.termo}" (tente outro termo em inglês)`);
+// Um item que falha não derruba os outros: ele sai com ✗ e o resto segue.
+for (const [n, item] of itens.entries()) {
+  try {
+    const fotos = await buscar(item.termo);
+    if (fotos.length === 0) {
+      console.error(`✗ ${item.arquivo}: nada em CC0 para "${item.termo}" (tente outro termo em inglês)`);
+      process.exitCode = 1;
+      continue;
+    }
+    if (candidatos) {
+      // Cada opção que não baixar é só pulada (as outras servem)
+      const opcoes: Foto[] = [];
+      for (const foto of fotos.slice(0, 4)) {
+        try {
+          await baixar(foto, join(pastaCandidatos, `${item.arquivo}-${opcoes.length + 1}.jpg`), true);
+          opcoes.push(foto);
+        } catch (erro) {
+          console.log(`  (pulei uma opção de ${item.arquivo}: ${erro instanceof Error ? erro.message : String(erro)})`);
+        }
+        await espera(500);
+      }
+      if (opcoes.length === 0) throw new Error(`nenhuma opção baixou para "${item.termo}"`);
+      // O nome do arquivo no Commons ajuda a saber quem é (ex.: Napoleon_I_of_France_by_...)
+      const nomes = opcoes.map((foto, i) => `${i + 1}: ${decodeURIComponent(foto.foreign_landing_url.split("/").pop() ?? "").replace(/^File:/, "").slice(0, 70)}`);
+      console.log(`• ${item.arquivo}: ${opcoes.length} opções em ${pastaCandidatos}/${item.arquivo}-N.jpg (480 px)\n    ${nomes.join("\n    ")}`);
+    } else {
+      const foto = fotos[item.escolha - 1];
+      if (!foto) throw new Error(`só há ${fotos.length} opções para "${item.termo}"`);
+      await baixar(foto, join(destino, `${item.arquivo}.jpg`));
+      creditos.push({ arquivo: `${item.arquivo}.jpg`, foto });
+      console.log(`✓ ${destino}/${item.arquivo}.jpg (${foto.source}, ${foto.foreign_landing_url})`);
+    }
+  } catch (erro) {
+    console.error(`✗ ${item.arquivo}: ${erro instanceof Error ? erro.message : String(erro)}`);
     process.exitCode = 1;
-    continue;
-  }
-  if (candidatos) {
-    const opcoes = fotos.slice(0, 4);
-    for (const [i, foto] of opcoes.entries()) await baixar(foto, join(pastaCandidatos, `${item.arquivo}-${i + 1}.jpg`), true);
-    // O nome do arquivo no Commons ajuda a saber quem é (ex.: Napoleon_I_of_France_by_...)
-    const nomes = opcoes.map((foto, i) => `${i + 1}: ${decodeURIComponent(foto.foreign_landing_url.split("/").pop() ?? "").replace(/^File:/, "").slice(0, 70)}`);
-    console.log(`• ${item.arquivo}: ${opcoes.length} opções em ${pastaCandidatos}/${item.arquivo}-N.jpg (480 px)\n    ${nomes.join("\n    ")}`);
-  } else {
-    const foto = fotos[item.escolha - 1];
-    if (!foto) throw new Error(`${item.arquivo}: só há ${fotos.length} opções para "${item.termo}"`);
-    await baixar(foto, join(destino, `${item.arquivo}.jpg`));
-    creditos.push({ arquivo: `${item.arquivo}.jpg`, foto });
-    console.log(`✓ ${destino}/${item.arquivo}.jpg (${foto.source}, ${foto.foreign_landing_url})`);
+  } finally {
+    await contarNaTela(n + 1);
   }
 }
 
