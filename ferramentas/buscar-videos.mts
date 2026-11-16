@@ -49,7 +49,9 @@ async function buscar(termo: string): Promise<Video[]> {
     throw new Error(texto.slice(0, 160));
   }
   // Deitados, de pelo menos 1280 px e com 6 s ou mais (cena curta repete o vídeo)
-  return resultados.filter((v) => v.largura > v.altura && v.largura >= 1280 && (v.duracao ?? 0) >= 6);
+  // Nada feito por IA (o Pixabay marca nas tags)
+  const feitoPorIA = /\b(ai[- ]?generated|generative|midjourney|stable diffusion|dall[- ]?e|ai art)\b/i;
+  return resultados.filter((v) => v.largura > v.altura && v.largura >= 1280 && (v.duracao ?? 0) >= 6 && !feitoPorIA.test(v.tags));
 }
 
 async function baixar(url: string, saida: string) {

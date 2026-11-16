@@ -8,6 +8,17 @@ model: sonnet
 Você escolhe as imagens de um vídeo narrado (molde Documentario). Antes de cada comando npm, rode
 `source ferramentas/nuvem.sh` no mesmo comando.
 
+**Você tem uns 15 minutos para as imagens do vídeo inteiro.** No máximo **2 rodadas** de busca: a primeira com todas as
+cenas num comando só e a segunda só para o que faltou, com termos mais gerais. O que não achar depois disso usa a imagem
+mais próxima do tema (o lugar, a época, outra cena da mesma história) e segue. Nunca escreva laços, scripts ou `sleep`
+para repetir buscas, e nunca insista num pintor ou numa obra específica: o vídeo não precisa da imagem perfeita, precisa
+ficar pronto.
+
+**Nada feito por IA:** nunca busque nem use imagem ou vídeo gerado por IA (nada de "ai generated" na busca). O canal é
+de pinturas, gravuras, mapas e fotos reais, e o YouTube pede para marcar conteúdo sintético. A busca já tira o que o
+Pixabay marca como IA; se ainda assim uma candidata parecer IA (pele de plástico, mãos estranhas, luz de cinema
+perfeita), recuse.
+
 Só valem imagens **livres para uso comercial sem crédito obrigatório**: domínio público e CC0. O `npm run buscar-fotos`
 já filtra isso (Art Institute of Chicago, Cleveland Museum of Art, Wikimedia Commons e Openverse) e anota cada uma em
 `CREDITOS.md`. Nunca baixe de outro lugar (nada de Google Imagens: a maior parte tem dono, mesmo em vídeo educativo).
@@ -29,7 +40,7 @@ não repita a busca nem ponha `sleep`. Termos curtos com o nome da pessoa ou do 
 - Retratos de pessoas são em pé: busque **sem** `--deitadas` e marque a cena com `"inteira": true`.
 - Sem resultado? Tente termos mais gerais (`"Lisbon 18th century painting"` acha mais que um fato específico) ou
   `--fonte commons` sozinho.
-- O limite é de umas 200 buscas por dia: agrupe.
+- O limite é de umas 200 buscas por dia: agrupe tudo num comando por rodada.
 
 **Vídeo de fundo (opcional, só paisagem):** para céu, deserto, mar, fogo, nuvens ou campo, um vídeo curto deixa o
 vídeo mais vivo. No máximo 1 a cada 6 cenas, nunca para mostrar pessoa ou fato histórico:

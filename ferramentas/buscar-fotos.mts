@@ -267,6 +267,9 @@ async function buscarNoCleveland(termo: string): Promise<Foto[]> {
     .filter(filtroDeTamanho);
 }
 
+/** As tags que o Pixabay põe em imagem feita por IA */
+const FEITO_POR_IA = /\b(ai[- ]?generated|generative|midjourney|stable diffusion|dall[- ]?e|ai art)\b/i;
+
 /** Pixabay: a busca passa pelo Postaí (a chave fica lá); fotos com até 1280 px */
 async function buscarNoPixabay(termo: string): Promise<Foto[]> {
   if (!process.env.POSTAI_CHAVE) throw new Error("sem o passe do Postaí (o Pixabay passa pelo Postaí)");
@@ -278,6 +281,10 @@ async function buscarNoPixabay(termo: string): Promise<Foto[]> {
     throw new Error(texto.slice(0, 160));
   }
   return resultados
+    // Nada feito por IA: destoa das pinturas e o YouTube pede para marcar conteúdo sintético
+    .filter((r) => !FEITO_POR_IA.test(r.tags))
+    // Vetores vêm com fundo transparente, que vira preto no JPEG
+    .filter((r) => !r.pagina.includes("/vectors/"))
     .map((r) => ({ id: r.id, url: r.url, previa: r.previa, source: "pixabay", foreign_landing_url: r.pagina, width: r.largura, height: r.altura, titulo: r.tags }))
     .filter(filtroDeTamanho);
 }
