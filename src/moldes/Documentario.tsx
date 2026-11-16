@@ -314,9 +314,13 @@ const MusicaEmLoop: React.FC<{ src: string; volume: number }> = ({ src, volume }
 // ---- Capa do YouTube (1280×720) ----
 
 export const capaDocumentarioSchema = z.object({
-  titulo: z.string(),
-  destaque: z.string().optional(),
+  titulo: z.string().describe("Até 4 palavras, que dão curiosidade sem repetir o título do vídeo (ex.: SÓ UMA PEDRA)"),
+  destaque: z.string().optional().describe("A palavra do título que sai em amarelo"),
   foto: z.string().optional(),
+  lado: z
+    .enum(["esquerda", "direita"])
+    .optional()
+    .describe("De que lado fica o texto: o oposto ao rosto ou à figura principal da foto (padrão: esquerda)"),
 });
 export type CapaDocumentario = z.infer<typeof capaDocumentarioSchema>;
 
@@ -326,40 +330,69 @@ export const capaDocumentarioExemplo: CapaDocumentario = {
 };
 
 /** Título grande à esquerda, foto em tela cheia por trás: legível até pequeno no celular */
-export const CapaDoDocumentario: React.FC<CapaDocumentario> = ({ titulo, destaque, foto }) => {
-  const palavras = titulo.split(" ");
-  const alvo = destaque?.toLowerCase();
+// Capa do YouTube que chama o clique (o que a crítica pedia): a figura grande e
+// com contraste, as bordas escurecidas, no máximo 4 palavras grossas em
+// maiúsculas com contorno preto (amarelo no destaque), do lado oposto à figura
+// e nunca no canto de baixo à direita, onde o YouTube põe a duração do vídeo.
+export const CapaDoDocumentario: React.FC<CapaDocumentario> = ({ titulo, destaque, foto, lado = "esquerda" }) => {
+  const palavras = titulo.toUpperCase().split(/\s+/).filter(Boolean);
+  const alvo = destaque?.toUpperCase().split(/\s+/) ?? [];
+  const limpa = (palavra: string) => palavra.replace(/[^\p{L}\p{N}]/gu, "");
+  const maior = Math.max(...palavras.map((p) => p.length), 1);
+  // Letra o maior possível: 2 palavras por linha, encolhendo se uma palavra for longa
+  const tamanho = Math.min(150, Math.round(1500 / Math.max(maior, 6)));
+  const naDireita = lado === "direita";
   return (
     <AbsoluteFill style={{ backgroundColor: "#0d0b10" }}>
       {foto ? (
-        <Img src={arquivo(foto)} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+        <Img
+          src={arquivo(foto)}
+          // O corte puxa para cima: em retrato e cena com gente, o rosto fica na parte de cima
+          style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "50% 22%", filter: "contrast(1.18) saturate(1.15) brightness(1.04)", transform: "scale(1.06)" }}
+        />
       ) : (
         <FundoSemFoto />
       )}
-      <AbsoluteFill style={{ background: "linear-gradient(90deg, rgba(8,7,10,0.92) 0%, rgba(8,7,10,0.75) 45%, rgba(8,7,10,0) 80%)" }} />
-      <AbsoluteFill style={{ justifyContent: "center", padding: "0 70px" }}>
-        <div style={{ width: 120, height: 10, borderRadius: 5, backgroundColor: cores.destaque, marginBottom: 26 }} />
-        <div
-          style={{
-            fontFamily: fontes.titulo,
-            fontWeight: 800,
-            fontSize: titulo.length > 45 ? 70 : 84,
-            lineHeight: 1.05,
-            color: "#fff",
-            maxWidth: 760,
-            textShadow: "0 4px 24px rgba(0,0,0,0.6)",
-          }}
-        >
-          {palavras.map((palavra, i) => {
-            const marcada = alvo && alvo.split(" ").includes(palavra.toLowerCase().replace(/[^\p{L}\p{N}]/gu, ""));
-            return (
-              <span key={i} style={{ color: marcada ? cores.destaque : undefined }}>
-                {palavra}{" "}
-              </span>
-            );
-          })}
-        </div>
-      </AbsoluteFill>
+      {/* Bordas escuras e o lado do texto mais escuro, para a figura e as letras saltarem */}
+      <AbsoluteFill style={{ background: "radial-gradient(ellipse at center, rgba(0,0,0,0) 45%, rgba(0,0,0,0.65) 100%)" }} />
+      <AbsoluteFill
+        style={{
+          background: `linear-gradient(${naDireita ? 270 : 90}deg, rgba(8,7,10,0.85) 0%, rgba(8,7,10,0.55) 38%, rgba(8,7,10,0) 62%)`,
+        }}
+      />
+      {/* O texto fica em cima, do lado escolhido: o canto de baixo à direita fica livre */}
+      <div
+        style={{
+          position: "absolute",
+          top: 70,
+          [naDireita ? "right" : "left"]: 60,
+          maxWidth: 640,
+          display: "flex",
+          flexWrap: "wrap",
+          justifyContent: naDireita ? "flex-end" : "flex-start",
+          gap: `0 ${Math.round(tamanho * 0.25)}px`,
+          fontFamily: fontes.titulo,
+          fontWeight: 900,
+          fontSize: tamanho,
+          lineHeight: 1,
+          letterSpacing: "-0.01em",
+          textAlign: naDireita ? "right" : "left",
+        }}
+      >
+        {palavras.map((palavra, i) => (
+          <span
+            key={i}
+            style={{
+              color: alvo.includes(limpa(palavra)) ? "#FFD60A" : "#FFFFFF",
+              WebkitTextStroke: `${Math.max(6, Math.round(tamanho * 0.07))}px #000`,
+              paintOrder: "stroke fill",
+              textShadow: "0 8px 24px rgba(0,0,0,0.7)",
+            }}
+          >
+            {palavra}
+          </span>
+        ))}
+      </div>
     </AbsoluteFill>
   );
 };

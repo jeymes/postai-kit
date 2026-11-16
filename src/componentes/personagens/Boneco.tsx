@@ -373,7 +373,8 @@ export const Boneco: React.FC<{
   const falando = palavras.some((p) => p.inicio <= frame && frame < p.fim);
   const forma = boca?.length ? formaDoRhubarb(boca, frame) : falando ? FALANDO[Math.floor(frame / 3) % FALANDO.length] : null;
   const emFala = palavras.length > 0 && palavras[0].inicio <= frame && frame < palavras[palavras.length - 1].fim + 4;
-  const piscando = (frame + semente * 37) % 97 < 4 && estado.expressao !== "radiante";
+  // O ciclo começa no meio: ninguém pisca no quadro 0 (a prévia do feed)
+  const piscando = (frame + semente * 37 + 50) % 97 < 4 && estado.expressao !== "radiante";
   const respira = Math.sin(frame / 14 + semente) * 3;
   const inclina = emFala ? Math.sin(frame / 6 + semente) * 2.5 : Math.sin(frame / 40 + semente) * 1.2;
   const largura = altura * 0.6;

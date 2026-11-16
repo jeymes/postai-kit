@@ -58,6 +58,10 @@ Se **2 das 3** passariam direto ou largariam no meio, o vídeo vai para `CORRIGI
   - `producao`: voz, legenda fora de tempo, marca ou logo faltando (rodar `npm run canal` de novo).
   Exemplo: "8 s: a noiva com as mãos na cabeça desde o começo; diretora-de-arte: mudar para pose normal e expressão surpresa na cena 3".
 
+**Pose no meio da fala é de propósito** quando o roteiro tem `meio` naquela cena: a pose ou a expressão de `estados`
+vale para a primeira metade da fala, e a de `meio` para a segunda. Antes de apontar "a pose não é a do roteiro",
+confira as duas.
+
 Depois, em uma seção `Para os próximos`, escreva no máximo 2 dicas curtas que valem para todos os episódios seguintes (ex.: "títulos com mais de 40 caracteres ficam pequenos no topo"). A coordenadora repassa ao dono.
 
 Se achar algo que **só o código do kit resolve** (a equipe não consegue corrigir no roteiro, nas imagens, na voz nem

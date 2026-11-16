@@ -110,7 +110,7 @@ if (peca.molde === "Documentario") {
   else if (tamanho(doc.encerramento) > 50) erro("roteirista-narrado", `encerramento com ${tamanho(doc.encerramento)} caracteres (até 50)`);
   if (!doc.capa?.titulo) erro("roteirista-narrado", "falta capa.titulo");
   else {
-    if (palavras(doc.capa.titulo) > 8) erro("roteirista-narrado", `capa.titulo com ${palavras(doc.capa.titulo)} palavras (até 8)`);
+    if (palavras(doc.capa.titulo) > 4) erro("roteirista-narrado", `capa.titulo com ${palavras(doc.capa.titulo)} palavras (até 4, letra grande na capa)`);
     if (doc.capa.destaque && !doc.capa.titulo.toLowerCase().includes(doc.capa.destaque.toLowerCase()))
       erro("roteirista-narrado", `capa.destaque "${doc.capa.destaque}" não está no título da capa`);
   }

@@ -85,7 +85,9 @@ Num **ajuste** pedido pelo dono, o roteiro guardado vem em `conteudo/ajuste-<cor
 - **Fim:** a última cena fecha a pergunta do começo e puxa o próximo vídeo. `encerramento` com até 50 caracteres
   (ex.: "Inscreva-se para a parte 2").
 - **Pronúncia:** nomes estrangeiros e siglas em `pronuncia`.
-- **Capa:** `capa.titulo` com até 8 palavras, que dá vontade de clicar sem mentir; `destaque` numa palavra forte;
+- **Capa:** `capa.titulo` com **até 4 palavras** (saem grandes, em maiúsculas e com contorno), que dão curiosidade sem
+  repetir o título do vídeo e sem mentir (ex.: "SÓ UMA PEDRA"); `destaque` na palavra mais forte (sai em amarelo);
+  `lado`: `esquerda` ou `direita`, o oposto ao rosto ou à figura principal da foto (o texto fica no alto desse lado);
   `foto` a imagem mais marcante.
 - **Post:** `post.titulo` com até 70 caracteres (o título do YouTube: a palavra-chave e o mais curioso nas
   primeiras palavras, porque a busca e a tela inicial cortam o resto) e

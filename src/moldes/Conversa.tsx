@@ -171,7 +171,7 @@ function estadoNaCena(cena: Cena, id: string): Estado | undefined {
   return cena.estados?.[id] ?? (id === "noiva" || id === "organizadora" ? cena[id] : undefined);
 }
 
-function momentosDe(quem: string, linha: Linha): Momento[] {
+function momentosDe(quem: string, linha: Linha, cartaoFinalEm?: number): Momento[] {
   const momentos: Momento[] = [{ em: 0, pose: "normal", expressao: "neutra" }];
   for (const { cena, inicio, palavras } of linha) {
     const estado = estadoNaCena(cena, quem);
@@ -181,15 +181,19 @@ function momentosDe(quem: string, linha: Linha): Momento[] {
     const palavraDoMeio = palavras[Math.floor(palavras.length / 2)];
     if (meio && palavraDoMeio) momentos.push({ em: Math.max(inicio + 1, palavraDoMeio.inicio - 4), ...meio });
   }
+  // No cartão final, as duas comemoram (com o pulinho da reação), em vez de
+  // ficarem paradas na última pose até o fim
+  if (cartaoFinalEm !== undefined) momentos.push({ em: cartaoFinalEm, pose: "comemorando", expressao: "radiante" });
   return momentos;
 }
 
 const TituloPov: React.FC<{ titulo: string; parte?: string }> = ({ titulo, parte }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
+  // Já na tela no quadro 0: é o que aparece na prévia do feed. Só cresce um pouco.
   const p = spring({ frame, fps, config: { damping: 14 } });
   return (
-    <div style={{ position: "absolute", top: 120, left: 0, right: 0, display: "flex", flexDirection: "column", alignItems: "center", gap: 14, scale: String(0.8 + 0.2 * p), opacity: p }}>
+    <div style={{ position: "absolute", top: 120, left: 0, right: 0, display: "flex", flexDirection: "column", alignItems: "center", gap: 14, scale: String(0.94 + 0.06 * p) }}>
       <div
         style={{
           width: 900,
@@ -312,7 +316,7 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
                 key={quem}
                 visual={visual}
                 desenho={desenho}
-                momentos={momentosDe(quem, linha)}
+                momentos={momentosDe(quem, linha, props.ctaFinal ? fimDasFalas : undefined)}
                 palavras={minhas.flatMap((l) => l.palavras)}
                 boca={minhas.some((l) => l.boca) ? minhas.flatMap((l) => l.boca ?? []) : undefined}
                 altura={900}
@@ -324,7 +328,7 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
           })}
         </AbsoluteFill>
         <TituloPov titulo={props.titulo} parte={props.parte} />
-        {props.ctaInicial && <BalaoDeChamada texto={props.ctaInicial} topo={props.parte ? 450 : 395} />}
+        {props.ctaInicial && <BalaoDeChamada texto={props.ctaInicial} topo={props.parte ? 450 : 395} jaNaTela />}
         {props.cartao && (
           <Cartao
             cartao={props.cartao}

@@ -29,6 +29,9 @@ export const Legendas: React.FC<{
   // A página fica até a próxima começar (sem piscar entre uma e outra)
   const pagina = pages.filter((p) => p.startMs <= agora).pop();
   if (!pagina) return null;
+  // Depois da última palavra da página, a legenda some (antes ficava congelada até o fim)
+  const fimDaPagina = pagina.tokens[pagina.tokens.length - 1].toMs;
+  if (agora > fimDaPagina + 700) return null;
   const desdeOInicio = agora - pagina.startMs;
   const entrada = interpolate(desdeOInicio, [0, 120], [0.85, 1], { extrapolateRight: "clamp" });
   return (

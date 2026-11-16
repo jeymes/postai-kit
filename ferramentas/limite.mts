@@ -6,9 +6,13 @@
 //      assunto: legenda, pose, movimento, imagem, voz, musica, capa, texto-na-tela, cartao, tempo ou outro
 import { ferramenta } from "./postai.ts";
 
-const [assunto, ...resto] = process.argv.slice(2);
-const texto = resto.join(" ").trim();
-if (!assunto || !texto) {
+const ASSUNTOS = ["legenda", "pose", "movimento", "imagem", "voz", "musica", "capa", "texto-na-tela", "cartao", "tempo", "outro"];
+const [pedido, ...resto] = process.argv.slice(2);
+// Assunto fora da lista vira "outro" (com o nome no texto): nenhuma anotação se perde
+const conhecido = ASSUNTOS.includes((pedido ?? "").toLowerCase());
+const assunto = conhecido ? pedido.toLowerCase() : "outro";
+const texto = `${conhecido || !pedido ? "" : `[${pedido}] `}${resto.join(" ").trim()}`;
+if (!pedido || !resto.join(" ").trim()) {
   console.error('Uso: npm run limite -- <assunto> "o problema e onde apareceu"');
   process.exit(0);
 }

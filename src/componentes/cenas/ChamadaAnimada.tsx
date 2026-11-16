@@ -41,10 +41,11 @@ export const SeloDaMarca: React.FC<{ tamanho: number; contorno?: number }> = ({ 
 );
 
 /** CTA do começo: balão de fala com o logo; entra com um pulo e sai antes da primeira virada */
-export const BalaoDeChamada: React.FC<{ texto: string; topo: number; sai?: number }> = ({ texto, topo, sai = 110 }) => {
+export const BalaoDeChamada: React.FC<{ texto: string; topo: number; sai?: number; jaNaTela?: boolean }> = ({ texto, topo, sai = 110, jaNaTela = false }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
-  const dentro = spring({ frame: frame - 10, fps, config: { damping: 10, stiffness: 140 } });
+  // jaNaTela: aparece desde o quadro 0 (a prévia do feed), em vez de entrar depois
+  const dentro = spring({ frame: frame - (jaNaTela ? -30 : 10), fps, config: { damping: 10, stiffness: 140 } });
   const fora = spring({ frame: frame - sai, fps, config: { damping: 20 } });
   const p = dentro * (1 - fora);
   if (p <= 0.01) return null;
