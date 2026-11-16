@@ -8,6 +8,7 @@
 // na hora, sem chamar ninguém.
 //
 // Uso (a coordenadora, no passo 1): npm run checar -- conversa | documentario
+//      --so-kit: só a estrutura e o render (o npm run kit:publicar usa, sem a nuvem)
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdtempSync, readdirSync, rmSync, statSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -23,6 +24,7 @@ if (!molde) {
 }
 
 const problemas: string[] = [];
+const soKit = process.argv.includes("--so-kit");
 
 // 1. Estrutura: nenhuma pasta com nome de arquivo
 const erradas: string[] = [];
@@ -61,7 +63,9 @@ if (!problemas.length) {
 }
 
 // 3. O passe do Postaí funciona
-if (!process.env.POSTAI_CHAVE) {
+if (soKit) {
+  // sem a nuvem
+} else if (!process.env.POSTAI_CHAVE) {
   problemas.push("falta o passe do Postaí (~/.postai-passe)");
 } else {
   try {
@@ -74,7 +78,7 @@ if (!process.env.POSTAI_CHAVE) {
 if (problemas.length) {
   const texto = `O kit não passou na checagem antes de começar, e nenhuma agente trabalhou (nada do seu Claude foi gasto com o vídeo): ${problemas.join("; ")}`;
   console.error(`\nCHECAGEM FALHOU: ${problemas.join("; ")}\nPare aqui: não chame nenhuma agente.`);
-  if (process.env.POSTAI_CHAVE) {
+  if (process.env.POSTAI_CHAVE && !soKit) {
     try {
       await ferramenta("contar_andamento", { agente: "coordenadora", status: "erro", mensagem: texto.slice(0, 200) });
       await ferramenta("anotar_limite_do_kit", { assunto: "outro", texto: `Checagem do começo falhou: ${problemas.join("; ")}`.slice(0, 300) });
@@ -84,4 +88,4 @@ if (problemas.length) {
   }
   process.exit(1);
 }
-console.log(`CHECAGEM OK: kit inteiro, o molde ${molde} renderiza e o Postaí respondeu.`);
+console.log(soKit ? `CHECAGEM OK (só o kit): kit inteiro e o molde ${molde} renderiza.` : `CHECAGEM OK: kit inteiro, o molde ${molde} renderiza e o Postaí respondeu.`);

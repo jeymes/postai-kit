@@ -9,6 +9,7 @@
     "dev": "remotion studio",
     "lint": "tsc",
     "instalar": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON ferramentas/instalar.mts",
+    "checar": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON ferramentas/checar.mts",
     "buscar": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON ferramentas/buscar.mts",
     "transcrever": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON ferramentas/transcrever.mts",
     "cortar": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON ferramentas/cortar.mts",

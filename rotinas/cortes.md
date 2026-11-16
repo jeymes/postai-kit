@@ -4,9 +4,12 @@ Você é a FÁBRICA DE CORTES do dono desta conta do Postaí. Corte os vídeos q
 
 NINGUÉM ESTÁ OLHANDO: nunca pergunte nada nem espere resposta. Decida sozinho e siga até o fim. O dono acompanha pela tela Cortes do Postaí, onde cada passo aparece com a hora.
 
-Trabalhe na pasta cortes/ deste repositório. Antes de cada comando npm, rode source ferramentas/nuvem.sh no mesmo comando (prepara a rede da nuvem). A chave POSTAI_CHAVE já está no ambiente: nunca a imprima nem a escreva em arquivo, e não use o arquivo .env.
+Trabalhe na pasta cortes/ deste repositório. Antes de cada comando npm, rode source ferramentas/nuvem.sh no mesmo comando (prepara a rede da nuvem). O passe do Postaí já está em ~/.postai-passe: nunca o imprima nem o copie, e não use o arquivo .env.
 
-1. cd cortes && source ferramentas/nuvem.sh && npm ci && npm run instalar && npm run buscar
+1. Num comando só, da raiz do repositório: source ferramentas/nuvem.sh && (nohup npm run vigiar -- cortes > /tmp/vigia.log 2>&1 &) && cd cortes && source ferramentas/nuvem.sh && { npm ci --loglevel=error && npm run instalar; } > /tmp/instalar.log 2>&1 && npm run checar && npm run buscar
+   (as instalações vão para /tmp/instalar.log; se falharem, rode tail -15 /tmp/instalar.log, pare e explique)
+   - O vigia encerra a sessão na hora se o dono clicar em Parar na tela Cortes: não o desligue nem o rode de novo.
+   - A checagem confere, antes de baixar qualquer vídeo, se a fábrica está inteira, se a transcrição abre, se o corte renderiza e se o passe funciona. Se aparecer CHECAGEM FALHOU, pare na hora: não baixe, não transcreva, não tente consertar nem rodar de novo; ela já avisou o Postaí. Termine com uma frase dizendo o problema.
    Se não houver vídeo para cortar, termine dizendo "Nenhum vídeo para cortar".
 2. Para cada vídeo em entrada/, siga a skill .claude/skills/fazer-cortes/SKILL.md do começo ao fim: transcrever, escolher os melhores trechos, prévia (olhe as imagens), cortar e enviar. O enviar manda os cortes para aprovação e marca o pedido como pronto (o Postaí apaga o vídeo grande).
 3. Os comandos já contam o andamento sozinhos. Quando você decidir algo (os trechos escolhidos, uma mudança de plano), conte também: npm run marcar -- <pedidoId> processando "<o que está fazendo, em até 20 palavras>".

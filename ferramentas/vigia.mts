@@ -6,6 +6,7 @@
 // Só age no Linux da nuvem (lê /proc); no seu computador não faz nada.
 //
 // Uso (a coordenadora, no passo 1): (nohup npm run vigiar > /tmp/vigia.log 2>&1 &)
+//      na fábrica de cortes (da raiz do kit): (nohup npm run vigiar -- cortes > /tmp/vigia.log 2>&1 &)
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { ferramenta } from "./postai.ts";
 
@@ -29,7 +30,7 @@ export function alvosParaEncerrar(processos: Processo[], meus: Set<number>): Pro
       !/vigia/.test(linha) &&
       // O Claude Code (não os arquivos de configuração em ~/.claude/) e o trabalho dele
       (/(^|[\s/])claude(-code)?([\s/.]|$)/i.test(linha.replace(/\/\.claude\/\S*/g, "")) ||
-        /remotion|ffmpeg|chrom|piper|kokoro|narrar|renderizar|buscar-fotos|conferir/i.test(linha)),
+        /remotion|ffmpeg|chrom|piper|kokoro|narrar|renderizar|buscar-fotos|conferir|whisper|transcrever|cortar|enviar\.mts/i.test(linha)),
   );
 }
 
@@ -67,12 +68,15 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     process.exit(0);
   }
   const inicio = Date.now();
+  // Na fábrica de cortes, o Postaí compara o Parar com a hora em que esta execução começou
+  const daFabrica = process.argv[2] === "cortes";
+  const pergunta = daFabrica ? { canal: "cortes", desde: inicio } : {};
   console.log("Vigia: de olho no botão Parar do Postaí.");
   while (Date.now() - inicio < LIMITE_MS) {
     await espera(INTERVALO_MS);
     let resposta = "";
     try {
-      resposta = await ferramenta("conferir_parada");
+      resposta = await ferramenta("conferir_parada", pergunta);
     } catch {
       continue; // sem rede agora: tenta de novo na próxima volta
     }
