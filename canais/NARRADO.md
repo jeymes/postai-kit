@@ -35,11 +35,19 @@ Conte o andamento de cada agente como sempre (`npm run andamento`). Antes de cad
 1. **roteirista-narrado:** escrever o vídeo de hoje. Ela responde com o caminho do arquivo e o resumo.
 2. **checadora:** conferir (ela começa pelo `npm run conferir`, que confere a forma por código, e cuida dos fatos).
    Se vier CORRIGIR, volte para a roteirista com a lista (no máximo 3 voltas). Só siga com APROVADO.
-3. **pesquisadora-de-imagens:** imagens de todas as cenas. Depois rode `npm run conferir -- conteudo/<arquivo>.json`:
-   os erros de imagem (cena sem foto, imagem em mais de 3 cenas) voltam para ela.
-4. **producao:** narrar (`npm run narrar`), **em segundo plano** (ver `producao.md`: o vídeo longo passa dos 10 minutos
-   que um comando pode durar). Confira a duração total: se ficou mais de 20% longe da duração do canal,
-   volte para a roteirista cortar ou acrescentar cenas (ela mantém as fontes) e narre de novo.
+3. **Ao mesmo tempo** (a narração não depende das imagens; assim o vídeo sai uns 10 minutos antes):
+   - **producao:** comece a narrar (`npm run narrar`) **em segundo plano** (ver `producao.md`: o vídeo longo passa
+     dos 10 minutos que um comando pode durar);
+   - **pesquisadora-de-imagens:** logo em seguida, sem esperar a narração, imagens de todas as cenas.
+
+   O `narrar` grava só a voz de cada cena, sem apagar as imagens que a pesquisadora põe no meio do caminho. **Ninguém
+   muda a fala, a ordem ou a quantidade de cenas** enquanto as duas trabalham.
+4. **Quando as duas terminarem** (as duas, nunca antes):
+   - rode `npm run conferir -- conteudo/<arquivo>.json`: os erros de imagem (cena sem foto, imagem em mais de 3
+     cenas) voltam para a pesquisadora;
+   - se o `narrar` avisou que alguma fala mudou, narre de novo;
+   - confira a duração total: se ficou mais de 20% longe da duração do canal, a roteirista corta ou acrescenta cenas
+     (ela mantém as fontes), a pesquisadora põe imagem só nas cenas novas e a produção narra de novo.
 5. **producao:** `npm run previa` e depois renderizar (`npm run renderizar`), também em segundo plano. O vídeo longo demora: uns 4 a 5 minutos de
    narração e render por minuto de vídeo (num Mac M1, 6 minutos levaram 26). Não pare no meio.
 6. **critica-narrado:** assistir. Se vier CORRIGIR, mande cada item para quem ela disse e renderize de novo (no máximo

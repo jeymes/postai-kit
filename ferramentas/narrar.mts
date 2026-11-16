@@ -122,8 +122,24 @@ pendentes.forEach((p, i) => {
   for (const d of diferencas) avisos.push(`  cena ${p.indice + 1}: ${d}`);
 });
 
-writeFileSync(caminho, `${JSON.stringify(peca, null, 2)}\n`);
-const total = cenas.reduce((soma, c) => soma + Number(c.narracao?.duracaoSeg ?? 0), 0);
+// Grava só a narração, no roteiro como ele está AGORA: no Canal dark a
+// pesquisadora põe as imagens enquanto a narração roda, e gravar o arquivo
+// lido no começo apagaria o que ela fez. Cena cuja fala mudou no meio do
+// caminho fica sem esta narração (narre de novo).
+const atual = JSON.parse(readFileSync(caminho, "utf8"));
+const cenasAtuais: Cena[] = atual.cenas ?? [];
+const mudaram: number[] = [];
+cenas.forEach((cena, i) => {
+  if (!cena.narracao) return;
+  if (!cenasAtuais[i] || cenasAtuais[i].fala !== cena.fala) {
+    mudaram.push(i + 1);
+    return;
+  }
+  cenasAtuais[i].narracao = cena.narracao;
+});
+writeFileSync(caminho, `${JSON.stringify(atual, null, 2)}\n`);
+if (mudaram.length) console.log(`\nAtenção: a fala das cenas ${mudaram.join(", ")} mudou enquanto a narração rodava. Rode o narrar de novo.`);
+const total = cenasAtuais.reduce((soma, c) => soma + Number(c.narracao?.duracaoSeg ?? 0), 0);
 console.log(`\nPronto: ${total.toFixed(1)} s de fala, gravados em ${caminho}.`);
 if (avisos.length) {
   console.log("\nConfira (pode ser pronúncia errada). Se for, ajuste em \"pronuncia\" e narre de novo:");
