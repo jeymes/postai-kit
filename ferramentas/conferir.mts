@@ -67,6 +67,14 @@ if (peca.molde === "Documentario") {
   const total = longas.reduce((soma, c) => soma + palavras(c.fala), 0);
   const alvo = minutos * 140;
   const narrado = longas.every((c) => c.narracao?.duracaoSeg);
+  // Cena sem voz vai muda para o vídeo. Parte narrada e parte não = algo gravou o
+  // roteiro por cima da narração; com --com-voz (antes da prévia e do render),
+  // nenhuma cena pode estar sem voz. O narrar reaproveita as cenas já narradas.
+  const semVoz = longas.map((c, i) => (c.narracao?.duracaoSeg ? 0 : i + 1)).filter(Boolean);
+  const exigirVoz = process.argv.includes("--com-voz");
+  if (semVoz.length && (exigirVoz || semVoz.length < longas.length)) {
+    erro("producao", `${semVoz.length} cena(s) sem voz (${semVoz.slice(0, 8).join(", ")}${semVoz.length > 8 ? "…" : ""}): rode o narrar de novo, ele só narra as que faltam`);
+  }
   if (narrado) {
     const seg = longas.reduce((soma, c) => soma + Number(c.narracao?.duracaoSeg ?? 0), 0);
     if (Math.abs(seg - minutos * 60) > minutos * 60 * 0.2)

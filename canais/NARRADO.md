@@ -43,12 +43,12 @@ Conte o andamento de cada agente como sempre (`npm run andamento`). Antes de cad
    O `narrar` grava só a voz de cada cena, sem apagar as imagens que a pesquisadora põe no meio do caminho. **Ninguém
    muda a fala, a ordem ou a quantidade de cenas** enquanto as duas trabalham.
 4. **Quando as duas terminarem** (as duas, nunca antes):
-   - rode `npm run conferir -- conteudo/<arquivo>.json`: os erros de imagem (cena sem foto, imagem em mais de 3
-     cenas) voltam para a pesquisadora;
+   - rode `npm run conferir -- conteudo/<arquivo>.json --com-voz`: os erros de imagem (cena sem foto, imagem em mais
+     de 3 cenas) voltam para a pesquisadora, e cena sem voz volta para a produção (narrar de novo, só as que faltam);
    - se o `narrar` avisou que alguma fala mudou, narre de novo;
    - confira a duração total: se ficou mais de 20% longe da duração do canal, a roteirista corta ou acrescenta cenas
      (ela mantém as fontes), a pesquisadora põe imagem só nas cenas novas e a produção narra de novo.
-5. **producao:** `npm run previa` e depois renderizar (`npm run renderizar`), também em segundo plano. O vídeo longo demora: uns 4 a 5 minutos de
+5. **producao:** só com o `npm run conferir -- conteudo/<arquivo>.json --com-voz` limpo, `npm run previa` e depois renderizar (`npm run renderizar`), também em segundo plano. O vídeo longo demora: uns 4 a 5 minutos de
    narração e render por minuto de vídeo (num Mac M1, 6 minutos levaram 26). Não pare no meio.
 6. **critica-narrado:** assistir. Se vier CORRIGIR, mande cada item para quem ela disse e renderize de novo (no máximo
    2 voltas). Se ainda ficar algo, a publicação usa `--duvida`.
