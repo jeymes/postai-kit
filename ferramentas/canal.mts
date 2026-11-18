@@ -5,7 +5,7 @@
 // pode ter anotado um aprendizado novo.
 //
 // Uso: POSTAI_CHAVE=postai.xxx.yyy npm run canal -- canais/<canal>
-import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { join } from "node:path";
 import { exigirChave, ferramenta } from "./postai.ts";
@@ -27,7 +27,7 @@ try {
   try {
     writeFileSync(join(pasta, "episodios.md"), `${await ferramenta("ver_episodios")}\n`);
     console.log(`Registro de episódios em ${join(pasta, "episodios.md")}.`);
-    const { logoUrl, ...marca } = JSON.parse(await ferramenta("ver_marca")) ?? {};
+    const { logoUrl, vinhetaUrl, fimDoVideo, ...marca } = JSON.parse(await ferramenta("ver_marca")) ?? {};
     // A marca completa (nome e cores) ou só a cor de destaque escolhida na tela
     if (marca.nome || marca.cores) {
       const atual = JSON.parse(readFileSync("marca/marca.json", "utf8"));
@@ -38,6 +38,18 @@ try {
     if (logoUrl) {
       const baixou = spawnSync("curl", ["-sSfL", "-o", join(pasta, "logo.png"), logoUrl], { stdio: "inherit" });
       console.log(baixou.status === 0 ? "Logo do canal baixado do Postaí." : "Não consegui baixar o logo: sigo sem ele.");
+    }
+    // A vinheta do fim (o motion do app ou do site): o npm run renderizar cola
+    // no fim de cada vídeo. Sem ela no Postaí (o dono apagou), sai daqui também.
+    mkdirSync("public/marca", { recursive: true });
+    // Como o vídeo termina (chamada, vinheta ou ambos): o renderizar segue
+    writeFileSync("public/marca/fim.json", `${JSON.stringify({ fim: fimDoVideo ?? "ambos" })}\n`);
+    for (const antiga of readdirSync("public/marca").filter((nome) => nome.startsWith("vinheta."))) rmSync(join("public/marca", antiga));
+    if (vinhetaUrl) {
+      const extensao = new URL(vinhetaUrl).pathname.match(/\.(mp4|mov|webm)$/i)?.[1]?.toLowerCase() ?? "mp4";
+      const baixou = spawnSync("curl", ["-sSfL", "-o", `public/marca/vinheta.${extensao}`, vinhetaUrl], { stdio: "inherit" });
+      console.log(baixou.status === 0 ? "Vinheta do fim baixada do Postaí: entra no fim de cada vídeo." : "Não consegui baixar a vinheta: os vídeos saem sem ela.");
+      if (baixou.status !== 0) rmSync(`public/marca/vinheta.${extensao}`, { force: true });
     }
   } catch (erro) {
     console.log(`Registro ou marca não baixados: ${erro instanceof Error ? erro.message : String(erro)}`);

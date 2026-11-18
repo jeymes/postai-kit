@@ -27,7 +27,7 @@ Abra (Read) **todos** os quadros, em ordem, e a `out/<arquivo>/capa.jpg`.
 - **o vídeo não segue o combinado com o dono:** o modelo e o fundo do `estilo` do roteiro não aparecem (ex.: era palito na noite e saiu boneco colorido no claro), ou, se o `canal-postai.md` tiver a "Receita de cada vídeo", algum passo dela falta ou está fora de ordem. Diga qual passo faltou e quem corrige (roteirista, se o roteiro não tem o passo; diretora de arte, se o roteiro tem e o quadro não mostra). Se o kit não desenha o passo, anote com `npm run limite` e não reprove por isso;
 - algo cortado, sobreposto ou fora do lugar; rosto coberto por título, cartão, balão ou legenda;
 - texto com erro de português ou palavra faltando (título, balão, cartão do fim, legendas);
-- o balão do começo em mais de uma linha ou cortado; o cartão do fim sem o logo, a chamada ou o botão; legenda vazando por baixo do cartão;
+- o balão do começo em mais de uma linha ou cortado; o cartão do fim sem o logo, a chamada ou o botão (a vinheta do fim do dono, se houver, entra sozinha depois dele no renderizar: não peça para pôr no roteiro); legenda vazando por baixo do cartão;
 - @, site ou texto de exemplo ("Sua Marca", "@suamarca", "suamarca.com.br") aparecendo no vídeo;
 - personagem parado na mesma pose e expressão por 3 quadros seguidos ou mais;
 - a capa sem as personagens inteiras, com título ilegível ou destaque na palavra errada.

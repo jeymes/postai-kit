@@ -26,7 +26,7 @@ Converse e escreva em **português do Brasil**, com frases simples: quem usa nem
 ```
 marca/marca.json          cores, fontes, logo, tom, público e chamada (do dono)
 conteudo/                 uma peça por arquivo JSON (do dono); exemplos em exemplo-*.json
-public/                   marca/ (logo), produtos/, fotos/, sites/, musica/ (do dono)
+public/                   marca/ (logo; vinheta.* = vinheta do fim, baixada pelo npm run canal e colada pelo npm run renderizar no fim de todo vídeo; fim.json = como termina: chamada, vinheta ou ambos), produtos/, fotos/, sites/, musica/ (do dono)
                           sfx/ (efeitos sonoros do kit), exemplos/
 src/nucleo/               marca.ts (lê o marca.json e carrega as fontes), animacao.ts (curvas)
 src/componentes/

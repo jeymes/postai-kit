@@ -16,6 +16,7 @@ import { Tutorial, tutorialExemplo, tutorialSchema } from "./moldes/Tutorial";
 import { Teste3D } from "./componentes/3d/Teste3D";
 import { PreviaDoEstilo } from "./estilos/Previa";
 import { Vitrine3D, vitrine3dExemplo, vitrine3dSchema } from "./moldes/Vitrine3D";
+import { Vinheta, vinhetaExemplo, type PropsDaVinheta } from "./moldes/Vinheta";
 
 // Moldes do Kit Estúdio. O conteúdo de cada peça vem de conteudo/<peca>.json
 // (ver CLAUDE.md); aqui ficam só os exemplos para abrir no Studio. Os moldes
@@ -115,6 +116,16 @@ export const RemotionRoot: React.FC = () => (
     <Folder name="Ferramentas">
       <Composition id="Teste3D" component={Teste3D} {...video} durationInFrames={60} />
       <Composition id="FichaDoPersonagem" component={FichaDoPersonagem} width={1080} height={1920} fps={FPS} durationInFrames={30} defaultProps={{}} />
+      <Composition
+        id="Vinheta"
+        component={Vinheta}
+        defaultProps={vinhetaExemplo}
+        width={1080}
+        height={1920}
+        fps={FPS}
+        durationInFrames={vinhetaExemplo.quadros}
+        calculateMetadata={({ props }: { props: PropsDaVinheta }) => ({ width: props.largura, height: props.altura, durationInFrames: props.quadros })}
+      />
       <Composition id="PreviaDoEstilo" component={PreviaDoEstilo} width={1080} height={1920} fps={FPS} durationInFrames={150} defaultProps={{ modelo: "chapado" as const, fundo: "claro" as const, cena: "dupla" as const }} />
     </Folder>
     <Folder name="Imagens">
