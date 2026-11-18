@@ -88,7 +88,13 @@ export const conversaSchema = z.object({
   estilo: estiloSchema.optional(),
   elenco: z.array(personagemSchema).length(2).optional().describe("As 2 personagens do episódio, do elenco do canal (sem isso: a Bia e a Lu)"),
   titulo: z.string().describe('Cartão do topo, ex.: "POV: ..."'),
-  parte: z.string().optional().describe('Selo embaixo do título, ex.: "PARTE 1"'),
+  parte: z.string().optional().describe('Selo da parte (no vídeo, embaixo do título; na capa, em cima), ex.: "PARTE 1"'),
+  cartaoFinal: z
+    .object({ pose: z.enum(POSES).optional(), expressao: z.enum(EXPRESSOES).optional() })
+    .optional()
+    .describe(
+      "Como as pessoas ficam no cartão final. Sem isso: comemorando, se a história acaba bem; se acaba com medo, tristeza ou briga, ficam como na última cena",
+    ),
   cenario: z
     .string()
     .default("atelie")
@@ -215,7 +221,15 @@ function estadoNaCena(cena: Cena, id: string): Estado | undefined {
   return cena.estados?.[id] ?? (id === "noiva" || id === "organizadora" ? cena[id] : undefined);
 }
 
-function momentosDe(quem: string, linha: Linha, cartaoFinalEm?: number): Momento[] {
+// Expressões de fim ruim: o cartão final não comemora depois delas
+const FIM_RUIM = new Set<string>(["preocupada", "brava", "medo", "sem-graca"]);
+
+function momentosDe(
+  quem: string,
+  linha: Linha,
+  cartaoFinalEm?: number,
+  cartaoFinal?: { pose?: Momento["pose"]; expressao?: Momento["expressao"] },
+): Momento[] {
   const momentos: Momento[] = [{ em: 0, pose: "normal", expressao: "neutra" }];
   for (const { cena, inicio, palavras } of linha) {
     const estado = estadoNaCena(cena, quem);
@@ -225,9 +239,17 @@ function momentosDe(quem: string, linha: Linha, cartaoFinalEm?: number): Momento
     const palavraDoMeio = palavras[Math.floor(palavras.length / 2)];
     if (meio && palavraDoMeio) momentos.push({ em: Math.max(inicio + 1, palavraDoMeio.inicio - 4), ...meio });
   }
-  // No cartão final, as duas comemoram (com o pulinho da reação), em vez de
-  // ficarem paradas na última pose até o fim
-  if (cartaoFinalEm !== undefined) momentos.push({ em: cartaoFinalEm, pose: "comemorando", expressao: "radiante" });
+  // No cartão final: o que o roteiro pedir; sem isso, comemoram (com o pulinho
+  // da reação) só se a história acaba bem; depois de medo ou tristeza, ficam como estavam
+  if (cartaoFinalEm !== undefined) {
+    const ultimo = momentos[momentos.length - 1];
+    const acabaMal = FIM_RUIM.has(ultimo.expressao);
+    momentos.push({
+      em: cartaoFinalEm,
+      pose: cartaoFinal?.pose ?? (acabaMal ? ultimo.pose : "comemorando"),
+      expressao: cartaoFinal?.expressao ?? (acabaMal ? ultimo.expressao : "radiante"),
+    });
+  }
   return momentos;
 }
 
@@ -382,7 +404,7 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
   let tamanhoAntes = 1;
   const mudancasDeTamanho = linha.flatMap((l) => {
     if (!l.cena.sombra) return [];
-    const novo = Math.min(1.6, Math.max(0.5, tamanhoAntes + (l.cena.sombra === "cresce" ? 0.3 : -0.3)));
+    const novo = Math.min(1.3, Math.max(0.5, tamanhoAntes + (l.cena.sombra === "cresce" ? 0.3 : -0.3)));
     const delta = novo - tamanhoAntes;
     tamanhoAntes = novo;
     return [{ em: l.inicio, delta }];
@@ -437,7 +459,7 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
                 noite={noite}
                 visual={visual}
                 desenho={desenho}
-                momentos={momentosDe(quem, linha, props.ctaFinal ? inicioDoCta : undefined)}
+                momentos={momentosDe(quem, linha, props.ctaFinal ? inicioDoCta : undefined, props.cartaoFinal)}
                 palavras={minhas.flatMap((l) => l.palavras)}
                 boca={minhas.some((l) => l.boca) ? minhas.flatMap((l) => l.boca ?? []) : undefined}
                 altura={900}
@@ -626,15 +648,16 @@ export const CapaConversa: React.FC<CapaDaConversa> = (props) => {
               <Frente />
             </CamadaDaFrente>
           )}
-      <div style={{ position: "absolute", top: 270, left: 60, right: 60, display: "flex", flexDirection: "column", alignItems: "center", gap: 18 }}>
-        <div style={{ background: "#FFFFFF", border: `7px solid ${TRACO}`, borderRadius: 44, padding: "30px 40px", boxShadow: "0 18px 0 rgba(43,35,64,0.15)" }}>
-          <Texto texto={titulo} destaque={props.capa?.destaque} tamanho={88} cor={TRACO} />
-        </div>
+      {/* A etiqueta da parte fica em cima do título: embaixo, cobria a cena */}
+      <div style={{ position: "absolute", top: props.parte ? 180 : 270, left: 60, right: 60, display: "flex", flexDirection: "column", alignItems: "center", gap: 18 }}>
         {props.parte && (
           <div style={{ background: cores.destaque, color: cores.textoNoDestaque, fontFamily: fontes.titulo, fontWeight: 800, fontSize: 44, padding: "8px 32px", borderRadius: 50, border: `6px solid ${TRACO}` }}>
             {props.parte}
           </div>
         )}
+        <div style={{ background: "#FFFFFF", border: `7px solid ${TRACO}`, borderRadius: 44, padding: "30px 40px", boxShadow: "0 18px 0 rgba(43,35,64,0.15)" }}>
+          <Texto texto={titulo} destaque={props.capa?.destaque} tamanho={88} cor={TRACO} />
+        </div>
       </div>
     </AbsoluteFill>
   );

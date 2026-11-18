@@ -62,7 +62,9 @@ export const Legendas: React.FC<{
         }}
       >
         {pagina.tokens.map((token, i) => {
-          const falando = token.fromMs <= agora && agora < token.toMs;
+          // Marcada até a próxima palavra começar: não pisca quando a voz mede curto (ex.: 140 ms)
+          const proxima = pagina.tokens[i + 1];
+          const falando = token.fromMs <= agora && agora < Math.max(token.toMs, proxima?.fromMs ?? token.toMs);
           return (
             <span
               key={i}
