@@ -90,7 +90,14 @@ export const conversaSchema = z.object({
   titulo: z.string().describe('Cartão do topo, ex.: "POV: ..."'),
   parte: z.string().optional().describe('Selo da parte (no vídeo, embaixo do título; na capa, em cima), ex.: "PARTE 1"'),
   cartaoFinal: z
-    .object({ pose: z.enum(POSES).optional(), expressao: z.enum(EXPRESSOES).optional() })
+    .object({
+      pose: z.enum(POSES).optional(),
+      expressao: z.enum(EXPRESSOES).optional(),
+      estados: z
+        .record(z.string(), z.object({ pose: z.enum(POSES).optional(), expressao: z.enum(EXPRESSOES).optional() }))
+        .optional()
+        .describe('Por pessoa, pelo id, ex.: o vilão bravo, de mão na cintura, enquanto a heroína comemora: {"vilao": {...}}'),
+    })
     .optional()
     .describe(
       "Como as pessoas ficam no cartão final. Sem isso: comemorando, se a história acaba bem; se acaba com medo, tristeza ou briga, ficam como na última cena",
@@ -459,7 +466,7 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
                 noite={noite}
                 visual={visual}
                 desenho={desenho}
-                momentos={momentosDe(quem, linha, props.ctaFinal ? inicioDoCta : undefined, props.cartaoFinal)}
+                momentos={momentosDe(quem, linha, props.ctaFinal ? inicioDoCta : undefined, { ...props.cartaoFinal, ...props.cartaoFinal?.estados?.[quem] })}
                 palavras={minhas.flatMap((l) => l.palavras)}
                 boca={minhas.some((l) => l.boca) ? minhas.flatMap((l) => l.boca ?? []) : undefined}
                 altura={900}
@@ -591,8 +598,12 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
 // grande. O que importa fica entre y 240 e 1680, a faixa que a grade do perfil
 // (3:4) não corta. A pose e a expressão de cada uma vêm de "capa" ou, sem isso,
 // da primeira fala em que cada uma aparece.
+type EstadoNaCapa = Partial<Estado>;
 type CapaDaConversa = Partial<ConversaProps> & {
-  capa?: { titulo?: string; destaque?: string } & Record<string, Estado | string | undefined>;
+  capa?: { titulo?: string; destaque?: string; estados?: Record<string, EstadoNaCapa> } & Record<
+    string,
+    EstadoNaCapa | Record<string, EstadoNaCapa> | string | undefined
+  >;
 };
 
 export const CapaConversa: React.FC<CapaDaConversa> = (props) => {
@@ -603,14 +614,20 @@ export const CapaConversa: React.FC<CapaDaConversa> = (props) => {
   const CamadaDaFrente = estilo.Frente ?? estilo.Camada;
   const titulo = props.capa?.titulo ?? props.titulo ?? "";
   const elenco = elencoDa(props);
+  // A pose da capa: em capa.estados (como nas cenas) ou direto em capa.<id>;
+  // o que faltar vem da primeira fala em que a pessoa aparece
   const estadoDe = (quem: string): Estado => {
-    const daCapa = props.capa?.[quem];
-    if (daCapa && typeof daCapa === "object") return daCapa;
+    const direto = props.capa?.[quem];
+    const daCapa = props.capa?.estados?.[quem] ?? (direto && typeof direto === "object" ? (direto as EstadoNaCapa) : undefined);
+    let daFala: Estado = { pose: "normal", expressao: "feliz" };
     for (const cena of props.cenas ?? []) {
       const estado = estadoNaCena(cena, quem);
-      if (estado) return estado;
+      if (estado) {
+        daFala = estado;
+        break;
+      }
     }
-    return { pose: "normal", expressao: "feliz" };
+    return { pose: daCapa?.pose ?? daFala.pose, expressao: daCapa?.expressao ?? daFala.expressao };
   };
   return (
     <AbsoluteFill style={{ background: fundo === "noite" ? "#0A0F26" : "#FBE7DA" }}>
