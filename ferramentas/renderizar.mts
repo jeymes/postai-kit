@@ -53,6 +53,12 @@ function lerJson<T>(arquivo: string): T | null {
     return null;
   }
 }
+// Canal dark: o modelo visual do canal (npm run canal grava em canais/dark/estilo-narrado.json)
+if (molde === "Documentario" && !props.estilo) {
+  const doCanal = lerJson<Record<string, unknown>>("canais/dark/estilo-narrado.json");
+  if (doCanal?.modelo) props.estilo = doCanal;
+}
+
 if (!MOLDES.includes(molde)) {
   console.error(`"molde" precisa ser ${MOLDES.join(", ")}. Veio: ${molde}`);
   process.exit(1);
@@ -244,7 +250,7 @@ if (molde === "Carrossel") {
   // Vídeo animado: a capa é a cena com os personagens
   if (molde === "Conversa") imagem("CapaConversa", { ...props, capa: capa ?? {} }, destinoDaCapa);
   else if (molde === "Documentario") {
-    imagem("CapaDoDocumentario", capa ?? capaPadrao(), destinoDaCapa);
+    imagem("CapaDoDocumentario", { ...(capa ?? capaPadrao()), ...(props.estilo ? { estilo: props.estilo } : {}) }, destinoDaCapa);
     capitulos = capitulosDoYouTube();
   }
   else imagem("Capa", capa ?? capaPadrao(), destinoDaCapa);

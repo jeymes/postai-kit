@@ -20,8 +20,13 @@ export const Legendas: React.FC<{
   largura?: number;
   /** Fundo escuro (estilo noite): texto branco e a palavra falada em dourado */
   noite?: boolean;
+  /** Outra fonte, peso e cores (os modelos do Canal dark); sem eles, os da marca */
+  fonte?: string;
+  peso?: number;
+  destaque?: string;
+  textoNoDestaque?: string;
   style?: React.CSSProperties;
-}> = ({ legendas, atraso = 0, tamanho = 76, caixa = false, largura = 940, noite = false, style }) => {
+}> = ({ legendas, atraso = 0, tamanho = 76, caixa = false, largura = 940, noite = false, fonte, peso, destaque, textoNoDestaque, style }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const agora = ((frame - atraso) / fps) * 1000;
@@ -46,8 +51,8 @@ export const Legendas: React.FC<{
           whiteSpace: "nowrap",
           justifyContent: "center",
           gap: `0 ${tamanho * 0.28}px`,
-          fontFamily: fontes.titulo,
-          fontWeight: 800,
+          fontFamily: fonte ?? fontes.titulo,
+          fontWeight: peso ?? 800,
           fontSize: tamanho,
           lineHeight: 1.15,
           textAlign: "center",
@@ -62,8 +67,14 @@ export const Legendas: React.FC<{
             <span
               key={i}
               style={{
-                color: noite ? (falando ? "#F5C94A" : "#FFFFFF") : falando ? cores.textoNoDestaque : cores.texto,
-                backgroundColor: noite || !falando ? "transparent" : cores.destaque,
+                color: noite
+                  ? falando
+                    ? (destaque ?? "#F5C94A")
+                    : "#FFFFFF"
+                  : falando
+                    ? (textoNoDestaque ?? cores.textoNoDestaque)
+                    : cores.texto,
+                backgroundColor: noite || !falando ? "transparent" : (destaque ?? cores.destaque),
                 ...(noite ? { textShadow: "0 4px 14px rgba(0,0,0,0.7)" } : {}),
                 borderRadius: tamanho * 0.22,
                 padding: `0 ${tamanho * 0.14}px`,

@@ -55,11 +55,20 @@ try {
     console.log(`Registro ou marca não baixados: ${erro instanceof Error ? erro.message : String(erro)}`);
   }
   try {
-    const elenco = JSON.parse(await ferramenta("ver_elenco")) as {
+    const dark = pasta.replace(/\/+$/, "").endsWith("dark");
+    const elenco = JSON.parse(await ferramenta("ver_elenco", dark ? { canal: "dark" } : {})) as {
       personagens: unknown[];
       estiloVisual?: { modelo: string; fundo: string };
       cenarios?: unknown[];
+      // Canal dark: o modelo visual, a cor, a letra e o que o dono pediu com as palavras dele
+      estiloDoNarrado?: { modelo: string; cor?: string | null; letra?: string | null; pedido?: string };
     };
+    if (dark) {
+      const { pedido: _pedido, ...estilo } = elenco.estiloDoNarrado ?? { modelo: "classico" };
+      const limpo = Object.fromEntries(Object.entries(estilo).filter(([, valor]) => valor));
+      writeFileSync(join(pasta, "estilo-narrado.json"), `${JSON.stringify(limpo, null, 2)}\n`);
+      console.log(`Estilo visual do Canal dark: ${limpo.modelo ?? "classico"}${limpo.letra ? `, letra ${limpo.letra}` : ""}${limpo.cor ? `, cor ${limpo.cor}` : ""}.`);
+    }
     // Os cenários que a equipe já criou para o canal: o npm run cenarios põe no roteiro
     writeFileSync(join(pasta, "cenarios.json"), `${JSON.stringify(elenco.cenarios ?? [], null, 2)}\n`);
     if (elenco.cenarios?.length) console.log(`Cenários criados pela equipe: ${elenco.cenarios.length} em ${join(pasta, "cenarios.json")}.`);

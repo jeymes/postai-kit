@@ -3,6 +3,7 @@ import React from "react";
 import { AbsoluteFill, Easing, Img, interpolate, Loop, Sequence, Series, staticFile, useCurrentFrame } from "remotion";
 import { z } from "zod";
 import { arquivo } from "../componentes/base";
+import { aparenciaDo, estiloDoNarradoSchema, type Aparencia } from "../estilos/narrado";
 import { Legendas } from "../componentes/texto/Legendas";
 import { suave } from "../nucleo/animacao";
 import { cores, fontes } from "../nucleo/marca";
@@ -59,6 +60,7 @@ export const documentarioSchema = z.object({
   volumeMusica: z.number().min(0).max(0.5).default(0.15),
   /** Frase do cartão final (ex.: "Inscreva-se para a parte 2"). Sem ela, o vídeo termina na última cena. */
   encerramento: z.string().optional(),
+  estilo: estiloDoNarradoSchema,
 });
 
 export type Documentario = z.infer<typeof documentarioSchema>;
@@ -91,15 +93,18 @@ const cinema = Easing.bezier(0.45, 0, 0.55, 1);
 const movimentoDa = (cena: Cena, indice: number) => cena.movimento ?? MOVIMENTOS[indice % MOVIMENTOS.length];
 
 /** Foto em tela cheia com zoom e deslize lentos (ken burns), do começo ao fim da cena. `parada`: fica no fim do movimento (a cena anterior, na mistura) */
-const FotoEmMovimento: React.FC<{ src: string; duracao: number; movimento: (typeof MOVIMENTOS)[number]; inteira?: boolean; parada?: boolean }> = ({
-  src,
-  duracao,
-  movimento,
-  inteira,
-  parada,
-}) => {
+const FotoEmMovimento: React.FC<{
+  src: string;
+  duracao: number;
+  movimento: (typeof MOVIMENTOS)[number];
+  inteira?: boolean;
+  parada?: boolean;
+  /** O tratamento do modelo (filtro CSS) e quanto a câmera anda (1 = o de sempre) */
+  filtro?: string;
+  ritmo?: number;
+}> = ({ src, duracao, movimento, inteira, parada, filtro = "none", ritmo = 1 }) => {
   const frame = useCurrentFrame();
-  const t = parada ? 1 : interpolate(frame, [0, duracao], [0, 1], { extrapolateRight: "clamp", easing: cinema });
+  const t = (parada ? 1 : interpolate(frame, [0, duracao], [0, 1], { extrapolateRight: "clamp", easing: cinema })) * ritmo;
   const escala =
     movimento === "afastar" ? 1.18 - 0.12 * t : movimento === "aproximar" ? 1.06 + 0.12 * t : movimento === "diagonal" ? 1.08 + 0.1 * t : 1.14;
   const x = movimento === "esquerda" ? 3 - 6 * t : movimento === "direita" ? -3 + 6 * t : movimento === "diagonal" ? -2 + 4 * t : 0;
@@ -109,11 +114,14 @@ const FotoEmMovimento: React.FC<{ src: string; duracao: number; movimento: (type
     const leve = 1 + (escala - 1) * 0.4;
     return (
       <AbsoluteFill style={{ overflow: "hidden", backgroundColor: "#000" }}>
-        <Img src={arquivo(src)} style={{ width: "100%", height: "100%", objectFit: "cover", filter: "blur(40px) brightness(0.45)", scale: "1.15" }} />
+        <Img
+          src={arquivo(src)}
+          style={{ width: "100%", height: "100%", objectFit: "cover", filter: `blur(40px) brightness(0.45) ${filtro === "none" ? "" : filtro}`, scale: "1.15" }}
+        />
         <AbsoluteFill style={{ padding: "40px 0", alignItems: "center", justifyContent: "center" }}>
           <Img
             src={arquivo(src)}
-            style={{ height: "100%", maxWidth: "90%", objectFit: "contain", transform: `scale(${leve})`, boxShadow: "0 30px 90px rgba(0,0,0,0.6)" }}
+            style={{ height: "100%", maxWidth: "90%", objectFit: "contain", transform: `scale(${leve})`, boxShadow: "0 30px 90px rgba(0,0,0,0.6)", filter: filtro }}
           />
         </AbsoluteFill>
       </AbsoluteFill>
@@ -123,34 +131,38 @@ const FotoEmMovimento: React.FC<{ src: string; duracao: number; movimento: (type
     <AbsoluteFill style={{ overflow: "hidden", backgroundColor: "#000" }}>
       <Img
         src={arquivo(src)}
-        style={{ width: "100%", height: "100%", objectFit: "cover", transform: `scale(${escala}) translate(${x}%, ${y}%)` }}
+        style={{ width: "100%", height: "100%", objectFit: "cover", transform: `scale(${escala}) translate(${x}%, ${y}%)`, filter: filtro }}
       />
     </AbsoluteFill>
   );
 };
 
-/** Sem foto: fundo escuro na cor da marca, com um brilho suave */
-const FundoSemFoto: React.FC = () => (
-  <AbsoluteFill style={{ background: `radial-gradient(circle at 30% 40%, ${cores.destaque}55 0%, #0d0b10 65%)` }} />
+/** Sem foto: fundo escuro na cor de destaque, com um brilho suave */
+const FundoSemFoto: React.FC<{ destaque?: string; fundo?: string }> = ({ destaque = cores.destaque, fundo = "#0d0b10" }) => (
+  <AbsoluteFill style={{ background: `radial-gradient(circle at 30% 40%, ${destaque}55 0%, ${fundo} 65%)` }} />
 );
 
-const Capitulo: React.FC<{ titulo: string }> = ({ titulo }) => {
+/** Mistério: o texto treme de leve, como projeção antiga */
+const tremorDo = (frame: number, ligado: boolean) => (ligado ? `${Math.sin(frame * 1.7) * 1.5}px ${Math.cos(frame * 2.3) * 1.2}px` : "0 0");
+
+const Capitulo: React.FC<{ titulo: string; ap: Aparencia }> = ({ titulo, ap }) => {
   const frame = useCurrentFrame();
   const opacidade = interpolate(frame, [0, 12, 70, 90], [0, 1, 1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
   const linha = interpolate(frame, [6, 30], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: suave });
   return (
     <AbsoluteFill style={{ backgroundColor: `rgba(8,7,10,${0.55 * opacidade})`, alignItems: "center", justifyContent: "center", opacity: opacidade }}>
-      <div style={{ width: 180 * linha, height: 6, borderRadius: 3, backgroundColor: cores.destaque, marginBottom: 34 }} />
+      <div style={{ width: 180 * linha, height: 6, borderRadius: 3, backgroundColor: ap.destaque, marginBottom: 34 }} />
       <div
         style={{
-          fontFamily: fontes.titulo,
-          fontWeight: 800,
+          fontFamily: ap.fonteTitulo,
+          fontWeight: ap.pesoTitulo,
           fontSize: 92,
           lineHeight: 1.1,
-          color: "#fff",
+          color: ap.textoClaro,
           textAlign: "center",
           maxWidth: 1500,
           textShadow: "0 6px 30px rgba(0,0,0,0.5)",
+          translate: tremorDo(frame, ap.tremor),
         }}
       >
         {titulo}
@@ -160,7 +172,7 @@ const Capitulo: React.FC<{ titulo: string }> = ({ titulo }) => {
 };
 
 /** Texto curto no canto de baixo à esquerda (data, lugar), como numa reportagem */
-const TextoNaTela: React.FC<{ texto: string; inicio: number }> = ({ texto, inicio }) => {
+const TextoNaTela: React.FC<{ texto: string; inicio: number; ap: Aparencia }> = ({ texto, inicio, ap }) => {
   const frame = useCurrentFrame();
   const entrada = interpolate(frame - inicio, [0, 16], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: suave });
   return (
@@ -176,13 +188,14 @@ const TextoNaTela: React.FC<{ texto: string; inicio: number }> = ({ texto, inici
         gap: 18,
       }}
     >
-      <div style={{ width: 8, height: 54, borderRadius: 4, backgroundColor: cores.destaque }} />
+      <div style={{ width: 8, height: 54, borderRadius: 4, backgroundColor: ap.destaque }} />
       <div
         style={{
-          fontFamily: fontes.titulo,
-          fontWeight: 700,
+          fontFamily: ap.fonteTexto,
+          fontWeight: Math.min(700, ap.pesoTitulo),
           fontSize: 46,
-          color: "#fff",
+          color: ap.textoClaro,
+          translate: tremorDo(frame, ap.tremor),
           backgroundColor: "rgba(8,7,10,0.6)",
           padding: "8px 22px",
           borderRadius: 12,
@@ -194,12 +207,12 @@ const TextoNaTela: React.FC<{ texto: string; inicio: number }> = ({ texto, inici
   );
 };
 
-const CenaDoDocumentario: React.FC<{ cena: Cena; indice: number; props: Documentario }> = ({ cena, indice, props }) => {
+const CenaDoDocumentario: React.FC<{ cena: Cena; indice: number; props: Documentario; ap: Aparencia }> = ({ cena, indice, props, ap }) => {
   const frame = useCurrentFrame();
   const duracao = quadrosDaFala(cena);
   // Dentro do capítulo, a foto nova se mistura com a anterior; no começo de capítulo, entra do preto
   const anterior = indice > 0 && !cena.capitulo ? props.cenas[indice - 1] : undefined;
-  const entrada = anterior?.foto ? MISTURA : ENTRADA_DO_CAPITULO;
+  const entrada = anterior?.foto ? Math.max(MISTURA, ap.mistura) : Math.max(ENTRADA_DO_CAPITULO, ap.mistura);
   const fade = interpolate(frame, [0, entrada], [0, 1], { extrapolateRight: "clamp", easing: cinema });
   return (
     <AbsoluteFill style={{ backgroundColor: "#000" }}>
@@ -210,56 +223,79 @@ const CenaDoDocumentario: React.FC<{ cena: Cena; indice: number; props: Document
           movimento={movimentoDa(anterior, indice - 1)}
           inteira={anterior.inteira}
           parada
+          filtro={ap.filtro}
+          ritmo={ap.ritmo}
         />
       )}
       <AbsoluteFill style={{ opacity: fade }}>
         {cena.video ? (
           <AbsoluteFill style={{ overflow: "hidden", backgroundColor: "#000" }}>
-            <Video src={arquivo(cena.video)} muted loop objectFit="cover" style={{ width: "100%", height: "100%" }} />
+            <Video src={arquivo(cena.video)} muted loop objectFit="cover" style={{ width: "100%", height: "100%", filter: ap.filtro }} />
           </AbsoluteFill>
         ) : cena.foto ? (
-          <FotoEmMovimento src={cena.foto} duracao={duracao} movimento={movimentoDa(cena, indice)} inteira={cena.inteira} />
+          <FotoEmMovimento
+            src={cena.foto}
+            duracao={duracao}
+            movimento={movimentoDa(cena, indice)}
+            inteira={cena.inteira}
+            filtro={ap.filtro}
+            ritmo={ap.ritmo}
+          />
         ) : (
-          <FundoSemFoto />
+          <FundoSemFoto destaque={ap.destaque} fundo={ap.fundo} />
         )}
+        {/* As texturas do modelo (papel velho, grão, vinheta) */}
+        <ap.Camadas />
         {/* Escurece as bordas e o pé, para a legenda e o texto lerem bem */}
         <AbsoluteFill style={{ background: "linear-gradient(180deg, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0) 30%, rgba(0,0,0,0) 60%, rgba(0,0,0,0.55) 100%)" }} />
       </AbsoluteFill>
-      {cena.texto && <TextoNaTela texto={cena.texto} inicio={cena.capitulo ? 80 : 10} />}
+      {cena.texto && <TextoNaTela texto={cena.texto} inicio={cena.capitulo ? 80 : 10} ap={ap} />}
       {cena.narracao && (
         <>
           <Sequence from={TEMPOS.antesDaFala} layout="none" name="Narração">
             <Audio src={staticFile(cena.narracao.audio)} />
           </Sequence>
           {props.legendas && (
-            <Legendas legendas={cena.narracao.legendas} atraso={TEMPOS.antesDaFala} tamanho={44} caixa largura={1400} style={{ top: 920, padding: "0 260px" }} />
+            <Legendas
+              legendas={cena.narracao.legendas}
+              atraso={TEMPOS.antesDaFala}
+              tamanho={ap.legenda.tamanho}
+              caixa={ap.legenda.caixa}
+              noite={ap.legenda.noite}
+              largura={1400}
+              {...(ap.modelo === "classico"
+                ? {}
+                : { fonte: ap.fonteTexto, peso: Math.max(500, Math.min(800, ap.pesoTitulo)), destaque: ap.destaque, textoNoDestaque: ap.textoNoDestaque })}
+              style={{ top: 920, padding: "0 260px" }}
+            />
           )}
         </>
       )}
       {cena.capitulo && (
         <Sequence durationInFrames={90} layout="none" name="Capítulo">
-          <Capitulo titulo={cena.capitulo} />
+          <Capitulo titulo={cena.capitulo} ap={ap} />
         </Sequence>
       )}
     </AbsoluteFill>
   );
 };
 
-const Encerramento: React.FC<{ texto: string }> = ({ texto }) => {
+const Encerramento: React.FC<{ texto: string; ap: Aparencia }> = ({ texto, ap }) => {
   const frame = useCurrentFrame();
   const entrada = interpolate(frame, [0, 20], [0, 1], { extrapolateRight: "clamp", easing: suave });
   return (
-    <AbsoluteFill style={{ backgroundColor: "#0d0b10", alignItems: "center", justifyContent: "center", gap: 40 }}>
-      <div style={{ fontFamily: fontes.titulo, fontWeight: 800, fontSize: 84, color: "#fff", opacity: entrada, textAlign: "center", maxWidth: 1500 }}>
+    <AbsoluteFill style={{ backgroundColor: ap.fundo, alignItems: "center", justifyContent: "center", gap: 40 }}>
+      <ap.Camadas />
+      <div style={{ fontFamily: ap.fonteTitulo, fontWeight: ap.pesoTitulo, fontSize: 84, color: ap.textoClaro, opacity: entrada, textAlign: "center", maxWidth: 1500 }}>
         {texto}
       </div>
       <div
         style={{
-          fontFamily: fontes.titulo,
-          fontWeight: 800,
+          fontFamily: ap.fonteTitulo,
+          fontWeight: ap.pesoTitulo,
           fontSize: 44,
-          color: cores.textoNoDestaque,
-          backgroundColor: cores.destaque,
+          color: ap.textoNoDestaque,
+          backgroundColor: ap.destaque,
           padding: "16px 44px",
           borderRadius: 999,
           opacity: entrada,
@@ -274,17 +310,18 @@ const Encerramento: React.FC<{ texto: string }> = ({ texto }) => {
 
 export const Documentario: React.FC<Documentario> = (props) => {
   const total = duracaoDoMolde("Documentario", props);
+  const ap = aparenciaDo(props.estilo);
   return (
     <AbsoluteFill style={{ backgroundColor: "#000" }}>
       <Series>
         {props.cenas.map((cena, i) => (
           <Series.Sequence key={i} durationInFrames={quadrosDaFala(cena)}>
-            <CenaDoDocumentario cena={cena} indice={i} props={props} />
+            <CenaDoDocumentario cena={cena} indice={i} props={props} ap={ap} />
           </Series.Sequence>
         ))}
         {props.encerramento && (
           <Series.Sequence durationInFrames={QUADROS_DO_ENCERRAMENTO}>
-            <Encerramento texto={props.encerramento} />
+            <Encerramento texto={props.encerramento} ap={ap} />
           </Series.Sequence>
         )}
       </Series>
@@ -321,6 +358,7 @@ export const capaDocumentarioSchema = z.object({
     .enum(["esquerda", "direita"])
     .optional()
     .describe("De que lado fica o texto: o oposto ao rosto ou à figura principal da foto (padrão: esquerda)"),
+  estilo: estiloDoNarradoSchema,
 });
 export type CapaDocumentario = z.infer<typeof capaDocumentarioSchema>;
 
@@ -334,7 +372,10 @@ export const capaDocumentarioExemplo: CapaDocumentario = {
 // com contraste, as bordas escurecidas, no máximo 4 palavras grossas em
 // maiúsculas com contorno preto (amarelo no destaque), do lado oposto à figura
 // e nunca no canto de baixo à direita, onde o YouTube põe a duração do vídeo.
-export const CapaDoDocumentario: React.FC<CapaDocumentario> = ({ titulo, destaque, foto, lado = "esquerda" }) => {
+export const CapaDoDocumentario: React.FC<CapaDocumentario> = ({ titulo, destaque, foto, lado = "esquerda", estilo }) => {
+  // O modelo do canal: o tratamento da foto, a letra e a cor do destaque (o Clássico fica como sempre)
+  const ap = aparenciaDo(estilo);
+  const classico = ap.modelo === "classico" && !estilo?.letra && !estilo?.cor;
   const palavras = titulo.toUpperCase().split(/\s+/).filter(Boolean);
   const alvo = destaque?.toUpperCase().split(/\s+/) ?? [];
   const limpa = (palavra: string) => palavra.replace(/[^\p{L}\p{N}]/gu, "");
@@ -348,11 +389,19 @@ export const CapaDoDocumentario: React.FC<CapaDocumentario> = ({ titulo, destaqu
         <Img
           src={arquivo(foto)}
           // O corte puxa para cima: em retrato e cena com gente, o rosto fica na parte de cima
-          style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "50% 22%", filter: "contrast(1.18) saturate(1.15) brightness(1.04)", transform: "scale(1.06)" }}
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            objectPosition: "50% 22%",
+            filter: `contrast(1.18) saturate(1.15) brightness(1.04)${ap.filtro === "none" ? "" : ` ${ap.filtro}`}`,
+            transform: "scale(1.06)",
+          }}
         />
       ) : (
-        <FundoSemFoto />
+        <FundoSemFoto destaque={ap.destaque} fundo={ap.fundo} />
       )}
+      {!classico && <ap.Camadas />}
       {/* Bordas escuras e o lado do texto mais escuro, para a figura e as letras saltarem */}
       <AbsoluteFill style={{ background: "radial-gradient(ellipse at center, rgba(0,0,0,0) 45%, rgba(0,0,0,0.65) 100%)" }} />
       <AbsoluteFill
@@ -371,8 +420,8 @@ export const CapaDoDocumentario: React.FC<CapaDocumentario> = ({ titulo, destaqu
           flexWrap: "wrap",
           justifyContent: naDireita ? "flex-end" : "flex-start",
           gap: `0 ${Math.round(tamanho * 0.25)}px`,
-          fontFamily: fontes.titulo,
-          fontWeight: 900,
+          fontFamily: classico ? fontes.titulo : ap.fonteTitulo,
+          fontWeight: classico ? 900 : Math.max(700, ap.pesoTitulo),
           fontSize: tamanho,
           lineHeight: 1,
           letterSpacing: "-0.01em",
@@ -383,7 +432,7 @@ export const CapaDoDocumentario: React.FC<CapaDocumentario> = ({ titulo, destaqu
           <span
             key={i}
             style={{
-              color: alvo.includes(limpa(palavra)) ? "#FFD60A" : "#FFFFFF",
+              color: alvo.includes(limpa(palavra)) ? (classico ? "#FFD60A" : ap.destaque) : "#FFFFFF",
               WebkitTextStroke: `${Math.max(6, Math.round(tamanho * 0.07))}px #000`,
               paintOrder: "stroke fill",
               textShadow: "0 8px 24px rgba(0,0,0,0.7)",
