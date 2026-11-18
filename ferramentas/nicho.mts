@@ -5,6 +5,9 @@
 //
 // Uso: npm run nicho -- --canal <animacao|dark|cortes>
 //        grava o nicho.md (canais/canal, canais/dark ou a raiz, nos Cortes)
+//      npm run nicho -- --canal <animacao|dark|cortes> --achados conteudo/achados.json
+//        a pesquisa feita na web: { termo, videos: [{ link, porque }], canais: [{ link, porque }] }
+//        (o Postaí confere cada link no YouTube e mostra na aba Nicho)
 //      npm run nicho -- --canal <animacao|dark|cortes> --reversa <id do vídeo>
 //        engenharia reversa de um vídeo do nicho: o Gemini assiste pelo link
 //        (sem baixar) e devolve a receita; o vídeo vira referência do canal
@@ -26,12 +29,20 @@ const valor = (nome: string) => {
 const doArquivo = existsSync(".postai-canal") ? readFileSync(".postai-canal", "utf8").trim() : "";
 const canal = valor("--canal") ?? (doArquivo === "dark" ? "dark" : "animacao");
 if (!["animacao", "dark", "cortes"].includes(canal)) {
-  console.error("Uso: npm run nicho -- --canal <animacao|dark|cortes> [--reversa <id> | --ideias conteudo/ideias.json]");
+  console.error("Uso: npm run nicho -- --canal <animacao|dark|cortes> [--achados <arquivo> | --reversa <id> | --ideias <arquivo>]");
   process.exit(1);
 }
 const arquivoDoNicho = canal === "dark" ? "canais/dark/nicho.md" : canal === "cortes" ? "nicho.md" : "canais/canal/nicho.md";
 
 try {
+  // Pesquisa com o Claude: os links que você achou na web vão para a aba Nicho
+  const achados = valor("--achados");
+  if (achados) {
+    if (!existsSync(achados)) throw new Error(`Não achei ${achados}.`);
+    const dados = JSON.parse(readFileSync(achados, "utf8")) as Record<string, unknown>;
+    console.log(await ferramenta("salvar_achados_do_claude", { ...dados, canal }));
+    process.exit(0);
+  }
   // Engenharia reversa: o Gemini assiste o vídeo pelo link (sem baixar nada)
   const reversa = valor("--reversa");
   if (reversa) {
