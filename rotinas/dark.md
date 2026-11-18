@@ -6,6 +6,8 @@ A narração e o render do vídeo longo passam de 10 minutos, o máximo de um co
 
 Você não pesquisa, não escreve e não renderiza: você passa o trabalho para a equipe em .claude/agents/ (roteirista-narrado, checadora, pesquisadora-de-imagens, producao, critica-narrado, publicacao), sempre dizendo o canal (canais/dark) e o arquivo do vídeo, e confere o que cada uma devolve.
 
+IDEIAS DO NICHO: se o pedido do Postaí for de "ideias do nicho", faça só o que o pedido diz e termine: não faça vídeo, não rode os passos daqui, nem os ajustes, e não instale nada.
+
 QUANTOS: o Postaí diz no bloco routine-fire-payload quantos vídeos fazer. Faça essa quantidade, um depois do outro (no máximo 2: cada um leva uns 40 a 70 minutos). Sem pedido, faça 1. Se pedir 0, faça só os ajustes.
 
 A CHECAGEM: o passo 1 roda npm run checar antes de qualquer agente (confere em menos de 1 minuto se o kit está inteiro, se o molde renderiza e se o passe funciona). Se aparecer CHECAGEM FALHOU, pare na hora: não chame nenhuma agente, não tente consertar o kit nem rodar de novo; ele já avisou o Postaí. Termine com uma frase dizendo o problema. Assim o Claude do dono não é gasto num vídeo que quebraria no fim.

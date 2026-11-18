@@ -25,6 +25,11 @@ já filtra isso (Art Institute of Chicago, Cleveland Museum of Art, Wikimedia Co
 
 ## 1. Busque candidatas
 
+Antes, leia em `canais/<canal>/canal-postai.md` as referências com "Buscar as mesmas obras na fonte de domínio
+público": são os artistas e as obras dos vídeos que deram certo no nicho. Quando servirem à cena, prefira essas obras
+(busque pelo nome do artista e do tema, ex.: `"Gustave Doré Samson"`), sempre nos museus e acervos abaixo, nunca
+num vídeo ou print de outro canal.
+
 Para cada cena, use a `busca` do roteiro. Junte as cenas que podem usar a mesma imagem (mesmo lugar e época). Busque
 **todas as candidatas num comando só**, nos museus (busca em quatro acervos ao mesmo tempo, os museus primeiro: pinturas
 escaneadas por eles, em alta resolução):

@@ -32,6 +32,11 @@ seguindo as regras de forma do `NARRADO.md`:
 - `cenas`: cada uma com `fala`, e com `busca` (os termos em **inglês** para achar a imagem dessa cena: lugar, época
   e tipo, ex.: `"Rio de Janeiro 19th century painting"`, `"Napoleon portrait"`). A pesquisadora usa a `busca` e
   depois põe a `foto`. Ponha `capitulo` onde um capítulo começa e `texto` (data, lugar) de vez em quando.
+- **Referências do nicho** (no `canal-postai.md`, as referências com "Jeito:"): são vídeos que deram certo no
+  YouTube e que o dono escolheu. Siga o jeito delas (gancho, ordem das partes, tamanho das frases, ritmo), mas a
+  história, as frases e o título são seus: nunca copie. Se a referência disser "Buscar as mesmas obras na fonte de
+  domínio público: ...", use essas obras e esses artistas na `busca` das cenas (ex.: `"Gustave Doré Samson"`,
+  `"Rembrandt Samson"`), para o vídeo ter o mesmo tipo de imagem, tirado da fonte original.
 - `voz` e a duração vêm do `canal-postai.md`. Conte as palavras: uns 140 por minuto.
 - `pronuncia` para nomes estrangeiros.
 - `encerramento`, `capa` (`titulo`, `destaque`; a `foto` a pesquisadora escolhe) e `post` (`titulo`, `legenda`).

@@ -36,9 +36,26 @@ if (indice !== -1) {
 
 const { item } = json(await ferramenta("pegar_da_pauta", {})) as { item: { titulo: string; resumo: string } | null };
 if (!item) {
+  // O que está em alta no nicho (aba Nicho do Postaí), para a roteirista propor
+  // a partir do que funciona no YouTube. Se falhar, segue sem.
+  let nicho = "";
+  try {
+    const { texto, temVideos } = json(await ferramenta("ver_nicho", { canal: canal === "dark" ? "dark" : "animacao" })) as {
+      texto: string;
+      temVideos: boolean;
+    };
+    if (temVideos) {
+      mkdirSync(pasta, { recursive: true });
+      writeFileSync(`${pasta}/nicho.md`, `${texto}\n`);
+      nicho = ` Antes, a roteirista lê ${pasta}/nicho.md (o que está em alta no nicho no YouTube e as ideias que o dono viu): prefira assuntos e ganchos que funcionam lá, sem copiar título, capa ou roteiro de ninguém.`;
+    }
+  } catch {
+    // sem o nicho, a pauta sai só da bíblia do canal
+  }
   console.log(
     "PAUTA VAZIA. Peça à roteirista 5 próximos vídeos que sigam o canal (título até 120 caracteres e um resumo de uma ou duas frases), " +
-      "grave em conteudo/pauta.json como [{\"titulo\", \"resumo\"}] e rode npm run pauta -- --propor conteudo/pauta.json; depois rode npm run pauta de novo.",
+      "grave em conteudo/pauta.json como [{\"titulo\", \"resumo\"}] e rode npm run pauta -- --propor conteudo/pauta.json; depois rode npm run pauta de novo." +
+      nicho,
   );
   process.exit(0);
 }
