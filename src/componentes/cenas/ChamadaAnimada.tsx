@@ -31,7 +31,7 @@ export const SeloDaMarca: React.FC<{ tamanho: number; contorno?: number }> = ({ 
     }}
   >
     {marca.logo ? (
-      <Img src={marca.logo} style={{ width: "72%", height: "72%", objectFit: "contain" }} />
+      <Img src={marca.logo} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
     ) : (
       <span style={{ fontFamily: fontes.titulo, fontWeight: 800, fontSize: tamanho * 0.5, color: cores.textoNoDestaque }}>
         {marca.nome.slice(0, 1)}

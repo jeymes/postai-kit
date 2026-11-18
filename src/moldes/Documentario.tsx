@@ -150,7 +150,15 @@ const Capitulo: React.FC<{ titulo: string; ap: Aparencia }> = ({ titulo, ap }) =
   const opacidade = interpolate(frame, [0, 12, 70, 90], [0, 1, 1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
   const linha = interpolate(frame, [6, 30], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: suave });
   return (
-    <AbsoluteFill style={{ backgroundColor: `rgba(8,7,10,${0.55 * opacidade})`, alignItems: "center", justifyContent: "center", opacity: opacidade }}>
+    <AbsoluteFill
+      style={{
+        // Véu escuro mais forte no meio: o título lê bem até em cima de imagem clara
+        background: "radial-gradient(ellipse 75% 55% at 50% 50%, rgba(8,7,10,0.84) 0%, rgba(8,7,10,0.58) 100%)",
+        alignItems: "center",
+        justifyContent: "center",
+        opacity: opacidade,
+      }}
+    >
       <div style={{ width: 180 * linha, height: 6, borderRadius: 3, backgroundColor: ap.destaque, marginBottom: 34 }} />
       <div
         style={{
@@ -161,7 +169,7 @@ const Capitulo: React.FC<{ titulo: string; ap: Aparencia }> = ({ titulo, ap }) =
           color: ap.textoClaro,
           textAlign: "center",
           maxWidth: 1500,
-          textShadow: "0 6px 30px rgba(0,0,0,0.5)",
+          textShadow: "0 4px 24px rgba(0,0,0,0.9), 0 0 3px rgba(0,0,0,0.9)",
           translate: tremorDo(frame, ap.tremor),
         }}
       >
@@ -280,17 +288,26 @@ const CenaDoDocumentario: React.FC<{ cena: Cena; indice: number; props: Document
   );
 };
 
-const Encerramento: React.FC<{ texto: string; ap: Aparencia }> = ({ texto, ap }) => {
+const Encerramento: React.FC<{ texto: string; ap: Aparencia; foto?: string }> = ({ texto, ap, foto }) => {
   const frame = useCurrentFrame();
   const entrada = interpolate(frame, [0, 20], [0, 1], { extrapolateRight: "clamp", easing: suave });
   return (
     <AbsoluteFill style={{ backgroundColor: ap.fundo, alignItems: "center", justifyContent: "center", gap: 40 }}>
+      {/* A última imagem do vídeo, desfocada e escura, por trás da chamada (antes era só a cor) */}
+      {foto && (
+        <Img
+          src={arquivo(foto)}
+          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", filter: "blur(16px) brightness(0.42)", scale: String(1.12 + 0.04 * entrada) }}
+        />
+      )}
       <ap.Camadas />
-      <div style={{ fontFamily: ap.fonteTitulo, fontWeight: ap.pesoTitulo, fontSize: 84, color: ap.textoClaro, opacity: entrada, textAlign: "center", maxWidth: 1500 }}>
+      {/* position: relative: por cima da imagem do fundo (que é absoluta) */}
+      <div style={{ position: "relative", fontFamily: ap.fonteTitulo, fontWeight: ap.pesoTitulo, fontSize: 84, color: ap.textoClaro, opacity: entrada, textAlign: "center", maxWidth: 1500, textShadow: "0 4px 24px rgba(0,0,0,0.7)" }}>
         {texto}
       </div>
       <div
         style={{
+          position: "relative",
           fontFamily: ap.fonteTitulo,
           fontWeight: ap.pesoTitulo,
           fontSize: 44,
@@ -321,7 +338,7 @@ export const Documentario: React.FC<Documentario> = (props) => {
         ))}
         {props.encerramento && (
           <Series.Sequence durationInFrames={QUADROS_DO_ENCERRAMENTO}>
-            <Encerramento texto={props.encerramento} ap={ap} />
+            <Encerramento texto={props.encerramento} ap={ap} foto={[...props.cenas].reverse().find((c) => c.foto)?.foto} />
           </Series.Sequence>
         )}
       </Series>

@@ -53,7 +53,7 @@ export function quadrosDaFala(cena: CenaNarrada) {
 }
 
 /** Conversa: respiro antes da primeira fala, entre as falas e no fim */
-export const CONVERSA = { inicio: 20, entreFalas: 12, fim: 45, ctaFinal: 105, final: 150 } as const;
+export const CONVERSA = { inicio: 20, entreFalas: 12, fim: 18, ctaFinal: 105, final: 150 } as const;
 
 /** Tempo estimado de cada palavra (antes da voz): curtas ~0,2 s, longas ~0,5 s, pausa na pontuação */
 export function estimarPalavras(fala: string) {

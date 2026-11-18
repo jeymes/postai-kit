@@ -84,6 +84,36 @@ const CorpoDaSombra: React.FC<{ frame: number; semente: number; brava: boolean; 
   </>
 );
 
+/**
+ * O sussurro no balão: quebra em linhas e, se não couber, diminui um pouco a
+ * letra (até 4 linhas). Só uma fala enorme ganha "…" no fim da 4ª linha. As
+ * letras por linha são as que cabem na largura do balão (Arial: ~0,5 da altura).
+ */
+export function quebrarSussurro(texto: string) {
+  const palavras = texto.split(/\s+/).filter(Boolean);
+  // [letra, letras por linha, até quantas linhas]: a letra não desce de 28 (lê no celular)
+  const tamanhos: Array<[number, number, number]> = [
+    [36, 22, 3],
+    [32, 25, 3],
+    [30, 27, 4],
+    [28, 29, 4],
+  ];
+  let ultimo = { linhas: [] as string[], fonte: 36 };
+  for (const [fonte, maximo, maxLinhas] of tamanhos) {
+    const linhas: string[] = [];
+    for (const palavra of palavras) {
+      const ultima = linhas[linhas.length - 1];
+      if (ultima !== undefined && `${ultima} ${palavra}`.length <= maximo) linhas[linhas.length - 1] = `${ultima} ${palavra}`;
+      else linhas.push(palavra);
+    }
+    ultimo = { linhas, fonte };
+    if (linhas.length <= maxLinhas) return ultimo;
+  }
+  const linhas = ultimo.linhas.slice(0, 4);
+  linhas[3] = `${linhas[3].slice(0, 28)}…`;
+  return { linhas, fonte: ultimo.fonte };
+}
+
 export const Sombra: React.FC<{
   momentos: Momento[];
   palavras: Palavra[];
@@ -124,17 +154,11 @@ export const Sombra: React.FC<{
   const aberta = forma ? ["C", "D", "E", "H"].includes(forma) : estado.expressao === "surpresa";
   const piscando = (frame + semente * 37 + 50) % 97 < 4;
   const rosto = desenho ? pecasDoRosto(desenho, estado.expressao, forma, piscando) : null;
-  // O sussurro em até 2 linhas de ~20 letras (o que passar vira "…")
-  const linhas: string[] = [];
-  for (const palavra of (sussurro ?? "").split(/\s+/).filter(Boolean)) {
-    const ultima = linhas[linhas.length - 1];
-    if (ultima !== undefined && `${ultima} ${palavra}`.length <= 20) linhas[linhas.length - 1] = `${ultima} ${palavra}`;
-    else linhas.push(palavra);
-  }
-  if (linhas.length > 2) {
-    linhas.length = 2;
-    linhas[1] = `${linhas[1].slice(0, 19)}…`;
-  }
+  // O sussurro quebra em linhas e a letra diminui para caber (antes cortava com "…" depois de ~35 letras)
+  const { linhas, fonte } = quebrarSussurro(sussurro ?? "");
+  const alturaDaLinha = Math.round(fonte * 1.22);
+  const folga = 30;
+  const alturaDoBalao = folga * 2 + linhas.length * alturaDaLinha;
   const largura = altura * 0.6;
   return (
     <svg viewBox="-100 0 600 1000" width={largura} height={altura} style={{ overflow: "visible", ...style }}>
@@ -164,11 +188,11 @@ export const Sombra: React.FC<{
       {/* O balão do sussurro fica sempre de pé (fora do espelho), em cima dela */}
       {/* O Conversa só manda o sussurro enquanto é a fala dela (o balão não pisca entre as palavras) */}
       {sussurro && escala > 0.5 && (
-        <g transform={`translate(${espelhar ? 230 : 170} ${Math.max(70, 930 - 620 * escala - 110)})`}>
-          <rect x={-230} y={-70} width={460} height={linhas.length > 1 ? 150 : 110} rx={34} fill="#FFFFFF" stroke="#1E1A24" strokeWidth={4} />
-          <text x={0} y={linhas.length > 1 ? -22 : -14} textAnchor="middle" dominantBaseline="middle" fill="#1E1A24" fontSize={36} fontFamily="Arial, sans-serif">
+        <g transform={`translate(${espelhar ? 230 : 170} ${Math.max(70, 930 - 620 * escala - 110 - Math.max(0, alturaDoBalao - 110))})`}>
+          <rect x={-230} y={-70} width={460} height={alturaDoBalao} rx={34} fill="#FFFFFF" stroke="#1E1A24" strokeWidth={4} />
+          <text x={0} y={-70 + folga + alturaDaLinha / 2} textAnchor="middle" dominantBaseline="middle" fill="#1E1A24" fontSize={fonte} fontFamily="Arial, sans-serif">
             {linhas.map((linha, i) => (
-              <tspan key={i} x={0} dy={i === 0 ? 0 : 44}>
+              <tspan key={i} x={0} dy={i === 0 ? 0 : alturaDaLinha}>
                 {linha}
               </tspan>
             ))}

@@ -220,7 +220,8 @@ export function alinhar(roteiro: Palavra[], ouvidas: Ouvida[], duracao: number) 
   }
 
   const legendas: Legenda[] = roteiro.map((p, indice) => ({
-    texto: p.original.replace(/[.,;:]+$/, "").replace(/^R\$(?=\d)/, "R$ "),
+    // A palavra como está no roteiro: as vírgulas ajudam a ler; só o ponto final sai
+    texto: p.original.replace(/(?<!\.)\.$/, "").replace(/^R\$(?=\d)/, "R$ "),
     inicioMs: Math.round(tempos[indice].inicio * 1000),
     fimMs: Math.round(Math.max(tempos[indice].fim, tempos[indice].inicio + 0.05) * 1000),
   }));

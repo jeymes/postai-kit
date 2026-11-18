@@ -12,10 +12,14 @@ const rgbDe = (hex: string) => {
   return `${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}`;
 };
 
-export const LuzDoAviso: React.FC<{ em: number; x?: number; y?: number; cor?: string }> = ({ em, x = 540, y = 1250, cor = cores.destaque }) => {
+export const LuzDoAviso: React.FC<{ em: number; ate?: number; x?: number; y?: number; cor?: string }> = ({ em, ate, x = 540, y = 1250, cor = cores.destaque }) => {
   const DOURADO = rgbDe(cor);
-  const frame = useCurrentFrame() - em;
+  const agora = useCurrentFrame();
+  const frame = agora - em;
   if (frame < 0) return null;
+  // `ate`: quadro em que a fala da luz acaba; ela apaga devagar (antes ficava acesa até o fim do vídeo)
+  const apaga = ate === undefined ? 1 : interpolate(agora, [ate, ate + 20], [1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  if (apaga <= 0) return null;
   const abre = interpolate(frame, [0, 24], [0, 1], { extrapolateRight: "clamp" });
   const clarao = interpolate(frame, [0, 5, 18], [0, 0.4, 0], { extrapolateRight: "clamp" });
   const raio = 120 + 900 * abre;
@@ -23,7 +27,7 @@ export const LuzDoAviso: React.FC<{ em: number; x?: number; y?: number; cor?: st
   const raios = interpolate(frame, [0, 10, 45], [0, 0.6, 0], { extrapolateRight: "clamp" });
   const brilho = interpolate(frame, [20, 60], [0.55, 0.28], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
   return (
-    <AbsoluteFill style={{ pointerEvents: "none" }}>
+    <AbsoluteFill style={{ pointerEvents: "none", opacity: apaga }}>
       <AbsoluteFill
         style={{
           background: `radial-gradient(circle ${raio}px at ${x}px ${y}px, rgba(${DOURADO}, ${brilho}), rgba(${DOURADO}, 0) 70%)`,

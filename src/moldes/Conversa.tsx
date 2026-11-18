@@ -487,7 +487,8 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
           );
           const sentado = estadoNaCena(cena, elenco[indice].id)?.pose === "sentado";
           const mao = maoDe(indice, sentado);
-          return <LuzDoAviso key={`luz-${i}`} em={inicio} x={mao.x} y={mao.y} />;
+          // Apaga quando a próxima fala começa
+          return <LuzDoAviso key={`luz-${i}`} em={inicio} ate={linha[i + 1]?.inicio ?? fimDasFalas} x={mao.x} y={mao.y} />;
         })}
         {linha.map(({ cena, inicio }, i) => {
           const fim = linha[i + 1]?.inicio ?? fimDasFalas;
