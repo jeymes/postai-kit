@@ -6,6 +6,7 @@ import { Boneco, type Desenho, type FormaDaBoca, type Momento, type Palavra, typ
 import { Palito } from "../componentes/personagens/Palito";
 import { Liso } from "../componentes/personagens/Liso";
 import { FundoLousa, FundoNeon, FundoQuadrinhos } from "../componentes/cenarios/FundosDosEstilos";
+import { CENARIOS_SEM_HISTORIA } from "../componentes/cenarios/Cenarios";
 import { FiltroDeGiz, FiltroDeMassinha, FiltroDeNeon, FiltroDeQuadrinhos } from "./filtros";
 
 // A cor de neon do personagem: o mesmo tom, saturado e claro, para brilhar no escuro
@@ -73,6 +74,8 @@ type Estilo = {
 // aparecem desenhados no traço do estilo; nos outros cenários (ateliê,
 // escritório, café), os estilos de traço usam só o fundo deles
 export const CENARIOS_DA_HISTORIA = ["quarto", "sala", "cozinha", "banheiro"];
+/** O cenário tem os móveis da história? (os do kit acima e todos os criados pela equipe) */
+const temMoveis = (cenario?: string) => Boolean(cenario) && !CENARIOS_SEM_HISTORIA.includes(cenario ?? "");
 
 const Normal: Estilo["Camada"] = ({ children }) => <>{children}</>;
 
@@ -134,7 +137,7 @@ export const ESTILOS = {
     nome: "Palito",
     Personagem: ({ desenho, ...props }) => (desenho ? <Boneco desenho={desenho} {...props} /> : <Palito {...props} />),
     Fundo: ({ fundo, Cenario, cenario }) => {
-      const daHistoria = CENARIOS_DA_HISTORIA.includes(cenario ?? "");
+      const daHistoria = temMoveis(cenario);
       const Camada = fundo === "noite" ? TracoNoite : TracoClaro;
       return (
         <>
@@ -186,7 +189,7 @@ export const ESTILOS = {
       <>
         <FiltroDeGiz />
         <FundoLousa noite={fundo === "noite"} />
-        {CENARIOS_DA_HISTORIA.includes(cenario ?? "") && (
+        {temMoveis(cenario) && (
           <TracoGiz fundo={fundo}>
             <Cenario />
           </TracoGiz>
@@ -217,7 +220,7 @@ export const ESTILOS = {
       <>
         <FiltroDeNeon />
         <FundoNeon noite={fundo === "noite"} />
-        {CENARIOS_DA_HISTORIA.includes(cenario ?? "") && (
+        {temMoveis(cenario) && (
           <TracoNeon fundo={fundo}>
             <Cenario />
           </TracoNeon>
@@ -244,7 +247,7 @@ export const ESTILOS = {
     Fundo: ({ fundo, Cenario, cenario }) => (
       <>
         <FiltroDeQuadrinhos />
-        {CENARIOS_DA_HISTORIA.includes(cenario ?? "") ? (
+        {temMoveis(cenario) ? (
           <>
             <Cenario />
             {fundo === "noite" && <VeuDeNoite />}

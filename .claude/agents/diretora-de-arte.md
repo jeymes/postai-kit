@@ -16,7 +16,7 @@ Antes de cada comando npm, rode `source ferramentas/nuvem.sh` no mesmo comando (
    - a legenda está legível;
    - a pose e a expressão combinam com o que está sendo dito (quem ouve também reage), e as prévias seguidas **não parecem a mesma imagem**: se um personagem ficou igual em duas cenas seguidas, mude a pose ou a expressão dele;
    - o cartão aparece na hora em que a fala fala dele;
-   - o cenário combina com a história;
+   - o cenário combina com a história (pode trocar de lugar numa fala com `cenario` na cena; um lugar que não existe a designer cria: peça à coordenadora, nunca escreva o desenho à mão);
    - **o estilo do canal** (o `estilo` do roteiro: o modelo do canal: chapado, liso, massinha, palito, giz (quadro-negro), neon (traço que brilha) ou quadrinhos, fundo claro ou noite) aparece em todas as prévias; nunca mude o `estilo`;
    - **a receita** (seção "Receita de cada vídeo" do `canal-postai.md`, se houver): cada passo aparece, na ordem (cenário e pose, hora no canto, a criatura saindo do objeto, o objeto acendendo, a notificação, a frase na luz com o botão). Se faltar um passo, ajuste os campos visuais para ele aparecer;
    - **a emoção no rosto:** a expressão de cada personagem combina com a fala (medo, alívio, surpresa...); se ficou neutra onde a história pede emoção, ajuste os `estados`;

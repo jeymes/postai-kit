@@ -42,3 +42,6 @@ canais/*/registro.json
 
 # De qual canal é a rotina (a do Canal dark grava "dark")
 .postai-canal
+canais/*/cenarios.json
+canais/*/cenarios-novos/
+canais/*/ficha-cenario-*.png

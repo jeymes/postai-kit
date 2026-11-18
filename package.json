@@ -13,6 +13,8 @@
     "canal": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON ferramentas/canal.mts",
     "elenco": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON ferramentas/elenco.mts",
     "personagem": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON ferramentas/personagem.mts",
+    "cenario": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON ferramentas/cenario.mts",
+    "cenarios": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON ferramentas/cenarios.mts",
     "andamento": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON ferramentas/andamento.mts",
     "vigiar": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON ferramentas/vigia.mts",
     "buscar-videos": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON ferramentas/buscar-videos.mts",

@@ -6,6 +6,7 @@
 // Uso: npm run elenco -- conteudo/<arquivo>.json <id-da-esquerda> <id-da-direita> [--canal canais/<canal>]
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { porCenariosNoRoteiro } from "./cenarios-do-roteiro.ts";
 
 const args = process.argv.slice(2);
 const indiceDoCanal = args.indexOf("--canal");
@@ -53,7 +54,11 @@ peca.elenco = escolhidos;
 // O estilo visual do canal (npm run canal grava em estilo.json): o render segue ele
 const arquivoDoEstilo = join(pastaDoCanal ?? "", "estilo.json");
 if (existsSync(arquivoDoEstilo)) peca.estilo = JSON.parse(readFileSync(arquivoDoEstilo, "utf8"));
+// Os cenários criados pela equipe que o roteiro usa (os que faltarem, a coordenadora manda desenhar)
+const arquivoDeCenarios = join(pastaDoCanal ?? "", "cenarios.json");
+const cenariosFaltando = porCenariosNoRoteiro(peca, existsSync(arquivoDeCenarios) ? JSON.parse(readFileSync(arquivoDeCenarios, "utf8")) : []);
 writeFileSync(caminho, `${JSON.stringify(peca, null, 2)}\n`);
 console.log(
   `Elenco do episódio: ${escolhidos.map((p) => `${p.nome}${p.desenho ? " (desenho próprio)" : p.tipo === "criatura" ? " (criatura do kit)" : ""}`).join(" e ")}.${peca.estilo ? ` Estilo: ${peca.estilo.modelo}, fundo ${peca.estilo.fundo}.` : ""}`,
 );
+if (cenariosFaltando.length) console.log(`Cenários ainda não desenhados: ${cenariosFaltando.join(", ")} (a designer cria; depois npm run cenarios).`);

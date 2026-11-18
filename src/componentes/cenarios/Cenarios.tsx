@@ -252,3 +252,59 @@ export const ORIGEM_NO_CENARIO: Partial<Record<keyof typeof CENARIOS, { objeto: 
 /** O que fica na frente dos personagens em alguns cenários (a cama do quarto) */
 export const FRENTE_DO_CENARIO: Partial<Record<keyof typeof CENARIOS, React.FC>> = { quarto: CamaNaFrente, sala: SofaNaFrente };
 export type NomeDoCenario = keyof typeof CENARIOS;
+
+// ---- Cenários criados pela equipe ----
+// Um lugar que o kit não tem (igreja, praia, carro...) a designer desenha em SVG
+// no mesmo espaço (1080 x 1920, chão em y 1490, contorno #2B2340 para os
+// estilos de traço trocarem a cor), confere a ficha (npm run cenario) e grava no
+// canal. O roteiro recebe o desenho em "cenariosProprios" (npm run cenarios).
+
+export type CenarioProprio = {
+  id: string;
+  nome: string;
+  /** Tudo atrás das pessoas (SVG, só formas) */
+  fundo: string;
+  /** O que cobre as pernas de quem está sentado (encosto do banco, mesa, volante) */
+  frente?: string;
+  /** De onde uma criatura pode sair (um objeto do cenário), na tela */
+  origem?: { objeto: string; x: number; y: number };
+};
+
+/** Os cenários do kit sem móveis da história: nos estilos de traço, só o fundo do estilo */
+export const CENARIOS_SEM_HISTORIA = ["atelie", "escritorio", "cafe"];
+export const ehCenarioDoKit = (nome: string): nome is NomeDoCenario => nome in CENARIOS;
+
+const desenhos = new Map<string, React.FC>();
+/** Um pedaço de SVG da equipe como camada de tela cheia (guardado: não remonta a cada quadro) */
+function camadaDesenhada(chave: string, svg: string, frente: boolean): React.FC {
+  const guardado = desenhos.get(chave);
+  if (guardado) return guardado;
+  const Camada: React.FC = () => (
+    <svg
+      viewBox="0 0 1080 1920"
+      width={1080}
+      height={1920}
+      style={{ position: "absolute", inset: 0, ...(frente ? { pointerEvents: "none" as const } : {}) }}
+      dangerouslySetInnerHTML={{ __html: svg }}
+    />
+  );
+  desenhos.set(chave, Camada);
+  return Camada;
+}
+
+export type CenarioResolvido = { nome: string; Cenario: React.FC; Frente?: React.FC; origem?: { objeto: string; x: number; y: number } };
+
+/** O cenário pelo nome: um do kit ou um criado pela equipe (sem achar: o ateliê) */
+export function resolverCenario(nome: string | undefined, proprios: CenarioProprio[] = []): CenarioResolvido {
+  const pedido = nome ?? "atelie";
+  if (ehCenarioDoKit(pedido)) return { nome: pedido, Cenario: CENARIOS[pedido], Frente: FRENTE_DO_CENARIO[pedido], origem: ORIGEM_NO_CENARIO[pedido] };
+  const proprio = proprios.find((c) => c.id === pedido);
+  if (!proprio) return resolverCenario("atelie");
+  const chave = `${proprio.id}:${proprio.fundo.length}:${proprio.frente?.length ?? 0}`;
+  return {
+    nome: proprio.id,
+    Cenario: camadaDesenhada(`f:${chave}`, proprio.fundo, false),
+    Frente: proprio.frente ? camadaDesenhada(`r:${chave}`, proprio.frente, true) : undefined,
+    origem: proprio.origem,
+  };
+}

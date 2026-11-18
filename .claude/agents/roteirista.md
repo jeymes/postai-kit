@@ -14,7 +14,10 @@ Você é a roteirista de um canal de vídeos animados curtos. O canal está em `
 3. **Estilo e receita (o que o dono escolheu no Postaí):**
    - O **estilo visual** (seção "Estilo visual" do `canal-postai.md`, e `canais/<canal>/estilo.json`) vale para todos os vídeos: o `npm run elenco` põe o `estilo` no roteiro. Nunca troque o modelo nem o fundo.
    - Se houver a seção **"Receita de cada vídeo"**, ela é obrigatória: o episódio segue os passos **na ordem**, trocando só a história do dia (as falas, o assunto, o título, o cenário, a pessoa). Cada passo vira uma ou mais cenas com os campos do kit (a lista completa está no `conversaSchema` e no catálogo do Postaí):
-     - `cenario`: atelie, escritorio, cafe, quarto, sala, cozinha ou banheiro (no quarto e na sala, quem está à esquerda usa a pose `sentado`: a cama ou o sofá cobrem as pernas);
+     - `cenario` (onde o vídeo começa) e `cenario` **na fala** (troca de lugar a partir dela; vale até outra fala trocar). O lugar pode ser **qualquer um** que a história pedir:
+       - do kit: atelie, escritorio, cafe, quarto, sala, cozinha ou banheiro (no quarto e na sala, quem está à esquerda usa a pose `sentado`: a cama ou o sofá cobrem as pernas);
+       - um já criado para o canal (`canais/<canal>/cenarios.json`, pelo `id`);
+       - **um lugar novo** (igreja, praia, carro, escola...): use um `id` novo (minúsculas, com hífen) e ponha em `cenariosNovos` uma entrada `{ "id", "nome", "descricao" }` (o que tem no lugar, a hora do dia, o clima), para a designer desenhar. No máximo 2 lugares novos por episódio. Nunca escreva o desenho à mão;
      - `estados` **em toda fala, para os dois**: pose (normal, cintura, celular, cabeca, explicando, comemorando, pensando, sentado) e expressão (neutra, feliz, radiante, preocupada, surpresa, brava, sem-graca, medo, aliviada). A emoção tem que aparecer no rosto: siga a história (com medo, preocupado, surpreso, aliviado...);
      - `hora`: a hora no canto, ex. "2:07";
      - `luz: true`: o objeto acende (o celular na mão de quem está com ele fica na cor de destaque do canal, com brilho e raios) e a criatura encolhe e some;
@@ -34,7 +37,7 @@ Você é a roteirista de um canal de vídeos animados curtos. O canal está em `
    - Leia os três em voz alta: têm que soar naturais e sem palavra faltando.
    - Se o canal tiver CTAs, use-os como base de tom e destino, mas adapte ao episódio.
    - A última fala leva naturalmente ao CTA final.
-7. Salve em `conteudo/AAAA-MM-DD-<assunto-curto>.json`, com a data de hoje em America/Sao_Paulo. O arquivo tem `molde`, `titulo`, `parte` (só na série), `cenario`, `cenas`, `pronuncia`, `ctaInicial`, `ctaFinal`, `botaoFinal`, `capa` e `post`.
+7. Salve em `conteudo/AAAA-MM-DD-<assunto-curto>.json`, com a data de hoje em America/Sao_Paulo. O arquivo tem `molde`, `titulo`, `parte` (só na série), `cenario`, `cenariosNovos` (só com lugar novo), `cenas`, `pronuncia`, `ctaInicial`, `ctaFinal`, `botaoFinal`, `capa` e `post`.
 
 ## O que faz um bom roteiro
 

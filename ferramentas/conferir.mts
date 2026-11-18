@@ -9,6 +9,7 @@
 //
 // Uso: npm run conferir -- conteudo/<arquivo>.json
 import { existsSync, readFileSync } from "node:fs";
+import { cenariosFaltando } from "./cenarios-do-roteiro.ts";
 
 const arquivo = process.argv.slice(2).find((arg) => !arg.startsWith("--"));
 if (!arquivo || !existsSync(arquivo)) {
@@ -133,6 +134,10 @@ if (peca.molde !== "Conversa") {
 
 // ---- Roteiro ----
 const cenas = peca.cenas ?? [];
+// Cenário que não é do kit nem está desenhado no roteiro (sai no ateliê, errado)
+const semDesenho = cenariosFaltando(peca as Parameters<typeof cenariosFaltando>[0]);
+if (semDesenho.length)
+  erro("designer-de-personagens", `cenário sem desenho: ${semDesenho.join(", ")} (desenhe com npm run cenario ... --gravar e rode npm run cenarios -- ${arquivo} --canal canais/<canal>)`);
 if (!peca.titulo) erro("roteirista", "falta o título");
 else if (tamanho(peca.titulo) > 50) erro("roteirista", `título com ${tamanho(peca.titulo)} caracteres (até 50)`);
 if (cenas.length < 4 || cenas.length > 7) erro("roteirista", `${cenas.length} cenas (de 4 a 7)`);

@@ -3,7 +3,7 @@ import React from "react";
 import { AbsoluteFill, interpolate, Sequence, spring, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 import { z } from "zod";
 import { EfeitosContexto, Som, SONS, type TipoSom } from "../componentes/audio/Som";
-import { CENARIOS, FRENTE_DO_CENARIO, ORIGEM_NO_CENARIO, type NomeDoCenario } from "../componentes/cenarios/Cenarios";
+import { resolverCenario, type CenarioProprio } from "../componentes/cenarios/Cenarios";
 import { HoraNoCanto, Notificacao } from "../componentes/cenas/Notificacao";
 import { TRACO, type FormaDaBoca, type Momento, type Palavra } from "../componentes/personagens/Boneco";
 import { ELENCO } from "../componentes/personagens/elenco";
@@ -89,7 +89,24 @@ export const conversaSchema = z.object({
   elenco: z.array(personagemSchema).length(2).optional().describe("As 2 personagens do episódio, do elenco do canal (sem isso: a Bia e a Lu)"),
   titulo: z.string().describe('Cartão do topo, ex.: "POV: ..."'),
   parte: z.string().optional().describe('Selo embaixo do título, ex.: "PARTE 1"'),
-  cenario: z.enum(Object.keys(CENARIOS) as [NomeDoCenario, ...NomeDoCenario[]]).default("atelie").describe("atelie, escritorio, cafe ou quarto (com a cama: use a pose sentado)"),
+  cenario: z
+    .string()
+    .default("atelie")
+    .describe(
+      "Onde começa: atelie, escritorio, cafe, quarto, sala, cozinha, banheiro (no quarto e na sala, pose sentado à esquerda) ou o id de um cenário criado pela equipe (cenariosProprios)",
+    ),
+  cenariosProprios: z
+    .array(
+      z.object({
+        id: z.string(),
+        nome: z.string(),
+        fundo: z.string(),
+        frente: z.string().optional(),
+        origem: z.object({ objeto: z.string(), x: z.number(), y: z.number() }).optional(),
+      }),
+    )
+    .optional()
+    .describe("Os cenários criados pela equipe que o roteiro usa (preenchido pelo npm run cenarios; não escrever à mão)"),
   cenas: z
     .array(
       z.object({
@@ -109,6 +126,7 @@ export const conversaSchema = z.object({
         luz: z.boolean().optional().describe("A luz do aviso: o celular de quem está com ele (pose celular ou sentado) acende dourado no começo desta fala, e a Sombra é empurrada e some"),
         sombra: z.enum(["cresce", "encolhe"]).optional().describe("A criatura cresce (a pessoa cedeu) ou encolhe (resistiu) no começo desta fala"),
         hora: z.string().max(8).optional().describe('Hora no canto de cima durante esta fala, ex.: "2:07" (madrugada)'),
+        cenario: z.string().optional().describe("Troca de lugar a partir desta fala (um cenário do kit ou criado pela equipe); vale até outra fala trocar"),
         notificacao: z
           .object({ titulo: z.string().max(30).optional().describe("Sem ele: o nome da marca"), texto: z.string().max(60) })
           .optional()
@@ -339,8 +357,17 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
   const fimDasFalas = ultima.inicio + quadrosDaFalaConversa(ultima.cena) + CONVERSA.entreFalas + CONVERSA.fim;
   // A cena do versículo (se tiver) vem antes do CTA final
   const inicioDoCta = fimDasFalas + (props.final ? CONVERSA.final : 0);
-  const Cenario = CENARIOS[props.cenario];
-  const Frente = FRENTE_DO_CENARIO[props.cenario];
+  // O lugar agora: o da última fala que trocou de cenário (até aqui), senão o do roteiro
+  const cenarioNaFala = (k: number) => {
+    for (let i = k; i >= 0; i--) if (linha[i]?.cena.cenario) return linha[i].cena.cenario;
+    return props.cenario;
+  };
+  let falaAgora = 0;
+  linha.forEach((l, i) => {
+    if (l.inicio <= frame) falaAgora = i;
+  });
+  const lugarAgora = resolverCenario(cenarioNaFala(falaAgora), props.cenariosProprios as CenarioProprio[] | undefined);
+  const { Cenario, Frente } = lugarAgora;
   const { fundo, def: estilo, escuro } = estiloDe(props.estilo);
   const CamadaDaFrente = estilo.Frente ?? estilo.Camada;
   const noite = fundo === "noite";
@@ -366,7 +393,7 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
     <AbsoluteFill style={{ background: noite ? "#0A0F26" : "#FBE7DA" }}>
       <EfeitosContexto.Provider value={props.efeitos}>
         <AbsoluteFill style={{ scale: String(zoom), transformOrigin: origem }}>
-          <estilo.Fundo fundo={fundo} Cenario={Cenario} cenario={props.cenario} />
+          <estilo.Fundo fundo={fundo} Cenario={Cenario} cenario={lugarAgora.nome} />
           {elenco.map(({ id: quem, visual, desenho, tipo, objeto }, indice) => {
             const minhas = linha.filter((l) => l.cena.quem === quem);
             const lugar = LUGAR[indice];
@@ -379,7 +406,7 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
               const pontoNaTela =
                 quemSegura >= 0
                   ? maoDe(quemSegura, estadoNaCena(primeira!.cena, elenco[quemSegura].id)?.pose === "sentado")
-                  : ORIGEM_NO_CENARIO[props.cenario];
+                  : resolverCenario(cenarioNaFala(primeira ? linha.indexOf(primeira) : 0), props.cenariosProprios as CenarioProprio[] | undefined).origem;
               const xNoDesenho = pontoNaTela ? (pontoNaTela.x - lugar.left) / 0.9 - 100 : 0;
               const de = pontoNaTela
                 ? { x: lugar.espelhar ? 400 - xNoDesenho : xNoDesenho, y: (pontoNaTela.y - 790) / 0.9 }
@@ -546,8 +573,9 @@ type CapaDaConversa = Partial<ConversaProps> & {
 };
 
 export const CapaConversa: React.FC<CapaDaConversa> = (props) => {
-  const Cenario = CENARIOS[props.cenario ?? "atelie"];
-  const Frente = FRENTE_DO_CENARIO[props.cenario ?? "atelie"];
+  // A capa mostra o lugar onde o vídeo começa
+  const lugar = resolverCenario(props.cenas?.[0]?.cenario ?? props.cenario, props.cenariosProprios as CenarioProprio[] | undefined);
+  const { Cenario, Frente } = lugar;
   const { fundo, def: estilo } = estiloDe(props.estilo);
   const CamadaDaFrente = estilo.Frente ?? estilo.Camada;
   const titulo = props.capa?.titulo ?? props.titulo ?? "";
@@ -563,7 +591,7 @@ export const CapaConversa: React.FC<CapaDaConversa> = (props) => {
   };
   return (
     <AbsoluteFill style={{ background: fundo === "noite" ? "#0A0F26" : "#FBE7DA" }}>
-      <estilo.Fundo fundo={fundo} Cenario={Cenario} cenario={props.cenario} />
+      <estilo.Fundo fundo={fundo} Cenario={Cenario} cenario={lugar.nome} />
       {elenco.map(({ id, visual, desenho, tipo, objeto }, indice) =>
         tipo === "criatura" ? (
           <Sombra

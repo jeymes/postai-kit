@@ -58,7 +58,11 @@ try {
     const elenco = JSON.parse(await ferramenta("ver_elenco")) as {
       personagens: unknown[];
       estiloVisual?: { modelo: string; fundo: string };
+      cenarios?: unknown[];
     };
+    // Os cenários que a equipe já criou para o canal: o npm run cenarios põe no roteiro
+    writeFileSync(join(pasta, "cenarios.json"), `${JSON.stringify(elenco.cenarios ?? [], null, 2)}\n`);
+    if (elenco.cenarios?.length) console.log(`Cenários criados pela equipe: ${elenco.cenarios.length} em ${join(pasta, "cenarios.json")}.`);
     writeFileSync(join(pasta, "elenco.json"), `${JSON.stringify(elenco.personagens, null, 2)}\n`);
     console.log(`Elenco: ${elenco.personagens.length} personagem(ns) em ${join(pasta, "elenco.json")}.`);
     // O estilo visual que o dono escolheu (sem ele: chapado, claro). O npm run elenco põe no roteiro.
