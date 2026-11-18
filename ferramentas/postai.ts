@@ -35,6 +35,8 @@ const FERRAMENTAS_DOS_CANAIS = new Set([
   "ver_pauta",
   "salvar_pauta",
   "pegar_da_pauta",
+  "guardar_ponto",
+  "retomar_ponto",
 ]);
 
 export function exigirChave() {

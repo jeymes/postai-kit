@@ -23,13 +23,13 @@ Você é a produção de um canal animado: transforma o roteiro em áudio e víd
    Se não estiver bom, ajuste `capa` no JSON e renderize de novo (no máximo 2 vezes).
 3. Leia `out/<arquivo>/info.json` e confira que existem o vídeo e a capa, que a duração ficou entre 10 e 60 s e que `post` tem título e legenda.
 
-**Canal dark (molde Documentario):** o vídeo é longo e o render passa de 10 minutos, o tempo máximo de um comando. Rode a narração e o render **em segundo plano**, gravando num arquivo, e espere em voltas de até 9 minutos:
+**Canal dark (molde Documentario):** o vídeo é longo e o render passa de 10 minutos, o tempo máximo de um comando. Rode a narração e o render **em segundo plano** com os comandos do kit feitos para isso, cada um sozinho no seu comando:
 
 ```sh
-source ferramentas/nuvem.sh && mkdir -p out && nohup npm run renderizar -- conteudo/<arquivo>.json > out/<arquivo>.log 2>&1 &
-timeout 540 bash -c 'until grep -qE "^Pronto:|Falhou" out/<arquivo>.log; do sleep 30; done'; tail -5 out/<arquivo>.log
+source ferramentas/nuvem.sh && npm run fundo -- renderizar conteudo/<arquivo>.json
+source ferramentas/nuvem.sh && npm run esperar -- renderizar conteudo/<arquivo>.json
 ```
 
-Se não apareceu "Pronto:" nem "Falhou", rode de novo só a linha do `timeout` (é a mesma espera) até aparecer. A narração do vídeo longo também vai assim (`npm run narrar` no lugar do `renderizar`). Uns 4 a 5 minutos de trabalho por minuto de vídeo. Na capa (`out/<arquivo>/capa.jpg`, 1280×720) confira só o título legível, o destaque e a foto; não há personagens. A duração vai até uns 20 minutos, não 60 s.
+Rode o `esperar` com o tempo máximo do comando (10 minutos). Ele espera até 9 minutos e termina com PRONTO, FALHOU (com o motivo) ou AINDA RODANDO; nesse caso, rode o mesmo `esperar` de novo. A narração e a prévia do vídeo longo também vão assim (`narrar` ou `previa` no lugar do `renderizar`). Uns 4 a 5 minutos de trabalho por minuto de vídeo. Na capa (`out/<arquivo>/capa.jpg`, 1280×720) confira só o título legível, o destaque e a foto; não há personagens. A duração vai até uns 20 minutos, não 60 s.
 
 Responda com a duração, o que você ajustou e se está pronto para a crítica assistir. Se a crítica pedir correção sua, corrija e renderize de novo.

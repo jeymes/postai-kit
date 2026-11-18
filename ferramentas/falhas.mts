@@ -24,7 +24,8 @@ const comando = relative(PASTA, process.argv[1] ?? "")
 // Estes já avisam por outro caminho ou terminam com erro de propósito:
 // checar (a rotina anota), conferir (lista o que a equipe deve arrumar),
 // limite (é o próprio anotar), andamento e vigia (falam com o Postaí o tempo todo)
-const IGNORAR = new Set(["checar", "conferir", "limite", "andamento", "vigia", "diagnostico", "falhas"]);
+// esperar: quem falhou (o comando em segundo plano) já anota sozinho
+const IGNORAR = new Set(["checar", "conferir", "limite", "andamento", "vigia", "diagnostico", "falhas", "esperar"]);
 
 // Guarda o fim do que saiu como erro
 const saida: string[] = [];

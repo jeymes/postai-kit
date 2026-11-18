@@ -8,7 +8,7 @@ NINGUÉM ESTÁ OLHANDO: nunca pergunte nada nem espere resposta. Decida sozinho 
 
 Trabalhe na pasta cortes/ deste repositório. Antes de cada comando npm, rode source ferramentas/nuvem.sh no mesmo comando (prepara a rede da nuvem). O passe do Postaí já está em ~/.postai-passe: nunca o imprima nem o copie, e não use o arquivo .env.
 
-1. Num comando só, da raiz do repositório: source ferramentas/nuvem.sh && (nohup npm run vigiar -- cortes > /tmp/vigia.log 2>&1 &) && cd cortes && source ferramentas/nuvem.sh && { npm ci --loglevel=error && npm run instalar; } > /tmp/instalar.log 2>&1 && npm run checar && npm run buscar
+1. Num comando só, da raiz do repositório: source ferramentas/nuvem.sh && npm run fundo -- vigiar cortes && cd cortes && source ferramentas/nuvem.sh && { npm ci --loglevel=error && npm run instalar; } > /tmp/instalar.log 2>&1 && npm run checar && npm run buscar
    (as instalações vão para /tmp/instalar.log; se falharem, rode tail -15 /tmp/instalar.log, pare e explique)
    - O vigia encerra a sessão na hora se o dono clicar em Parar na tela Cortes: não o desligue nem o rode de novo.
    - A checagem confere, antes de baixar qualquer vídeo, se a fábrica está inteira, se a transcrição abre, se o corte renderiza e se o passe funciona. Se aparecer CHECAGEM FALHOU, pare na hora: não baixe, não transcreva, não tente consertar nem rodar de novo; ela já avisou o Postaí. Termine com uma frase dizendo o problema.
@@ -16,6 +16,8 @@ Trabalhe na pasta cortes/ deste repositório. Antes de cada comando npm, rode so
 2. Para cada vídeo em entrada/, siga a skill .claude/skills/fazer-cortes/SKILL.md do começo ao fim: transcrever, escolher os melhores trechos, prévia (olhe as imagens), cortar e enviar. O enviar manda os cortes para aprovação e marca o pedido como pronto (o Postaí apaga o vídeo grande).
 3. Os comandos já contam o andamento sozinhos. Quando você decidir algo (os trechos escolhidos, uma mudança de plano), conte também: npm run marcar -- <pedidoId> processando "<o que está fazendo, em até 20 palavras>".
 4. Se um vídeo der erro e não se resolver em uns 15 minutos: npm run marcar -- <pedidoId> erro "<o problema em palavras simples>" e siga para o próximo. Não mude o código da fábrica para contornar.
+
+Se a permissão do Claude barrar um comando, não tente contornar: rode npm run marcar -- <pedidoId> erro "Comando barrado pela permissão do Claude" e siga para o próximo.
 
 Nunca baixe vídeos de redes sociais. Não faça commit nem push. Ninguém muda o código da fábrica.
 
