@@ -28,10 +28,11 @@ try {
     writeFileSync(join(pasta, "episodios.md"), `${await ferramenta("ver_episodios")}\n`);
     console.log(`Registro de episódios em ${join(pasta, "episodios.md")}.`);
     const { logoUrl, ...marca } = JSON.parse(await ferramenta("ver_marca")) ?? {};
-    if (marca.nome) {
+    // A marca completa (nome e cores) ou só a cor de destaque escolhida na tela
+    if (marca.nome || marca.cores) {
       const atual = JSON.parse(readFileSync("marca/marca.json", "utf8"));
       writeFileSync("marca/marca.json", `${JSON.stringify({ ...atual, ...marca, cores: { ...atual.cores, ...marca.cores } }, null, 2)}\n`);
-      console.log(`Marca do canal: ${marca.nome}.`);
+      console.log(`Marca do canal: ${marca.nome ?? atual.nome}${marca.cores?.destaque ? `, destaque ${marca.cores.destaque}` : ""}.`);
     }
     // O logo que a pessoa enviou no Postaí (curl: na nuvem passa pelo proxy)
     if (logoUrl) {
@@ -42,9 +43,16 @@ try {
     console.log(`Registro ou marca não baixados: ${erro instanceof Error ? erro.message : String(erro)}`);
   }
   try {
-    const elenco = JSON.parse(await ferramenta("ver_elenco")) as { personagens: unknown[] };
+    const elenco = JSON.parse(await ferramenta("ver_elenco")) as {
+      personagens: unknown[];
+      estiloVisual?: { modelo: string; fundo: string };
+    };
     writeFileSync(join(pasta, "elenco.json"), `${JSON.stringify(elenco.personagens, null, 2)}\n`);
     console.log(`Elenco: ${elenco.personagens.length} personagem(ns) em ${join(pasta, "elenco.json")}.`);
+    // O estilo visual que o dono escolheu (sem ele: chapado, claro). O npm run elenco põe no roteiro.
+    const estilo = elenco.estiloVisual ?? { modelo: "chapado", fundo: "claro" };
+    writeFileSync(join(pasta, "estilo.json"), `${JSON.stringify(estilo, null, 2)}\n`);
+    console.log(`Estilo visual do canal: ${estilo.modelo}, fundo ${estilo.fundo}.`);
   } catch (erro) {
     // Postaí sem o ver_elenco ainda: segue sem o elenco.json (a cena usa o visual)
     console.log(`Elenco não baixado: ${erro instanceof Error ? erro.message : String(erro)}`);

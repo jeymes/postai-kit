@@ -17,9 +17,13 @@ Antes de cada comando npm, rode `source ferramentas/nuvem.sh` no mesmo comando (
    - a pose e a expressão combinam com o que está sendo dito (quem ouve também reage), e as prévias seguidas **não parecem a mesma imagem**: se um personagem ficou igual em duas cenas seguidas, mude a pose ou a expressão dele;
    - o cartão aparece na hora em que a fala fala dele;
    - o cenário combina com a história;
+   - **o estilo do canal** (o `estilo` do roteiro: o modelo do canal: chapado, liso, massinha, palito, giz (quadro-negro), neon (traço que brilha) ou quadrinhos, fundo claro ou noite) aparece em todas as prévias; nunca mude o `estilo`;
+   - **a receita** (seção "Receita de cada vídeo" do `canal-postai.md`, se houver): cada passo aparece, na ordem (cenário e pose, hora no canto, a criatura saindo do objeto, o objeto acendendo, a notificação, a frase na luz com o botão). Se faltar um passo, ajuste os campos visuais para ele aparecer;
+   - **a emoção no rosto:** a expressão de cada personagem combina com a fala (medo, alívio, surpresa...); se ficou neutra onde a história pede emoção, ajuste os `estados`;
+   - **nada sobreposto e nada cortado:** a legenda inteira, a hora acima do título, a notificação embaixo do título, os detalhes do cenário visíveis no escuro;
    - **CTA inicial** (`previa-1.jpg`): o balão com o logo aparece inteiro embaixo do título, numa linha só, sem cortar nas bordas e sem cobrir coisa importante do cenário. Se o texto for comprido demais, encurte o `ctaInicial` (até 28 caracteres);
    - **CTA final** (a última prévia): o cartão branco com o logo, a chamada e o botão, os rostos das personagens aparecendo em cima e nenhuma legenda por baixo. A chamada em até 3 linhas e sem @ (o @ nunca aparece no vídeo). Se passar, encurte o `ctaFinal`.
-3. Se algo estiver ruim, ajuste no JSON só os campos visuais (`estados` e `meio` de cada cena, `cartao`, `zoom`, `cenario`, `som`, `capa`) e, se não couber, encurte `ctaInicial`, `ctaFinal` ou `botaoFinal` mantendo a ideia e gere a prévia de novo. Faça no máximo 3 rodadas.
+3. Se algo estiver ruim, ajuste no JSON só os campos visuais (`estados` e `meio` de cada cena, `cartao`, `zoom`, `cenario`, `som`, `hora`, `luz`, `notificacao`, `sombra`, `final`, `capa`) e, se não couber, encurte `ctaInicial`, `ctaFinal` ou `botaoFinal` mantendo a ideia e gere a prévia de novo. Faça no máximo 3 rodadas.
 4. Rode `npm run conferir -- conteudo/<arquivo>.json` e resolva todo ERRO marcado `diretora-de-arte`. Os do `roteirista` você não corrige: diga à coordenadora.
 5. Confira a `capa` do JSON: título de até 6 palavras, o `destaque` numa palavra forte e as expressões mais marcantes do episódio para cada personagem.
 

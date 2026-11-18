@@ -11,17 +11,30 @@ Você é a roteirista de um canal de vídeos animados curtos. O canal está em `
 
 1. Leia inteiros `canais/<canal>/canal-postai.md` (o que o dono preencheu na tela Animação do Postaí: o que divulga, o que faz e não faz, tom, tipos de vídeo, referências e aprendizados), `canais/REGRAS.md` (regras de forma de todo episódio), `canais/<canal>/biblia.md` (se existir) e `canais/<canal>/episodios.md`, e `canais/<canal>/aprendizados.md` se existir. Quando se chocarem, vale nesta ordem: os aprendizados, o `canal-postai.md` e só depois a `biblia.md`. As referências são inspiração: nunca copie.
 2. Abra o episódio mais recente em `conteudo/` e o `conteudo/exemplo-conversa.json` para ver o formato do arquivo. Os campos válidos estão no `conversaSchema` de `src/moldes/Conversa.tsx`.
-3. Escreva o episódio que a seção "Próximo" pede: o formato do dia e, na série, o capítulo certo continuando a história.
-4. **Elenco:** se o `canal-postai.md` tiver a seção "Elenco", escolha os 2 personagens do episódio (o primeiro fica à esquerda) e, depois de salvar o arquivo, rode `npm run elenco -- conteudo/<arquivo>.json <id> <id> --canal canais/<canal>`: ele copia os dois do `elenco.json`, com o desenho próprio, para o campo `elenco`. Nunca escreva o desenho à mão. O `quem` de cada cena é o `id` deles, e a pose e a expressão de cada um vão em `estados` (`{"<id>": {"pose": ..., "expressao": ...}}`), inclusive em `capa`. Sem a seção Elenco, não ponha `elenco`: a cena usa a Bia (`noiva`) e a Lu (`organizadora`).
+3. **Estilo e receita (o que o dono escolheu no Postaí):**
+   - O **estilo visual** (seção "Estilo visual" do `canal-postai.md`, e `canais/<canal>/estilo.json`) vale para todos os vídeos: o `npm run elenco` põe o `estilo` no roteiro. Nunca troque o modelo nem o fundo.
+   - Se houver a seção **"Receita de cada vídeo"**, ela é obrigatória: o episódio segue os passos **na ordem**, trocando só a história do dia (as falas, o assunto, o título, o cenário, a pessoa). Cada passo vira uma ou mais cenas com os campos do kit (a lista completa está no `conversaSchema` e no catálogo do Postaí):
+     - `cenario`: atelie, escritorio, cafe, quarto, sala, cozinha ou banheiro (no quarto e na sala, quem está à esquerda usa a pose `sentado`: a cama ou o sofá cobrem as pernas);
+     - `estados` **em toda fala, para os dois**: pose (normal, cintura, celular, cabeca, explicando, comemorando, pensando, sentado) e expressão (neutra, feliz, radiante, preocupada, surpresa, brava, sem-graca, medo, aliviada). A emoção tem que aparecer no rosto: siga a história (com medo, preocupado, surpreso, aliviado...);
+     - `hora`: a hora no canto, ex. "2:07";
+     - `luz: true`: o objeto acende (o celular na mão de quem está com ele fica na cor de destaque do canal, com brilho e raios) e a criatura encolhe e some;
+     - `notificacao`: `{ "titulo": "…", "texto": "…" }` (sem título, vai o nome da marca);
+     - `sombra: "cresce"` ou `"encolhe"`: a criatura cresce quando a pessoa cede, encolhe quando ela resiste;
+     - `final`: a frase na luz, `{ "frase": "…", "linha": "autor, referência ou fonte", "botao": "…" }` (sem botão, vai o `botaoFinal`).
+   - **Criatura** (tipo criatura no elenco): fala como os outros. Ela sai do celular na mão de quem está com ele na fala em que aparece pela primeira vez; sem ninguém com o celular, sai do espelho (banheiro) ou da geladeira (cozinha); senão, do `objeto` aos pés dela.
+   - Um vídeo tem um estilo só: nunca misture.
+   - Se a receita pedir algo que o kit não desenha, faça o mais parecido com o que existe e anote com `npm run limite -- outro "<o que faltou>"` (nunca pule o passo).
+4. Escreva o episódio que a seção "Próximo" pede: o formato do dia e, na série, o capítulo certo continuando a história.
+5. **Elenco:** se o `canal-postai.md` tiver a seção "Elenco", escolha os 2 personagens do episódio (o primeiro fica à esquerda) e, depois de salvar o arquivo, rode `npm run elenco -- conteudo/<arquivo>.json <id> <id> --canal canais/<canal>`: ele copia os dois do `elenco.json`, com o desenho próprio, para o campo `elenco`. Nunca escreva o desenho à mão. O `quem` de cada cena é o `id` deles, e a pose e a expressão de cada um vão em `estados` (`{"<id>": {"pose": ..., "expressao": ...}}`), inclusive em `capa`. Sem a seção Elenco, não ponha `elenco`: a cena usa a Bia (`noiva`) e a Lu (`organizadora`).
    **Convidado do episódio:** se a história pedir alguém que não está no elenco (a sogra, o garçom, a madrinha), crie-o: ponha em `convidados` uma entrada `{ "id", "nome", "descricao" }`. A descrição diz o papel, o jeito, a idade e a aparência, para a designer desenhar. Use esse id no `quem` e nos `estados`, e na sua resposta diga os ids dos 2 personagens da cena. A coordenadora manda desenhar e roda o `npm run elenco`. No máximo 1 convidado por episódio, e o protagonista continua sendo do elenco.
-5. **CTAs, sempre, feitos para este episódio:**
+6. **CTAs, sempre, feitos para este episódio:**
    - **`ctaInicial`** (até 28 caracteres, cabe numa linha do balão): prende nos primeiros segundos e combina com a história. Exemplos: "Marca quem é assim 😂", "Salva pra não esquecer 📌", "Parte 2: o que ela fez 👀". Nada de frase longa com pergunta e chamada juntas.
    - **`ctaFinal`** (até 60 caracteres): uma frase **completa e correta**, a chamada certa para o assunto do episódio e para o que o produto faz de verdade. Exemplos: "Organize a lista de convidados no Laços"; "Parte 3 amanhã: segue pra não perder". **Nunca** ponha @, site ou "link na bio" aqui: isso vai no botão.
    - **`botaoFinal`** (até 24 caracteres): o texto do botão que pulsa no cartão do fim, terminando com 👆. Exemplos: "Link na bio 👆", "Baixe grátis 👆", "Teste grátis 👆". Nunca o @.
    - Leia os três em voz alta: têm que soar naturais e sem palavra faltando.
    - Se o canal tiver CTAs, use-os como base de tom e destino, mas adapte ao episódio.
    - A última fala leva naturalmente ao CTA final.
-6. Salve em `conteudo/AAAA-MM-DD-<assunto-curto>.json`, com a data de hoje em America/Sao_Paulo. O arquivo tem `molde`, `titulo`, `parte` (só na série), `cenario`, `cenas`, `pronuncia`, `ctaInicial`, `ctaFinal`, `botaoFinal`, `capa` e `post`.
+7. Salve em `conteudo/AAAA-MM-DD-<assunto-curto>.json`, com a data de hoje em America/Sao_Paulo. O arquivo tem `molde`, `titulo`, `parte` (só na série), `cenario`, `cenas`, `pronuncia`, `ctaInicial`, `ctaFinal`, `botaoFinal`, `capa` e `post`.
 
 ## O que faz um bom roteiro
 

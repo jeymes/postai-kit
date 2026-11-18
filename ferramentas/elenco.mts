@@ -24,7 +24,7 @@ if (!arquivoDoElenco || !existsSync(arquivoDoElenco)) {
   process.exit(1);
 }
 
-type Personagem = { id: string; nome: string; voz?: string; visual: unknown; desenho?: unknown };
+type Personagem = { id: string; nome: string; voz?: string; tipo?: string; criatura?: string; objeto?: string; visual: unknown; desenho?: unknown };
 const elenco: Personagem[] = JSON.parse(readFileSync(arquivoDoElenco, "utf8"));
 // Convidados do episódio (desenhados só para ele): canais/<canal>/convidados/<id>.json
 const doConvidado = (id: string): Personagem | undefined => {
@@ -37,11 +37,23 @@ const escolhidos = ids.map((id) => {
     console.error(`Não achei "${id}" no elenco nem em convidados/. Ids do elenco: ${elenco.map((e) => e.id).join(", ")}`);
     process.exit(1);
   }
-  const { id: pid, nome, voz, visual, desenho } = p;
-  return { id: pid, nome, ...(voz ? { voz } : {}), visual, ...(desenho ? { desenho } : {}) };
+  const { id: pid, nome, voz, tipo, criatura, objeto, visual, desenho } = p;
+  return {
+    id: pid,
+    nome,
+    ...(voz ? { voz } : {}),
+    ...(tipo === "criatura" ? { tipo, ...(criatura ? { criatura } : {}), ...(objeto ? { objeto } : {}) } : {}),
+    visual,
+    ...(desenho ? { desenho } : {}),
+  };
 });
 
 const peca = JSON.parse(readFileSync(caminho, "utf8"));
 peca.elenco = escolhidos;
+// O estilo visual do canal (npm run canal grava em estilo.json): o render segue ele
+const arquivoDoEstilo = join(pastaDoCanal ?? "", "estilo.json");
+if (existsSync(arquivoDoEstilo)) peca.estilo = JSON.parse(readFileSync(arquivoDoEstilo, "utf8"));
 writeFileSync(caminho, `${JSON.stringify(peca, null, 2)}\n`);
-console.log(`Elenco do episódio: ${escolhidos.map((p) => `${p.nome}${p.desenho ? " (desenho próprio)" : ""}`).join(" e ")}.`);
+console.log(
+  `Elenco do episódio: ${escolhidos.map((p) => `${p.nome}${p.desenho ? " (desenho próprio)" : p.tipo === "criatura" ? " (criatura do kit)" : ""}`).join(" e ")}.${peca.estilo ? ` Estilo: ${peca.estilo.modelo}, fundo ${peca.estilo.fundo}.` : ""}`,
+);

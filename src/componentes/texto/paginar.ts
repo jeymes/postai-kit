@@ -24,7 +24,9 @@ export function paginar(legendas: Legenda[], maxLetras: number, juntarMs = 1100)
     if (!texto) continue;
     const atual = paginas[paginas.length - 1];
     const token = { text: texto, fromMs: l.inicioMs, toMs: l.fimMs };
-    if (!atual || l.nova || l.inicioMs - atual.startMs > juntarMs || letras(atual) + 1 + texto.length > maxLetras) {
+    // Fim de frase (. ! ? …) fecha a página: a próxima frase começa noutra
+    const fimDeFrase = atual ? /[.!?…]["”')]*$/.test(atual.tokens[atual.tokens.length - 1].text) : false;
+    if (!atual || l.nova || fimDeFrase || l.inicioMs - atual.startMs > juntarMs || letras(atual) + 1 + texto.length > maxLetras) {
       paginas.push({ startMs: l.inicioMs, tokens: [token] });
     } else {
       atual.tokens.push(token);
@@ -40,6 +42,21 @@ export function paginar(legendas: Legenda[], maxLetras: number, juntarMs = 1100)
       const passa = antes.tokens.pop()!;
       agora.tokens.unshift(passa);
       agora.startMs = passa.fromMs;
+    }
+  }
+  // Palavrinha (até 2 letras: o, a, e, de, um...) nunca fica pendurada no fim da
+  // página: passa para a seguinte, se for a mesma fala e couber
+  for (let i = 0; i < paginas.length - 1; i++) {
+    const pagina = paginas[i];
+    const seguinte = paginas[i + 1];
+    const ultima = pagina.tokens[pagina.tokens.length - 1];
+    const curta = ultima.text.replace(/[^\p{L}]/gu, "").length <= 2 && !/[.!?…,;:]$/.test(ultima.text);
+    const mesmaFala = seguinte.startMs - ultima.toMs < 400;
+    const cabe = letras(seguinte) + 1 + ultima.text.length <= maxLetras;
+    if (curta && pagina.tokens.length >= 2 && mesmaFala && cabe) {
+      pagina.tokens.pop();
+      seguinte.tokens.unshift(ultima);
+      seguinte.startMs = ultima.fromMs;
     }
   }
   return paginas;

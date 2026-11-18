@@ -3,14 +3,21 @@ import React from "react";
 import { AbsoluteFill, interpolate, Sequence, spring, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 import { z } from "zod";
 import { EfeitosContexto, Som, SONS, type TipoSom } from "../componentes/audio/Som";
-import { CENARIOS, type NomeDoCenario } from "../componentes/cenarios/Cenarios";
-import { Boneco, TRACO, type FormaDaBoca, type Momento, type Palavra } from "../componentes/personagens/Boneco";
+import { CENARIOS, FRENTE_DO_CENARIO, ORIGEM_NO_CENARIO, type NomeDoCenario } from "../componentes/cenarios/Cenarios";
+import { HoraNoCanto, Notificacao } from "../componentes/cenas/Notificacao";
+import { TRACO, type FormaDaBoca, type Momento, type Palavra } from "../componentes/personagens/Boneco";
 import { ELENCO } from "../componentes/personagens/elenco";
 import { PENTEADOS, type Visual } from "../componentes/personagens/Boneco";
 import { Legendas, type Legenda } from "../componentes/texto/Legendas";
 import { Texto } from "../componentes/texto/Texto";
 import { BalaoDeChamada, CartaoDeChamada } from "../componentes/cenas/ChamadaAnimada";
 import { cores, fontes } from "../nucleo/marca";
+import { estiloDe, estiloSchema, type EstiloDaPeca } from "../estilos/registro";
+import { FiltrosDosEstilos } from "../estilos/filtros";
+import { OBJETOS_DA_SOMBRA, Sombra } from "../componentes/personagens/Sombra";
+import { CelularAceso } from "../componentes/personagens/Boneco";
+import { LuzDoAviso } from "../componentes/efeitos/LuzDoAviso";
+import { FraseNaLuz } from "../componentes/cenas/FraseNaLuz";
 import { CONVERSA, estimarPalavras, FPS, quadrosDaFalaConversa } from "./tempos";
 
 // Cena de conversa entre personagens fixos do elenco, em desenho 2D: cada
@@ -18,8 +25,8 @@ import { CONVERSA, estimarPalavras, FPS, quadrosDaFalaConversa } from "./tempos"
 // momento. A voz (uma por personagem), a legenda e a boca vêm do
 // `npm run narrar`; sem ela, a prévia sai muda, com o tempo estimado.
 
-const POSES = ["normal", "cintura", "celular", "cabeca", "explicando", "comemorando", "pensando"] as const;
-const EXPRESSOES = ["neutra", "feliz", "radiante", "preocupada", "surpresa", "brava", "sem-graca"] as const;
+const POSES = ["normal", "cintura", "celular", "cabeca", "explicando", "comemorando", "pensando", "sentado"] as const;
+const EXPRESSOES = ["neutra", "feliz", "radiante", "preocupada", "surpresa", "brava", "sem-graca", "medo", "aliviada"] as const;
 const nomesDosSons = Object.keys(SONS) as [TipoSom, ...TipoSom[]];
 
 const estadoSchema = z.object({ pose: z.enum(POSES), expressao: z.enum(EXPRESSOES) });
@@ -30,6 +37,9 @@ export const personagemSchema = z.object({
   id: z.string().regex(/^[a-z0-9-]{1,20}$/).describe('Quem fala, nas cenas ("quem")'),
   nome: z.string().max(30),
   voz: z.string().optional().describe("Voz do kit (src/componentes/personagens/vozes.ts)"),
+  tipo: z.enum(["pessoa", "criatura"]).optional().describe("criatura: só desenho (a Sombra do kit ou desenho próprio), sem pele nem roupa"),
+  criatura: z.enum(["sombra"]).optional().describe("Criatura desenhada pelo kit (quando não tem desenho próprio)"),
+  objeto: z.enum(OBJETOS_DA_SOMBRA).optional().describe("De onde a Sombra sai: celular, garrafa ou espelho"),
   visual: z.object({
     pele: cor,
     cabelo: cor,
@@ -75,10 +85,11 @@ const narracaoSchema = z
   .describe("Preenchido pelo npm run narrar (não editar à mão)");
 
 export const conversaSchema = z.object({
+  estilo: estiloSchema.optional(),
   elenco: z.array(personagemSchema).length(2).optional().describe("As 2 personagens do episódio, do elenco do canal (sem isso: a Bia e a Lu)"),
   titulo: z.string().describe('Cartão do topo, ex.: "POV: ..."'),
   parte: z.string().optional().describe('Selo embaixo do título, ex.: "PARTE 1"'),
-  cenario: z.enum(Object.keys(CENARIOS) as [NomeDoCenario, ...NomeDoCenario[]]).default("atelie").describe("atelie, escritorio ou cafe"),
+  cenario: z.enum(Object.keys(CENARIOS) as [NomeDoCenario, ...NomeDoCenario[]]).default("atelie").describe("atelie, escritorio, cafe ou quarto (com a cama: use a pose sentado)"),
   cenas: z
     .array(
       z.object({
@@ -95,6 +106,13 @@ export const conversaSchema = z.object({
         noiva: estadoSchema.optional().describe("Jeito antigo (só a Bia e a Lu): prefira estados"),
         organizadora: estadoSchema.optional(),
         som: z.enum(nomesDosSons).optional().describe("Efeito sonoro no começo da fala"),
+        luz: z.boolean().optional().describe("A luz do aviso: o celular de quem está com ele (pose celular ou sentado) acende dourado no começo desta fala, e a Sombra é empurrada e some"),
+        sombra: z.enum(["cresce", "encolhe"]).optional().describe("A criatura cresce (a pessoa cedeu) ou encolhe (resistiu) no começo desta fala"),
+        hora: z.string().max(8).optional().describe('Hora no canto de cima durante esta fala, ex.: "2:07" (madrugada)'),
+        notificacao: z
+          .object({ titulo: z.string().max(30).optional().describe("Sem ele: o nome da marca"), texto: z.string().max(60) })
+          .optional()
+          .describe("Cartão de notificação (título e texto que o roteiro define), junto com a luz ou sozinho"),
         narracao: narracaoSchema.optional(),
       }),
     )
@@ -122,6 +140,14 @@ export const conversaSchema = z.object({
   ctaInicial: z.string().max(60).optional().describe('Balão curto (até 28 caracteres, uma linha) embaixo do título nos primeiros segundos, ex.: "Marca quem é assim 😂"'),
   ctaFinal: z.string().max(80).optional().describe('Frase completa no cartão do fim, sem @ e sem "link na bio" (isso vai no botão), ex.: "Organize o seu casamento no Laços"'),
   botaoFinal: z.string().max(24).optional().describe('Texto do botão do cartão do fim, ex.: "Link na bio 👆", "Baixe grátis 👆". Padrão: "Link na bio 👆"'),
+  final: z
+    .object({
+      frase: z.string().max(180).describe("A frase grande (versículo, citação, lição)"),
+      linha: z.string().max(60).optional().describe("A linha menor embaixo: autor, referência, fonte"),
+      botao: z.string().max(30).optional().describe("Texto do botão (sem ele: o botaoFinal do roteiro)"),
+    })
+    .optional()
+    .describe("Frase na luz: cena final escura com feixe de luz, a frase na cor de destaque do canal, a linha embaixo, a pessoa no feixe e o botão (antes do CTA final)"),
   legendas: z.boolean().default(true),
   efeitos: z.boolean().default(true),
   vozes: z.record(z.string(), z.object({ voz: z.string(), velocidade: z.number().optional() })).optional(),
@@ -187,7 +213,8 @@ function momentosDe(quem: string, linha: Linha, cartaoFinalEm?: number): Momento
   return momentos;
 }
 
-const TituloPov: React.FC<{ titulo: string; parte?: string }> = ({ titulo, parte }) => {
+// `abaixo`: o que entra embaixo do título, na mesma coluna (a notificação): nada se sobrepõe
+const TituloPov: React.FC<{ titulo: string; parte?: string; abaixo?: React.ReactNode }> = ({ titulo, parte, abaixo }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   // Já na tela no quadro 0: é o que aparece na prévia do feed. Só cresce um pouco.
@@ -216,6 +243,7 @@ const TituloPov: React.FC<{ titulo: string; parte?: string }> = ({ titulo, parte
           {parte}
         </div>
       )}
+      {abaixo}
     </div>
   );
 };
@@ -273,6 +301,13 @@ const Cartao: React.FC<{ cartao: NonNullable<ConversaProps["cartao"]>; entra: nu
   );
 };
 
+// Onde fica a mão com o celular e o rosto de quem está no lugar 0 ou 1 (na tela
+// 1080x1920), em pé ou sentado: a luz do aviso, o feixe da tela e a criatura
+// que sai do celular partem daqui
+const maoDe = (indice: number, sentado: boolean) => ({ x: indice === 0 ? 261 : 819, y: sentado ? 1289 : 1190 });
+const rostoDe = (indice: number, sentado: boolean) => ({ x: indice === 0 ? 320 : 760, y: sentado ? 1098 : 999 });
+const comCelular = (pose?: string) => pose === "celular" || pose === "sentado";
+
 // A primeira do elenco fica à esquerda; a segunda, à direita, virada para ela
 const LUGAR = [
   { left: 50, espelhar: false, origem: "320px 1150px", semente: 0 },
@@ -302,21 +337,80 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
   // Onde termina a conversa (e começa o cartão do CTA final)
   const ultima = linha[linha.length - 1];
   const fimDasFalas = ultima.inicio + quadrosDaFalaConversa(ultima.cena) + CONVERSA.entreFalas + CONVERSA.fim;
+  // A cena do versículo (se tiver) vem antes do CTA final
+  const inicioDoCta = fimDasFalas + (props.final ? CONVERSA.final : 0);
   const Cenario = CENARIOS[props.cenario];
+  const Frente = FRENTE_DO_CENARIO[props.cenario];
+  const { fundo, def: estilo, escuro } = estiloDe(props.estilo);
+  const CamadaDaFrente = estilo.Frente ?? estilo.Camada;
+  const noite = fundo === "noite";
+  // A primeira fala com a luz do aviso: a Sombra é empurrada e some ali, e o
+  // celular de quem está com ele na mão acende dourado
+  const naLuz = linha.find((l) => l.cena.luz);
+  const luzEm = naLuz?.inicio;
+  const quemAcende = naLuz
+    ? Math.max(0, elenco.findIndex((p) => ["celular", "sentado"].includes(estadoNaCena(naLuz.cena, p.id)?.pose ?? "")))
+    : -1;
+  // A criatura cresce quando a pessoa cede e encolhe quando resiste (campo "sombra" da cena)
+  let tamanhoAntes = 1;
+  const mudancasDeTamanho = linha.flatMap((l) => {
+    if (!l.cena.sombra) return [];
+    const novo = Math.min(1.6, Math.max(0.5, tamanhoAntes + (l.cena.sombra === "cresce" ? 0.3 : -0.3)));
+    const delta = novo - tamanhoAntes;
+    tamanhoAntes = novo;
+    return [{ em: l.inicio, delta }];
+  });
+  const tamanhoDaCriatura =
+    1 + mudancasDeTamanho.reduce((soma, m) => soma + m.delta * spring({ frame: frame - m.em, fps, config: { damping: 14 } }), 0);
   return (
-    <AbsoluteFill style={{ background: "#FBE7DA" }}>
+    <AbsoluteFill style={{ background: noite ? "#0A0F26" : "#FBE7DA" }}>
       <EfeitosContexto.Provider value={props.efeitos}>
         <AbsoluteFill style={{ scale: String(zoom), transformOrigin: origem }}>
-          <Cenario />
-          {elenco.map(({ id: quem, visual, desenho }, indice) => {
+          <estilo.Fundo fundo={fundo} Cenario={Cenario} cenario={props.cenario} />
+          {elenco.map(({ id: quem, visual, desenho, tipo, objeto }, indice) => {
             const minhas = linha.filter((l) => l.cena.quem === quem);
             const lugar = LUGAR[indice];
+            if (tipo === "criatura") {
+              // A Sombra sai do objeto pouco antes da primeira vez que aparece
+              const primeira = linha.find((l) => l.cena.quem === quem || estadoNaCena(l.cena, quem));
+              const falaAgora = minhas.find((l) => l.palavras.length && l.palavras[0].inicio <= frame && frame <= l.palavras[l.palavras.length - 1].fim);
+              // De onde ela sai: do celular na mão de alguém naquela fala; senão, do objeto do cenário (espelho, geladeira); senão, aos pés dela
+              const quemSegura = primeira ? elenco.findIndex((p) => p.tipo !== "criatura" && comCelular(estadoNaCena(primeira.cena, p.id)?.pose)) : -1;
+              const pontoNaTela =
+                quemSegura >= 0
+                  ? maoDe(quemSegura, estadoNaCena(primeira!.cena, elenco[quemSegura].id)?.pose === "sentado")
+                  : ORIGEM_NO_CENARIO[props.cenario];
+              const xNoDesenho = pontoNaTela ? (pontoNaTela.x - lugar.left) / 0.9 - 100 : 0;
+              const de = pontoNaTela
+                ? { x: lugar.espelhar ? 400 - xNoDesenho : xNoDesenho, y: (pontoNaTela.y - 790) / 0.9 }
+                : undefined;
+              return (
+                <Sombra
+                  key={quem}
+                  momentos={momentosDe(quem, linha)}
+                  palavras={minhas.flatMap((l) => l.palavras)}
+                  boca={minhas.some((l) => l.boca) ? minhas.flatMap((l) => l.boca ?? []) : undefined}
+                  altura={900}
+                  espelhar={lugar.espelhar}
+                  semente={lugar.semente}
+                  aparece={primeira ? Math.max(1, primeira.inicio - 20) : 0}
+                  some={luzEm}
+                  escala={tamanhoDaCriatura}
+                  desenho={desenho}
+                  objeto={objeto}
+                  de={de}
+                  sussurro={falaAgora?.cena.fala}
+                  style={{ position: "absolute", left: lugar.left, top: 790 }}
+                />
+              );
+            }
             return (
-              <Boneco
-                key={quem}
+              <CelularAceso.Provider key={quem} value={luzEm !== undefined && frame >= luzEm && indice === quemAcende}>
+              <estilo.Personagem
+                noite={noite}
                 visual={visual}
                 desenho={desenho}
-                momentos={momentosDe(quem, linha, props.ctaFinal ? fimDasFalas : undefined)}
+                momentos={momentosDe(quem, linha, props.ctaFinal ? inicioDoCta : undefined)}
                 palavras={minhas.flatMap((l) => l.palavras)}
                 boca={minhas.some((l) => l.boca) ? minhas.flatMap((l) => l.boca ?? []) : undefined}
                 altura={900}
@@ -324,10 +418,74 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
                 semente={lugar.semente}
                 style={{ position: "absolute", left: lugar.left, top: 790 }}
               />
+              </CelularAceso.Provider>
             );
           })}
+          {Frente && (
+            <CamadaDaFrente fundo={fundo}>
+              <Frente />
+            </CamadaDaFrente>
+          )}
+          {/* No escuro, a tela do celular ilumina o rosto de quem está com ele (um feixe claro e fraco) */}
+          {escuro &&
+            (() => {
+              const k = linha.findIndex((l, n) => frame >= l.inicio && frame < (linha[n + 1]?.inicio ?? fimDasFalas));
+              if (k < 0 || (luzEm !== undefined && frame >= luzEm)) return null;
+              return elenco.map((p, indice) => {
+                const pose = estadoNaCena(linha[k].cena, p.id)?.pose ?? momentosDe(p.id, linha).filter((m) => m.em <= frame).pop()?.pose;
+                if (p.tipo === "criatura" || !comCelular(pose)) return null;
+                const sentado = pose === "sentado";
+                const m = maoDe(indice, sentado);
+                const r = rostoDe(indice, sentado);
+                return (
+                  <svg key={`feixe-${p.id}`} viewBox="0 0 1080 1920" width={1080} height={1920} style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
+                    <defs>
+                      <linearGradient id={`feixe-${indice}`} x1={m.x} y1={m.y} x2={r.x} y2={r.y} gradientUnits="userSpaceOnUse">
+                        <stop offset="0" stopColor="#D8E6FF" stopOpacity={0.32} />
+                        <stop offset="1" stopColor="#D8E6FF" stopOpacity={0.04} />
+                      </linearGradient>
+                    </defs>
+                    <polygon points={`${m.x - 10},${m.y} ${m.x + 10},${m.y} ${r.x + 70},${r.y} ${r.x - 70},${r.y}`} fill={`url(#feixe-${indice})`} />
+                  </svg>
+                );
+              });
+            })()}
         </AbsoluteFill>
-        <TituloPov titulo={props.titulo} parte={props.parte} />
+        {linha.map(({ cena, inicio }, i) => {
+          if (!cena.luz) return null;
+          // A luz nasce no celular de quem está com ele na mão nesta fala
+          const indice = Math.max(
+            0,
+            elenco.findIndex((p) => ["celular", "sentado"].includes(estadoNaCena(cena, p.id)?.pose ?? "")),
+          );
+          const sentado = estadoNaCena(cena, elenco[indice].id)?.pose === "sentado";
+          const mao = maoDe(indice, sentado);
+          return <LuzDoAviso key={`luz-${i}`} em={inicio} x={mao.x} y={mao.y} />;
+        })}
+        {linha.map(({ cena, inicio }, i) => {
+          const fim = linha[i + 1]?.inicio ?? fimDasFalas;
+          return (
+            <React.Fragment key={`extra-${i}`}>
+              {cena.hora && (
+                <Sequence from={inicio} durationInFrames={fim - inicio} layout="none" name={`Hora ${i + 1}`}>
+                  <HoraNoCanto hora={cena.hora} noite={escuro} />
+                </Sequence>
+              )}
+            </React.Fragment>
+          );
+        })}
+        <TituloPov
+          titulo={props.titulo}
+          parte={props.parte}
+          abaixo={(() => {
+            // A notificação da fala de agora, na coluna do título
+            const i = linha.findIndex((l, k) => l.cena.notificacao && frame >= l.inicio - 4 && frame < (linha[k + 1]?.inicio ?? fimDasFalas));
+            const cena = i >= 0 ? linha[i].cena : null;
+            return cena?.notificacao ? (
+              <Notificacao em={linha[i].inicio - 4} texto={cena.notificacao.texto} app={cena.notificacao.titulo} noite={escuro} noFluxo />
+            ) : null;
+          })()}
+        />
         {props.ctaInicial && <BalaoDeChamada texto={props.ctaInicial} topo={props.parte ? 450 : 395} jaNaTela />}
         {props.cartao && (
           <Cartao
@@ -339,7 +497,7 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
         )}
         {props.legendas && (
           <Sequence durationInFrames={props.ctaFinal ? fimDasFalas : undefined} layout="none" name="Legendas">
-            <Legendas legendas={legendas} tamanho={68} largura={940} style={{ top: 1730, padding: "0 70px" }} />
+            <Legendas legendas={legendas} noite={escuro} tamanho={estilo.legenda} largura={940} style={{ top: estilo.legenda > 70 ? 1690 : 1730, padding: "0 70px" }} />
           </Sequence>
         )}
         {linha.map(({ cena, inicio }, i) => (
@@ -352,8 +510,24 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
             {cena.som && <Som tipo={cena.som} em={Math.max(0, inicio - 4)} />}
           </React.Fragment>
         ))}
+        {props.final && (
+          <Sequence from={fimDasFalas} durationInFrames={CONVERSA.final} name="Frase na luz">
+            <FraseNaLuz
+              frase={props.final.frase}
+              linha={props.final.linha}
+              botao={props.final.botao ?? props.botaoFinal}
+              figura={(() => {
+                // A pessoa do episódio, pequena, de pé embaixo do feixe de luz
+                const pessoa = elenco.find((p) => p.tipo !== "criatura");
+                return pessoa ? (
+                  <estilo.Personagem noite visual={pessoa.visual} desenho={pessoa.desenho} momentos={[{ em: 0, pose: "normal", expressao: "feliz" }]} palavras={[]} altura={380} />
+                ) : undefined;
+              })()}
+            />
+          </Sequence>
+        )}
         {props.ctaFinal && (
-          <Sequence from={fimDasFalas} layout="none" name="CTA final">
+          <Sequence from={inicioDoCta} layout="none" name="CTA final">
             <CartaoDeChamada chamada={props.ctaFinal} botao={props.botaoFinal} />
             <Som tipo="sucesso" em={2} />
           </Sequence>
@@ -373,6 +547,9 @@ type CapaDaConversa = Partial<ConversaProps> & {
 
 export const CapaConversa: React.FC<CapaDaConversa> = (props) => {
   const Cenario = CENARIOS[props.cenario ?? "atelie"];
+  const Frente = FRENTE_DO_CENARIO[props.cenario ?? "atelie"];
+  const { fundo, def: estilo } = estiloDe(props.estilo);
+  const CamadaDaFrente = estilo.Frente ?? estilo.Camada;
   const titulo = props.capa?.titulo ?? props.titulo ?? "";
   const elenco = elencoDa(props);
   const estadoDe = (quem: string): Estado => {
@@ -385,11 +562,25 @@ export const CapaConversa: React.FC<CapaDaConversa> = (props) => {
     return { pose: "normal", expressao: "feliz" };
   };
   return (
-    <AbsoluteFill style={{ background: "#FBE7DA" }}>
-      <Cenario />
-      {elenco.map(({ id, visual, desenho }, indice) => (
-        <Boneco
+    <AbsoluteFill style={{ background: fundo === "noite" ? "#0A0F26" : "#FBE7DA" }}>
+      <estilo.Fundo fundo={fundo} Cenario={Cenario} cenario={props.cenario} />
+      {elenco.map(({ id, visual, desenho, tipo, objeto }, indice) =>
+        tipo === "criatura" ? (
+          <Sombra
+            desenho={desenho}
+            key={id}
+            momentos={[{ em: 0, ...estadoDe(id) }]}
+            palavras={[]}
+            altura={960}
+            espelhar={LUGAR[indice].espelhar}
+            semente={LUGAR[indice].semente}
+            objeto={objeto}
+            style={{ position: "absolute", left: LUGAR[indice].left - 20, top: 700 }}
+          />
+        ) : (
+        <estilo.Personagem
           key={id}
+          noite={fundo === "noite"}
           visual={visual}
           desenho={desenho}
           momentos={[{ em: 0, ...estadoDe(id) }]}
@@ -399,7 +590,13 @@ export const CapaConversa: React.FC<CapaDaConversa> = (props) => {
           semente={LUGAR[indice].semente}
           style={{ position: "absolute", left: LUGAR[indice].left - 20, top: 700 }}
         />
-      ))}
+        ),
+      )}
+      {Frente && (
+            <CamadaDaFrente fundo={fundo}>
+              <Frente />
+            </CamadaDaFrente>
+          )}
       <div style={{ position: "absolute", top: 270, left: 60, right: 60, display: "flex", flexDirection: "column", alignItems: "center", gap: 18 }}>
         <div style={{ background: "#FFFFFF", border: `7px solid ${TRACO}`, borderRadius: 44, padding: "30px 40px", boxShadow: "0 18px 0 rgba(43,35,64,0.15)" }}>
           <Texto texto={titulo} destaque={props.capa?.destaque} tamanho={88} cor={TRACO} />
@@ -423,20 +620,28 @@ const SITUACOES_DA_FICHA: Array<{ nome: string; pose: (typeof POSES)[number]; ex
   { nome: "preocupado", pose: "cabeca", expressao: "preocupada" },
 ];
 
-export const FichaDoPersonagem: React.FC<{ personagem?: PersonagemDaCena }> = ({ personagem }) => {
+export const FichaDoPersonagem: React.FC<{ personagem?: PersonagemDaCena; estilo?: EstiloDaPeca }> = ({ personagem, estilo: doCanal }) => {
   const p = personagem ?? ELENCO_PADRAO[0];
+  const { fundo, def: estilo } = estiloDe(doCanal);
+  const noite = fundo === "noite";
   return (
-    <AbsoluteFill style={{ background: "#FBE7DA", flexDirection: "row", flexWrap: "wrap" }}>
+    <AbsoluteFill style={{ background: noite ? "#0A0F26" : "#FBE7DA", flexDirection: "row", flexWrap: "wrap" }}>
+      <FiltrosDosEstilos />
       {SITUACOES_DA_FICHA.map((s) => (
         <div key={s.nome} style={{ width: 540, height: 960, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", paddingBottom: 30 }}>
-          <Boneco
-            visual={p.visual}
-            desenho={p.desenho}
-            momentos={[{ em: 0, pose: s.pose, expressao: s.expressao }]}
-            palavras={s.falando ? [{ inicio: 0, fim: 999 }] : []}
-            altura={820}
-          />
-          <div style={{ fontFamily: fontes.titulo, fontSize: 36, fontWeight: 800, color: TRACO }}>{s.nome}</div>
+          {p.tipo === "criatura" ? (
+            <Sombra desenho={p.desenho} momentos={[{ em: 0, pose: s.pose, expressao: s.expressao }]} palavras={s.falando ? [{ inicio: 0, fim: 999 }] : []} altura={820} objeto={p.objeto} />
+          ) : (
+            <estilo.Personagem
+              noite={noite}
+              visual={p.visual}
+              desenho={p.desenho}
+              momentos={[{ em: 0, pose: s.pose, expressao: s.expressao }]}
+              palavras={s.falando ? [{ inicio: 0, fim: 999 }] : []}
+              altura={820}
+            />
+          )}
+          <div style={{ fontFamily: fontes.titulo, fontSize: 36, fontWeight: 800, color: noite ? "#F4F6FF" : TRACO }}>{s.nome}</div>
         </div>
       ))}
     </AbsoluteFill>

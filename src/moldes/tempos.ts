@@ -53,7 +53,7 @@ export function quadrosDaFala(cena: CenaNarrada) {
 }
 
 /** Conversa: respiro antes da primeira fala, entre as falas e no fim */
-export const CONVERSA = { inicio: 20, entreFalas: 12, fim: 45, ctaFinal: 105 } as const;
+export const CONVERSA = { inicio: 20, entreFalas: 12, fim: 45, ctaFinal: 105, final: 150 } as const;
 
 /** Tempo estimado de cada palavra (antes da voz): curtas ~0,2 s, longas ~0,5 s, pausa na pontuação */
 export function estimarPalavras(fala: string) {
@@ -100,7 +100,7 @@ export function cenasDoMolde(molde: string, c: Conteudo): number[] {
     case "Documentario":
       return [...((c.cenas ?? []) as CenaNarrada[]).map(quadrosDaFala), ...(c.encerramento ? [QUADROS_DO_ENCERRAMENTO] : [])];
     case "Conversa":
-      return [CONVERSA.inicio, ...((c.cenas ?? []) as CenaNarrada[]).map((cena) => quadrosDaFalaConversa(cena) + CONVERSA.entreFalas), CONVERSA.fim, ...(c.ctaFinal ? [CONVERSA.ctaFinal] : [])];
+      return [CONVERSA.inicio, ...((c.cenas ?? []) as CenaNarrada[]).map((cena) => quadrosDaFalaConversa(cena) + CONVERSA.entreFalas), CONVERSA.fim, ...(c.final ? [CONVERSA.final] : []), ...(c.ctaFinal ? [CONVERSA.ctaFinal] : [])];
     default: {
       const meu = CENAS_DOS_MEUS_MOLDES[molde];
       if (!meu) throw new Error(`Molde sem tempos: ${molde} (registre em src/moldes/meus/tempos.ts)`);

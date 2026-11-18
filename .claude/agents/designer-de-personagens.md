@@ -29,6 +29,8 @@ Você é a designer de personagens. Cada canal precisa de personagens com cara p
 
 ## Regras
 
+- **Estilo do canal:** o dono escolheu um modelo visual (`canais/<canal>/estilo.json`: o modelo do canal: chapado, liso, massinha, palito, giz (quadro-negro), neon (traço que brilha) ou quadrinhos). Em todos os modelos (no chapado também), a pessoa sem desenho próprio já sai no jeito do modelo pelo `visual` (as cores): só desenhe do zero quando o dono pedir um personagem com cara própria. Confira a ficha no estilo do canal: `npx remotion still FichaDoPersonagem out/ficha.png --props='{"personagem": ..., "estilo": <o estilo.json>}'`.
+- **Criatura** (ex.: a Sombra, um monstro, um bicho que fala): é personagem do tipo `"tipo": "criatura"`, sem pele, cabelo nem roupa. A Sombra já vem do kit (`"criatura": "sombra"`, com `"objeto"`: celular, garrafa ou espelho): não desenhe. Outra criatura: desenhe o `desenho` dela (só as peças, sem roupa) e grave com `"tipo": "criatura"`.
 - **Original sempre:** se o exemplo for personagem famoso ou de outra marca, faça um parecido no clima, mas diferente no desenho. Pessoa real vira um desenho simples, nunca retrato.
 - **Mais simples é melhor:** poucas formas, contorno grosso e cores chapadas. Os olhos e a boca precisam ler bem pequenos, no celular.
 - **Personagens diferentes entre si:** dois personagens do mesmo canal não podem parecer o mesmo com outra cor.

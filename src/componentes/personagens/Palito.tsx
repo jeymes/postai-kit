@@ -1,0 +1,194 @@
+import React from "react";
+import { useCurrentFrame, useVideoConfig } from "remotion";
+import {
+  BRACO,
+  DESCIDA_SENTADO,
+  estadoAgora,
+  segurandoCelular,
+  TelaDoCelular,
+  FALANDO,
+  formaDoRhubarb,
+  OMBRO,
+  POSES,
+  type Angulos,
+  type Expressao,
+  type FormaDaBoca,
+  type Momento,
+  type Palavra,
+  type Visual,
+} from "./Boneco";
+
+// Estilo "palito": boneco de traço (cabeça redonda, corpo, braços e pernas de
+// linha grossa), no mesmo espaço do Boneco (viewBox -100 0 600 1000, cabeça em
+// (200, 232), ombros em y 392, quadril em 640, pés em 940) e com as mesmas
+// poses, expressões e boca. A cor do traço é a roupa do personagem (cada um
+// tem a sua). `noite`: cabeça escura com a luz da tela no rosto.
+
+const CABECA = { x: 200, y: 232, r: 96 };
+
+// No palito os braços saem do meio do corpo, logo embaixo da cabeça: nas poses
+// de braço para cima, ângulos próprios para as mãos irem ao lado da cabeça
+// (sem cruzar o rosto). O Braco ainda soma 16° para fora.
+const POSES_DO_PALITO = {
+  ...POSES,
+  cabeca: { esq: [84, 85], dir: [84, 85] },
+  comemorando: { esq: [98, 51], dir: [98, 51] },
+} satisfies typeof POSES;
+const LINHA = 26;
+
+const Olhos: React.FC<{ expressao: Expressao; piscando: boolean; cor: string }> = ({ expressao, piscando, cor }) => (
+  <>
+    {[166, 234].map((x) => {
+      if (expressao === "radiante" || expressao === "aliviada")
+        return <path key={x} d={`M${x - 14} 244 Q${x} 228 ${x + 14} 244`} fill="none" stroke={cor} strokeWidth={8} strokeLinecap="round" />;
+      if (piscando) return <path key={x} d={`M${x - 12} 240 L${x + 12} 240`} stroke={cor} strokeWidth={8} strokeLinecap="round" />;
+      const grande = expressao === "surpresa" || expressao === "medo";
+      const olhar = expressao === "sem-graca" ? 8 : 0;
+      return <circle key={x} cx={x + olhar} cy={238} r={grande ? 15 : 11} fill={cor} />;
+    })}
+    {expressao === "brava" && (
+      <>
+        <path d="M146 210 L184 222" stroke={cor} strokeWidth={8} strokeLinecap="round" />
+        <path d="M254 210 L216 222" stroke={cor} strokeWidth={8} strokeLinecap="round" />
+      </>
+    )}
+    {(expressao === "medo" || expressao === "aliviada") && (
+      <>
+        <path d={expressao === "medo" ? "M146 214 L184 202" : "M148 212 Q166 206 184 212"} stroke={cor} strokeWidth={8} strokeLinecap="round" fill="none" />
+        <path d={expressao === "medo" ? "M254 214 L216 202" : "M252 212 Q234 206 216 212"} stroke={cor} strokeWidth={8} strokeLinecap="round" fill="none" />
+      </>
+    )}
+    {expressao === "preocupada" && (
+      <>
+        <path d="M148 220 L184 208" stroke={cor} strokeWidth={8} strokeLinecap="round" />
+        <path d="M252 220 L216 208" stroke={cor} strokeWidth={8} strokeLinecap="round" />
+      </>
+    )}
+  </>
+);
+
+const Boca: React.FC<{ expressao: Expressao; forma: string | null; cor: string }> = ({ expressao, forma, cor }) => {
+  const traco = { fill: "none", stroke: cor, strokeWidth: 8, strokeLinecap: "round" as const };
+  if (forma) {
+    const aberta = ["C", "D", "E", "H"].includes(forma);
+    const meio = ["B", "G", "F"].includes(forma);
+    return <ellipse cx={200} cy={290} rx={aberta ? 20 : meio ? 16 : 13} ry={aberta ? 15 : meio ? 7 : 3} fill={cor} />;
+  }
+  switch (expressao) {
+    case "feliz":
+      return <path d="M172 280 Q200 310 228 280" {...traco} />;
+    case "radiante":
+      return <path d="M168 276 Q200 326 232 276 Z" fill={cor} stroke={cor} strokeWidth={6} strokeLinejoin="round" />;
+    case "preocupada":
+      return <path d="M178 298 Q200 280 222 298" {...traco} />;
+    case "surpresa":
+      return <ellipse cx={200} cy={292} rx={12} ry={16} fill={cor} />;
+    case "brava":
+      return <path d="M176 292 L224 292" {...traco} />;
+    case "sem-graca":
+      return <path d="M176 290 Q188 282 200 290 Q212 298 224 290" {...traco} />;
+    case "medo":
+      return <path d="M176 296 Q182 284 190 294 Q198 284 206 294 Q214 284 224 296" {...traco} />;
+    case "aliviada":
+      return <path d="M178 282 Q200 302 222 282" {...traco} />;
+    default:
+      return <path d="M182 288 L218 288" {...traco} />;
+  }
+};
+
+const Celular: React.FC<{ noite: boolean }> = ({ noite }) => (
+  <g>
+    <rect x={-24} y={-44} width={48} height={80} rx={9} fill="#1E1A24" />
+    <TelaDoCelular x={-18} y={-37} largura={36} altura={64} cor={noite ? "#CFE6FF" : "#BDEBDD"} />
+  </g>
+);
+
+// Um braço de traço: ombro e cotovelo nos ângulos da pose (como no Boneco)
+// No palito os braços saem do meio do corpo: abre um pouco para não colarem nele
+const Braco: React.FC<{ angulos: Angulos; cor: string; celular?: boolean; noite: boolean }> = ({ angulos: [ombroDaPose, cotovelo], cor, celular, noite }) => {
+  const ombro = ombroDaPose + 16;
+  return (
+  <g transform={`translate(200 ${OMBRO.y - 14}) rotate(${ombro})`}>
+    <line x1={0} y1={0} x2={0} y2={BRACO} stroke={cor} strokeWidth={LINHA} strokeLinecap="round" />
+    <g transform={`translate(0 ${BRACO}) rotate(${cotovelo})`}>
+      <line x1={0} y1={0} x2={0} y2={BRACO} stroke={cor} strokeWidth={LINHA} strokeLinecap="round" />
+      <circle cx={0} cy={BRACO + 6} r={20} fill={cor} />
+      {celular && (
+        <g transform={`translate(0 ${BRACO + 2}) rotate(${-(ombro + cotovelo)})`}>
+          <Celular noite={noite} />
+        </g>
+      )}
+    </g>
+  </g>
+  );
+};
+
+export const Palito: React.FC<{
+  visual: Visual;
+  momentos: Momento[];
+  palavras: Palavra[];
+  boca?: FormaDaBoca[];
+  altura: number;
+  espelhar?: boolean;
+  semente?: number;
+  /** Fundo noite: cabeça escura e luz da tela no rosto */
+  noite?: boolean;
+  /** Para os estilos de traço (giz, neon): a cor de dentro da cabeça e a do rosto */
+  cores?: { cabeca?: string; rosto?: string };
+  style?: React.CSSProperties;
+}> = ({ visual, momentos, palavras, boca, altura, espelhar = false, semente = 0, noite = false, cores, style }) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const estado = estadoAgora(momentos, frame, fps, POSES_DO_PALITO);
+  const falando = palavras.some((p) => p.inicio <= frame && frame < p.fim);
+  const forma = boca?.length ? formaDoRhubarb(boca, frame) : falando ? FALANDO[Math.floor(frame / 3) % FALANDO.length] : null;
+  const emFala = palavras.length > 0 && palavras[0].inicio <= frame && frame < palavras[palavras.length - 1].fim + 4;
+  const piscando = (frame + semente * 37 + 50) % 97 < 4 && estado.expressao !== "radiante";
+  const respira = Math.sin(frame / 14 + semente) * 3;
+  const inclina = emFala ? Math.sin(frame / 6 + semente) * 3 : Math.sin(frame / 40 + semente) * 1.5;
+  const cor = visual.roupa;
+  const rosto = cores?.rosto ?? (noite ? "#F4F6FF" : "#2B2340");
+  const cabeca = cores?.cabeca ?? (noite ? "#1C2547" : "#FFFFFF");
+  const largura = altura * 0.6;
+  const celular = segurandoCelular(estado.pose);
+  const id = `luz-${semente}`;
+  return (
+    <svg viewBox="-100 0 600 1000" width={largura} height={altura} style={{ overflow: "visible", ...style }}>
+      <defs>
+        <radialGradient id={id} cx="0.5" cy="0.62" r="0.6">
+          <stop offset="0" stopColor="#9CC8FF" stopOpacity={celular ? 0.55 : 0.28} />
+          <stop offset="1" stopColor="#9CC8FF" stopOpacity={0} />
+        </radialGradient>
+      </defs>
+      <g transform={espelhar ? "translate(400 0) scale(-1 1)" : undefined}>
+        {estado.pose !== "sentado" && <ellipse cx={200} cy={958} rx={120} ry={16} fill={noite ? "rgba(0,0,0,0.35)" : "rgba(43,35,64,0.14)"} />}
+        <g transform={`translate(0 ${estado.pulo + (estado.pose === "sentado" ? DESCIDA_SENTADO : 0)})`}>
+          {/* Pernas (sentado, ficam embaixo da coberta) */}
+          <path d={estado.pose === "sentado" ? "M200 640 L200 700" : "M200 640 L156 936 M200 640 L244 936"} stroke={cor} strokeWidth={LINHA} strokeLinecap="round" fill="none" />
+          <g transform={`translate(0 ${respira})`}>
+            {/* Corpo */}
+            <line x1={200} y1={CABECA.y + CABECA.r - 4} x2={200} y2={640} stroke={cor} strokeWidth={LINHA} strokeLinecap="round" />
+            <g transform={`rotate(${inclina} 200 360)`}>
+              <circle cx={CABECA.x} cy={CABECA.y} r={CABECA.r} fill={cabeca} stroke={cor} strokeWidth={LINHA - 6} />
+              {noite && <circle cx={CABECA.x} cy={CABECA.y} r={CABECA.r - 10} fill={`url(#${id})`} />}
+              <Olhos expressao={estado.expressao} piscando={piscando} cor={rosto} />
+              <Boca expressao={estado.expressao} forma={forma} cor={rosto} />
+              {visual.oculos && (
+                <g fill="none" stroke={rosto} strokeWidth={6}>
+                  <circle cx={166} cy={238} r={27} />
+                  <circle cx={234} cy={238} r={27} />
+                  <path d="M193 236 L207 236" />
+                </g>
+              )}
+            </g>
+            {/* Braços: o direito é o esquerdo espelhado no meio do corpo */}
+            <Braco angulos={estado.esq} cor={cor} noite={noite} />
+            <g transform="translate(400 0) scale(-1 1)">
+              <Braco angulos={estado.dir} cor={cor} celular={celular} noite={noite} />
+            </g>
+          </g>
+        </g>
+      </g>
+    </svg>
+  );
+};

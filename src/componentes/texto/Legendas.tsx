@@ -18,8 +18,10 @@ export const Legendas: React.FC<{
   caixa?: boolean;
   /** A largura livre para a legenda, em px (a tela menos as margens): define quantas letras cabem numa linha */
   largura?: number;
+  /** Fundo escuro (estilo noite): texto branco e a palavra falada em dourado */
+  noite?: boolean;
   style?: React.CSSProperties;
-}> = ({ legendas, atraso = 0, tamanho = 76, caixa = false, largura = 940, style }) => {
+}> = ({ legendas, atraso = 0, tamanho = 76, caixa = false, largura = 940, noite = false, style }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const agora = ((frame - atraso) / fps) * 1000;
@@ -60,8 +62,9 @@ export const Legendas: React.FC<{
             <span
               key={i}
               style={{
-                color: falando ? cores.textoNoDestaque : cores.texto,
-                backgroundColor: falando ? cores.destaque : "transparent",
+                color: noite ? (falando ? "#F5C94A" : "#FFFFFF") : falando ? cores.textoNoDestaque : cores.texto,
+                backgroundColor: noite || !falando ? "transparent" : cores.destaque,
+                ...(noite ? { textShadow: "0 4px 14px rgba(0,0,0,0.7)" } : {}),
                 borderRadius: tamanho * 0.22,
                 padding: `0 ${tamanho * 0.14}px`,
                 scale: falando ? "1.06" : "1",

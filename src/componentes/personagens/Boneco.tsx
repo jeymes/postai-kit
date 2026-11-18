@@ -1,5 +1,6 @@
 import React from "react";
 import { spring, useCurrentFrame, useVideoConfig } from "remotion";
+import { cores } from "../../nucleo/marca";
 
 // Personagem de corpo inteiro, desenhado em vetor e montado em peças (cabeça,
 // olhos, sobrancelhas, boca, braços com cotovelo), no estilo 2D chapado com
@@ -14,8 +15,8 @@ const BOCA_ESCURA = "#5A1F2B";
 const LINGUA = "#E0607A";
 const BOCHECHA = "#FF8FA3";
 
-export type Expressao = "neutra" | "feliz" | "radiante" | "preocupada" | "surpresa" | "brava" | "sem-graca";
-export type Pose = "normal" | "cintura" | "celular" | "cabeca" | "explicando" | "comemorando" | "pensando";
+export type Expressao = "neutra" | "feliz" | "radiante" | "preocupada" | "surpresa" | "brava" | "sem-graca" | "medo" | "aliviada";
+export type Pose = "normal" | "cintura" | "celular" | "cabeca" | "explicando" | "comemorando" | "pensando" | "sentado";
 export type Momento = { em: number; pose: Pose; expressao: Expressao };
 /** Intervalo de uma palavra dita pelo personagem, em quadros */
 export type Palavra = { inicio: number; fim: number };
@@ -45,18 +46,18 @@ export type Desenho = {
 
 const BOCA_ABERTA = new Set(["C", "D", "E", "H"]);
 
-function pecasDoRosto(desenho: Desenho, expressao: Expressao, forma: string | null, piscando: boolean) {
+export function pecasDoRosto(desenho: Desenho, expressao: Expressao, forma: string | null, piscando: boolean) {
   const olhos = piscando || expressao === "radiante" ? desenho.olhos.fechados : desenho.olhos.abertos;
   let boca: string;
   if (forma) boca = BOCA_ABERTA.has(forma) ? desenho.bocas.aberta : desenho.bocas.fechada;
-  else if (expressao === "feliz" || expressao === "radiante") boca = desenho.bocas.sorriso;
-  else if (expressao === "surpresa") boca = desenho.bocas.aberta;
+  else if (expressao === "feliz" || expressao === "radiante" || expressao === "aliviada") boca = desenho.bocas.sorriso;
+  else if (expressao === "surpresa" || expressao === "medo") boca = desenho.bocas.aberta;
   else if (expressao === "preocupada" || expressao === "sem-graca") boca = desenho.bocas.triste ?? desenho.bocas.fechada;
   else boca = desenho.bocas.fechada;
   return { olhos, boca };
 }
 
-const Svg: React.FC<{ html?: string }> = ({ html }) => (html ? <g dangerouslySetInnerHTML={{ __html: html }} /> : null);
+export const Svg: React.FC<{ html?: string }> = ({ html }) => (html ? <g dangerouslySetInnerHTML={{ __html: html }} /> : null);
 
 export const PENTEADOS = ["ondulado", "chanel", "curto", "coque"] as const;
 export type Penteado = (typeof PENTEADOS)[number];
@@ -79,8 +80,8 @@ export type Visual = {
 
 // Ângulos de cada braço: [ombro, cotovelo] em graus. 0 = para baixo; positivo =
 // para fora do corpo. O cotovelo é relativo ao braço.
-type Angulos = [number, number];
-const POSES: Record<Pose, { esq: Angulos; dir: Angulos }> = {
+export type Angulos = [number, number];
+export const POSES: Record<Pose, { esq: Angulos; dir: Angulos }> = {
   normal: { esq: [10, -6], dir: [10, -6] },
   cintura: { esq: [10, -6], dir: [42, -100] },
   celular: { esq: [10, -6], dir: [6, -125] },
@@ -88,7 +89,13 @@ const POSES: Record<Pose, { esq: Angulos; dir: Angulos }> = {
   explicando: { esq: [10, -6], dir: [25, 95] },
   comemorando: { esq: [150, 15], dir: [150, 15] },
   pensando: { esq: [10, -6], dir: [-66, -130] },
+  // Sentado (na cama, no sofá) mexendo no celular: o corpo desce, as pernas ficam atrás da cama do cenário
+  sentado: { esq: [10, -6], dir: [6, -125] },
 };
+
+/** Quanto o corpo desce quando o personagem está sentado (no espaço do desenho) */
+export const DESCIDA_SENTADO = 110;
+export const segurandoCelular = (pose: Pose) => pose === "celular" || pose === "sentado";
 
 // Formas da boca (as mesmas letras do Rhubarb), no tamanho do rosto
 const FORMAS: Record<string, { l: number; a: number; dentes?: boolean; lingua?: boolean }> = {
@@ -101,9 +108,9 @@ const FORMAS: Record<string, { l: number; a: number; dentes?: boolean; lingua?: 
   G: { l: 17, a: 5, dentes: true },
   H: { l: 17, a: 12, lingua: true },
 };
-const FALANDO = ["C", "B", "D", "B", "E", "C", "F", "B", "A"];
+export const FALANDO = ["C", "B", "D", "B", "E", "C", "F", "B", "A"];
 
-function formaDoRhubarb(boca: FormaDaBoca[], frame: number) {
+export function formaDoRhubarb(boca: FormaDaBoca[], frame: number) {
   let forma: string | null = null;
   for (const b of boca) {
     if (b.quadro > frame) break;
@@ -112,10 +119,11 @@ function formaDoRhubarb(boca: FormaDaBoca[], frame: number) {
   return forma;
 }
 
-const OMBRO = { x: 128, y: 392 };
-const BRACO = 112;
+export const OMBRO = { x: 128, y: 392 };
+export const BRACO = 112;
 
-function estadoAgora(momentos: Momento[], frame: number, fps: number) {
+/** `tabela`: outro estilo pode ter ângulos próprios em algumas poses (o palito) */
+export function estadoAgora(momentos: Momento[], frame: number, fps: number, tabela: Record<Pose, { esq: Angulos; dir: Angulos }> = POSES) {
   let i = 0;
   momentos.forEach((m, k) => {
     if (m.em <= frame) i = k;
@@ -123,8 +131,8 @@ function estadoAgora(momentos: Momento[], frame: number, fps: number) {
   const atual = momentos[i];
   const antes = momentos[Math.max(0, i - 1)];
   const p = i === 0 ? 1 : spring({ frame: frame - atual.em, fps, config: { damping: 13, stiffness: 140 } });
-  const de = POSES[antes.pose];
-  const para = POSES[atual.pose];
+  const de = tabela[antes.pose];
+  const para = tabela[atual.pose];
   const mistura = (x: Angulos, y: Angulos): Angulos => [x[0] + (y[0] - x[0]) * p, x[1] + (y[1] - x[1]) * p];
   // Pulinho quando a expressão muda: o personagem "reage"
   const desde = frame - atual.em;
@@ -132,10 +140,26 @@ function estadoAgora(momentos: Momento[], frame: number, fps: number) {
   return { esq: mistura(de.esq, para.esq), dir: mistura(de.dir, para.dir), expressao: atual.expressao, pose: atual.pose, pulo };
 }
 
+// O objeto acendeu: o celular de quem está com ele fica na cor de destaque do
+// canal (todos os estilos leem isto; o Conversa liga para quem segura o
+// celular na cena com "luz")
+export const CelularAceso = React.createContext(false);
+
+/** A tela do celular: a cor de sempre, ou dourada com brilho quando o aviso acende */
+export const TelaDoCelular: React.FC<{ x: number; y: number; largura: number; altura: number; cor: string }> = ({ x, y, largura, altura, cor }) => {
+  const aceso = React.useContext(CelularAceso);
+  return (
+    <>
+      {aceso && <rect x={x - 14} y={y - 14} width={largura + 28} height={altura + 28} rx={18} fill={cores.destaque} opacity={0.35} />}
+      <rect x={x} y={y} width={largura} height={altura} rx={5} fill={aceso ? cores.destaque : cor} />
+    </>
+  );
+};
+
 const Celular: React.FC = () => (
   <g>
     <rect x={-24} y={-44} width={48} height={80} rx={9} fill={TRACO} />
-    <rect x={-18} y={-37} width={36} height={64} rx={5} fill="#BDEBDD" />
+    <TelaDoCelular x={-18} y={-37} largura={36} altura={64} cor="#BDEBDD" />
     <rect x={-12} y={-28} width={24} height={5} rx={2} fill="#fff" />
     <rect x={-12} y={-18} width={18} height={5} rx={2} fill="#fff" />
     <rect x={-12} y={-8} width={22} height={5} rx={2} fill="#fff" />
@@ -244,6 +268,10 @@ const Sobrancelhas: React.FC<{ expressao: Expressao }> = ({ expressao }) => {
     surpresa: ["M140 186 Q160 174 180 184", "M220 184 Q240 174 260 186"],
     brava: ["M140 194 Q162 198 182 210", "M218 210 Q238 198 260 194"],
     "sem-graca": ["M140 202 Q160 196 180 200", "M220 200 Q240 196 260 202"],
+    // Com medo: sobrancelhas altas e juntas no meio
+    medo: ["M140 200 Q158 184 182 182", "M218 182 Q242 184 260 200"],
+    // Aliviada: sobrancelhas soltas e um pouco caídas
+    aliviada: ["M140 200 Q160 196 180 202", "M220 202 Q240 196 260 200"],
   };
   return (
     <>
@@ -257,10 +285,10 @@ const Sobrancelhas: React.FC<{ expressao: Expressao }> = ({ expressao }) => {
 const Olhos: React.FC<{ expressao: Expressao; piscando: boolean }> = ({ expressao, piscando }) => (
   <>
     {[160, 240].map((x) => {
-      if (expressao === "radiante")
+      if (expressao === "radiante" || expressao === "aliviada")
         return <path key={x} d={`M${x - 14} 250 Q${x} 234 ${x + 14} 250`} fill="none" stroke={TRACO} strokeWidth={7} strokeLinecap="round" />;
       if (piscando) return <path key={x} d={`M${x - 13} 246 Q${x} 252 ${x + 13} 246`} fill="none" stroke={TRACO} strokeWidth={6} strokeLinecap="round" />;
-      const grande = expressao === "surpresa";
+      const grande = expressao === "surpresa" || expressao === "medo";
       // Sem graça: olha para o lado
       const olhar = expressao === "sem-graca" ? 7 : 0;
       return (
@@ -302,6 +330,11 @@ const Boca: React.FC<{ expressao: Expressao; forma: string | null }> = ({ expres
       return <path d="M184 306 L216 306" fill="none" stroke={TRACO} strokeWidth={6} strokeLinecap="round" />;
     case "sem-graca":
       return <path d="M182 304 Q191 297 200 304 Q209 311 218 304" fill="none" stroke={TRACO} strokeWidth={5} strokeLinecap="round" />;
+    case "medo":
+      // Boca tremida, entreaberta
+      return <path d="M180 312 Q186 300 192 310 Q198 300 204 310 Q210 300 220 312" fill="none" stroke={TRACO} strokeWidth={5} strokeLinecap="round" strokeLinejoin="round" />;
+    case "aliviada":
+      return <path d="M182 298 Q200 314 218 298" fill="none" stroke={TRACO} strokeWidth={6} strokeLinecap="round" />;
     default:
       return <path d="M186 302 Q200 308 214 302" fill="none" stroke={TRACO} strokeWidth={6} strokeLinecap="round" />;
   }
@@ -383,8 +416,8 @@ export const Boneco: React.FC<{
     return (
       <svg viewBox="-100 0 600 1000" width={largura} height={altura} style={{ overflow: "visible", ...style }}>
         <g transform={espelhar ? "translate(400 0) scale(-1 1)" : undefined}>
-          <ellipse cx={200} cy={958} rx={150} ry={20} fill="rgba(43,35,64,0.16)" />
-          <g transform={`translate(0 ${estado.pulo})`}>
+          {estado.pose !== "sentado" && <ellipse cx={200} cy={958} rx={150} ry={20} fill="rgba(43,35,64,0.16)" />}
+          <g transform={`translate(0 ${estado.pulo + (estado.pose === "sentado" ? DESCIDA_SENTADO : 0)})`}>
             <g transform={`translate(0 ${respira})`}>
               <g transform={`rotate(${inclina} 200 360)`}>
                 <Svg html={desenho.atras} />
@@ -396,7 +429,7 @@ export const Boneco: React.FC<{
                 {desenho.sobrancelhas !== false && <Sobrancelhas expressao={estado.expressao} />}
                 <Svg html={rosto.boca} />
               </g>
-              <Bracos esq={estado.esq} dir={estado.dir} visual={visual} celular={estado.pose === "celular"} />
+              <Bracos esq={estado.esq} dir={estado.dir} visual={visual} celular={segurandoCelular(estado.pose)} />
             </g>
           </g>
         </g>
@@ -406,10 +439,10 @@ export const Boneco: React.FC<{
   return (
     <svg viewBox="-100 0 600 1000" width={largura} height={altura} style={{ overflow: "visible", ...style }}>
       <g transform={espelhar ? "translate(400 0) scale(-1 1)" : undefined}>
-        <ellipse cx={200} cy={958} rx={150} ry={20} fill="rgba(43,35,64,0.16)" />
-        <g transform={`translate(0 ${estado.pulo})`}>
-          {/* Pernas e sapatos */}
-          {[172, 228].map((x) => (
+        {estado.pose !== "sentado" && <ellipse cx={200} cy={958} rx={150} ry={20} fill="rgba(43,35,64,0.16)" />}
+        <g transform={`translate(0 ${estado.pulo + (estado.pose === "sentado" ? DESCIDA_SENTADO : 0)})`}>
+          {/* Pernas e sapatos (sentado, ficam embaixo da coberta) */}
+          {estado.pose !== "sentado" && [172, 228].map((x) => (
             <g key={x}>
               <rect x={x - 26} y={600} width={52} height={330} rx={22} fill={visual.calca} stroke={TRACO} strokeWidth={6} />
               <ellipse cx={x + (x < 200 ? -8 : 8)} cy={938} rx={38} ry={20} fill={visual.sapato} stroke={TRACO} strokeWidth={6} />
@@ -453,7 +486,7 @@ export const Boneco: React.FC<{
                 />
               )}
             </g>
-            <Bracos esq={estado.esq} dir={estado.dir} visual={visual} celular={estado.pose === "celular"} />
+            <Bracos esq={estado.esq} dir={estado.dir} visual={visual} celular={segurandoCelular(estado.pose)} />
           </g>
         </g>
       </g>

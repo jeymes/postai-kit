@@ -14,6 +14,7 @@ import { duracaoDoMolde, FPS, QUADROS_DA_IMAGEM } from "./moldes/tempos";
 import { Trend, trendExemplo, trendSchema } from "./moldes/Trend";
 import { Tutorial, tutorialExemplo, tutorialSchema } from "./moldes/Tutorial";
 import { Teste3D } from "./componentes/3d/Teste3D";
+import { PreviaDoEstilo } from "./estilos/Previa";
 import { Vitrine3D, vitrine3dExemplo, vitrine3dSchema } from "./moldes/Vitrine3D";
 
 // Moldes do Kit Estúdio. O conteúdo de cada peça vem de conteudo/<peca>.json
@@ -114,6 +115,7 @@ export const RemotionRoot: React.FC = () => (
     <Folder name="Ferramentas">
       <Composition id="Teste3D" component={Teste3D} {...video} durationInFrames={60} />
       <Composition id="FichaDoPersonagem" component={FichaDoPersonagem} width={1080} height={1920} fps={FPS} durationInFrames={30} defaultProps={{}} />
+      <Composition id="PreviaDoEstilo" component={PreviaDoEstilo} width={1080} height={1920} fps={FPS} durationInFrames={150} defaultProps={{ modelo: "chapado" as const, fundo: "claro" as const, cena: "dupla" as const }} />
     </Folder>
     <Folder name="Imagens">
       <Composition id="Capa" component={Capa} schema={capaSchema} defaultProps={capaExemplo} {...video} durationInFrames={QUADROS_DA_IMAGEM} />

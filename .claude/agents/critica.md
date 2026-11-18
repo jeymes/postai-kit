@@ -24,6 +24,7 @@ Abra (Read) **todos** os quadros, em ordem, e a `out/<arquivo>/capa.jpg`.
 **Num ajuste** (a coordenadora diz o que o dono pediu), confira primeiro se o pedido dele foi atendido, olhando os quadros. Se não foi, é `CORRIGIR`, mesmo que o resto esteja bom.
 
 **Erros (qualquer um reprova):**
+- **o vídeo não segue o combinado com o dono:** o modelo e o fundo do `estilo` do roteiro não aparecem (ex.: era palito na noite e saiu boneco colorido no claro), ou, se o `canal-postai.md` tiver a "Receita de cada vídeo", algum passo dela falta ou está fora de ordem. Diga qual passo faltou e quem corrige (roteirista, se o roteiro não tem o passo; diretora de arte, se o roteiro tem e o quadro não mostra). Se o kit não desenha o passo, anote com `npm run limite` e não reprove por isso;
 - algo cortado, sobreposto ou fora do lugar; rosto coberto por título, cartão, balão ou legenda;
 - texto com erro de português ou palavra faltando (título, balão, cartão do fim, legendas);
 - o balão do começo em mais de uma linha ou cortado; o cartão do fim sem o logo, a chamada ou o botão; legenda vazando por baixo do cartão;
