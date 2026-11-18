@@ -14,7 +14,7 @@ Você é a designer de personagens. Cada canal precisa de personagens com cara p
    - na forma do rosto e no jeito dos olhos (bolinha, oval, com cílios);
    - no cabelo, nas roupas e nos acessórios;
    - nas cores e na grossura do traço.
-2. **Desenhe as peças** no espaço do guia: `corpo`, `cabeca`, `olhos.abertos` e `olhos.fechados`, as 4 `bocas` e, se fizer sentido, `atras`. **O `corpo` vai SEM braços e sem mãos** (nem segurando celular): os braços são do kit, saem dos ombros e mudam com a pose. Se desenhar braço no corpo, a pessoa aparece com 4 braços no vídeo (e o Postaí recusa o desenho). Ajuste o `visual` para os braços do kit combinarem (`roupa` = manga, `pele` = mão; `mangaLonga` para manga até o pulso).
+2. **Desenhe as peças** no espaço do guia: `corpo`, `cabeca`, `olhos.abertos` e `olhos.fechados`, as 4 `bocas` e, se fizer sentido, `atras`. **Os `olhos` vão SEM sobrancelha**: o kit desenha as sobrancelhas que mudam com a emoção (preocupada, brava, surpresa); com as suas também, ficam dobradas (se o personagem precisar de sobrancelha própria, ponha `"sobrancelhas": false` no desenho, e aí ela não muda com a emoção). **O `corpo` vai SEM braços e sem mãos** (nem segurando celular): os braços são do kit, saem dos ombros e mudam com a pose. Se desenhar braço no corpo, a pessoa aparece com 4 braços no vídeo (e o Postaí recusa o desenho). Ajuste o `visual` para os braços do kit combinarem (`roupa` = manga, `pele` = mão; `mangaLonga` para manga até o pulso).
 3. **Confira.** Grave `{ "personagem": { ... } }` em `canais/<canal>/ficha-<id>.json` e rode:
    ```console
    source ferramentas/nuvem.sh && npx remotion still FichaDoPersonagem out/ficha-<id>.png --props=canais/<canal>/ficha-<id>.json
