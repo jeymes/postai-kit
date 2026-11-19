@@ -1,0 +1,117 @@
+{
+  "molde": "Mundo3D",
+  "bonecos": "pecas",
+  "voz": "pm_alex",
+  "ctaFinal": "Siga para a próxima parte",
+  "botaoFinal": "Siga o canal 👆",
+  "multidao": null,
+  "titulo": "Ele tinha 75 anos. Deus disse: vai.",
+  "destaqueDoTitulo": "vai",
+  "personagens": [
+    {
+      "id": "abraao",
+      "onde": [
+        -0.9,
+        2.4
+      ],
+      "espelhar": false,
+      "naPonte": false,
+      "visual": {
+        "pele": "#D9A273",
+        "cabelo": "#4A3226",
+        "roupa": "#E3C28F",
+        "calca": "#D9A273",
+        "sapato": "#B97A45",
+        "penteado": "curto",
+        "roupaEstilo": "blusa",
+        "mangaLonga": false,
+        "oculos": false,
+        "tiara": false,
+        "faixa": ""
+      },
+      "detalhes3d": {
+        "barba": true
+      }
+    },
+    {
+      "id": "sara",
+      "onde": [
+        0.9,
+        2.7
+      ],
+      "espelhar": true,
+      "naPonte": false,
+      "visual": {
+        "pele": "#E8B58C",
+        "cabelo": "#6B3A22",
+        "roupa": "#D9A25F",
+        "calca": "#D9A25F",
+        "sapato": "#9C5A33",
+        "penteado": "ondulado",
+        "roupaEstilo": "blusa",
+        "mangaLonga": false,
+        "oculos": false,
+        "tiara": false,
+        "faixa": ""
+      }
+    }
+  ],
+  "cenario": {
+    "ambiente": "deserto"
+  },
+  "cenas": [
+    {
+      "fala": "Gênesis 12. Abraão morava em Harã, com Sara e tudo o que tinha.",
+      "quem": "abraao",
+      "plano": "aberto",
+      "foco": "abraao",
+      "destaque": [
+        "Harã"
+      ],
+      "estados": {
+        "abraao": {
+          "pose": "pensando",
+          "expressao": "neutra"
+        },
+        "sara": {
+          "pose": "normal",
+          "expressao": "neutra"
+        }
+      }
+    },
+    {
+      "fala": "Deus disse: sai da tua terra, para a terra que eu te mostrar.",
+      "quem": "sara",
+      "plano": "medio",
+      "foco": "sara",
+      "destaque": [
+        "sai"
+      ],
+      "estados": {
+        "abraao": {
+          "pose": "cabeca",
+          "expressao": "surpresa"
+        },
+        "sara": {
+          "pose": "explicando",
+          "expressao": "preocupada"
+        }
+      }
+    },
+    {
+      "fala": "E ele foi, sem saber para onde ia.",
+      "quem": "abraao",
+      "plano": "close",
+      "foco": "abraao",
+      "destaque": [
+        "foi"
+      ],
+      "estados": {
+        "abraao": {
+          "pose": "normal",
+          "expressao": "aliviada"
+        }
+      }
+    }
+  ]
+}

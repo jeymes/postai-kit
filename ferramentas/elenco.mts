@@ -4,9 +4,12 @@
 // passa pela mão dela.
 //
 // Uso: npm run elenco -- conteudo/<arquivo>.json <id-da-esquerda> <id-da-direita> [--canal canais/<canal>]
+// No Mundo 3D (molde Mundo3D), sem ids: npm run elenco -- conteudo/<arquivo>.json --canal canais/<canal>
+// põe as cores (visual) e a voz de cada personagem do roteiro que está no elenco.
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { porCenariosNoRoteiro } from "./cenarios-do-roteiro.ts";
+import { VOZES } from "../src/componentes/personagens/vozes.ts";
 
 const args = process.argv.slice(2);
 const indiceDoCanal = args.indexOf("--canal");
@@ -14,7 +17,9 @@ const pastaDoCanal = indiceDoCanal >= 0 ? args[indiceDoCanal + 1] : null;
 const soltos = args.filter((arg, i) => !arg.startsWith("--") && i !== indiceDoCanal + 1);
 const [caminho, ...ids] = soltos;
 
-if (!caminho || ids.length !== 2) {
+const peca3d = caminho && existsSync(caminho) ? JSON.parse(readFileSync(caminho, "utf8")) : null;
+const ehMundo3D = peca3d?.molde === "Mundo3D";
+if (!caminho || (!ehMundo3D && ids.length !== 2)) {
   console.error("Uso: npm run elenco -- conteudo/<arquivo>.json <id> <id> [--canal canais/<canal>]");
   process.exit(1);
 }
@@ -32,6 +37,29 @@ const doConvidado = (id: string): Personagem | undefined => {
   const arquivo = join(pastaDoCanal ?? "", "convidados", `${id}.json`);
   return existsSync(arquivo) ? (JSON.parse(readFileSync(arquivo, "utf8")) as Personagem) : undefined;
 };
+
+// Mundo 3D: os bonecos de peças usam as cores do elenco (o desenho 2D não entra) e a voz de cada um
+if (ehMundo3D) {
+  type No3D = { id: string; visual?: unknown };
+  const personagens: No3D[] = peca3d.personagens ?? [];
+  const achados: string[] = [];
+  const figurantes: string[] = [];
+  peca3d.vozes = peca3d.vozes ?? {};
+  for (const p of personagens) {
+    const doElenco = elenco.find((e) => e.id === p.id) ?? doConvidado(p.id);
+    if (!doElenco) {
+      figurantes.push(p.id);
+      continue;
+    }
+    p.visual = doElenco.visual;
+    if (doElenco.voz && !peca3d.vozes[p.id]) peca3d.vozes[p.id] = VOZES[doElenco.voz] ?? { voz: doElenco.voz };
+    achados.push(doElenco.nome);
+  }
+  writeFileSync(caminho, `${JSON.stringify(peca3d, null, 2)}\n`);
+  console.log(`Mundo 3D: ${achados.length ? `${achados.join(", ")} com as cores do elenco` : "ninguém do elenco"}.`);
+  if (figurantes.length) console.log(`Fora do elenco (saem com cores variadas; use veste para a cor da roupa): ${figurantes.join(", ")}. Ids do elenco: ${elenco.map((e) => e.id).join(", ")}`);
+  process.exit(0);
+}
 const escolhidos = ids.map((id) => {
   const p = elenco.find((e) => e.id === id) ?? doConvidado(id);
   if (!p) {

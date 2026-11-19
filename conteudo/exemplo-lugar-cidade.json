@@ -1,0 +1,134 @@
+{
+  "molde": "Mundo3D",
+  "bonecos": "pecas",
+  "voz": "pm_alex",
+  "ctaFinal": "Siga para a próxima parte",
+  "botaoFinal": "Siga o canal 👆",
+  "multidao": {
+    "quantos": 6,
+    "chapeu": "capacete",
+    "veste": "#8A6E4B",
+    "naPonte": false,
+    "marchando": false
+  },
+  "titulo": "O menor da casa virou rei.",
+  "destaqueDoTitulo": "rei",
+  "personagens": [
+    {
+      "id": "davi",
+      "onde": [
+        -0.9,
+        2.4
+      ],
+      "espelhar": false,
+      "naPonte": false,
+      "visual": {
+        "pele": "#D9A273",
+        "cabelo": "#7A4A22",
+        "roupa": "#E3C28F",
+        "calca": "#D9A273",
+        "sapato": "#B97A45",
+        "penteado": "curto",
+        "roupaEstilo": "blusa",
+        "mangaLonga": false,
+        "oculos": false,
+        "tiara": false,
+        "faixa": ""
+      }
+    },
+    {
+      "id": "saul",
+      "onde": [
+        0.9,
+        2.7
+      ],
+      "espelhar": true,
+      "naPonte": false,
+      "visual": {
+        "pele": "#D9A273",
+        "cabelo": "#4A3226",
+        "roupa": "#7A2E3B",
+        "calca": "#D9A273",
+        "sapato": "#B97A45",
+        "penteado": "curto",
+        "roupaEstilo": "blusa",
+        "mangaLonga": false,
+        "oculos": false,
+        "tiara": false,
+        "faixa": ""
+      },
+      "detalhes3d": {
+        "barba": true,
+        "figurino": "manto",
+        "acessorio": "coroa",
+        "pano": "#B5352E"
+      }
+    }
+  ],
+  "cenario": {
+    "ambiente": "cidade"
+  },
+  "cenas": [
+    {
+      "fala": "Em Jerusalém, o rei Saul olhava o gigante e ninguém tinha coragem.",
+      "quem": "saul",
+      "plano": "aberto",
+      "foco": "saul",
+      "destaque": [
+        "coragem"
+      ],
+      "estados": {
+        "davi": {
+          "pose": "normal",
+          "expressao": "neutra"
+        },
+        "saul": {
+          "pose": "cabeca",
+          "expressao": "medo"
+        }
+      },
+      "multidao": {
+        "pose": "normal",
+        "expressao": "preocupada"
+      }
+    },
+    {
+      "fala": "Um menino pastor disse: eu vou.",
+      "quem": "davi",
+      "plano": "medio",
+      "foco": "davi",
+      "destaque": [
+        "vou"
+      ],
+      "estados": {
+        "davi": {
+          "pose": "comemorando",
+          "expressao": "feliz"
+        },
+        "saul": {
+          "pose": "normal",
+          "expressao": "surpresa"
+        }
+      },
+      "multidao": {
+        "pose": "normal",
+        "expressao": "surpresa"
+      }
+    },
+    {
+      "fala": "O rei duvidou. Deus não.",
+      "quem": "saul",
+      "plano": "close",
+      "foco": "saul",
+      "destaque": [
+        "Deus"
+      ],
+      "estados": {
+        "saul": {
+          "pose": "pensando",
+          "expressao": "sem-graca"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,118 @@
+{
+  "molde": "Mundo3D",
+  "bonecos": "pecas",
+  "voz": "pm_alex",
+  "ctaFinal": "Siga para a próxima parte",
+  "botaoFinal": "Siga o canal 👆",
+  "multidao": null,
+  "titulo": "Ela catava o que sobrava. Virou bisavó de um rei.",
+  "destaqueDoTitulo": "rei",
+  "personagens": [
+    {
+      "id": "boaz",
+      "onde": [
+        -0.9,
+        2.4
+      ],
+      "espelhar": false,
+      "naPonte": false,
+      "visual": {
+        "pele": "#D9A273",
+        "cabelo": "#4A3226",
+        "roupa": "#E3C28F",
+        "calca": "#D9A273",
+        "sapato": "#B97A45",
+        "penteado": "curto",
+        "roupaEstilo": "blusa",
+        "mangaLonga": false,
+        "oculos": false,
+        "tiara": false,
+        "faixa": ""
+      },
+      "detalhes3d": {
+        "barba": true
+      }
+    },
+    {
+      "id": "rute",
+      "onde": [
+        0.9,
+        2.7
+      ],
+      "espelhar": true,
+      "naPonte": false,
+      "visual": {
+        "pele": "#E8B58C",
+        "cabelo": "#6B3A22",
+        "roupa": "#D9A25F",
+        "calca": "#D9A25F",
+        "sapato": "#9C5A33",
+        "penteado": "ondulado",
+        "roupaEstilo": "blusa",
+        "mangaLonga": false,
+        "oculos": false,
+        "tiara": false,
+        "faixa": ""
+      }
+    }
+  ],
+  "cenario": {
+    "ambiente": "aldeia",
+    "ponte": false
+  },
+  "cenas": [
+    {
+      "fala": "Rute 2. Na aldeia de Belém, Rute pegava as espigas que sobravam.",
+      "quem": "rute",
+      "plano": "aberto",
+      "foco": "rute",
+      "destaque": [
+        "Belém"
+      ],
+      "estados": {
+        "boaz": {
+          "pose": "normal",
+          "expressao": "neutra"
+        },
+        "rute": {
+          "pose": "pensando",
+          "expressao": "preocupada"
+        }
+      }
+    },
+    {
+      "fala": "Boaz viu e mandou deixar mais espigas para ela.",
+      "quem": "boaz",
+      "plano": "medio",
+      "foco": "boaz",
+      "destaque": [
+        "mais"
+      ],
+      "estados": {
+        "boaz": {
+          "pose": "explicando",
+          "expressao": "feliz"
+        },
+        "rute": {
+          "pose": "normal",
+          "expressao": "surpresa"
+        }
+      }
+    },
+    {
+      "fala": "A bondade dele mudou a história de Israel.",
+      "quem": "boaz",
+      "plano": "close",
+      "foco": "rute",
+      "destaque": [
+        "bondade"
+      ],
+      "estados": {
+        "rute": {
+          "pose": "normal",
+          "expressao": "radiante"
+        }
+      }
+    }
+  ]
+}

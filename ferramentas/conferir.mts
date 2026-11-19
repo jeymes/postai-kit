@@ -127,22 +127,28 @@ if (peca.molde === "Documentario") {
   resultado();
 }
 
-// ---- Mundo3D (bonecos de palito num mundo 3D): a forma, por código ----
+// ---- Mundo3D (bonecos de peças num mundo 3D): a forma, por código ----
 if (peca.molde === "Mundo3D") {
   type Cena3D = { fala?: string; quem?: string; plano?: string; foco?: string; estados?: Record<string, unknown>; narracao?: { duracaoSeg?: number }; queda?: string };
   const m = peca as unknown as {
     titulo?: string;
-    personagens?: Array<{ id: string }>;
+    personagens?: Array<{ id: string; visual?: unknown }>;
     multidao?: unknown;
     cenas?: Cena3D[];
     ctaFinal?: string;
     botaoFinal?: string;
-    cenario?: { ponte?: boolean };
+    cenario?: { ponte?: boolean; ambiente?: string };
     post?: { titulo?: string; legenda?: string };
   };
   const cenas = m.cenas ?? [];
   const ids = new Set((m.personagens ?? []).map((p) => p.id));
   const PLANOS = ["aberto", "medio", "close", "de-baixo", "por-cima"];
+  const AMBIENTES = ["campo", "deserto", "cidade", "aldeia", "moderno"];
+  const ambiente = m.cenario?.ambiente ?? "campo";
+  const temPonte = m.cenario?.ponte ?? ambiente === "campo";
+  if (!AMBIENTES.includes(ambiente)) erro("roteirista", `cenario.ambiente "${ambiente}" não existe (use ${AMBIENTES.join(", ")})`);
+  const semCores = (peca as { bonecos?: string }).bonecos === "pecas" ? (m.personagens ?? []).filter((p) => !p.visual).map((p) => p.id) : [];
+  if (semCores.length) aviso("roteirista", `sem as cores do elenco: ${semCores.join(", ")} (rode npm run elenco -- <arquivo> --canal canais/<canal>; fora do elenco, tudo bem)`);
   if (cenas.length < 3) erro("roteirista", `só ${cenas.length} cena(s): um vídeo pede de 5 a 12`);
   if (cenas.length > 14) erro("roteirista", `${cenas.length} cenas: no máximo 14 (o vídeo passa de 1 minuto)`);
   if (tamanho(m.titulo) > 60) erro("roteirista", `título com ${tamanho(m.titulo)} letras (até 60, cabe em 4 linhas)`);
@@ -152,11 +158,11 @@ if (peca.molde === "Mundo3D") {
     else if (palavras(cena.fala) > 28) erro("roteirista", `cena ${n} com ${palavras(cena.fala)} palavras (até 28: divida em duas cenas)`);
     if (!PLANOS.includes(cena.plano ?? "")) erro("roteirista", `cena ${n}: plano "${cena.plano}" (use ${PLANOS.join(", ")})`);
     const foco = cena.foco ?? "";
-    if (!(ids.has(foco) || (foco === "multidao" && m.multidao) || (foco === "ponte" && m.cenario?.ponte !== false)))
+    if (!(ids.has(foco) || (foco === "multidao" && m.multidao) || (foco === "ponte" && temPonte)))
       erro("roteirista", `cena ${n}: foco "${foco}" não existe (um id de personagens, "multidao" ou "ponte")`);
     if (cena.quem && !ids.has(cena.quem)) erro("roteirista", `cena ${n}: quem "${cena.quem}" não está em personagens`);
     for (const id of Object.keys(cena.estados ?? {})) if (!ids.has(id)) erro("roteirista", `cena ${n}: estado de "${id}", que não está em personagens`);
-    if (cena.queda && m.cenario?.ponte === false) erro("roteirista", `cena ${n}: queda sem ponte no cenário`);
+    if (cena.queda && !temPonte) erro("roteirista", `cena ${n}: queda sem ponte no cenário`);
     if (process.argv.includes("--com-voz") && !cena.narracao) erro("producao", `cena ${n} sem voz: rode o narrar de novo`);
   });
   // Os planos variam (o que prende é a câmera mudando)

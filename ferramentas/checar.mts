@@ -15,11 +15,13 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { ferramenta } from "./postai.ts";
 
-const MOLDES: Record<string, string> = { conversa: "Conversa", documentario: "Documentario", mundo3d: "Mundo3D" };
+const MOLDES: Record<string, string> = { conversa: "Conversa", documentario: "Documentario", mundo3d: "Mundo3D", bonecos3d: "Mundo3D" };
+// Um molde com outro jeito de desenhar: o quadro de teste usa o exemplo dele
+const EXEMPLOS: Record<string, string> = { bonecos3d: "conteudo/exemplo-lugar-cidade.json" };
 const pedido = (process.argv[2] ?? "").toLowerCase();
 const molde = MOLDES[pedido];
 if (!molde) {
-  console.error("Uso: npm run checar -- conversa | documentario | mundo3d");
+  console.error("Uso: npm run checar -- conversa | documentario | mundo3d | bonecos3d");
   process.exit(1);
 }
 
@@ -49,7 +51,7 @@ if (!problemas.length) {
   const quadro = join(pasta, "quadro.png");
   // O 3D sem placa de vídeo (a nuvem): o swangle desenha no processador
   const gl = molde === "Mundo3D" ? [`--gl=${process.env.KIT_NAVEGADOR ? "swangle" : "angle"}`] : [];
-  const r = spawnSync("npx", ["remotion", "still", molde, quadro, "--frame=30", "--scale=0.2", "--log=error", ...gl], {
+  const r = spawnSync("npx", ["remotion", "still", molde, quadro, "--frame=30", "--scale=0.2", "--log=error", ...gl, ...(EXEMPLOS[pedido] ? [`--props=${EXEMPLOS[pedido]}`] : [])], {
     encoding: "utf8",
     shell: process.platform === "win32",
     timeout: 4 * 60 * 1000,

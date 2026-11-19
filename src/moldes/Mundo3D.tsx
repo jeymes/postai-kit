@@ -9,7 +9,9 @@ import { CartaoDeChamada } from "../componentes/cenas/ChamadaAnimada";
 import type { FormaDaBoca, Momento, Palavra, Visual } from "../componentes/personagens/Boneco";
 import { Palito } from "../componentes/personagens/Palito";
 import { fontes } from "../nucleo/marca";
+import { ACESSORIOS, AMBIENTES, FIGURINOS, PALETAS, trajeDoAmbiente, trajeDoChapeu, visualDeFigurante, type Traje } from "./mundo3d/ambientes";
 import { aplicar, distancia, PLANOS, poseDoPlano, poseNoTempo, projetar, type Plano, type Ponto } from "./mundo3d/camera";
+import { BonecoDePecas } from "./mundo3d/BonecoDePecas";
 import { Mundo, PONTE, sorteio } from "./mundo3d/Mundo";
 import { duracaoDoMolde, estimarPalavras, FPS, MUNDO3D, quadrosDaCenaDoMundo3D } from "./tempos";
 
@@ -21,7 +23,10 @@ import { duracaoDoMolde, estimarPalavras, FPS, MUNDO3D, quadrosDaCenaDoMundo3D }
 const POSES = ["normal", "cintura", "celular", "cabeca", "explicando", "comemorando", "pensando", "sentado"] as const;
 const EXPRESSOES = ["neutra", "feliz", "radiante", "preocupada", "surpresa", "brava", "sem-graca", "medo", "aliviada"] as const;
 const CHAPEUS = ["coroa", "capacete", "faixa"] as const;
-const estadoSchema = z.object({ pose: z.enum(POSES), expressao: z.enum(EXPRESSOES) });
+const estadoSchema = z.object({
+  pose: z.enum(POSES),
+  expressao: z.enum(EXPRESSOES),
+});
 const SONS_DO_MUNDO = ["passos", "rangido", "estalo", "impacto", "transicao"] as const satisfies readonly TipoSom[];
 
 const narracaoSchema = z
@@ -43,12 +48,28 @@ const personagemSchema = z.object({
   onde: z.tuple([z.number(), z.number()]).describe("[x, z] no chão do mundo"),
   naPonte: z.boolean().default(false),
   espelhar: z.boolean().default(false),
+  // Com visual (e o desenho próprio do elenco, se houver): o personagem do canal, com rosto, no lugar do palito
+  visual: z.record(z.string(), z.unknown()).optional().describe("O visual do elenco do canal (com ele, sai o boneco com rosto)"),
+  desenho: z.unknown().optional().describe("O desenho próprio do elenco (vem do npm run canal)"),
+  detalhes3d: z
+    .object({
+      barba: z.boolean().optional(),
+      figurino: z.enum(FIGURINOS).optional().describe("Sem isso, a roupa que o lugar pede"),
+      acessorio: z.enum(ACESSORIOS).optional().describe("Sem isso, o que o lugar pede (véu, turbante...)"),
+      pano: z.string().optional().describe("Cor do véu, do turbante ou da capa"),
+    })
+    .optional()
+    .describe("Barba e, se quiser mudar, a roupa e o que vai na cabeça"),
 });
 
 export const mundo3dSchema = z.object({
   titulo: z.string().describe("Título grande no começo (maiúsculas)"),
   destaqueDoTitulo: z.string().optional(),
   personagens: z.array(personagemSchema).max(4),
+  bonecos: z
+    .enum(["palito", "pecas"])
+    .default("palito")
+    .describe('"palito" (estilo Mundo 3D, desenho de traço por cima do 3D) ou "pecas" (estilo Bonecos 3D: tudo em 3D, nas cores do elenco)'),
   multidao: z
     .object({
       quantos: z.number().int().min(1).max(30),
@@ -58,6 +79,7 @@ export const mundo3dSchema = z.object({
       naPonte: z.boolean().default(true),
       marchando: z.boolean().default(true),
     })
+    .nullable()
     .optional(),
   cenas: z
     .array(
@@ -72,22 +94,36 @@ export const mundo3dSchema = z.object({
         balanco: z.number().min(0).max(1).default(0).describe("O quanto a ponte balança nesta cena"),
         queda: z.string().optional().describe("A palavra em que a ponte cai (com o estalo), ex.: desabou"),
         sons: z
-          .array(z.object({ tipo: z.enum(SONS_DO_MUNDO), em: z.number().min(0).default(0).describe("Segundos desde o começo da cena"), repetir: z.number().int().min(1).max(12).default(1) }))
+          .array(
+            z.object({
+              tipo: z.enum(SONS_DO_MUNDO),
+              em: z.number().min(0).default(0).describe("Segundos desde o começo da cena"),
+              repetir: z.number().int().min(1).max(12).default(1),
+            }),
+          )
           .default([]),
         narracao: narracaoSchema.optional(),
       }),
     )
     .min(1),
   voz: z.enum(["pf_dora", "pm_alex", "pm_santa"]).default("pm_alex").describe("A voz do narrador"),
-  vozes: z.record(z.string(), z.object({ voz: z.string(), velocidade: z.number().optional() })).optional().describe("A voz de quem fala, pelo id"),
+  vozes: z
+    .record(z.string(), z.object({ voz: z.string(), velocidade: z.number().optional() }))
+    .optional()
+    .describe("A voz de quem fala, pelo id"),
   velocidade: z.number().min(0.7).max(1.4).default(1),
   pronuncia: z.record(z.string(), z.string()).optional(),
   musica: z.string().optional().describe("musica/calma-esperanca.mp3, calma-reflexao.mp3 ou calma-drama.mp3"),
   volumeMusica: z.number().min(0).max(0.5).default(0.12),
   cenario: z
-    .object({ ponte: z.boolean().default(true), tendas: z.boolean().default(true) })
-    .default({ ponte: true, tendas: true })
-    .describe("O mundo: campo com rio, árvores e montanhas; a ponte e as tendas são opcionais"),
+    .object({
+      ambiente: z.enum(AMBIENTES).default("campo").describe("O lugar: muda o chão, o céu, as plantas, as casas e a roupa dos bonecos"),
+      ponte: z.boolean().optional().describe("A ponte sobre o rio (padrão: só no campo)"),
+      rio: z.boolean().optional().describe("O rio (padrão: o do lugar)"),
+      tendas: z.boolean().optional().describe("As tendas (padrão: as do lugar)"),
+    })
+    .default({ ambiente: "campo" })
+    .describe("O mundo da história"),
   ctaFinal: z.string().max(80).optional().describe("Frase do cartão do fim (com o logo da marca), sem @ e sem link na bio"),
   botaoFinal: z.string().max(24).optional().describe('O botão do cartão do fim, ex.: "Siga o canal 👆"'),
   semLegenda: z.boolean().default(false).describe("Só para a capa (o renderizar põe): sem a legenda"),
@@ -112,11 +148,22 @@ function linhaDoTempo(cenas: Mundo3DProps["cenas"]) {
     let fala: number;
     let boca: FormaDaBoca[] | undefined;
     if (cena.narracao) {
-      palavras = cena.narracao.legendas.map((l) => ({ texto: l.texto, inicio: inicio + Math.round((l.inicioMs / 1000) * FPS), fim: inicio + Math.round((l.fimMs / 1000) * FPS) }));
+      palavras = cena.narracao.legendas.map((l) => ({
+        texto: l.texto,
+        inicio: inicio + Math.round((l.inicioMs / 1000) * FPS),
+        fim: inicio + Math.round((l.fimMs / 1000) * FPS),
+      }));
       fala = Math.ceil(cena.narracao.duracaoSeg * FPS);
-      boca = cena.narracao.boca?.map((b) => ({ quadro: inicio + Math.round(b.inicio * FPS), forma: b.forma }));
+      boca = cena.narracao.boca?.map((b) => ({
+        quadro: inicio + Math.round(b.inicio * FPS),
+        forma: b.forma,
+      }));
     } else {
-      palavras = estimarPalavras(cena.fala).map((p) => ({ texto: p.texto, inicio: inicio + p.inicio, fim: inicio + p.fim }));
+      palavras = estimarPalavras(cena.fala).map((p) => ({
+        texto: p.texto,
+        inicio: inicio + p.inicio,
+        fim: inicio + p.fim,
+      }));
       fala = palavras.length ? palavras[palavras.length - 1].fim - inicio : 45;
     }
     const limpa = (t: string) => t.toLowerCase().replace(/[^\p{L}]/gu, "");
@@ -142,6 +189,7 @@ function lugaresDaMultidao(quantos: number, naPonte: boolean): Array<[number, nu
   });
 }
 
+// Palito: o traço na cor da roupa
 const visualDe = (roupa: string): Visual => ({
   pele: "#FFFFFF",
   cabelo: "#2B2340",
@@ -152,15 +200,18 @@ const visualDe = (roupa: string): Visual => ({
   roupaEstilo: "blusa",
 });
 
-/** Os tufos de grama na frente dos pés: o boneco fica "dentro" do campo. */
+/** Os tufos de grama na frente dos pés do palito: ele fica "dentro" do campo. */
 const Tufo: React.FC<{ largura: number }> = ({ largura }) => (
   <svg viewBox="0 0 100 40" width={largura} height={largura * 0.4} style={{ overflow: "visible" }}>
     {[8, 20, 31, 44, 56, 67, 80, 92].map((x, i) => (
-      <path key={x} d={`M${x - 4} 40 Q${x + (i % 2 ? 3 : -3)} ${18 - (i % 3) * 5} ${x + (i % 2 ? 6 : -6)} ${4 + (i % 3) * 4} Q${x + 1} 22 ${x + 4} 40 Z`} fill={i % 2 ? "#4E9A2E" : "#5FB33A"} />
+      <path
+        key={x}
+        d={`M${x - 4} 40 Q${x + (i % 2 ? 3 : -3)} ${18 - (i % 3) * 5} ${x + (i % 2 ? 6 : -6)} ${4 + (i % 3) * 4} Q${x + 1} 22 ${x + 4} 40 Z`}
+        fill={i % 2 ? "#4E9A2E" : "#5FB33A"}
+      />
     ))}
   </svg>
 );
-
 
 const Legenda: React.FC<{ palavras: PalavraDita[]; destaque: string[] }> = ({ palavras, destaque }) => {
   const frame = useCurrentFrame();
@@ -171,12 +222,33 @@ const Legenda: React.FC<{ palavras: PalavraDita[]; destaque: string[] }> = ({ pa
   const grupo = palavras.slice(comeco, comeco + 3);
   const marcar = new Set(destaque.map((d) => d.toLowerCase()));
   return (
-    <div style={{ position: "absolute", top: 1180, left: 60, right: 60, textAlign: "center", fontFamily: fontes.titulo, fontWeight: 800, fontSize: 92, lineHeight: 1.05, textTransform: "uppercase" }}>
+    <div
+      style={{
+        position: "absolute",
+        top: 1180,
+        left: 60,
+        right: 60,
+        textAlign: "center",
+        fontFamily: fontes.titulo,
+        fontWeight: 800,
+        fontSize: 92,
+        lineHeight: 1.05,
+        textTransform: "uppercase",
+      }}
+    >
       {grupo.map((p, i) => {
         const limpa = p.texto.replace(/[^\p{L}\p{N}]/gu, "").toLowerCase();
         return (
           <React.Fragment key={i}>
-            <span style={{ color: marcar.has(limpa) ? "#FFD23F" : "#FFFFFF", WebkitTextStroke: "12px #15121C", paintOrder: "stroke fill" }}>{p.texto.replace(/[.,!?:]+$/, "")}</span>{" "}
+            <span
+              style={{
+                color: marcar.has(limpa) ? "#FFD23F" : "#FFFFFF",
+                WebkitTextStroke: "12px #15121C",
+                paintOrder: "stroke fill",
+              }}
+            >
+              {p.texto.replace(/[.,!?:]+$/, "")}
+            </span>{" "}
           </React.Fragment>
         );
       })}
@@ -190,10 +262,32 @@ const Titulo: React.FC<{ texto: string; destaque?: string }> = ({ texto, destaqu
   const opacidade = Math.min(1, (84 - frame) / 10);
   const marcar = (destaque ?? "").toLowerCase();
   return (
-    <div style={{ position: "absolute", top: 190, left: 70, right: 70, textAlign: "center", fontFamily: fontes.titulo, fontWeight: 800, fontSize: 96, lineHeight: 1.02, textTransform: "uppercase", opacity: opacidade }}>
+    <div
+      style={{
+        position: "absolute",
+        top: 190,
+        left: 70,
+        right: 70,
+        textAlign: "center",
+        fontFamily: fontes.titulo,
+        fontWeight: 800,
+        fontSize: 96,
+        lineHeight: 1.02,
+        textTransform: "uppercase",
+        opacity: opacidade,
+      }}
+    >
       {texto.split(" ").map((p, i) => (
         <React.Fragment key={i}>
-          <span style={{ color: p.toLowerCase().replace(/[^\p{L}]/gu, "") === marcar ? "#FFD23F" : "#FFFFFF", WebkitTextStroke: "13px #15121C", paintOrder: "stroke fill" }}>{p}</span>{" "}
+          <span
+            style={{
+              color: p.toLowerCase().replace(/[^\p{L}]/gu, "") === marcar ? "#FFD23F" : "#FFFFFF",
+              WebkitTextStroke: "13px #15121C",
+              paintOrder: "stroke fill",
+            }}
+          >
+            {p}
+          </span>{" "}
         </React.Fragment>
       ))}
     </div>
@@ -218,7 +312,11 @@ export const Mundo3D: React.FC<Mundo3DProps> = (props) => {
   // Quem está no mundo: os personagens e a multidão, cada um com o seu ponto
   const multidao = props.multidao;
   const pessoas = [
-    ...props.personagens.map((p) => ({ ...p, multidao: false, semente: p.id.length })),
+    ...props.personagens.map((p) => ({
+      ...p,
+      multidao: false,
+      semente: p.id.length,
+    })),
     ...(multidao
       ? lugaresDaMultidao(multidao.quantos, multidao.naPonte).map(([x, zz], i) => ({
           id: `multidao-${i}`,
@@ -257,27 +355,69 @@ export const Mundo3D: React.FC<Mundo3DProps> = (props) => {
   const escala = cena.foco === "multidao" || cena.foco === "ponte" ? 1.9 : 1;
   aplicar(camera, poseNoTempo(poseDoPlano(cena.plano as Plano, foco, escala), (frame - agora.inicio) / Math.max(1, agora.fim - agora.inicio)));
 
-  // De trás para a frente: quem está mais longe é desenhado primeiro
-  const naTela = pessoas
-    .map((p) => {
-      const pes = pontoDe(p);
-      const cabeca: Ponto = [pes[0], pes[1] + ALTURA_DO_BONECO, pes[2]];
-      const a = projetar(camera, pes, width, height);
-      const b = projetar(camera, cabeca, width, height);
-      return { p, a, alturaPx: Math.abs(a.y - b.y), dist: distancia(camera, pes) };
-    })
-    .filter((q) => q.a.naFrente && q.alturaPx > 8 && q.alturaPx < height * 3)
-    .sort((m, n) => n.dist - m.dist);
+  const pecas = props.bonecos === "pecas";
+  // Palito: desenhado por cima do 3D, de trás para a frente (quem está mais longe primeiro)
+  const naTela = pecas
+    ? []
+    : pessoas
+        .map((p) => {
+          const pes = pontoDe(p);
+          const cabeca: Ponto = [pes[0], pes[1] + ALTURA_DO_BONECO, pes[2]];
+          const a = projetar(camera, pes, width, height);
+          const b = projetar(camera, cabeca, width, height);
+          return { p, a, alturaPx: Math.abs(a.y - b.y), dist: distancia(camera, pes) };
+        })
+        .filter((q) => q.a.naFrente && q.alturaPx > 8 && q.alturaPx < height * 3)
+        .sort((m, n) => n.dist - m.dist);
+
+  // O lugar: o que ele tem (rio, ponte, tendas) e a roupa que ele pede
+  const ambiente = props.cenario.ambiente;
+  const paleta = PALETAS[ambiente];
+  const temPonte = props.cenario.ponte ?? ambiente === "campo";
+  const temRio = props.cenario.rio ?? (paleta.rio || temPonte);
+  const temTendas = props.cenario.tendas ?? paleta.tendas;
+  const trajeDe = (p: (typeof pessoas)[number], visual: Visual): Traje => {
+    const d = "detalhes3d" in p ? p.detalhes3d : undefined;
+    return { ...trajeDoAmbiente(ambiente, visual, p.semente), ...trajeDoChapeu(p.chapeu), ...(d?.figurino && { figurino: d.figurino }), ...(d?.acessorio && { acessorio: d.acessorio }), ...(d?.pano && { pano: d.pano }) };
+  };
 
   const estadoDe = (id: string, ehMultidao: boolean): Momento[] => {
     const estado = ehMultidao ? cena.multidao : cena.estados?.[id];
-    return [{ em: 0, pose: estado?.pose ?? "normal", expressao: estado?.expressao ?? "neutra" }];
+    return [
+      {
+        em: 0,
+        pose: estado?.pose ?? "normal",
+        expressao: estado?.expressao ?? "neutra",
+      },
+    ];
   };
 
   return (
     <AbsoluteFill style={{ backgroundColor: "#9ED2F6" }}>
       <ThreeCanvas width={width} height={height} camera={camera} gl={{ antialias: true }} style={{ position: "absolute", inset: 0 }}>
-        <Mundo balanco={balanco} queda={queda} ponte={props.cenario.ponte} tendas={props.cenario.tendas} />
+        <Mundo balanco={balanco} queda={queda} ponte={temPonte} rio={temRio} tendas={temTendas} ambiente={ambiente} />
+        {/* Bonecos de peças: todos em 3D, o elenco com as cores dele; a multidão e os figurantes, variados */}
+        {pecas && pessoas.map((p) => {
+          const visual = "visual" in p && p.visual ? (p.visual as unknown as Visual) : visualDeFigurante(p.semente, p.veste);
+          const [x, , zz] = pontoDe(p);
+          return (
+            <BonecoDePecas
+              key={p.id}
+              visual={visual}
+              traje={trajeDe(p, visual)}
+              detalhes={"detalhes3d" in p ? p.detalhes3d : undefined}
+              momentos={estadoDe(p.id, p.multidao)}
+              palavras={cena.quem === p.id ? agora.palavras : []}
+              boca={cena.quem === p.id ? agora.boca : undefined}
+              posicao={pontoDe(p)}
+              // Quase de frente para a câmera, um pouco virado para quem está do lado (a multidão olha para a frente)
+              virar={p.multidao ? 0 : Math.atan2(camera.position.x - x, camera.position.z - zz) * 0.75 + (p.espelhar ? -0.18 : 0.18)}
+              espelhar={p.espelhar}
+              semente={p.semente}
+              andando={p.multidao && Boolean(multidao?.marchando)}
+            />
+          );
+        })}
       </ThreeCanvas>
       {naTela.map(({ p, a, alturaPx }) => {
         // A figura vai da cabeça (y 136) aos pés (y 958) no desenho de 1000
@@ -334,21 +474,70 @@ export const mundo3dExemplo: Mundo3DProps = {
   titulo: "Por que soldados param de marchar na ponte?",
   destaqueDoTitulo: "marchar",
   personagens: [
-    { id: "capitao", roupa: "#2B2340", veste: "#B23A3A", chapeu: "capacete", onde: [-1.4, 2.6], naPonte: false, espelhar: false },
+    {
+      id: "capitao",
+      roupa: "#2B2340",
+      veste: "#B23A3A",
+      chapeu: "capacete",
+      onde: [-1.4, 2.6],
+      naPonte: false,
+      espelhar: false,
+    },
   ],
-  multidao: { quantos: 15, roupa: "#3A3F47", veste: "#C0392B", chapeu: "capacete", naPonte: true, marchando: true },
+  multidao: {
+    quantos: 15,
+    roupa: "#3A3F47",
+    veste: "#C0392B",
+    chapeu: "capacete",
+    naPonte: true,
+    marchando: true,
+  },
   cenas: [
-    { fala: "Em 1831, na Inglaterra, uma tropa inteira atravessou esta ponte marchando.", plano: "aberto", foco: "ponte", destaque: ["1831", "marchando"], balanco: 0, sons: [{ tipo: "passos", em: 0, repetir: 3 }] },
-    { fala: "Todos pisavam juntos, no mesmo ritmo.", plano: "medio", foco: "multidao", destaque: ["juntos", "ritmo"], multidao: { pose: "normal", expressao: "neutra" }, balanco: 0.25, sons: [{ tipo: "passos", em: 0, repetir: 2 }] },
-    { fala: "A ponte começou a balançar cada vez mais... e desabou.", plano: "de-baixo", foco: "multidao", destaque: ["balançar", "desabou"], multidao: { pose: "cabeca", expressao: "medo" }, balanco: 1, queda: "desabou", sons: [{ tipo: "rangido", em: 0.2, repetir: 2 }] },
-    { fala: "Desde então a ordem é: na ponte, cada um no seu passo!", quem: "capitao", plano: "close", foco: "capitao", destaque: ["passo"], estados: { capitao: { pose: "explicando", expressao: "brava" } }, balanco: 0, sons: [] },
+    {
+      fala: "Em 1831, na Inglaterra, uma tropa inteira atravessou esta ponte marchando.",
+      plano: "aberto",
+      foco: "ponte",
+      destaque: ["1831", "marchando"],
+      balanco: 0,
+      sons: [{ tipo: "passos", em: 0, repetir: 3 }],
+    },
+    {
+      fala: "Todos pisavam juntos, no mesmo ritmo.",
+      plano: "medio",
+      foco: "multidao",
+      destaque: ["juntos", "ritmo"],
+      multidao: { pose: "normal", expressao: "neutra" },
+      balanco: 0.25,
+      sons: [{ tipo: "passos", em: 0, repetir: 2 }],
+    },
+    {
+      fala: "A ponte começou a balançar cada vez mais... e desabou.",
+      plano: "de-baixo",
+      foco: "multidao",
+      destaque: ["balançar", "desabou"],
+      multidao: { pose: "cabeca", expressao: "medo" },
+      balanco: 1,
+      queda: "desabou",
+      sons: [{ tipo: "rangido", em: 0.2, repetir: 2 }],
+    },
+    {
+      fala: "Desde então a ordem é: na ponte, cada um no seu passo!",
+      quem: "capitao",
+      plano: "close",
+      foco: "capitao",
+      destaque: ["passo"],
+      estados: { capitao: { pose: "explicando", expressao: "brava" } },
+      balanco: 0,
+      sons: [],
+    },
   ],
   voz: "pm_alex",
   vozes: { capitao: { voz: "pm_santa" } },
   velocidade: 1,
   musica: "musica/calma-drama.mp3",
   volumeMusica: 0.12,
-  cenario: { ponte: true, tendas: true },
+  bonecos: "palito",
+  cenario: { ambiente: "campo", ponte: true, tendas: true },
   ctaFinal: "Siga para mais histórias que mudaram o mundo",
   botaoFinal: "Siga o canal 👆",
   semLegenda: false,

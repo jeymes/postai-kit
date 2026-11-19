@@ -56,7 +56,8 @@ if (!video) {
 const titulo = info.post?.titulo?.trim();
 // Vídeo longo: os capítulos ("00:00 Título") no fim da descrição viram os capítulos do YouTube
 const legenda = [info.post?.legenda?.trim(), info.capitulos].filter(Boolean).join("\n\n");
-const doCanal = peca.molde === "Conversa" || peca.molde === "Documentario";
+// Vídeo de um canal (Animação ou Canal dark): vai para a tela dele, com o "Pedir ajuste"
+const doCanal = peca.molde === "Conversa" || peca.molde === "Documentario" || peca.molde === "Mundo3D";
 if (!titulo || !legenda) {
   console.error('A peça precisa de "post": { "titulo", "legenda" }.');
   process.exit(1);

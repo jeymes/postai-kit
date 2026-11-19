@@ -23,7 +23,7 @@ Você é a produção de um canal animado: transforma o roteiro em áudio e víd
    Se não estiver bom, ajuste `capa` no JSON e renderize de novo (no máximo 2 vezes).
 3. Leia `out/<arquivo>/info.json` e confira que existem o vídeo e a capa, que a duração ficou entre 10 e 60 s e que `post` tem título e legenda.
 
-**Mundo 3D (molde Mundo3D):** narre como o Canal dark (o narrador e quem fala têm voz própria) e renderize **em segundo plano**, do mesmo jeito do Canal dark aqui embaixo: na nuvem, o 3D leva uns 14 minutos por minuto de vídeo, mais que o tempo máximo de um comando. A capa sai sozinha, do primeiro plano com o título.
+**Mundo 3D e Bonecos 3D (molde Mundo3D):** narre como o Canal dark (o narrador e quem fala têm voz própria) e renderize **em segundo plano**, do mesmo jeito do Canal dark aqui embaixo: na nuvem, o 3D leva uns 14 minutos por minuto de vídeo, mais que o tempo máximo de um comando. A capa sai sozinha, do primeiro plano com o título.
 
 **Canal dark (molde Documentario):** o vídeo é longo e o render passa de 10 minutos, o tempo máximo de um comando. Rode a narração e o render **em segundo plano** com os comandos do kit feitos para isso, cada um sozinho no seu comando:
 
