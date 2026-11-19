@@ -101,7 +101,7 @@ npm run voz:instalar -- --mascote        # uma vez: ~1,2 GB em .voz/
 npm run narrar -- conteudo/<peça>.json   # voz, legenda e conferência de cada cena
 ```
 
-- Vozes: `pf_dora` (feminina), `pm_alex` e `pm_santa` (masculinas).
+- Vozes: 15 femininas e 15 masculinas em `src/componentes/personagens/vozes.ts` (cada uma com o nicho que combina), feitas das 3 do Kokoro em português (`pf_dora`, `pm_alex`, `pm_santa`) misturadas com outras.
 - Preço, hora, porcentagem, @ e site são lidos por extenso ("R$ 12,90" vira "doze reais e noventa
   centavos"), e a legenda mostra como você escreveu.
 - A **conferência** escuta a voz e avisa o que saiu diferente do roteiro. Palavra pronunciada errado

@@ -49,7 +49,7 @@ Se o `canal-postai.md` disser **ESTILO: mundo3d**, o vídeo é outro molde: bone
 - **Personagens** (até 4): `id`, `onde` [x, z], `veste` (cor da túnica), `chapeu` (`coroa`, `capacete` ou `faixa`), `roupa` (cor do traço) e `espelhar`. **Multidão** (até 30): `multidao` com `quantos`, `veste`, `chapeu`, `naPonte` e `marchando`.
 - **Cada cena:** `fala`, `quem` (sem ele, fala o narrador), `plano` (`aberto`, `medio`, `close`, `de-baixo` ou `por-cima`), `foco` (um `id`, `multidao` ou `ponte`), `destaque` (1 ou 2 palavras em amarelo), `estados` (`{"<id>": {"pose", "expressao"}}`), `multidao` (pose e expressão de todos), `balanco` (0 a 1: a ponte balançando), `queda` (a palavra em que a ponte cai, com o estalo) e `sons` (`passos`, `rangido`, `estalo`, `impacto`, `transicao`, com `em` em segundos e `repetir`).
 - **A câmera conta a história:** comece com `aberto`, varie os planos (`medio`, `de-baixo` para tensão, `close` para a frase forte) e não repita o mesmo plano mais de 2 vezes seguidas.
-- **Voz e som:** `voz` do narrador (`pm_alex`, `pm_santa` ou `pf_dora`), `vozes` de quem fala (`{"<id>": {"voz": "pm_santa"}}`), `musica` (`musica/calma-drama.mp3`, `calma-esperanca.mp3` ou `calma-reflexao.mp3`) e `pronuncia` para nomes difíceis.
+- **Voz e som:** `voz` do narrador (um id de `src/componentes/personagens/vozes.ts`, como `masculina-12`, escolhido pelo `nicho` de cada voz; se o `canal-postai.md` disser a voz, use a dele), `vozes` de quem fala (`{"<id>": {"voz": "pm_santa"}}`), `musica` (`musica/calma-drama.mp3`, `calma-esperanca.mp3` ou `calma-reflexao.mp3`) e `pronuncia` para nomes difíceis.
 - **Fim e post:** `ctaFinal` e `botaoFinal` como nos outros vídeos (o cartão do fim tem o logo da marca), e `post` com `titulo` e `legenda`.
 
 ## Estilo "Bonecos 3D" (molde Mundo3D com `"bonecos": "pecas"`)
@@ -63,7 +63,7 @@ Se o `canal-postai.md` disser **ESTILO: bonecos3d**, use o molde Mundo3D com `"b
 - **Multidão** (até 30): `multidao` com `quantos`, `veste`, `chapeu` (`capacete` vira soldados de armadura; `coroa`, manto e coroa), `naPonte` e `marchando` (pernas e braços balançam).
 - **Cada cena:** `fala`, `quem` (sem ele, fala o narrador), `plano` (`aberto`, `medio`, `close`, `de-baixo` ou `por-cima`), `foco` (um `id`, `multidao` ou `ponte`), `destaque` (1 ou 2 palavras em amarelo), `estados` (`{"<id>": {"pose", "expressao"}}`), `multidao` (pose e expressão de todos), `balanco` (0 a 1: a ponte balançando), `queda` (a palavra em que a ponte cai, com o estalo) e `sons` (`passos`, `rangido`, `estalo`, `impacto`, `transicao`, com `em` em segundos e `repetir`).
 - **A câmera conta a história:** comece com `aberto`, varie os planos (`medio`, `de-baixo` para tensão, `close` para a frase forte) e não repita o mesmo plano mais de 2 vezes seguidas.
-- **Voz e som:** `voz` do narrador (`pm_alex`, `pm_santa` ou `pf_dora`), `vozes` de quem fala (`{"<id>": {"voz": "pm_santa"}}`), `musica` (`musica/calma-drama.mp3`, `calma-esperanca.mp3` ou `calma-reflexao.mp3`) e `pronuncia` para nomes difíceis.
+- **Voz e som:** `voz` do narrador (um id de `src/componentes/personagens/vozes.ts`, como `masculina-12`, escolhido pelo `nicho` de cada voz; se o `canal-postai.md` disser a voz, use a dele), `vozes` de quem fala (`{"<id>": {"voz": "pm_santa"}}`), `musica` (`musica/calma-drama.mp3`, `calma-esperanca.mp3` ou `calma-reflexao.mp3`) e `pronuncia` para nomes difíceis.
 - **Fim e post:** `ctaFinal` e `botaoFinal` como nos outros vídeos (o cartão do fim tem o logo da marca), e `post` com `titulo` e `legenda`.
 
 ## O que faz um bom roteiro

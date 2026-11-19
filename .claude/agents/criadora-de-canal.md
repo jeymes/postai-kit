@@ -28,7 +28,7 @@ Você monta o canal de vídeos animados de um cliente, para ele não ter que pre
      - `hashtags` (até 3, sem acento quando der);
      - `ctaInicial` (até 60 caracteres) e `ctaFinal` (até 80, chamando para o site ou o @ de verdade).
    - `personagens`: de 2 a 4, originais e com papéis que criem conflito engraçado (quem tem o problema, quem resolve, um coadjuvante). Cada um tem:
-     - `id` (minúsculas, sem acento), `nome`, `jeito` (personalidade e jeito de falar, em até 300 caracteres) e `voz` (`feminina-1`, `feminina-2`, `feminina-3`, `masculina-1`, `masculina-2`, `masculina-3`, diferentes entre si);
+     - `id` (minúsculas, sem acento), `nome`, `jeito` (personalidade e jeito de falar, em até 300 caracteres) e `voz` (de `feminina-1` a `feminina-15` ou de `masculina-1` a `masculina-15`, diferentes entre si): leia o `nicho` de cada uma em `src/componentes/personagens/vozes.ts` e escolha a que combina com o personagem e com o nicho do canal, sem cair sempre nas primeiras;
      - `visual`, com:
        - `pele`, `cabelo`, `roupa`, `calca`, `sapato` em `#RRGGBB`;
        - `penteado`: `ondulado`, `chanel`, `curto` ou `coque`;

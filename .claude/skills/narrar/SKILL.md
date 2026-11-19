@@ -32,7 +32,7 @@ Molde `Narrado` (exemplo em `conteudo/exemplo-narrado.json`). Cada cena tem:
   `print` + `proporcao` + `rolagem` (o site no celular; ver `npm run capturar-site`), `animacao`
   (sucesso, confete, estrelas, curtida, seta).
 
-No topo: `voz` (`pf_dora` feminina; `pm_alex` ou `pm_santa` masculinas), `velocidade` (1 = normal),
+No topo: `voz` (um id de `src/componentes/personagens/vozes.ts`, de `feminina-1` a `feminina-15` ou de `masculina-1` a `masculina-15`, escolhido pelo `nicho` de cada uma; ou o nome do Kokoro: `pf_dora`, `pm_alex`, `pm_santa`), `velocidade` (1 = normal),
 `mascote` (true/false), `avatar` (`"tela"` ou `"janela"`: a pessoa falando, ver a skill `avatar`), `legendas` (true), `chamada`, `musica` (fica baixinha) e `post`.
 
 Pode escrever preço, hora, porcentagem, @ e site normalmente ("R$ 12,90", "das 8h às 18h", "50%",

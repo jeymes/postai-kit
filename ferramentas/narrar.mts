@@ -39,8 +39,10 @@ if (!cenas.some((cena) => cena.fala)) {
 }
 
 const nome = basename(caminho, ".json");
-const voz: string = peca.voz ?? "pf_dora";
-const velocidade: number = peca.velocidade ?? 1;
+// O narrador ("voz" no topo) aceita o id do catálogo ("masculina-4") ou o nome do Kokoro
+const doCatalogo: Voz | undefined = peca.voz ? VOZES[peca.voz as string] : undefined;
+const voz: string = doCatalogo?.voz ?? peca.voz ?? "pf_dora";
+const velocidade: number = peca.velocidade ?? doCatalogo?.velocidade ?? 1;
 const pronuncia: Record<string, string> = peca.pronuncia ?? {};
 const comMascote = peca.mascote === true || peca.molde === "Conversa";
 // Voz de cada personagem: a do elenco do roteiro (o nome de uma das VOZES ou
