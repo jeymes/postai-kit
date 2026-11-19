@@ -15,11 +15,11 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { ferramenta } from "./postai.ts";
 
-const MOLDES: Record<string, string> = { conversa: "Conversa", documentario: "Documentario" };
+const MOLDES: Record<string, string> = { conversa: "Conversa", documentario: "Documentario", mundo3d: "Mundo3D" };
 const pedido = (process.argv[2] ?? "").toLowerCase();
 const molde = MOLDES[pedido];
 if (!molde) {
-  console.error("Uso: npm run checar -- conversa | documentario");
+  console.error("Uso: npm run checar -- conversa | documentario | mundo3d");
   process.exit(1);
 }
 
@@ -47,7 +47,9 @@ for (const arquivo of ["ferramentas/andamento.mts", "ferramentas/aprovar.mts", "
 if (!problemas.length) {
   const pasta = mkdtempSync(join(tmpdir(), "postai-checar-"));
   const quadro = join(pasta, "quadro.png");
-  const r = spawnSync("npx", ["remotion", "still", molde, quadro, "--frame=30", "--scale=0.2", "--log=error"], {
+  // O 3D sem placa de vídeo (a nuvem): o swangle desenha no processador
+  const gl = molde === "Mundo3D" ? [`--gl=${process.env.KIT_NAVEGADOR ? "swangle" : "angle"}`] : [];
+  const r = spawnSync("npx", ["remotion", "still", molde, quadro, "--frame=30", "--scale=0.2", "--log=error", ...gl], {
     encoding: "utf8",
     shell: process.platform === "win32",
     timeout: 4 * 60 * 1000,

@@ -26,6 +26,28 @@ import {
 
 const CABECA = { x: 200, y: 232, r: 96 };
 
+/** O que vai na cabeça (mundo medieval do molde Mundo3D): coroa, capacete ou faixa */
+export type ChapeuDoPalito = "coroa" | "capacete" | "faixa";
+
+const Chapeu: React.FC<{ tipo: ChapeuDoPalito; traco: string }> = ({ tipo, traco }) => {
+  if (tipo === "coroa")
+    return (
+      <g stroke={traco} strokeWidth={6} strokeLinejoin="round">
+        <path d="M134 168 L134 146 L152 104 L174 140 L200 90 L226 140 L248 104 L266 146 L266 168 Z" fill="#F2C230" />
+        <circle cx={200} cy={150} r={9} fill="#E8453C" />
+      </g>
+    );
+  if (tipo === "capacete")
+    return (
+      <g stroke={traco} strokeWidth={6} strokeLinejoin="round">
+        <path d="M104 214 A96 96 0 0 1 296 214 Z" fill="#A7B0BA" />
+        <rect x={94} y={206} width={212} height={20} rx={10} fill="#8C96A1" />
+        <path d="M200 120 L200 206" stroke="#8C96A1" strokeWidth={10} />
+      </g>
+    );
+  return <path d="M108 176 Q200 160 292 176 L292 198 Q200 182 108 198 Z" fill="#F4F1E8" stroke={traco} strokeWidth={6} strokeLinejoin="round" />;
+};
+
 // No palito os braços saem do meio do corpo, logo embaixo da cabeça: nas poses
 // de braço para cima, ângulos próprios para as mãos irem ao lado da cabeça
 // (sem cruzar o rosto). O Braco ainda soma 16° para fora.
@@ -135,8 +157,11 @@ export const Palito: React.FC<{
   noite?: boolean;
   /** Para os estilos de traço (giz, neon): a cor de dentro da cabeça e a do rosto */
   cores?: { cabeca?: string; rosto?: string };
+  /** Túnica por cima do corpo (a cor), no mundo medieval do Mundo3D */
+  veste?: string;
+  chapeu?: ChapeuDoPalito;
   style?: React.CSSProperties;
-}> = ({ visual, momentos, palavras, boca, altura, espelhar = false, semente = 0, noite = false, cores, style }) => {
+}> = ({ visual, momentos, palavras, boca, altura, espelhar = false, semente = 0, noite = false, cores, veste, chapeu, style }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const estado = estadoAgora(momentos, frame, fps, POSES_DO_PALITO);
@@ -168,11 +193,19 @@ export const Palito: React.FC<{
           <g transform={`translate(0 ${respira})`}>
             {/* Corpo */}
             <line x1={200} y1={CABECA.y + CABECA.r - 4} x2={200} y2={640} stroke={cor} strokeWidth={LINHA} strokeLinecap="round" />
+            {veste && (
+              <g stroke={rosto} strokeWidth={6} strokeLinejoin="round">
+                <path d="M156 326 L244 326 L288 704 L112 704 Z" fill={veste} />
+                <path d="M178 326 L200 372 L222 326" fill="none" />
+                <path d="M126 560 L274 560" stroke="#5A3A1E" strokeWidth={14} />
+              </g>
+            )}
             <g transform={`rotate(${inclina} 200 360)`}>
               <circle cx={CABECA.x} cy={CABECA.y} r={CABECA.r} fill={cabeca} stroke={cor} strokeWidth={LINHA - 6} />
               {noite && <circle cx={CABECA.x} cy={CABECA.y} r={CABECA.r - 10} fill={`url(#${id})`} />}
               <Olhos expressao={estado.expressao} piscando={piscando} cor={rosto} />
               <Boca expressao={estado.expressao} forma={forma} cor={rosto} />
+              {chapeu && <Chapeu tipo={chapeu} traco={rosto} />}
               {visual.oculos && (
                 <g fill="none" stroke={rosto} strokeWidth={6}>
                   <circle cx={166} cy={238} r={27} />

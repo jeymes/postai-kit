@@ -24,6 +24,7 @@
     "checar": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --import ./ferramentas/falhas.mts ferramentas/checar.mts",
     "limite": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --import ./ferramentas/falhas.mts ferramentas/limite.mts",
     "trilhas:calmas": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --import ./ferramentas/falhas.mts ferramentas/trilhas-calmas.mts",
+    "sons:mundo": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON ferramentas/sons-do-mundo.mts",
     "pauta": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --import ./ferramentas/falhas.mts ferramentas/pauta.mts",
     "nicho": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --import ./ferramentas/falhas.mts ferramentas/nicho.mts",
     "conferir": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --import ./ferramentas/falhas.mts ferramentas/conferir.mts",

@@ -25,6 +25,10 @@ export const SONS = {
   tictac: { volume: 0.45, quadros: 33 },
   sininho: { volume: 0.4, quadros: 42 },
   fogos: { volume: 0.45, quadros: 66 },
+  // Os do mundo 3D (npm run sons:mundo)
+  passos: { volume: 0.5, quadros: 60 },
+  rangido: { volume: 0.45, quadros: 42 },
+  estalo: { volume: 0.75, quadros: 36 },
 } as const;
 
 export type TipoSom = keyof typeof SONS;

@@ -1,0 +1,125 @@
+{
+  "molde": "Mundo3D",
+  "titulo": "Por que soldados param de marchar na ponte?",
+  "destaqueDoTitulo": "marchar",
+  "personagens": [
+    {
+      "id": "capitao",
+      "roupa": "#2B2340",
+      "veste": "#B23A3A",
+      "chapeu": "capacete",
+      "onde": [
+        -1.4,
+        2.6
+      ],
+      "naPonte": false,
+      "espelhar": false
+    }
+  ],
+  "multidao": {
+    "quantos": 15,
+    "roupa": "#3A3F47",
+    "veste": "#C0392B",
+    "chapeu": "capacete",
+    "naPonte": true,
+    "marchando": true
+  },
+  "cenas": [
+    {
+      "fala": "Em 1831, na Inglaterra, uma tropa inteira atravessou esta ponte marchando.",
+      "plano": "aberto",
+      "foco": "ponte",
+      "destaque": [
+        "1831",
+        "marchando"
+      ],
+      "balanco": 0,
+      "sons": [
+        {
+          "tipo": "passos",
+          "em": 0,
+          "repetir": 3
+        }
+      ]
+    },
+    {
+      "fala": "Todos pisavam juntos, no mesmo ritmo.",
+      "plano": "medio",
+      "foco": "multidao",
+      "destaque": [
+        "juntos",
+        "ritmo"
+      ],
+      "multidao": {
+        "pose": "normal",
+        "expressao": "neutra"
+      },
+      "balanco": 0.25,
+      "sons": [
+        {
+          "tipo": "passos",
+          "em": 0,
+          "repetir": 2
+        }
+      ]
+    },
+    {
+      "fala": "A ponte começou a balançar cada vez mais... e desabou.",
+      "plano": "de-baixo",
+      "foco": "multidao",
+      "destaque": [
+        "balançar",
+        "desabou"
+      ],
+      "multidao": {
+        "pose": "cabeca",
+        "expressao": "medo"
+      },
+      "balanco": 1,
+      "queda": "desabou",
+      "sons": [
+        {
+          "tipo": "rangido",
+          "em": 0.2,
+          "repetir": 2
+        }
+      ]
+    },
+    {
+      "fala": "Desde então a ordem é: na ponte, cada um no seu passo!",
+      "quem": "capitao",
+      "plano": "close",
+      "foco": "capitao",
+      "destaque": [
+        "passo"
+      ],
+      "estados": {
+        "capitao": {
+          "pose": "explicando",
+          "expressao": "brava"
+        }
+      },
+      "balanco": 0,
+      "sons": []
+    }
+  ],
+  "voz": "pm_alex",
+  "vozes": {
+    "capitao": {
+      "voz": "pm_santa"
+    }
+  },
+  "velocidade": 1,
+  "musica": "musica/calma-drama.mp3",
+  "volumeMusica": 0.12,
+  "cenario": {
+    "ponte": true,
+    "tendas": true
+  },
+  "ctaFinal": "Siga para mais histórias que mudaram o mundo",
+  "botaoFinal": "Siga o canal 👆",
+  "post": {
+    "titulo": "Por que soldados param de marchar na ponte? 🌉",
+    "legenda": "Em 1831 uma ponte caiu na Inglaterra por causa de uma marcha no mesmo ritmo. #historia #curiosidades #shorts"
+  }
+}

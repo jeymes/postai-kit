@@ -1,5 +1,5 @@
-// Conferência automática de um episódio animado (molde Conversa) ou de um
-// vídeo do Canal dark (molde Documentario), antes de
+// Conferência automática de um episódio animado (molde Conversa ou Mundo3D) ou
+// de um vídeo do Canal dark (molde Documentario), antes de
 // renderizar. Confere o que é regra fixa e não depende de gosto: tamanhos,
 // CTAs, @ e texto de exemplo, movimento dos personagens, capa e post. Não
 // gasta nada do Claude e não se distrai. O gosto (graça, ritmo, beleza) fica
@@ -127,8 +127,52 @@ if (peca.molde === "Documentario") {
   resultado();
 }
 
+// ---- Mundo3D (bonecos de palito num mundo 3D): a forma, por código ----
+if (peca.molde === "Mundo3D") {
+  type Cena3D = { fala?: string; quem?: string; plano?: string; foco?: string; estados?: Record<string, unknown>; narracao?: { duracaoSeg?: number }; queda?: string };
+  const m = peca as unknown as {
+    titulo?: string;
+    personagens?: Array<{ id: string }>;
+    multidao?: unknown;
+    cenas?: Cena3D[];
+    ctaFinal?: string;
+    botaoFinal?: string;
+    cenario?: { ponte?: boolean };
+    post?: { titulo?: string; legenda?: string };
+  };
+  const cenas = m.cenas ?? [];
+  const ids = new Set((m.personagens ?? []).map((p) => p.id));
+  const PLANOS = ["aberto", "medio", "close", "de-baixo", "por-cima"];
+  if (cenas.length < 3) erro("roteirista", `só ${cenas.length} cena(s): um vídeo pede de 5 a 12`);
+  if (cenas.length > 14) erro("roteirista", `${cenas.length} cenas: no máximo 14 (o vídeo passa de 1 minuto)`);
+  if (tamanho(m.titulo) > 60) erro("roteirista", `título com ${tamanho(m.titulo)} letras (até 60, cabe em 4 linhas)`);
+  cenas.forEach((cena, i) => {
+    const n = i + 1;
+    if (!cena.fala?.trim()) erro("roteirista", `cena ${n} sem fala`);
+    else if (palavras(cena.fala) > 28) erro("roteirista", `cena ${n} com ${palavras(cena.fala)} palavras (até 28: divida em duas cenas)`);
+    if (!PLANOS.includes(cena.plano ?? "")) erro("roteirista", `cena ${n}: plano "${cena.plano}" (use ${PLANOS.join(", ")})`);
+    const foco = cena.foco ?? "";
+    if (!(ids.has(foco) || (foco === "multidao" && m.multidao) || (foco === "ponte" && m.cenario?.ponte !== false)))
+      erro("roteirista", `cena ${n}: foco "${foco}" não existe (um id de personagens, "multidao" ou "ponte")`);
+    if (cena.quem && !ids.has(cena.quem)) erro("roteirista", `cena ${n}: quem "${cena.quem}" não está em personagens`);
+    for (const id of Object.keys(cena.estados ?? {})) if (!ids.has(id)) erro("roteirista", `cena ${n}: estado de "${id}", que não está em personagens`);
+    if (cena.queda && m.cenario?.ponte === false) erro("roteirista", `cena ${n}: queda sem ponte no cenário`);
+    if (process.argv.includes("--com-voz") && !cena.narracao) erro("producao", `cena ${n} sem voz: rode o narrar de novo`);
+  });
+  // Os planos variam (o que prende é a câmera mudando)
+  const repetidos = cenas.filter((c, i) => i > 0 && c.plano === cenas[i - 1].plano).length;
+  if (cenas.length >= 4 && repetidos > cenas.length / 2) aviso("roteirista", "muitos planos iguais seguidos: varie (aberto, médio, de baixo, close)");
+  const segundos = cenas.reduce((soma, c) => soma + (c.narracao?.duracaoSeg ?? palavras(c.fala) / 2.6), 0);
+  if (segundos > 75) erro("roteirista", `uns ${Math.round(segundos)} s de fala: o Short vai até uns 60 s`);
+  if (!m.ctaFinal) aviso("roteirista", "sem ctaFinal: o vídeo termina sem o cartão da marca");
+  if (m.ctaFinal && (/@/.test(m.ctaFinal) || /link na bio/i.test(m.ctaFinal))) erro("roteirista", "ctaFinal sem @ e sem link na bio (isso vai no botão)");
+  if (!m.post?.titulo || !m.post?.legenda) erro("roteirista", 'falta "post": { "titulo", "legenda" }');
+  console.log(`Mundo3D: ${cenas.length} cenas, uns ${Math.round(segundos)} s de fala.`);
+  resultado();
+}
+
 if (peca.molde !== "Conversa") {
-  console.log(`Molde ${peca.molde ?? "?"}: esta conferência é para os moldes Conversa e Documentario.`);
+  console.log(`Molde ${peca.molde ?? "?"}: esta conferência é para os moldes Conversa, Documentario e Mundo3D.`);
   process.exit(0);
 }
 

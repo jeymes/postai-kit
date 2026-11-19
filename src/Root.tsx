@@ -16,6 +16,7 @@ import { Tutorial, tutorialExemplo, tutorialSchema } from "./moldes/Tutorial";
 import { Teste3D } from "./componentes/3d/Teste3D";
 import { PreviaDoEstilo } from "./estilos/Previa";
 import { Vitrine3D, vitrine3dExemplo, vitrine3dSchema } from "./moldes/Vitrine3D";
+import { Mundo3D, mundo3dExemplo, mundo3dSchema } from "./moldes/Mundo3D";
 import { Vinheta, vinhetaExemplo, type PropsDaVinheta } from "./moldes/Vinheta";
 
 // Moldes do Kit Estúdio. O conteúdo de cada peça vem de conteudo/<peca>.json
@@ -67,6 +68,16 @@ export const RemotionRoot: React.FC = () => (
         {...video}
         durationInFrames={duracaoDoMolde("Narrado", narradoExemplo)}
         {...duracao("Narrado", narradoSchema)}
+      />
+      {/* Bonecos de palito num mundo 3D (estilo "Mundo 3D" da Animação) */}
+      <Composition
+        id="Mundo3D"
+        component={Mundo3D}
+        schema={mundo3dSchema}
+        defaultProps={mundo3dExemplo}
+        {...video}
+        durationInFrames={duracaoDoMolde("Mundo3D", mundo3dExemplo)}
+        {...duracao("Mundo3D", mundo3dSchema)}
       />
       <Composition
         id="Vitrine3D"

@@ -55,6 +55,9 @@ export function quadrosDaFala(cena: CenaNarrada) {
 /** Conversa: respiro antes da primeira fala, entre as falas e no fim */
 export const CONVERSA = { inicio: 20, entreFalas: 12, fim: 18, ctaFinal: 105, final: 150 } as const;
 
+/** Mundo3D: respiro entre as cenas, o tempo da queda (na cena que tem) e o cartão do fim */
+export const MUNDO3D = { entreCenas: 10, queda: 16, cartao: 105 } as const;
+
 /** Tempo estimado de cada palavra (antes da voz): curtas ~0,2 s, longas ~0,5 s, pausa na pontuação */
 export function estimarPalavras(fala: string) {
   let quadro = 0;
@@ -74,6 +77,13 @@ export function quadrosDaFalaConversa(cena: CenaNarrada) {
   if (cena.narracao) return Math.ceil(cena.narracao.duracaoSeg * FPS);
   const palavras = estimarPalavras(cena.fala ?? "");
   return palavras.length ? palavras[palavras.length - 1].fim : 30;
+}
+
+/** Uma cena do Mundo3D: a fala (a voz ou a estimativa), o respiro e, se a ponte cai nela, a queda */
+export function quadrosDaCenaDoMundo3D(cena: { fala?: string; narracao?: { duracaoSeg: number }; queda?: string }) {
+  const estimadas = estimarPalavras(cena.fala ?? "");
+  const fala = cena.narracao ? Math.ceil(cena.narracao.duracaoSeg * FPS) : estimadas.length ? estimadas[estimadas.length - 1].fim : 45;
+  return fala + MUNDO3D.entreCenas + (cena.queda ? MUNDO3D.queda : 0);
 }
 
 /** Duração de cada cena do molde, na ordem */
@@ -99,6 +109,8 @@ export function cenasDoMolde(molde: string, c: Conteudo): number[] {
       return [...((c.cenas ?? []) as CenaNarrada[]).map(quadrosDaFala), TEMPOS.chamada];
     case "Documentario":
       return [...((c.cenas ?? []) as CenaNarrada[]).map(quadrosDaFala), ...(c.encerramento ? [QUADROS_DO_ENCERRAMENTO] : [])];
+    case "Mundo3D":
+      return [...((c.cenas ?? []) as Array<{ fala?: string; narracao?: { duracaoSeg: number }; queda?: string }>).map(quadrosDaCenaDoMundo3D), ...(c.ctaFinal ? [MUNDO3D.cartao] : [])];
     case "Conversa":
       return [CONVERSA.inicio, ...((c.cenas ?? []) as CenaNarrada[]).map((cena) => quadrosDaFalaConversa(cena) + CONVERSA.entreFalas), CONVERSA.fim, ...(c.final ? [CONVERSA.final] : []), ...(c.ctaFinal ? [CONVERSA.ctaFinal] : [])];
     default: {
@@ -147,8 +159,9 @@ export const MOLDES_DE_VIDEO = [
   "Documentario",
   "Vitrine3D",
   "Conversa",
+  "Mundo3D",
   ...Object.keys(CENAS_DOS_MEUS_MOLDES),
 ];
 
 /** Moldes do kit com 3D: o renderizar prepara a fonte 3D e usa a placa de vídeo */
-export const MOLDES_3D = ["Vitrine3D"];
+export const MOLDES_3D = ["Vitrine3D", "Mundo3D"];

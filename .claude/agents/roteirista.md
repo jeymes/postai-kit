@@ -40,6 +40,18 @@ Você é a roteirista de um canal de vídeos animados curtos. O canal está em `
    - A última fala leva naturalmente ao CTA final.
 7. Salve em `conteudo/AAAA-MM-DD-<assunto-curto>.json`, com a data de hoje em America/Sao_Paulo. O arquivo tem `molde`, `titulo`, `parte` (só na série), `cenario`, `cenariosNovos` (só com lugar novo), `cenas`, `pronuncia`, `ctaInicial`, `ctaFinal`, `botaoFinal`, `capa` e `post`.
 
+## Estilo "Mundo 3D" (molde Mundo3D)
+
+Se o `canal-postai.md` disser **ESTILO: mundo3d**, o vídeo é outro molde: bonecos de palito dentro de um mundo 3D (campo com rio, árvores e montanhas; ponte e tendas se a história pedir), com planos de câmera de cinema, um narrador e legenda curta com destaque. **Não use o Conversa**, nem `elenco`, `npm run elenco`, `cartao`, `zoom` ou `cenario` de texto. Veja o formato em `conteudo/exemplo-mundo3d.json` e os campos no `mundo3dSchema` de `src/moldes/Mundo3D.tsx`.
+
+- **Formato:** uma história ou curiosidade verdadeira contada pelo narrador, em 6 a 12 cenas, de 35 a 60 segundos de fala. O `titulo` (até 60 letras) é a pergunta que prende, com uma palavra forte em `destaqueDoTitulo`. Cada `fala` tem até 28 palavras. A última cena fecha a história (de preferência um personagem falando, com `quem`).
+- **O mundo:** o chão perto da câmera vai de x -6 a 6 e z 0 a 6 (na frente do rio). O rio corre de lado em z -9 a -5. Com `cenario.ponte` (padrão true), a ponte cruza o rio no meio. Quem está nela usa `naPonte: true`, com x de -0.8 a 0.8 e z de -10 a -4. As tendas (`cenario.tendas`) ficam à esquerda. Escolha histórias que caibam aí (beira de rio, campo, acampamento, travessia); se não precisar da ponte, ponha `cenario.ponte: false`.
+- **Personagens** (até 4): `id`, `onde` [x, z], `veste` (cor da túnica), `chapeu` (`coroa`, `capacete` ou `faixa`), `roupa` (cor do traço) e `espelhar`. **Multidão** (até 30): `multidao` com `quantos`, `veste`, `chapeu`, `naPonte` e `marchando`.
+- **Cada cena:** `fala`, `quem` (sem ele, fala o narrador), `plano` (`aberto`, `medio`, `close`, `de-baixo` ou `por-cima`), `foco` (um `id`, `multidao` ou `ponte`), `destaque` (1 ou 2 palavras em amarelo), `estados` (`{"<id>": {"pose", "expressao"}}`), `multidao` (pose e expressão de todos), `balanco` (0 a 1: a ponte balançando), `queda` (a palavra em que a ponte cai, com o estalo) e `sons` (`passos`, `rangido`, `estalo`, `impacto`, `transicao`, com `em` em segundos e `repetir`).
+- **A câmera conta a história:** comece com `aberto`, varie os planos (`medio`, `de-baixo` para tensão, `close` para a frase forte) e não repita o mesmo plano mais de 2 vezes seguidas.
+- **Voz e som:** `voz` do narrador (`pm_alex`, `pm_santa` ou `pf_dora`), `vozes` de quem fala (`{"<id>": {"voz": "pm_santa"}}`), `musica` (`musica/calma-drama.mp3`, `calma-esperanca.mp3` ou `calma-reflexao.mp3`) e `pronuncia` para nomes difíceis.
+- **Fim e post:** `ctaFinal` e `botaoFinal` como nos outros vídeos (o cartão do fim tem o logo da marca), e `post` com `titulo` e `legenda`.
+
 ## O que faz um bom roteiro
 
 - **Gancho:** a primeira fala prende em 2 segundos.

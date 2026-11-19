@@ -44,6 +44,7 @@ if (fimDoVideo === "vinheta" && !args.includes("--previa")) {
     delete props.ctaFinal;
   }
   if (molde === "Documentario") delete props.encerramento;
+  if (molde === "Mundo3D") delete props.ctaFinal;
 }
 
 function lerJson<T>(arquivo: string): T | null {
@@ -64,7 +65,7 @@ if (!MOLDES.includes(molde)) {
   process.exit(1);
 }
 
-if ((molde === "Narrado" || molde === "Documentario") && !previa && props.cenas.some((c: { narracao?: unknown }) => !c.narracao)) {
+if ((molde === "Narrado" || molde === "Documentario" || molde === "Mundo3D") && !previa && props.cenas.some((c: { narracao?: unknown }) => !c.narracao)) {
   console.error(`Falta a voz de alguma cena. Rode antes: npm run narrar -- ${caminho}`);
   process.exit(1);
 }
@@ -74,7 +75,8 @@ const meu = join("src", "moldes", "meus", `${molde}.tsx`);
 const com3d = MOLDES_3D.includes(molde) || (existsSync(meu) && readFileSync(meu, "utf8").includes("componentes/3d"));
 if (com3d && fonte3dDesatualizada()) await prepararFonte3d();
 // O jeito de usar a placa de vídeo que o `npm run diagnostico` achou (angle serve na maioria)
-const gl = com3d ? [`--gl=${lerDiagnostico()?.gl ?? "angle"}`] : [];
+// Na nuvem não há placa de vídeo: o swangle desenha o 3D no processador
+const gl = com3d ? [`--gl=${lerDiagnostico()?.gl ?? (process.env.KIT_NAVEGADOR ? "swangle" : "angle")}`] : [];
 
 function lerDiagnostico(): { gl?: string } | null {
   try {
@@ -249,6 +251,8 @@ if (molde === "Carrossel") {
   const destinoDaCapa = join(saida, "capa.jpg");
   // Vídeo animado: a capa é a cena com os personagens
   if (molde === "Conversa") imagem("CapaConversa", { ...props, capa: capa ?? {} }, destinoDaCapa);
+  // Mundo 3D: o primeiro plano, já com o título inteiro na tela
+  else if (molde === "Mundo3D") imagem("Mundo3D", { ...props, semLegenda: true }, destinoDaCapa, 45);
   else if (molde === "Documentario") {
     imagem("CapaDoDocumentario", { ...(capa ?? capaPadrao()), ...(props.estilo ? { estilo: props.estilo } : {}) }, destinoDaCapa);
     capitulos = capitulosDoYouTube();
