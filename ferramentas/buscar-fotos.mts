@@ -12,7 +12,7 @@
 //   --deitadas (só fotos deitadas, gravadas com 1920 px de largura: para o Documentario),
 //   --fonte commons (Wikimedia Commons: pinturas, mapas e fotos antigas; só domínio público e CC0;
 //   melhor para história e com termos gerais, ex. "Rio de Janeiro 19th century painting"),
-//   --fonte museus (ao mesmo tempo no Art Institute of Chicago, no Cleveland Museum of Art, no
+//   --fonte museus (ao mesmo tempo no Art Institute of Chicago, no Cleveland Museum of Art, no The Met, no
 //   Commons e no Openverse, só domínio público e CC0, sem chave; os museus vêm primeiro: as
 //   imagens são escaneadas por eles, em alta resolução; o melhor para o Canal dark; na rotina
 //   da nuvem entra também o Pixabay, com fotos modernas de lugares e paisagens),
@@ -267,6 +267,64 @@ async function buscarNoCleveland(termo: string): Promise<Foto[]> {
     .filter(filtroDeTamanho);
 }
 
+/** Largura e altura de um JPEG pelos primeiros bytes (o marcador SOF), sem baixar a imagem toda */
+function dimensoesDoJpeg(b: Uint8Array): { width: number; height: number } | null {
+  let i = 2;
+  while (i + 9 < b.length) {
+    if (b[i] !== 0xff) return null;
+    const marca = b[i + 1];
+    const tamanho = (b[i + 2] << 8) + b[i + 3];
+    // SOF0 a SOF15, menos os que não são quadro (C4, C8, CC)
+    if (marca >= 0xc0 && marca <= 0xcf && ![0xc4, 0xc8, 0xcc].includes(marca)) {
+      return { height: (b[i + 5] << 8) + b[i + 6], width: (b[i + 7] << 8) + b[i + 8] };
+    }
+    i += 2 + tamanho;
+  }
+  return null;
+}
+
+/**
+ * The Met (Nova York): obras em domínio público (CC0), sem chave. A busca é a
+ * v1.1 (a v1 saiu do ar em 01/10/2026); cada obra diz se é domínio público. A
+ * API não dá o tamanho da imagem: lê do começo do próprio JPEG.
+ */
+async function buscarNoMet(termo: string): Promise<Foto[]> {
+  const url = new URL("https://collectionapi.metmuseum.org/public/collection/v1.1/search");
+  url.searchParams.set("q", termo);
+  url.searchParams.set("hasImages", "true");
+  url.searchParams.set("limit", "20");
+  const resp = await pedir(url);
+  if (!resp.ok) throw new Error(`O Met respondeu ${resp.status} para "${termo}"`);
+  const { objectIDs } = (await resp.json()) as { objectIDs?: number[] | null };
+  type Obra = { objectID: number; isPublicDomain?: boolean; primaryImage?: string; primaryImageSmall?: string; title?: string; artistDisplayName?: string; objectURL?: string };
+  const obras = await Promise.all(
+    (objectIDs ?? []).slice(0, 12).map(async (id) => {
+      const r = await pedir(`https://collectionapi.metmuseum.org/public/collection/v1/objects/${id}`);
+      return r.ok ? ((await r.json()) as Obra) : null;
+    }),
+  );
+  const boas = obras.filter((o): o is Obra => Boolean(o?.isPublicDomain && o.primaryImage && tituloCombina(termo, o.title ?? "")));
+  const fotos = await Promise.all(
+    boas.map(async (o): Promise<Foto | null> => {
+      const comeco = await pedir(o.primaryImage as string, { "User-Agent": AGENTE, Range: "bytes=0-65535" });
+      if (!comeco.ok) return null;
+      const dim = dimensoesDoJpeg(new Uint8Array(await comeco.arrayBuffer()));
+      if (!dim) return null;
+      return {
+        id: String(o.objectID),
+        url: o.primaryImage as string,
+        previa: o.primaryImageSmall || undefined,
+        source: "met",
+        foreign_landing_url: o.objectURL ?? `https://www.metmuseum.org/art/collection/search/${o.objectID}`,
+        width: dim.width,
+        height: dim.height,
+        titulo: [o.title, o.artistDisplayName].filter(Boolean).join(", "),
+      };
+    }),
+  );
+  return fotos.filter((f): f is Foto => f !== null).filter(filtroDeTamanho);
+}
+
 /** As tags que o Pixabay põe em imagem feita por IA */
 const FEITO_POR_IA = /\b(ai[- ]?generated|generative|midjourney|stable diffusion|dall[- ]?e|ai art)\b/i;
 
@@ -309,10 +367,11 @@ const pesoDe = (f: Foto) => PESO[f.source] ?? (f.source.startsWith("smithsonian"
  * confiável para o menos, e mantém a ordem de relevância de cada um.
  */
 async function buscarNosMuseus(termo: string): Promise<Foto[]> {
-  const nomes = ["Art Institute", "Cleveland", "Commons", "Openverse", "Pixabay"];
+  const nomes = ["Art Institute", "Cleveland", "Met", "Commons", "Openverse", "Pixabay"];
   const resultados = await Promise.allSettled([
     buscarNoAIC(termo),
     buscarNoCleveland(termo),
+    buscarNoMet(termo),
     buscarNoCommons(termo),
     buscarNoOpenverse(termo, false),
     // Sem o passe (no computador, sem a rotina), o Pixabay fica de fora sem avisar
