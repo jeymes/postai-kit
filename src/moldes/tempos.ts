@@ -54,6 +54,8 @@ export function quadrosDaFala(cena: CenaNarrada) {
 
 /** Conversa: respiro antes da primeira fala, entre as falas e no fim */
 export const CONVERSA = { inicio: 20, entreFalas: 12, fim: 18, ctaFinal: 105, final: 150 } as const;
+/** O trecho do vídeo real do app no fim do Conversa (de 1 a 6 s), antes do cartão final */
+export const quadrosDoVideoDoApp = (v: { de: number; ate: number }) => Math.round(Math.min(6, Math.max(1, v.ate - v.de)) * 30);
 
 /** Mundo3D: respiro entre as cenas, o tempo da queda (na cena que tem) e o cartão do fim */
 export const MUNDO3D = { entreCenas: 10, queda: 16, cartao: 105 } as const;
@@ -112,7 +114,14 @@ export function cenasDoMolde(molde: string, c: Conteudo): number[] {
     case "Mundo3D":
       return [...((c.cenas ?? []) as Array<{ fala?: string; narracao?: { duracaoSeg: number }; queda?: string }>).map(quadrosDaCenaDoMundo3D), ...(c.ctaFinal ? [MUNDO3D.cartao] : [])];
     case "Conversa":
-      return [CONVERSA.inicio, ...((c.cenas ?? []) as CenaNarrada[]).map((cena) => quadrosDaFalaConversa(cena) + CONVERSA.entreFalas), CONVERSA.fim, ...(c.final ? [CONVERSA.final] : []), ...(c.ctaFinal ? [CONVERSA.ctaFinal] : [])];
+      return [
+        CONVERSA.inicio,
+        ...((c.cenas ?? []) as CenaNarrada[]).map((cena) => quadrosDaFalaConversa(cena) + CONVERSA.entreFalas),
+        CONVERSA.fim,
+        ...(c.final ? [CONVERSA.final] : []),
+        ...(c.videoDoApp ? [quadrosDoVideoDoApp(c.videoDoApp as { de: number; ate: number })] : []),
+        ...(c.ctaFinal ? [CONVERSA.ctaFinal] : []),
+      ];
     default: {
       const meu = CENAS_DOS_MEUS_MOLDES[molde];
       if (!meu) throw new Error(`Molde sem tempos: ${molde} (registre em src/moldes/meus/tempos.ts)`);

@@ -1,6 +1,6 @@
 import { Audio } from "@remotion/media";
 import React from "react";
-import { AbsoluteFill, interpolate, Sequence, spring, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
+import { AbsoluteFill, interpolate, OffthreadVideo, Sequence, spring, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 import { z } from "zod";
 import { EfeitosContexto, Som, SONS, type TipoSom } from "../componentes/audio/Som";
 import { resolverCenario, type CenarioProprio } from "../componentes/cenarios/Cenarios";
@@ -18,7 +18,7 @@ import { OBJETOS_DA_SOMBRA, Sombra } from "../componentes/personagens/Sombra";
 import { CelularAceso } from "../componentes/personagens/Boneco";
 import { LuzDoAviso } from "../componentes/efeitos/LuzDoAviso";
 import { FraseNaLuz } from "../componentes/cenas/FraseNaLuz";
-import { CONVERSA, estimarPalavras, FPS, quadrosDaFalaConversa } from "./tempos";
+import { CONVERSA, estimarPalavras, FPS, quadrosDaFalaConversa, quadrosDoVideoDoApp } from "./tempos";
 
 // Cena de conversa entre personagens fixos do elenco, em desenho 2D: cada
 // cena é a fala de um personagem, com a pose e a expressão de cada um naquele
@@ -189,6 +189,14 @@ export const conversaSchema = z.object({
     })
     .optional()
     .describe("Frase na luz: cena final escura com feixe de luz, a frase na cor de destaque do canal, a linha embaixo, a pessoa no feixe e o botão (antes do CTA final)"),
+  videoDoApp: z
+    .object({
+      arquivo: z.string().describe("O vídeo do produto: o material do canal (canais/<canal>/materiais/<id>.mp4) ou um arquivo em public/"),
+      de: z.number().min(0).describe("Segundo em que o trecho começa no vídeo do app"),
+      ate: z.number().min(0).describe("Segundo em que termina (de 1 a 6 s depois do de; o canal costuma pedir 2 a 4)"),
+    })
+    .optional()
+    .describe("O trecho do vídeo real do app no fim (dentro de um celular), antes do cartão final: mostra o que a história falou"),
   legendas: z.boolean().default(true),
   efeitos: z.boolean().default(true),
   vozes: z.record(z.string(), z.object({ voz: z.string(), velocidade: z.number().optional() })).optional(),
@@ -418,7 +426,9 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
   const ultima = linha[linha.length - 1];
   const fimDasFalas = ultima.inicio + quadrosDaFalaConversa(ultima.cena) + CONVERSA.entreFalas + CONVERSA.fim;
   // A cena do versículo (se tiver) vem antes do CTA final
-  const inicioDoCta = fimDasFalas + (props.final ? CONVERSA.final : 0);
+  const inicioDoApp = fimDasFalas + (props.final ? CONVERSA.final : 0);
+  const quadrosDoApp = props.videoDoApp ? quadrosDoVideoDoApp(props.videoDoApp) : 0;
+  const inicioDoCta = inicioDoApp + quadrosDoApp;
   // O lugar agora: o da última fala que trocou de cenário (até aqui), senão o do roteiro
   const cenarioNaFala = (k: number) => {
     for (let i = k; i >= 0; i--) if (linha[i]?.cena.cenario) return linha[i].cena.cenario;
@@ -616,6 +626,11 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
             />
           </Sequence>
         )}
+        {props.videoDoApp && (
+          <Sequence from={inicioDoApp} durationInFrames={quadrosDoApp} name="Vídeo do app">
+            <VideoDoApp arquivo={props.videoDoApp.arquivo} de={props.videoDoApp.de} quadros={quadrosDoApp} />
+          </Sequence>
+        )}
         {props.ctaFinal && (
           <Sequence from={inicioDoCta} layout="none" name="CTA final">
             <CartaoDeChamada chamada={props.ctaFinal} botao={props.botaoFinal} />
@@ -623,6 +638,42 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
           </Sequence>
         )}
       </EfeitosContexto.Provider>
+    </AbsoluteFill>
+  );
+};
+
+/** O trecho do vídeo real do app num celular, no fundo da cor da marca, antes do cartão final */
+const VideoDoApp: React.FC<{ arquivo: string; de: number; quadros: number }> = ({ arquivo, de, quadros }) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const entra = spring({ frame, fps, config: { damping: 14, stiffness: 140 } });
+  const sai = interpolate(frame, [quadros - 8, quadros], [1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  return (
+    // Fundo sólido (a cena da conversa não aparece por trás), com um brilho na cor da marca
+    <AbsoluteFill
+      style={{
+        backgroundColor: "#FFFFFF",
+        backgroundImage: `radial-gradient(circle at 50% 40%, ${cores.destaque}55 0%, ${cores.destaque}22 60%, transparent 100%)`,
+        alignItems: "center",
+        justifyContent: "center",
+        opacity: sai,
+      }}
+    >
+      <div
+        style={{
+          width: 600,
+          height: 1240,
+          borderRadius: 80,
+          border: `16px solid ${TRACO}`,
+          overflow: "hidden",
+          background: "#000",
+          boxShadow: "0 40px 80px rgba(43,35,64,0.35)",
+          scale: String(0.85 + 0.15 * entra),
+          translate: `0 ${(1 - entra) * 120}px`,
+        }}
+      >
+        <OffthreadVideo src={staticFile(arquivo)} muted trimBefore={Math.round(de * fps)} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+      </div>
     </AbsoluteFill>
   );
 };

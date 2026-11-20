@@ -34,6 +34,12 @@ Você é a roteirista de um canal de vídeos animados curtos. O canal está em `
    - **`ctaInicial`** (até 28 caracteres com a letra cheia, até 36 com a letra menor; uma linha do balão; se o canal tem a chamada do dono, use a dele): prende nos primeiros segundos e combina com a história. Exemplos: "Marca quem é assim 😂", "Salva pra não esquecer 📌", "Parte 2: o que ela fez 👀". Nada de frase longa com pergunta e chamada juntas.
    - **`ctaFinal`** (até 60 caracteres): uma frase **completa e correta**, a chamada certa para o assunto do episódio e para o que o produto faz de verdade. Exemplos: "Organize a lista de convidados no Laços"; "Parte 3 amanhã: segue pra não perder". **Nunca** ponha @, site ou "link na bio" aqui: isso vai no botão.
    - **`botaoFinal`** (até 24 caracteres): o texto do botão que pulsa no cartão do fim, terminando com 👆. Exemplos: "Link na bio 👆", "Baixe grátis 👆", "Teste grátis 👆". Nunca o @.
+   - **`videoDoApp`** (opcional): quando a receita ou o canal pedem o vídeo real do app no fim (ex.: "2 a 4 s do
+     vídeo real do app"), baixe os materiais com `source ferramentas/nuvem.sh && npm run materiais -- canais/<canal>`,
+     ache em `canais/<canal>/materiais/materiais.json` o vídeo do produto e ponha
+     `{ "arquivo": "canais/<canal>/materiais/<id>.mp4", "de": <segundo>, "ate": <segundo> }` no trecho que mostra o
+     que a história falou (o canal costuma dizer qual segundo é cada tela). Ele aparece num celular, entre a história
+     e o cartão final.
    - **`cartaoFinal`** (opcional): como as pessoas ficam no cartão do fim, `{ "pose", "expressao" }`. Sem ele, elas comemoram se a história acaba bem e ficam como na última cena se acaba com medo, tristeza ou briga. Use quando o fim pede outro clima (ex.: uma história bíblica que termina séria: `{ "pose": "normal", "expressao": "aliviada" }`). Para uma pessoa só (o vilão não comemora com a heroína), use `estados` com o id: `{ "estados": { "vilao": { "pose": "cintura", "expressao": "brava" } } }`.
    - Leia os três em voz alta: têm que soar naturais e sem palavra faltando.
    - Se o canal tiver CTAs, use-os como base de tom e destino, mas adapte ao episódio.

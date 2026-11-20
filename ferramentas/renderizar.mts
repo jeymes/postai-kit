@@ -16,7 +16,7 @@
 //   npm run renderizar -- conteudo/<nome>.json   o vídeo ou as imagens finais
 //   (--detalhes mostra o progresso do Remotion; sem ele, só o resumo ou o erro)
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { basename, join } from "node:path";
 import { duracaoDoMolde, FPS, iniciosDasCenas, MOLDES_3D, MOLDES_DE_VIDEO, QUADROS_DA_IMAGEM, quadrosDaPrevia } from "../src/moldes/tempos.ts";
 import { fonte3dDesatualizada, prepararFonte3d } from "./fonte-3d.mts";
@@ -55,6 +55,19 @@ function lerJson<T>(arquivo: string): T | null {
   }
 }
 // Canal dark: o modelo visual do canal (npm run canal grava em canais/dark/estilo-narrado.json)
+// O vídeo do app (Conversa) vem dos materiais do canal: o Remotion só enxerga
+// public/, então copia para public/videos-do-app/ e aponta o roteiro para lá
+if (molde === "Conversa" && props.videoDoApp?.arquivo && !existsSync(join("public", props.videoDoApp.arquivo))) {
+  const origem = props.videoDoApp.arquivo;
+  if (!existsSync(origem)) {
+    console.error(`O vídeo do app não existe: ${origem} (rode npm run materiais -- canais/<canal>)`);
+    process.exit(1);
+  }
+  mkdirSync(join("public", "videos-do-app"), { recursive: true });
+  const nomeDoArquivo = origem.split("/").pop() as string;
+  copyFileSync(origem, join("public", "videos-do-app", nomeDoArquivo));
+  props.videoDoApp = { ...props.videoDoApp, arquivo: `videos-do-app/${nomeDoArquivo}` };
+}
 // Sem "multidao" no roteiro, o Remotion completaria com a do exemplo do molde
 // (15 soldados): roteiro sem multidão sai sem multidão.
 if (molde === "Mundo3D" && props.multidao === undefined) props.multidao = null;
