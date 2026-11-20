@@ -155,6 +155,16 @@ export const conversaSchema = z.object({
       numero: z.number().optional().describe("Contador que sobe de 0 até ele"),
       rotulo: z.string().optional(),
       itens: z.array(z.string()).max(4).default([]),
+      marca: z
+        .enum(["confirmado", "pendente", "nenhuma"])
+        .default("confirmado")
+        .describe('O sinal ao lado dos itens: "confirmado" (✓ verde), "pendente" (⏳, ex.: "Ainda sem resposta") ou "nenhuma"'),
+      marcados: z
+        .number()
+        .int()
+        .min(0)
+        .optional()
+        .describe("Com marca confirmado: quantos itens (os primeiros) ganham o ✓; os outros ficam ⏳. Com numero, cada ✓ aparece junto com o contador"),
       entra: z.number().int().describe("Índice da cena em que aparece (0 = primeira)"),
       sai: z.number().int().describe("Índice da cena em que some"),
       contaNa: z.number().int().optional().describe("Índice da cena em que o contador sobe"),
@@ -304,12 +314,18 @@ const Cartao: React.FC<{ cartao: NonNullable<ConversaProps["cartao"]>; entra: nu
   if (escala <= 0.01) return null;
   const numero = cartao.numero ?? 0;
   const contado = Math.round(interpolate(frame, [contaDe, contaDe + 40], [0, numero], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }));
+  const itens = cartao.itens;
+  const marcados = Math.min(itens.length, cartao.marcados ?? itens.length);
+  // Com 3 itens ou mais o cartão fica mais baixo (não cobre a cabeça de quem está à direita)
+  const compacto = itens.length >= 3;
+  // Rótulo comprido vai embaixo do número (antes quebrava em duas linhas curtas ao lado dele)
+  const rotuloEmbaixo = (cartao.rotulo ?? "").length > 12;
   return (
     <div
       style={{
         position: "absolute",
         left: 590,
-        top: 425,
+        top: compacto ? 400 : 425,
         width: 410,
         scale: String(escala),
         rotate: `${(1 - dentro) * 8}deg`,
@@ -317,12 +333,12 @@ const Cartao: React.FC<{ cartao: NonNullable<ConversaProps["cartao"]>; entra: nu
         border: `7px solid ${TRACO}`,
         borderRadius: 52,
         boxShadow: "0 24px 0 rgba(43,35,64,0.15)",
-        padding: "24px 28px",
+        padding: compacto ? "18px 26px" : "24px 28px",
         fontFamily: fontes.titulo,
         color: TRACO,
         display: "flex",
         flexDirection: "column",
-        gap: 10,
+        gap: compacto ? 6 : 10,
       }}
     >
       <div style={{ fontSize: 32, fontWeight: 800, display: "flex", alignItems: "center", gap: 10 }}>
@@ -330,17 +346,34 @@ const Cartao: React.FC<{ cartao: NonNullable<ConversaProps["cartao"]>; entra: nu
         {cartao.titulo}
       </div>
       {cartao.numero !== undefined && (
-        <div style={{ display: "flex", alignItems: "baseline", gap: 12, background: "#E7F7F1", borderRadius: 24, padding: "10px 20px", border: `4px solid ${TRACO}` }}>
-          <span style={{ fontSize: 68, fontWeight: 900, color: "#1F8F6A" }}>{contado}</span>
-          {cartao.rotulo && <span style={{ fontSize: 30, fontWeight: 700 }}>{cartao.rotulo}</span>}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: rotuloEmbaixo ? "column" : "row",
+            alignItems: rotuloEmbaixo ? "flex-start" : "baseline",
+            gap: rotuloEmbaixo ? 0 : 12,
+            background: cartao.marca === "pendente" ? "#FFF4DB" : "#E7F7F1",
+            borderRadius: 24,
+            padding: compacto ? "6px 20px" : "10px 20px",
+            border: `4px solid ${TRACO}`,
+          }}
+        >
+          <span style={{ fontSize: compacto ? 58 : 68, fontWeight: 900, lineHeight: 1.05, color: cartao.marca === "pendente" ? "#B7791F" : "#1F8F6A" }}>{contado}</span>
+          {cartao.rotulo && <span style={{ fontSize: 30, fontWeight: 700, lineHeight: 1.1 }}>{cartao.rotulo}</span>}
         </div>
       )}
-      {cartao.itens.map((item, i) => {
+      {itens.map((item, i) => {
         const p = spring({ frame: frame - entra - 8 - i * 5, fps, config: { damping: 14 } });
+        // O ✓ do item i aparece quando o contador passa a parte dele (antes: todos marcados com o contador em 0)
+        const confirmado =
+          cartao.marca === "confirmado" &&
+          i < marcados &&
+          (cartao.numero === undefined || contado >= Math.ceil((numero * (i + 1)) / Math.max(1, marcados)));
+        const sinal = cartao.marca === "nenhuma" ? null : confirmado ? "✓" : cartao.marca === "pendente" || i >= marcados ? "⏳" : null;
         return (
-          <div key={item} style={{ display: "flex", justifyContent: "space-between", fontSize: 30, fontWeight: 700, opacity: p, translate: `${(1 - p) * 40}px 0px` }}>
+          <div key={item} style={{ display: "flex", justifyContent: "space-between", gap: 12, fontSize: compacto ? 28 : 30, fontWeight: 700, opacity: p, translate: `${(1 - p) * 40}px 0px` }}>
             <span>{item}</span>
-            <span style={{ color: "#1F8F6A" }}>✓</span>
+            {sinal && <span style={{ color: confirmado ? "#1F8F6A" : "#B7791F" }}>{sinal}</span>}
           </div>
         );
       })}
