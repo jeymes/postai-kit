@@ -155,7 +155,7 @@ const Palmeira: React.FC<{ x: number; z: number; escala: number; tom: number }> 
 };
 
 /** As plantas: do outro lado do rio e nos lados, longe da ponte e da frente da câmera. */
-const Arvores: React.FC<{ tipo: Paleta["plantas"]; muitas: boolean }> = ({ tipo, muitas }) => {
+const Arvores: React.FC<{ tipo: Paleta["plantas"]; muitas: boolean; livre?: (x: number, z: number) => boolean }> = ({ tipo, muitas, livre = () => true }) => {
   const lista = useMemo(() => {
     const r = sorteio(7);
     const arvores: Array<{ x: number; z: number; escala: number; pinheiro: boolean; tom: number }> = [];
@@ -167,10 +167,11 @@ const Arvores: React.FC<{ tipo: Paleta["plantas"]; muitas: boolean }> = ({ tipo,
       const sorteado = { x, z, escala: 0.8 + r() * 0.9, pinheiro: r() < 0.35, tom: r() };
       // Palmeiras e casas pedem menos plantas (o lugar fica mais aberto)
       if (!muitas && i % 3 !== 0) continue;
+      if (!livre(x, z)) continue;
       arvores.push(sorteado);
     }
     return arvores;
-  }, [muitas]);
+  }, [muitas, livre]);
   return (
     <>
       {lista.map((a, i) =>
@@ -401,15 +402,15 @@ const Muralha: React.FC = () => (
 );
 
 /** Pedras soltas pelo chão (deserto e aldeia). */
-const Pedras: React.FC = () => {
+const Pedras: React.FC<{ livre?: (x: number, z: number) => boolean }> = ({ livre = () => true }) => {
   const lista = useMemo(() => {
     const r = sorteio(53);
     return Array.from({ length: 26 }, () => {
       const x = (r() - 0.5) * 40;
       const z = -14 + r() * 18;
       return { x, z, tam: 0.15 + r() * 0.45, giro: r() * 6, tom: r() };
-    }).filter((p) => !(Math.abs(p.x) < 4 && p.z > -3 && p.z < 7));
-  }, []);
+    }).filter((p) => !(Math.abs(p.x) < 4 && p.z > -3 && p.z < 7) && livre(p.x, p.z));
+  }, [livre]);
   return (
     <>
       {lista.map((p, i) => (
@@ -422,6 +423,227 @@ const Pedras: React.FC = () => {
   );
 };
 
+
+// ---------- Reino: o castelo no fundo ----------
+const PEDRA = "#ABA49A";
+const Torre: React.FC<{ x: number; z: number; altura: number; raio: number; telhado: string }> = ({ x, z, altura, raio, telhado }) => (
+  <group position={[x, 0, z]}>
+    <mesh position={[0, altura / 2, 0]}>
+      <cylinderGeometry args={[raio, raio * 1.05, altura, 10]} />
+      <meshStandardMaterial color={PEDRA} flatShading roughness={1} />
+    </mesh>
+    <mesh position={[0, altura + raio * 0.9, 0]}>
+      <coneGeometry args={[raio * 1.25, raio * 1.8, 10]} />
+      <meshStandardMaterial color={telhado} flatShading />
+    </mesh>
+    {/* A bandeira no alto */}
+    <mesh position={[0, altura + raio * 2.2, 0]}>
+      <cylinderGeometry args={[0.05, 0.05, 1.6, 5]} />
+      <meshStandardMaterial color="#5C4630" />
+    </mesh>
+    <mesh position={[0.45, altura + raio * 2.6, 0]}>
+      <boxGeometry args={[0.85, 0.5, 0.03]} />
+      <meshStandardMaterial color={telhado} />
+    </mesh>
+    {/* As janelinhas */}
+    {[0.45, 0.7].map((f) => (
+      <mesh key={f} position={[0, altura * f, raio + 0.01]}>
+        <boxGeometry args={[0.35, 0.7, 0.05]} />
+        <meshStandardMaterial color="#2E2A28" />
+      </mesh>
+    ))}
+  </group>
+);
+
+const Castelo: React.FC = () => (
+  <group position={[0, 0, -30]}>
+    {/* O muro com ameias */}
+    <mesh position={[0, 3, 0]}>
+      <boxGeometry args={[26, 6, 2]} />
+      <meshStandardMaterial color={PEDRA} flatShading roughness={1} />
+    </mesh>
+    {Array.from({ length: 13 }, (_, i) => (
+      <mesh key={i} position={[-12 + i * 2, 6.4, 0.5]}>
+        <boxGeometry args={[1, 0.8, 0.9]} />
+        <meshStandardMaterial color="#A19A90" flatShading />
+      </mesh>
+    ))}
+    {/* A torre de menagem no meio, mais alta */}
+    <mesh position={[0, 6.5, -4]}>
+      <boxGeometry args={[9, 13, 6]} />
+      <meshStandardMaterial color="#B2ABA1" flatShading roughness={1} />
+    </mesh>
+    <Torre x={-13} z={0} altura={9} raio={1.9} telhado="#3F63B8" />
+    <Torre x={13} z={0} altura={9} raio={1.9} telhado="#3F63B8" />
+    <Torre x={-5} z={-4} altura={16} raio={1.6} telhado="#C2453A" />
+    <Torre x={5} z={-4} altura={16} raio={1.6} telhado="#C2453A" />
+    {/* O portão em arco */}
+    <mesh position={[0, 1.6, 1.02]}>
+      <boxGeometry args={[3, 3.2, 0.05]} />
+      <meshStandardMaterial color="#5C3F28" />
+    </mesh>
+    <mesh position={[0, 3.2, 1.02]} rotation={[Math.PI / 2, 0, 0]}>
+      <cylinderGeometry args={[1.5, 1.5, 0.05, 16, 1, false, -Math.PI / 2, Math.PI]} />
+      <meshStandardMaterial color="#5C3F28" />
+    </mesh>
+  </group>
+);
+
+// ---------- Mar: a água no fundo, a espuma na beira e os barcos ----------
+const BEIRA = -5;
+const Mar: React.FC = () => (
+  <group>
+    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.03, BEIRA - 100]}>
+      <planeGeometry args={[400, 200]} />
+      <meshStandardMaterial color="#2F86C9" roughness={0.15} metalness={0.3} />
+    </mesh>
+    {/* A água rasa e a espuma na beira */}
+    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.035, BEIRA - 1.2]}>
+      <planeGeometry args={[400, 2.4]} />
+      <meshStandardMaterial color="#5FB6E0" roughness={0.2} metalness={0.2} />
+    </mesh>
+    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.04, BEIRA + 0.1]}>
+      <planeGeometry args={[400, 0.45]} />
+      <meshStandardMaterial color="#F6FBFF" roughness={1} />
+    </mesh>
+  </group>
+);
+
+const Barco: React.FC<{ x: number; z: number; giro: number; vela: string }> = ({ x, z, giro, vela }) => (
+  <group position={[x, 0.05, z]} rotation={[0, giro, 0]}>
+    <mesh position={[0, 0.35, 0]} scale={[1, 0.5, 0.42]}>
+      <cylinderGeometry args={[1.9, 1.3, 1.4, 6]} />
+      <meshStandardMaterial color="#7A5132" flatShading />
+    </mesh>
+    <mesh position={[0, 2.2, 0]}>
+      <cylinderGeometry args={[0.07, 0.07, 3.4, 5]} />
+      <meshStandardMaterial color="#5C4630" />
+    </mesh>
+    <mesh position={[0.05, 2.4, 0]}>
+      <boxGeometry args={[0.04, 2.2, 1.9]} />
+      <meshStandardMaterial color={vela} flatShading />
+    </mesh>
+  </group>
+);
+
+const Barcos: React.FC = () => (
+  <>
+    <Barco x={-9} z={-16} giro={0.4} vela="#F4EEE0" />
+    <Barco x={6} z={-24} giro={-0.3} vela="#E8D2A6" />
+    <Barco x={18} z={-38} giro={0.2} vela="#F4EEE0" />
+    <Barco x={-22} z={-44} giro={-0.5} vela="#D9B98A" />
+  </>
+);
+
+// ---------- Salão do trono: chão de pedra, tapete vermelho, colunas e o trono ----------
+const OURO = "#D9A93E";
+const Salao: React.FC = () => (
+  <group>
+    <mesh rotation={[-Math.PI / 2, 0, 0]}>
+      <planeGeometry args={[60, 60]} />
+      <meshStandardMaterial color="#9A8670" roughness={0.9} />
+    </mesh>
+    {/* As lajotas: linhas mais escuras no chão */}
+    {Array.from({ length: 13 }, (_, i) => (
+      <mesh key={`l${i}`} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.005, -14 + i * 2.5]}>
+        <planeGeometry args={[32, 0.06]} />
+        <meshStandardMaterial color="#7A6854" />
+      </mesh>
+    ))}
+    {/* O tapete vermelho até o trono */}
+    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, -1]}>
+      <planeGeometry args={[3.2, 24]} />
+      <meshStandardMaterial color="#9E2430" roughness={1} />
+    </mesh>
+    {[-1.65, 1.65].map((x) => (
+      <mesh key={x} rotation={[-Math.PI / 2, 0, 0]} position={[x, 0.025, -1]}>
+        <planeGeometry args={[0.12, 24]} />
+        <meshStandardMaterial color={OURO} />
+      </mesh>
+    ))}
+    {/* As paredes: o fundo e os lados */}
+    <mesh position={[0, 7, -15]}>
+      <boxGeometry args={[34, 14, 1]} />
+      <meshStandardMaterial color="#B9A68A" flatShading roughness={1} />
+    </mesh>
+    {[-16.5, 16.5].map((x) => (
+      <mesh key={x} position={[x, 7, 0]}>
+        <boxGeometry args={[1, 14, 32]} />
+        <meshStandardMaterial color="#AE9B80" flatShading roughness={1} />
+      </mesh>
+    ))}
+    {/* Os estandartes na parede do fundo */}
+    {[-6, 6].map((x) => (
+      <group key={x} position={[x, 7.5, -14.45]}>
+        <mesh>
+          <boxGeometry args={[2.2, 5, 0.05]} />
+          <meshStandardMaterial color="#9E2430" />
+        </mesh>
+        <mesh position={[0, 0.6, 0.04]}>
+          <boxGeometry args={[0.9, 0.9, 0.02]} />
+          <meshStandardMaterial color={OURO} />
+        </mesh>
+      </group>
+    ))}
+    {/* As colunas, em duas fileiras */}
+    {[-6.5, 6.5].flatMap((x) =>
+      [-11, -5, 1, 7].map((z) => (
+        <group key={`${x}${z}`} position={[x, 0, z]}>
+          <mesh position={[0, 0.3, 0]}>
+            <boxGeometry args={[1.7, 0.6, 1.7]} />
+            <meshStandardMaterial color="#C9B99E" flatShading />
+          </mesh>
+          <mesh position={[0, 6, 0]}>
+            <cylinderGeometry args={[0.62, 0.7, 11.4, 12]} />
+            <meshStandardMaterial color="#D8CAB0" flatShading roughness={1} />
+          </mesh>
+          <mesh position={[0, 11.9, 0]}>
+            <boxGeometry args={[1.8, 0.6, 1.8]} />
+            <meshStandardMaterial color="#C9B99E" flatShading />
+          </mesh>
+          {/* A tocha acesa na coluna */}
+          <mesh position={[0, 4.2, 0.75]}>
+            <coneGeometry args={[0.16, 0.4, 6]} />
+            <meshStandardMaterial color="#FFB547" emissive="#FF8A1F" emissiveIntensity={1.4} />
+          </mesh>
+        </group>
+      )),
+    )}
+    {/* O trono no alto dos degraus */}
+    <group position={[0, 0, -12]}>
+      {[0, 1, 2].map((d) => (
+        <mesh key={d} position={[0, 0.2 + d * 0.4, -d * 0.6]}>
+          <boxGeometry args={[6 - d * 1.2, 0.4, 3.4 - d * 0.6]} />
+          <meshStandardMaterial color="#C4B293" flatShading />
+        </mesh>
+      ))}
+      <group position={[0, 1.2, -1.4]}>
+        <mesh position={[0, 0.5, 0]}>
+          <boxGeometry args={[1.8, 1, 1.4]} />
+          <meshStandardMaterial color={OURO} flatShading metalness={0.3} />
+        </mesh>
+        <mesh position={[0, 1.05, 0.05]}>
+          <boxGeometry args={[1.4, 0.15, 1.1]} />
+          <meshStandardMaterial color="#9E2430" />
+        </mesh>
+        <mesh position={[0, 2.3, -0.6]}>
+          <boxGeometry args={[1.8, 3.4, 0.25]} />
+          <meshStandardMaterial color={OURO} flatShading metalness={0.3} />
+        </mesh>
+        <mesh position={[0, 2.1, -0.46]}>
+          <boxGeometry args={[1.3, 2.4, 0.05]} />
+          <meshStandardMaterial color="#9E2430" />
+        </mesh>
+      </group>
+    </group>
+  </group>
+);
+
+// Onde pode ter planta e pedra: nada no mar nem na frente do castelo
+const naAreia = (_x: number, z: number) => z > BEIRA + 1;
+const foraDoCastelo = (x: number, z: number) => !(Math.abs(x) < 19 && z < -18);
+const livreDo = (c: Paleta) => (c.mar ? naAreia : c.castelo ? foraDoCastelo : undefined);
+
 /** O mundo inteiro, com a luz e o céu, no lugar escolhido. */
 export const Mundo: React.FC<{ balanco: number; queda?: number; ponte?: boolean; tendas?: boolean; rio?: boolean; ambiente?: Ambiente }> = ({
   balanco,
@@ -432,6 +654,18 @@ export const Mundo: React.FC<{ balanco: number; queda?: number; ponte?: boolean;
   ambiente = "campo",
 }) => {
   const c = PALETAS[ambiente];
+  if (c.interior)
+    return (
+      <>
+        <color attach="background" args={[c.ceu]} />
+        <fog attach="fog" args={[c.nevoa, 30, 90]} />
+        <hemisphereLight args={["#FFE9C9", c.luzDoChao, 0.9]} />
+        <directionalLight position={[6, 20, 14]} intensity={1.5} color={c.luzDoSol} />
+        <pointLight position={[0, 9, -8]} intensity={60} distance={30} color="#FFC982" />
+        <ambientLight intensity={0.35} />
+        <Salao />
+      </>
+    );
   return (
     <>
       <color attach="background" args={[c.ceu]} />
@@ -442,12 +676,15 @@ export const Mundo: React.FC<{ balanco: number; queda?: number; ponte?: boolean;
       <Chao cor={c.chao} />
       {rio && <Rio margem={c.margem} />}
       {rio && ponte && <Ponte balanco={balanco} queda={queda} />}
-      <Arvores tipo={c.plantas} muitas={!c.casas && c.plantas !== "palmeiras"} />
+      <Arvores tipo={c.plantas} muitas={!c.casas && c.plantas !== "palmeiras"} livre={livreDo(c)} />
       <Montanhas cor={c.montanhas} />
       <Nuvens />
       {c.casas && <Casas tipo={c.casas} rio={rio} />}
       {c.muralha && <Muralha />}
-      {c.pedras && <Pedras />}
+      {c.pedras && <Pedras livre={livreDo(c)} />}
+      {c.castelo && <Castelo />}
+      {c.mar && <Mar />}
+      {c.mar && <Barcos />}
       {/* As tendas ficam à esquerda: a câmera do plano aberto vem da direita */}
       {tendas && <Tenda x={-6.8} z={0.4} cor="#3D6FD6" />}
       {tendas && <Tenda x={-9.6} z={2.6} cor="#D64545" />}

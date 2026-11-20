@@ -17,6 +17,12 @@ A equipe escolhe só o lugar da história em `cenario.ambiente`, e o mundo e a r
 | `cidade`  | chão de terra, casas de barro, muralha com torres, palmeiras | túnica comprida; véu ou turbante                  |
 | `aldeia`  | grama, rio, casas de palha, árvores, pedras                | túnica curta (às vezes chapéu de palha) ou vestido  |
 | `moderno` | grama, casas coloridas de telhado vermelho                 | camiseta, calça e tênis (as cores do elenco)        |
+| `reino`   | grama, árvores e um castelo de pedra com torres no fundo   | túnica curta ou comprida                            |
+| `mar`     | praia de areia, o mar no fundo, barcos a vela, palmeiras   | túnica curta, às vezes turbante                     |
+| `salao`   | salão do trono: chão de pedra, tapete, colunas, o trono    | roupa comprida e capa; véu (cabelo comprido)        |
+
+Gestos (em `estados` de cada cena): `apontando` (o braço esticado), `caido` (tomba de lado e fica deitado; a
+câmera mira o corpo) e `ate` [x, z] (a pessoa anda até lá durante a cena e continua de lá nas próximas).
 
 - `cenario.ponte`, `cenario.rio` e `cenario.tendas` ligam ou desligam cada coisa. A ponte só aparece no campo,
   a não ser que a equipe peça.

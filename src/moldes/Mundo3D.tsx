@@ -20,12 +20,16 @@ import { duracaoDoMolde, estimarPalavras, FPS, MUNDO3D, quadrosDaCenaDoMundo3D }
 // legenda curta com destaque. A voz vem do npm run narrar (o narrador e quem
 // fala, cada um com a sua); os passos, o rangido e o estalo, do npm run sons:mundo.
 
-const POSES = ["normal", "cintura", "celular", "cabeca", "explicando", "comemorando", "pensando", "sentado"] as const;
+const POSES = ["normal", "cintura", "celular", "cabeca", "explicando", "comemorando", "pensando", "sentado", "apontando", "caido"] as const;
 const EXPRESSOES = ["neutra", "feliz", "radiante", "preocupada", "surpresa", "brava", "sem-graca", "medo", "aliviada"] as const;
 const CHAPEUS = ["coroa", "capacete", "faixa"] as const;
 const estadoSchema = z.object({
-  pose: z.enum(POSES),
+  pose: z.enum(POSES).describe('"apontando": o braço esticado para a frente; "caido": tomba e fica deitado no chão'),
   expressao: z.enum(EXPRESSOES),
+  ate: z
+    .tuple([z.number(), z.number()])
+    .optional()
+    .describe("Andar: [x, z] para onde a pessoa caminha durante a cena (as cenas seguintes continuam de lá)"),
 });
 const SONS_DO_MUNDO = ["passos", "rangido", "estalo", "impacto", "transicao"] as const satisfies readonly TipoSom[];
 
@@ -334,8 +338,27 @@ export const Mundo3D: React.FC<Mundo3DProps> = (props) => {
         }))
       : []),
   ];
+  // Andar: cada personagem começa a cena onde a última caminhada terminou e, se a
+  // cena tiver "ate", anda até lá em 85% da cena (devagar no começo e no fim)
+  const indiceDaCena = linha.indexOf(agora);
+  const caminhada = (id: string, onde: [number, number]) => {
+    let de = onde;
+    for (let j = 0; j < indiceDaCena; j++) {
+      const ate = linha[j].cena.estados?.[id]?.ate;
+      if (ate) de = ate;
+    }
+    const ate = cena.estados?.[id]?.ate;
+    if (!ate) return { onde: de, andando: false, rumo: null as number | null };
+    const t = Math.min(1, Math.max(0, (frame - agora.inicio) / Math.max(1, (agora.fim - agora.inicio) * 0.85)));
+    const e = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+    return {
+      onde: [de[0] + (ate[0] - de[0]) * e, de[1] + (ate[1] - de[1]) * e] as [number, number],
+      andando: t > 0 && t < 1,
+      rumo: Math.atan2(ate[0] - de[0], ate[1] - de[1]),
+    };
+  };
   const pontoDe = (p: (typeof pessoas)[number]): Ponto => {
-    const [x, zz] = p.onde;
+    const [x, zz] = p.multidao ? p.onde : caminhada(p.id, p.onde).onde;
     if (!p.naPonte) return [x, 0, zz];
     // Na ponte: em cima das tábuas, girando junto com ela
     const y = PONTE.altura;
@@ -352,7 +375,10 @@ export const Mundo3D: React.FC<Mundo3DProps> = (props) => {
       return [meio[0], multidao.naPonte ? PONTE.altura : 0, meio[1]];
     }
     const p = pessoas.find((q) => q.id === cena.foco) ?? pessoas[0];
-    return p ? pontoDe(p) : [0, 0, 0];
+    if (!p) return [0, 0, 0];
+    const ponto = pontoDe(p);
+    // Caído: a câmera mira o corpo deitado no chão, não onde a cabeça estaria de pé
+    return cena.estados?.[p.id]?.pose === "caido" ? [ponto[0] + 0.9, ponto[1] - 0.9, ponto[2]] : ponto;
   })();
   // A tropa e a ponte pedem o plano mais aberto (cabe o grupo e o mundo)
   const escala = cena.foco === "multidao" || cena.foco === "ponte" ? 1.9 : 1;
@@ -413,11 +439,18 @@ export const Mundo3D: React.FC<Mundo3DProps> = (props) => {
               palavras={cena.quem === p.id ? agora.palavras : []}
               boca={cena.quem === p.id ? agora.boca : undefined}
               posicao={pontoDe(p)}
-              // Quase de frente para a câmera, um pouco virado para quem está do lado (a multidão olha para a frente)
-              virar={p.multidao ? 0 : Math.atan2(camera.position.x - x, camera.position.z - zz) * 0.75 + (p.espelhar ? -0.18 : 0.18)}
+              // Quase de frente para a câmera, um pouco virado para quem está do lado (a multidão olha
+              // para a frente); andando, de frente para onde vai
+              virar={
+                p.multidao
+                  ? 0
+                  : caminhada(p.id, p.onde).andando
+                    ? (caminhada(p.id, p.onde).rumo as number)
+                    : Math.atan2(camera.position.x - x, camera.position.z - zz) * 0.75 + (p.espelhar ? -0.18 : 0.18)
+              }
               espelhar={p.espelhar}
               semente={p.semente}
-              andando={p.multidao && Boolean(multidao?.marchando)}
+              andando={p.multidao ? Boolean(multidao?.marchando) : caminhada(p.id, p.onde).andando}
             />
           );
         })}
@@ -429,7 +462,19 @@ export const Mundo3D: React.FC<Mundo3DProps> = (props) => {
         const fala = cena.quem === p.id ? agora.palavras : [];
         const boca = cena.quem === p.id ? agora.boca : undefined;
         return (
-          <div key={p.id} style={{ position: "absolute", left: a.x - largura / 2, top: a.y - altura * 0.958 }}>
+          <div
+            key={p.id}
+            style={{
+              position: "absolute",
+              left: a.x - largura / 2,
+              top: a.y - altura * 0.958 - (!p.multidao && caminhada(p.id, p.onde).andando ? Math.abs(Math.sin(frame / 4)) * altura * 0.03 : 0),
+              // Caído: o desenho deita de lado, girando nos pés
+              ...(cena.estados?.[p.id]?.pose === "caido" && {
+                transform: `rotate(${(p.espelhar ? -1 : 1) * 90 * Math.min(1, (frame - agora.inicio) / 12)}deg)`,
+                transformOrigin: `${largura / 2}px ${altura * 0.958}px`,
+              }),
+            }}
+          >
             <Palito
               visual={visualDe(p.roupa)}
               momentos={estadoDe(p.id, p.multidao)}

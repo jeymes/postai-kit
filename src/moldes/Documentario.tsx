@@ -295,7 +295,8 @@ const CenaDoDocumentario: React.FC<{ cena: Cena; indice: number; props: Document
               noite={cena.rota ? false : ap.legenda.noite}
               largura={1400}
               {...(ap.modelo === "classico"
-                ? {}
+                ? // O Clássico mantém a letra de sempre, mas a palavra falada usa a cor que o dono escolheu
+                  { destaque: ap.destaque, textoNoDestaque: ap.textoNoDestaque }
                 : { fonte: ap.fonteTexto, peso: Math.max(500, Math.min(800, ap.pesoTitulo)), destaque: ap.destaque, textoNoDestaque: ap.textoNoDestaque })}
               style={{ top: 920, padding: "0 260px" }}
             />

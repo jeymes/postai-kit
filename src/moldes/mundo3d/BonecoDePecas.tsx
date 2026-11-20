@@ -104,6 +104,9 @@ const POSES_DE_PECAS: Record<Pose, { esq: Direcao; dir: Direcao; sentado?: boole
   comemorando: { esq: [-0.55, 0.83, 0.1], dir: [0.55, 0.83, 0.1] },
   pensando: { esq: [0.1, -0.7, 0.7], dir: [-0.45, 0.5, 0.75] },
   sentado: { esq: [-0.1, -0.6, 0.8], dir: [0.1, -0.6, 0.8], sentado: true },
+  apontando: { esq: [-0.12, -1, 0.04], dir: [0.5, 0.12, 0.86] },
+  // Caído: os braços junto do corpo; o corpo inteiro deita de lado (ver "deitar" abaixo)
+  caido: { esq: [-0.12, -1, 0.04], dir: [0.12, -1, 0.04] },
 };
 const BAIXO = new THREE.Vector3(0, -1, 0);
 const giroDoBraco = (d: Direcao) => new THREE.Quaternion().setFromUnitVectors(BAIXO, new THREE.Vector3(...d).normalize());
@@ -337,6 +340,8 @@ export const BonecoDePecas: React.FC<{
   const desde = frame - atual.em;
   const pulo = i > 0 && antes.expressao !== atual.expressao && desde < 12 ? Math.sin((desde / 12) * Math.PI) * 0.05 : 0;
   const sentado = Boolean(para.sentado);
+  // Caindo: tomba de lado em uns 12 quadros (girando nos pés) e fica deitado; levantando, volta
+  const deitar = (atual.pose === "caido" ? (i === 0 ? 1 : p) : antes.pose === "caido" && i > 0 ? 1 - p : 0) as number;
 
   const falando = palavras.some((q) => q.inicio <= frame && frame < q.fim);
   const forma = boca?.length ? formaDoRhubarb(boca, frame) : falando ? FALANDO[Math.floor(frame / 3) % FALANDO.length] : null;
@@ -427,6 +432,8 @@ export const BonecoDePecas: React.FC<{
 
   return (
     <group position={[posicao[0], posicao[1] + pulo - descida, posicao[2]]} rotation={[0, virar, 0]} scale={[espelhar ? -1 : 1, 1, 1]}>
+      {/* Caído: o corpo inteiro deita de lado, girando nos pés */}
+      <group rotation={[0, 0, (-deitar * Math.PI) / 2]} position={[0, deitar * 0.14, 0]}>
       {/* Sombra */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.012 + descida, 0]}>
         <circleGeometry args={[0.36, 28]} />
@@ -520,6 +527,7 @@ export const BonecoDePecas: React.FC<{
           )}
           {visual.tiara && acessorio === "nenhum" && <Peca geo={geo.tiara} cor="#E3C28F" position={[0, c.a - 0.07, 0]} />}
         </group>
+      </group>
       </group>
     </group>
   );
