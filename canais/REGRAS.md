@@ -8,7 +8,7 @@ O roteiro é um `conteudo/<data>-<assunto>.json` no molde **Conversa**. O format
 
 - **Título:** até 50 caracteres, para caber em 2 linhas. Na série, use `"parte": "PARTE N"`; fora da série, não use `parte`.
 - **Cenário** (`"cenario"`): `atelie`, `escritorio` ou `cafe`. Combine com a história e não repita o mesmo cenário 3 vezes seguidas.
-- **Falas:** de 4 a 7 cenas, cada uma com **até 12 palavras**, e de 12 a 25 segundos de fala no total.
+- **Falas:** de 4 a 7 cenas, cada uma com **até 12 palavras**, e de 12 a 25 segundos de fala no total. Quando o canal pede vídeo mais longo (ex.: "45 a 60 s" no `canal-postai.md`), até **12 cenas** e o tempo que o canal pede (até uns 55 s de fala), sempre com falas de até 12 palavras.
 - **Gancho:** a primeira fala prende em 2 segundos. Nada de "Oi, gente".
 - **Final:** a última fala é a virada, a piada ou o gancho, e leva ao CTA final. Nunca termine com "segue a gente".
 
@@ -25,7 +25,7 @@ O roteiro é um `conteudo/<data>-<assunto>.json` no molde **Conversa**. O format
 ## Fechamento
 
 - **Pronúncia:** inclua `"pronuncia"` para o nome do produto, se ele puder ser lido errado.
-- **CTAs:** `ctaInicial` (até 28 caracteres, uma linha), `ctaFinal` (até 60, frase completa, sem @ nem "link na bio") e `botaoFinal` (até 24, ex.: "Link na bio 👆"), feitos para o episódio. O @ nunca aparece no vídeo.
+- **CTAs:** `ctaInicial` (até 28 caracteres com a letra cheia; até 36, e a letra diminui; sempre uma linha; se o dono escreveu a chamada, use a dele), `ctaFinal` (até 60, frase completa, sem @ nem "link na bio") e `botaoFinal` (até 24, ex.: "Link na bio 👆"), feitos para o episódio. O @ nunca aparece no vídeo.
 - **Capa:** `"capa"` com o `titulo` (até 6 palavras), o `destaque` e a pose e a expressão mais fortes de cada personagem, pelo id. Sem foto.
 - **Post:**
   - **título:** até 60 caracteres, com o mais forte nas **primeiras palavras** (o Shorts e o Reels mostram só o começo) e no máximo 1 emoji. Ex.: "Só Deus poderia curá-la. E Ele estava ali", e não "Somente Deus poderia curá-la. E aqui está o Senhor: a emoção de Nicodemos";

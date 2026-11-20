@@ -15,12 +15,12 @@ Leia `canais/<canal>/canal-postai.md` (o que o dono preencheu no Postaí; vale m
 2. **Continuidade:** é o formato e o capítulo que o "Próximo" pede. Na série, a história continua do resumo de "o que já aconteceu". O tema não se repete nos últimos 15 episódios do Registro.
 3. **Forma:**
    - título com até 50 caracteres;
-   - de 4 a 7 cenas, cada fala com até 12 palavras;
+   - de 4 a 7 cenas (até 12 se o canal pedir vídeo mais longo), cada fala com até 12 palavras;
    - `parte` só na série;
    - cenário diferente dos dois últimos episódios;
    - no máximo 2 sons;
    - `pronuncia` com o nome do produto;
-   - `ctaInicial` com até 28 caracteres, `ctaFinal` com até 60 e `botaoFinal` com até 24, os três presentes, feitos para este episódio (não genéricos) e sem prometer o que o produto não faz;
+   - `ctaInicial` com até 36 caracteres, `ctaFinal` com até 60 e `botaoFinal` com até 24, os três presentes, feitos para este episódio (não genéricos) e sem prometer o que o produto não faz;
    - **leia cada CTA como frase:** completa, sem palavra faltando, com concordância certa (ex.: "Organize a lista do seu no Laços" está errado: falta "casamento"). Sem @ nem site no `ctaFinal` e no `botaoFinal`;
    - **movimento:** toda cena tem `estados` para os dois personagens, e nenhum dos dois repete a mesma pose e expressão em duas cenas seguidas;
    - `capa` com título de até 6 palavras, destaque e a pose e expressão de cada personagem;

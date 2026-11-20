@@ -5,7 +5,7 @@ import { AbsoluteFill, Sequence, staticFile, useCurrentFrame, useVideoConfig } f
 import * as THREE from "three";
 import { z } from "zod";
 import { SONS, Som, type TipoSom } from "../componentes/audio/Som";
-import { CartaoDeChamada } from "../componentes/cenas/ChamadaAnimada";
+import { BalaoDeChamada, CartaoDeChamada } from "../componentes/cenas/ChamadaAnimada";
 import type { FormaDaBoca, Momento, Palavra, Visual } from "../componentes/personagens/Boneco";
 import { Palito } from "../componentes/personagens/Palito";
 import { fontes } from "../nucleo/marca";
@@ -68,6 +68,11 @@ const personagemSchema = z.object({
 
 export const mundo3dSchema = z.object({
   titulo: z.string().describe("Título grande no começo (maiúsculas)"),
+  ctaInicial: z
+    .string()
+    .max(60)
+    .optional()
+    .describe('Balão curto (até 28 caracteres) embaixo do título nos primeiros segundos, como no Conversa'),
   destaqueDoTitulo: z.string().optional(),
   personagens: z.array(personagemSchema).max(4),
   bonecos: z
@@ -514,6 +519,10 @@ export const Mundo3D: React.FC<Mundo3DProps> = (props) => {
         </Sequence>
       )}
       <Titulo texto={props.titulo} destaque={props.destaqueDoTitulo} />
+      {/* A chamada inicial embaixo do título (antes só o Conversa desenhava): uns 17 caracteres por linha do título */}
+      {props.ctaInicial && (
+        <BalaoDeChamada texto={props.ctaInicial} topo={190 + Math.ceil(props.titulo.length / 17) * 98 + 30} jaNaTela />
+      )}
     </AbsoluteFill>
   );
 };

@@ -190,7 +190,9 @@ if (semDesenho.length)
   erro("designer-de-personagens", `cenário sem desenho: ${semDesenho.join(", ")} (desenhe com npm run cenario ... --gravar e rode npm run cenarios -- ${arquivo} --canal canais/<canal>)`);
 if (!peca.titulo) erro("roteirista", "falta o título");
 else if (tamanho(peca.titulo) > 50) erro("roteirista", `título com ${tamanho(peca.titulo)} caracteres (até 50)`);
-if (cenas.length < 4 || cenas.length > 7) erro("roteirista", `${cenas.length} cenas (de 4 a 7)`);
+// De 4 a 7 cenas (uns 30 s); até 12 quando o canal pede vídeo mais longo (ex.: 45 a 60 s)
+if (cenas.length < 4 || cenas.length > 12) erro("roteirista", `${cenas.length} cenas (de 4 a 7; até 12 se o canal pedir vídeo mais longo)`);
+else if (cenas.length > 7) aviso("roteirista", `${cenas.length} cenas: só se o canal pedir vídeo mais longo (ex.: 45 a 60 s)`);
 cenas.forEach((cena, i) => {
   const n = palavras(cena.fala);
   if (n > 12) erro("roteirista", `cena ${i + 1}: fala com ${n} palavras (até 12)`);
@@ -199,7 +201,7 @@ cenas.forEach((cena, i) => {
 // ---- CTAs: curtos, frase inteira, nunca @ ----
 const temContato = (texto = "") => /@\w|https?:|www\.|\.com\b|\.app\b|link na bio/i.test(texto);
 if (!peca.ctaInicial) erro("roteirista", "falta o ctaInicial");
-else if (tamanho(peca.ctaInicial) > 28) erro("roteirista", `ctaInicial com ${tamanho(peca.ctaInicial)} caracteres (até 28, cabe numa linha do balão)`);
+else if (tamanho(peca.ctaInicial) > 36) erro("roteirista", `ctaInicial com ${tamanho(peca.ctaInicial)} caracteres (até 36; acima de 28 o balão diminui a letra para caber numa linha)`);
 if (!peca.ctaFinal) erro("roteirista", "falta o ctaFinal");
 else {
   if (tamanho(peca.ctaFinal) > 60) erro("roteirista", `ctaFinal com ${tamanho(peca.ctaFinal)} caracteres (até 60)`);

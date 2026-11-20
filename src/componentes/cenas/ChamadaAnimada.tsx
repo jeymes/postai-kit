@@ -67,7 +67,10 @@ export const BalaoDeChamada: React.FC<{ texto: string; topo: number; sai?: numbe
           }}
         >
           <SeloDaMarca tamanho={70} contorno={4} />
-          <span style={{ fontFamily: fontes.titulo, fontWeight: 800, fontSize: 42, color: TRACO, whiteSpace: "nowrap" }}>{texto}</span>
+          {/* Até 28 letras com a letra cheia; de 29 a 36 a letra diminui para caber numa linha */}
+          <span style={{ fontFamily: fontes.titulo, fontWeight: 800, fontSize: texto.length > 28 ? Math.max(32, Math.round((42 * 28) / texto.length)) : 42, color: TRACO, whiteSpace: "nowrap" }}>
+            {texto}
+          </span>
         </div>
         {/* A pontinha do balão */}
         <svg width="54" height="40" viewBox="0 0 54 40" style={{ position: "absolute", left: 70, bottom: -33 }}>

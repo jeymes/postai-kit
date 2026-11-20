@@ -55,6 +55,9 @@ function lerJson<T>(arquivo: string): T | null {
   }
 }
 // Canal dark: o modelo visual do canal (npm run canal grava em canais/dark/estilo-narrado.json)
+// Sem "multidao" no roteiro, o Remotion completaria com a do exemplo do molde
+// (15 soldados): roteiro sem multidão sai sem multidão.
+if (molde === "Mundo3D" && props.multidao === undefined) props.multidao = null;
 if (molde === "Documentario" && !props.estilo) {
   const doCanal = lerJson<Record<string, unknown>>("canais/dark/estilo-narrado.json");
   if (doCanal?.modelo) props.estilo = doCanal;
