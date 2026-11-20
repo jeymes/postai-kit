@@ -4,15 +4,19 @@
 // cenario --gravar). Os do kit não precisam.
 //
 // Uso: npm run cenarios -- conteudo/<arquivo>.json --canal canais/<canal>
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { porCenariosNoRoteiro, type CenarioProprio } from "./cenarios-do-roteiro.ts";
 
 const args = process.argv.slice(2);
 const indice = args.indexOf("--canal");
-const pasta = indice >= 0 ? args[indice + 1] : null;
+// Sem --canal, usa a única pasta de canais/ (o caso normal: um canal por conta).
+const unico = existsSync("canais") ? readdirSync("canais", { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => join("canais", d.name)) : [];
+const pasta = indice >= 0 ? args[indice + 1] : unico.length === 1 ? unico[0] : null;
 const caminho = args.find((arg, i) => !arg.startsWith("--") && i !== indice + 1);
 if (!caminho || !existsSync(caminho) || !pasta) {
+  if (!caminho || !existsSync(caminho)) console.error(`Arquivo do roteiro não encontrado${caminho ? `: ${caminho}` : ""}.`);
+  if (!pasta) console.error("Falta o canal (--canal canais/<canal>).");
   console.error("Uso: npm run cenarios -- conteudo/<arquivo>.json --canal canais/<canal>");
   process.exit(1);
 }

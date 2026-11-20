@@ -13,8 +13,16 @@ if (!caminho) {
   process.exit(1);
 }
 exigirChave();
+// O Postaí limita alguns campos da linha (tema 200, formato 60): corta com "…" em vez de falhar.
+const cortar = (texto: unknown, max: number) =>
+  typeof texto === "string" && texto.length > max ? `${texto.slice(0, max - 1).trimEnd()}…` : texto;
 try {
-  console.log(await ferramenta("registrar_episodio", JSON.parse(readFileSync(caminho, "utf8"))));
+  const registro = JSON.parse(readFileSync(caminho, "utf8"));
+  if (registro.linha) {
+    registro.linha.tema = cortar(registro.linha.tema, 200);
+    registro.linha.formato = cortar(registro.linha.formato, 60);
+  }
+  console.log(await ferramenta("registrar_episodio", registro));
 } catch (erro) {
   console.error(erro instanceof Error ? erro.message : String(erro));
   process.exit(1);
