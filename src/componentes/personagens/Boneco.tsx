@@ -425,7 +425,22 @@ export const Boneco: React.FC<{
               <g transform={`rotate(${inclina} 200 360)`}>
                 <Svg html={desenho.atras} />
               </g>
-              <Svg html={desenho.corpo} />
+              {/* Sentado: o desenho próprio traz as pernas junto do corpo; corta no quadril,
+                  senão elas saem por baixo do sofá ou da cama (as do boneco comum já somem) */}
+              {estado.pose === "sentado" ? (
+                <>
+                  <defs>
+                    <clipPath id={`quadril-${semente}`}>
+                      <rect x={-100} y={0} width={600} height={690} />
+                    </clipPath>
+                  </defs>
+                  <g clipPath={`url(#quadril-${semente})`}>
+                    <Svg html={desenho.corpo} />
+                  </g>
+                </>
+              ) : (
+                <Svg html={desenho.corpo} />
+              )}
               <g transform={`rotate(${inclina} 200 360)`}>
                 <Svg html={desenho.cabeca} />
                 <Svg html={rosto.olhos} />

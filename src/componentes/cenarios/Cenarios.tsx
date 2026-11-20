@@ -45,10 +45,10 @@ export const Escritorio: React.FC = () => {
       <g transform="rotate(3 330 720)">
         <rect x={270} y={680} width={150} height={90} fill="#FFFFFF" stroke={TRACO} strokeWidth={5} />
         <text x={345} y={718} textAnchor="middle" fontFamily="Arial Black, Arial, sans-serif" fontSize={20} fill="#A86166">
-          SAVE THE
+          GUARDE
         </text>
         <text x={345} y={746} textAnchor="middle" fontFamily="Arial Black, Arial, sans-serif" fontSize={20} fill="#A86166">
-          DATE
+          A DATA
         </text>
       </g>
 
@@ -219,8 +219,9 @@ export const Cozinha: React.FC = () => (
     <path d="M280 1160 L280 1100 Q280 1080 300 1080 L330 1080" fill="none" stroke={TRACO} strokeWidth={8} strokeLinecap="round" />
     <rect x={740} y={760} width={280} height={730} rx={26} fill="#F4F6F8" stroke={TRACO} strokeWidth={8} />
     <line x1={740} y1={1010} x2={1020} y2={1010} stroke={TRACO} strokeWidth={6} />
-    <rect x={770} y={820} width={14} height={140} rx={7} fill={TRACO} />
-    <rect x={770} y={1050} width={14} height={180} rx={7} fill={TRACO} />
+    {/* Puxadores na borda de fora, em cinza: perto do meio pareciam uma haste saindo da cabeça de quem fica à direita */}
+    <rect x={988} y={820} width={12} height={140} rx={6} fill="#8E9AA3" stroke={TRACO} strokeWidth={3} />
+    <rect x={988} y={1050} width={12} height={180} rx={6} fill="#8E9AA3" stroke={TRACO} strokeWidth={3} />
     <rect x={0} y={1490} width={1080} height={430} fill="#CFC3B5" />
     <rect x={0} y={1478} width={1080} height={22} fill="#FFFFFF" stroke={TRACO} strokeWidth={6} />
   </svg>
