@@ -83,7 +83,15 @@ Use **o mesmo termo** da busca das candidatas: assim o comando pega exatamente a
 guardadas), sem buscar de novo.
 
 Na dúvida sobre uma (rosto pequeno, texto), abra a imagem grande gravada antes de pô-la no roteiro.
-Ponha `"foto": "fotos/<peça>/<nome>.jpg"` em cada cena (e `"inteira": true` nos retratos e mapas). Regras:
+Ponha `"foto": "fotos/<peça>/<nome>.jpg"` em cada cena (e `"inteira": true` nos retratos e mapas).
+
+**Cena com `lugares` (mapa animado):** escolha um mapa antigo de domínio público onde **todos** os lugares
+aparecem, abra a imagem (Read) e ponha em `rota` onde fica cada lugar, em % da imagem, na mesma ordem:
+`"rota": [[67, 50], [55, 75], [45, 96]]` (`[x, y]`, 0,0 = canto de cima à esquerda). Não precisa de `inteira`.
+Depois do `npm run previa`, confira que cada ponto caiu no lugar certo do mapa; se não achar um mapa com todos os
+lugares, tire `lugares` e use a cena como foto comum.
+
+Regras:
 
 - toda cena com foto; a mesma imagem no máximo 3 vezes no vídeo, e com `movimento` diferente quando repetir em cenas
   seguidas;

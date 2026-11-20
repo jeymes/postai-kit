@@ -8,6 +8,7 @@ import { Legendas } from "../componentes/texto/Legendas";
 import { suave } from "../nucleo/animacao";
 import { cores, fontes } from "../nucleo/marca";
 import { duracaoDoMolde, QUADROS_DO_ENCERRAMENTO, quadrosDaFala, TEMPOS } from "./tempos";
+import { Giz, MapaAnimado, Recorte } from "./documentario/apresentacoes";
 
 // Vídeo longo e deitado (1920×1080) para canal narrado no YouTube: uma voz lê a
 // "fala" de cada cena por cima de uma foto em tela cheia que se move devagar
@@ -44,6 +45,18 @@ export const documentarioSchema = z.object({
           .optional()
           .describe("Como a foto se move: aproximar, afastar, esquerda, direita, subir, descer ou diagonal (padrão: alterna sozinho)"),
         inteira: z.boolean().optional().describe("Mostra a imagem inteira, sem cortar (retrato em pé, mapa), sobre ela mesma desfocada"),
+        rota: z
+          .array(z.tuple([z.number().min(0).max(100), z.number().min(0).max(100)]))
+          .min(2)
+          .max(12)
+          .optional()
+          .describe(
+            "Mapa animado: com a foto de um mapa, a rota se desenha de ponto a ponto na cor de destaque. Cada ponto em % da imagem [x, y] (0,0 = canto de cima à esquerda): olhe o mapa e marque onde fica cada lugar",
+          ),
+        lugares: z
+          .array(z.string().max(30))
+          .optional()
+          .describe('O nome de cada ponto da rota, na mesma ordem ("" para não mostrar), ex.: ["Lisboa", "", "Rio de Janeiro"]'),
         narracao: narracaoSchema.optional(),
       }),
     )
@@ -140,6 +153,27 @@ const FotoEmMovimento: React.FC<{
   );
 };
 
+/** A imagem da cena do jeito do modelo: mapa com rota, recorte de papel, giz ou foto em tela cheia */
+const ImagemDaCena: React.FC<{ cena: Cena; indice: number; duracao: number; ap: Aparencia; parada?: boolean }> = ({
+  cena,
+  indice,
+  duracao,
+  ap,
+  parada,
+}) => {
+  const foto = cena.foto as string;
+  if (cena.rota)
+    return (
+      <MapaAnimado src={foto} duracao={duracao} rota={cena.rota} lugares={cena.lugares} filtro={ap.filtro} destaque={ap.destaque} fonte={ap.fonteTexto} parada={parada} />
+    );
+  if (ap.apresentacao === "recorte")
+    return <Recorte src={foto} duracao={duracao} indice={indice} filtro={ap.filtro} destaque={ap.destaque} ritmo={ap.ritmo} inteira={cena.inteira} parada={parada} />;
+  if (ap.apresentacao === "giz") return <Giz src={foto} duracao={duracao} indice={indice} ritmo={ap.ritmo} inteira={cena.inteira} parada={parada} />;
+  return (
+    <FotoEmMovimento src={foto} duracao={duracao} movimento={movimentoDa(cena, indice)} inteira={cena.inteira} parada={parada} filtro={ap.filtro} ritmo={ap.ritmo} />
+  );
+};
+
 /** Sem foto: fundo escuro na cor de destaque, com um brilho suave */
 const FundoSemFoto: React.FC<{ destaque?: string; fundo?: string }> = ({ destaque = cores.destaque, fundo = "#0d0b10" }) => (
   <AbsoluteFill style={{ background: `radial-gradient(circle at 30% 40%, ${destaque}55 0%, ${fundo} 65%)` }} />
@@ -228,15 +262,7 @@ const CenaDoDocumentario: React.FC<{ cena: Cena; indice: number; props: Document
   return (
     <AbsoluteFill style={{ backgroundColor: "#000" }}>
       {anterior?.foto && frame < entrada && (
-        <FotoEmMovimento
-          src={anterior.foto}
-          duracao={quadrosDaFala(anterior)}
-          movimento={movimentoDa(anterior, indice - 1)}
-          inteira={anterior.inteira}
-          parada
-          filtro={ap.filtro}
-          ritmo={ap.ritmo}
-        />
+        <ImagemDaCena cena={anterior} indice={indice - 1} duracao={quadrosDaFala(anterior)} ap={ap} parada />
       )}
       <AbsoluteFill style={{ opacity: fade }}>
         {cena.video ? (
@@ -244,14 +270,7 @@ const CenaDoDocumentario: React.FC<{ cena: Cena; indice: number; props: Document
             <Video src={arquivo(cena.video)} muted loop objectFit="cover" style={{ width: "100%", height: "100%", filter: ap.filtro }} />
           </AbsoluteFill>
         ) : cena.foto ? (
-          <FotoEmMovimento
-            src={cena.foto}
-            duracao={duracao}
-            movimento={movimentoDa(cena, indice)}
-            inteira={cena.inteira}
-            filtro={ap.filtro}
-            ritmo={ap.ritmo}
-          />
+          <ImagemDaCena cena={cena} indice={indice} duracao={duracao} ap={ap} />
         ) : (
           <FundoSemFoto destaque={ap.destaque} fundo={ap.fundo} />
         )}
@@ -271,8 +290,9 @@ const CenaDoDocumentario: React.FC<{ cena: Cena; indice: number; props: Document
               legendas={cena.narracao.legendas}
               atraso={TEMPOS.antesDaFala}
               tamanho={ap.legenda.tamanho}
-              caixa={ap.legenda.caixa}
-              noite={ap.legenda.noite}
+              // Em cima do mapa (claro) a legenda precisa da caixa para ler
+              caixa={cena.rota ? true : ap.legenda.caixa}
+              noite={cena.rota ? false : ap.legenda.noite}
               largura={1400}
               {...(ap.modelo === "classico"
                 ? {}

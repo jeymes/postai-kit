@@ -17,7 +17,7 @@ import { cores, fontes } from "../nucleo/marca";
 // podem mudar à parte. O que o dono pedir e o kit não fizer, a equipe anota com
 // npm run limite (o kit aprende depois). Espelha functions/src/animacaoCore.ts.
 
-export const MODELOS_DO_NARRADO = ["classico", "pergaminho", "misterio", "pb", "dormir"] as const;
+export const MODELOS_DO_NARRADO = ["classico", "pergaminho", "misterio", "pb", "dormir", "colagem", "lousa"] as const;
 export type ModeloDoNarrado = (typeof MODELOS_DO_NARRADO)[number];
 
 const latino = { subsets: ["latin" as const] };
@@ -155,6 +155,8 @@ export interface Aparencia {
   tremor: boolean;
   /** Legenda: tamanho e se a palavra falada ganha a etiqueta colorida */
   legenda: { tamanho: number; caixa: boolean; noite: boolean };
+  /** Como a imagem aparece: em tela cheia, recortada em papel sobre jornal (Colagem) ou desenhada a giz (Lousa) */
+  apresentacao: "tela" | "recorte" | "giz";
 }
 
 const BASE = {
@@ -165,6 +167,7 @@ const BASE = {
   mistura: 18,
   tremor: false,
   legenda: { tamanho: 44, caixa: true, noite: false },
+  apresentacao: "tela" as const,
 };
 
 export function aparenciaDo(estilo?: EstiloDoNarrado): Aparencia {
@@ -244,6 +247,38 @@ export function aparenciaDo(estilo?: EstiloDoNarrado): Aparencia {
           ritmo: 0.45,
           mistura: 54,
           legenda: { tamanho: 36, caixa: false, noite: true },
+        };
+      case "colagem":
+        // Estilo reportagem de colagem: recortes de papel rasgado, fita e linha vermelha sobre jornal velho
+        return {
+          ...BASE,
+          filtro: "contrast(1.08) saturate(0.85) sepia(0.15)",
+          Camadas: () => <Grao forca={0.1} />,
+          fonteTitulo: fonteDa("moderna") ?? fontes.titulo,
+          fonteTexto: fonteDa("maquina") ?? fontes.texto,
+          pesoTitulo: 400,
+          destaque: "#c8102e",
+          textoNoDestaque: "#ffffff",
+          textoClaro: "#fbf6ea",
+          fundo: "#1c1712",
+          legenda: { tamanho: 44, caixa: true, noite: false },
+          apresentacao: "recorte",
+        };
+      case "lousa":
+        // Quadro-negro: a imagem vira um desenho a giz, e as letras parecem escritas à mão
+        return {
+          ...BASE,
+          filtro: "none",
+          Camadas: () => <Grao forca={0.08} />,
+          fonteTitulo: fonteDa("manuscrita") ?? fontes.titulo,
+          fonteTexto: fonteDa("manuscrita") ?? fontes.texto,
+          pesoTitulo: 700,
+          destaque: "#f2e394",
+          textoNoDestaque: "#1f2b25",
+          textoClaro: "#f4f1e6",
+          fundo: "#1f2b25",
+          legenda: { tamanho: 52, caixa: false, noite: true },
+          apresentacao: "giz",
         };
       default:
         return {

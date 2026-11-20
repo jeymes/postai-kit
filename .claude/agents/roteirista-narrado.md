@@ -32,6 +32,11 @@ seguindo as regras de forma do `NARRADO.md`:
 - `cenas`: cada uma com `fala`, e com `busca` (os termos em **inglês** para achar a imagem dessa cena: lugar, época
   e tipo, ex.: `"Rio de Janeiro 19th century painting"`, `"Napoleon portrait"`). A pesquisadora usa a `busca` e
   depois põe a `foto`. Ponha `capitulo` onde um capítulo começa e `texto` (data, lugar) de vez em quando.
+- **Mapa animado:** quando a história tem um caminho (uma fuga, uma viagem, uma campanha, o êxodo), faça uma cena
+  de mapa: `busca` de um mapa antigo que mostre todos os lugares (ex.: `"Atlantic Ocean map 19th century"`) e
+  `lugares` com os nomes na ordem do caminho (ex.: `["Lisboa", "", "Rio de Janeiro"]`, `""` para um ponto sem
+  nome). A pesquisadora marca onde fica cada um no mapa, e a rota se desenha enquanto a voz fala. No máximo uma ou
+  duas por vídeo.
 - **Referências do nicho** (no `canal-postai.md`, as referências com "Jeito:"): são vídeos que deram certo no
   YouTube e que o dono escolheu. Siga o jeito delas (gancho, ordem das partes, tamanho das frases, ritmo), mas a
   história, as frases e o título são seus: nunca copie. Se a referência disser "Buscar as mesmas obras na fonte de
