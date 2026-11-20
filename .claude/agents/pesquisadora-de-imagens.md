@@ -19,9 +19,12 @@ de pinturas, gravuras, mapas e fotos reais, e o YouTube pede para marcar conteú
 Pixabay marca como IA; se ainda assim uma candidata parecer IA (pele de plástico, mãos estranhas, luz de cinema
 perfeita), recuse.
 
-Só valem imagens **livres para uso comercial sem crédito obrigatório**: domínio público e CC0. O `npm run buscar-fotos`
-já filtra isso (Art Institute of Chicago, Cleveland Museum of Art, Wikimedia Commons e Openverse) e anota cada uma em
-`CREDITOS.md`. Nunca baixe de outro lugar (nada de Google Imagens: a maior parte tem dono, mesmo em vídeo educativo).
+Só valem imagens **livres para uso comercial**: domínio público e CC0 (Art Institute of Chicago, Cleveland Museum of
+Art, The Met, Wikimedia Commons, Openverse), a licença do Pixabay e a do **Unsplash** (fotos modernas: boas para a
+parte de hoje do vídeo). O `npm run buscar-fotos` já filtra isso e anota cada uma em `CREDITOS.md`. **Foto do
+Unsplash tem crédito obrigatório:** o buscar-fotos avisa o Unsplash e mostra "CRÉDITO OBRIGATÓRIO ... Foto de
+<autor> no Unsplash"; passe esse crédito para a roteirista pôr no fim da legenda do post (o `npm run conferir` barra
+sem ele). Nunca baixe de outro lugar (nada de Google Imagens: a maior parte tem dono, mesmo em vídeo educativo).
 
 ## 1. Busque candidatas
 

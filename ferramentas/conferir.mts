@@ -121,6 +121,20 @@ if (peca.molde === "Documentario") {
     if (tamanho(doc.post.titulo) > 100) erro("roteirista-narrado", `post.titulo com ${tamanho(doc.post.titulo)} caracteres (até 100)`);
     if (tamanho(doc.post.legenda) > 1800) erro("roteirista-narrado", `post.legenda com ${tamanho(doc.post.legenda)} caracteres (até 1.800: os capítulos entram depois)`);
   }
+  // Foto do Unsplash (e a capa): o crédito na legenda do post é obrigatório (o buscar-fotos anota no CREDITOS.md)
+  const usadas = new Set([...usos.keys(), ...(doc.capa?.foto ? [doc.capa.foto] : [])]);
+  for (const pasta of new Set([...usadas].map((f) => f.split("/").slice(0, -1).join("/")))) {
+    const caminho = `public/${pasta}/CREDITOS.md`;
+    if (!existsSync(caminho)) continue;
+    for (const linha of readFileSync(caminho, "utf8").split("\n")) {
+      const colunas = linha.split("|").map((c) => c.trim());
+      // | arquivo | fonte | original | id | crédito |
+      if (colunas[2] !== "unsplash" || !usadas.has(`${pasta}/${colunas[1]}`)) continue;
+      const autor = (colunas[5] ?? "").replace(/^Foto de /, "").replace(/ no Unsplash$/, "");
+      if (autor && !(doc.post?.legenda ?? "").includes(autor))
+        erro("roteirista-narrado", `falta o crédito do Unsplash na legenda do post: "${colunas[5]}" (foto ${colunas[1]})`);
+    }
+  }
   const textoTodo = JSON.stringify({ ...doc, cenas: longas.map(({ narracao: _n, ...resto }) => resto) });
   if (/sua ?marca|@suamarca|lorem ipsum/i.test(textoTodo)) erro("roteirista-narrado", 'texto de exemplo ("Sua Marca") no roteiro');
   console.log(`Documentario: ${longas.length} cenas, ${total} palavras (alvo ~${alvo}), ${capitulos.length} capítulos, ${usos.size} imagens.`);

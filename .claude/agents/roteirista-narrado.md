@@ -44,7 +44,9 @@ seguindo as regras de forma do `NARRADO.md`:
   `"Rembrandt Samson"`), para o vídeo ter o mesmo tipo de imagem, tirado da fonte original.
 - `voz` e a duração vêm do `canal-postai.md`. Conte as palavras: uns 140 por minuto.
 - `pronuncia` para nomes estrangeiros.
-- `encerramento`, `capa` (`titulo`, `destaque`; a `foto` a pesquisadora escolhe) e `post` (`titulo`, `legenda`).
+- `encerramento`, `capa` (`titulo`, `destaque`; a `foto` a pesquisadora escolhe) e `post` (`titulo`, `legenda`). Se
+  alguma foto veio do Unsplash, o fim da legenda leva o crédito de cada uma (ex.: `Fotos: Ana Souza e Lee Park no
+  Unsplash.`); o `npm run conferir` confere.
 - `fontes`: a lista das páginas que você usou (`[{ "titulo", "url" }]`). Não aparece no vídeo; a checadora confere.
 
 ## O que faz um bom roteiro narrado

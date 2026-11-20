@@ -16,6 +16,8 @@
 //   Commons e no Openverse, só domínio público e CC0, sem chave; os museus vêm primeiro: as
 //   imagens são escaneadas por eles, em alta resolução; o melhor para o Canal dark; na rotina
 //   da nuvem entra também o Pixabay, com fotos modernas de lugares e paisagens),
+//   --fonte unsplash (fotos modernas do Unsplash, uso comercial; passa pelo Postaí; avisa o Unsplash no download
+//   final e o CRÉDITO vai obrigatório na legenda do post, anotado no CREDITOS.md),
 //   --fonte pixabay (fotos e ilustrações modernas do Pixabay, uso comercial sem crédito; passa pelo
 //   Postaí, que tem a chave: precisa do passe da rotina ou da POSTAI_CHAVE)
 // As opções de cada item ficam em _candidatos/<item>.json: a escolha (#n) pega exatamente a que
@@ -38,6 +40,8 @@ type Foto = {
   height: number;
   /** O nome da obra, quando o acervo dá (ajuda a saber quem é) */
   titulo?: string;
+  /** Crédito obrigatório na legenda do post (Unsplash: "Foto de <autor> no Unsplash") */
+  credito?: string;
   /** Cabeçalhos que o acervo exige para baixar */
   cabecalhos?: Record<string, string>;
 };
@@ -347,6 +351,25 @@ async function buscarNoPixabay(termo: string): Promise<Foto[]> {
     .filter(filtroDeTamanho);
 }
 
+/**
+ * Unsplash: fotos modernas (grátis, uso comercial), pela chave do Postaí. Exige
+ * avisar o Unsplash quando a foto é escolhida (feito no download final) e o
+ * crédito na legenda do post. Nunca vai para o banco geral de imagens.
+ */
+async function buscarNoUnsplash(termo: string): Promise<Foto[]> {
+  if (!process.env.POSTAI_CHAVE) throw new Error("sem o passe do Postaí (o Unsplash passa pelo Postaí)");
+  const texto = await ferramenta("buscar_no_unsplash", { q: termo, orientacao: deitadas ? "horizontal" : "all", porPagina: 20 });
+  let resultados: Array<{ id: string; pagina: string; largura: number; altura: number; previa: string; url: string; descricao: string; credito: string }>;
+  try {
+    resultados = (JSON.parse(texto) as { resultados: typeof resultados }).resultados;
+  } catch {
+    throw new Error(texto.slice(0, 160));
+  }
+  return resultados
+    .map((r) => ({ id: r.id, url: r.url, previa: r.previa, source: "unsplash", foreign_landing_url: r.pagina, width: r.largura, height: r.altura, titulo: r.descricao, credito: r.credito }))
+    .filter(filtroDeTamanho);
+}
+
 // Quanto cada acervo vale na ordem: os museus escaneiam as próprias obras (alta
 // resolução, licença certa); o resto do Openverse (Flickr etc.) é mais variado.
 const PESO: Record<string, number> = {
@@ -358,6 +381,7 @@ const PESO: Record<string, number> = {
   nga: 3,
   wikimedia: 2,
   pixabay: 1.5,
+  unsplash: 1.5,
 };
 const pesoDe = (f: Foto) => PESO[f.source] ?? (f.source.startsWith("smithsonian") ? 3 : 1);
 
@@ -367,7 +391,7 @@ const pesoDe = (f: Foto) => PESO[f.source] ?? (f.source.startsWith("smithsonian"
  * confiável para o menos, e mantém a ordem de relevância de cada um.
  */
 async function buscarNosMuseus(termo: string): Promise<Foto[]> {
-  const nomes = ["Art Institute", "Cleveland", "Met", "Commons", "Openverse", "Pixabay"];
+  const nomes = ["Art Institute", "Cleveland", "Met", "Commons", "Openverse", "Pixabay", "Unsplash"];
   const resultados = await Promise.allSettled([
     buscarNoAIC(termo),
     buscarNoCleveland(termo),
@@ -376,6 +400,7 @@ async function buscarNosMuseus(termo: string): Promise<Foto[]> {
     buscarNoOpenverse(termo, false),
     // Sem o passe (no computador, sem a rotina), o Pixabay fica de fora sem avisar
     process.env.POSTAI_CHAVE ? buscarNoPixabay(termo) : Promise.resolve([]),
+    process.env.POSTAI_CHAVE ? buscarNoUnsplash(termo) : Promise.resolve([]),
   ]);
   const listas: Foto[][] = [];
   for (const [i, r] of resultados.entries()) {
@@ -437,6 +462,7 @@ async function buscar(termo: string): Promise<Foto[]> {
   if (fonte === "commons") return buscarNoCommons(termo);
   if (fonte === "museus") return buscarNosMuseus(termo);
   if (fonte === "pixabay") return buscarNoPixabay(termo);
+  if (fonte === "unsplash") return buscarNoUnsplash(termo);
   return buscarNoOpenverse(termo);
 }
 
@@ -518,6 +544,11 @@ for (const [n, item] of itens.entries()) {
       const foto = fotos[item.escolha - 1];
       if (!foto) throw new Error(`só há ${fotos.length} opções para "${item.termo}"`);
       await baixar(foto, join(destino, `${item.arquivo}.jpg`));
+      // Unsplash: avisa que a foto foi usada (exigência deles) e lembra o crédito da legenda
+      if (foto.source === "unsplash") {
+        await ferramenta("usar_foto_do_unsplash", { id: foto.id }).catch(() => undefined);
+        console.log(`  CRÉDITO OBRIGATÓRIO na legenda do post: ${foto.credito}`);
+      }
       creditos.push({ arquivo: `${item.arquivo}.jpg`, foto });
       console.log(`✓ ${destino}/${item.arquivo}.jpg (${foto.source}, ${foto.foreign_landing_url})`);
     }
@@ -536,13 +567,13 @@ if (!candidatos && creditos.length > 0) {
         .split("\n")
         .filter((l) => /^\| \S+\.jpg \|/.test(l) && !creditos.some((c) => l.startsWith(`| ${c.arquivo} |`)))
     : [];
-  const novas = creditos.map(({ arquivo, foto }) => `| ${arquivo} | ${foto.source} | ${foto.foreign_landing_url} | ${foto.id} |`);
+  const novas = creditos.map(({ arquivo, foto }) => `| ${arquivo} | ${foto.source} | ${foto.foreign_landing_url} | ${foto.id} |${foto.credito ? ` ${foto.credito} |` : ""}`);
   writeFileSync(
     caminho,
     [
       `# Fotos de domínio público (${pasta})`,
       "",
-      "Licença CC0 ou domínio público (uso comercial sem crédito obrigatório), baixadas do Openverse, do Wikimedia Commons, do Art Institute of Chicago ou do Cleveland Museum of Art com o ferramentas/buscar-fotos.mts.",
+      "Licença CC0 ou domínio público (uso comercial sem crédito obrigatório), baixadas do Openverse, do Wikimedia Commons, do Art Institute of Chicago, do Cleveland Museum of Art ou do The Met com o ferramentas/buscar-fotos.mts. As do Unsplash (licença do Unsplash) têm crédito obrigatório na legenda do post: está na última coluna.",
       "",
       "| Arquivo | Fonte | Original | Id |",
       "| --- | --- | --- | --- |",
