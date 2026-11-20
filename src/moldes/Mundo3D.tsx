@@ -106,7 +106,10 @@ export const mundo3dSchema = z.object({
       }),
     )
     .min(1),
-  voz: z.enum(["pf_dora", "pm_alex", "pm_santa"]).default("pm_alex").describe("A voz do narrador"),
+  voz: z
+    .string()
+    .default("pm_alex")
+    .describe("Id de src/componentes/personagens/vozes.ts (feminina-1..15, masculina-1..15) ou o nome do Kokoro (pf_dora, pm_alex, pm_santa)"),
   vozes: z
     .record(z.string(), z.object({ voz: z.string(), velocidade: z.number().optional() }))
     .optional()

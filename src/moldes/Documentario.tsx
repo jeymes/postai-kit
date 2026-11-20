@@ -49,7 +49,10 @@ export const documentarioSchema = z.object({
     )
     .min(1)
     .max(150),
-  voz: z.enum(["pf_dora", "pm_alex", "pm_santa"]).default("pm_alex").describe("pf_dora (feminina), pm_alex ou pm_santa (masculinas)"),
+  voz: z
+    .string()
+    .default("pm_alex")
+    .describe("Id de src/componentes/personagens/vozes.ts (feminina-1..15, masculina-1..15) ou o nome do Kokoro (pf_dora, pm_alex, pm_santa)"),
   velocidade: z.number().min(0.7).max(1.4).default(1),
   pronuncia: z.record(z.string(), z.string()).optional().describe('Como a voz deve ler uma palavra: {"Tiradentes": "Tiradêntes"}'),
   legendas: z.boolean().default(true),
