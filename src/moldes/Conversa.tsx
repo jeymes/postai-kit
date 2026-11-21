@@ -130,7 +130,10 @@ export const conversaSchema = z.object({
   cenas: z
     .array(
       z.object({
-        quem: z.string().describe("O id de quem fala (do elenco)"),
+        quem: z
+          .string()
+          .optional()
+          .describe('O id de quem fala (do elenco). Sem "quem", fala o NARRADOR, que não aparece: os personagens fazem a cena pelos "estados" (pose e expressão), sem mexer a boca'),
         fala: z.string().describe("O que o personagem diz: 1 frase curta"),
         estados: z
           .record(z.string(), estadoSchema)
@@ -208,6 +211,10 @@ export const conversaSchema = z.object({
   legendas: z.boolean().default(true),
   efeitos: z.boolean().default(true),
   vozes: z.record(z.string(), z.object({ voz: z.string(), velocidade: z.number().optional() })).optional(),
+  voz: z
+    .string()
+    .optional()
+    .describe('A voz do NARRADOR (as falas sem "quem"): um id do catálogo, ex.: "masculina-12"'),
 });
 
 export type ConversaProps = z.infer<typeof conversaSchema>;
@@ -252,6 +259,38 @@ type Linha = ReturnType<typeof linhaDoTempo>;
 // episódios antigos, nos campos "noiva" e "organizadora".
 function estadoNaCena(cena: Cena, id: string): Estado | undefined {
   return cena.estados?.[id] ?? (id === "noiva" || id === "organizadora" ? cena[id] : undefined);
+}
+
+/**
+ * A pose "sentado" corta as pernas no quadril e conta com a frente do cenário
+ * (a cama do quarto, o sofá da sala ou a frente de um cenário da equipe) para
+ * cobri-las, e só no lugar da esquerda numa conversa de dois. Fora disso, as
+ * pernas sumiam no vídeo ("sem pernas", "dentro do sofá"): a pessoa fica de pé
+ * com o celular na mão (a mesma ação, sem defeito).
+ */
+export function cenasSemSentadoSolto(
+  cenas: Cena[],
+  cenarioDoRoteiro: string | undefined,
+  proprios: CenarioProprio[] | undefined,
+  elenco: Array<{ id: string }>,
+): Cena[] {
+  const daEsquerda = elenco.length === 2 ? elenco[0].id : null;
+  let cenario = cenarioDoRoteiro;
+  const seguro = (estado: Estado | undefined, id: string, temFrente: boolean) =>
+    estado?.pose === "sentado" && !(temFrente && id === daEsquerda) ? { ...estado, pose: "celular" as const } : estado;
+  return cenas.map((cena) => {
+    cenario = cena.cenario ?? cenario;
+    const temFrente = Boolean(resolverCenario(cenario, proprios).Frente);
+    const ajustar = (estados: Record<string, Estado> | undefined) =>
+      estados && Object.fromEntries(Object.entries(estados).map(([id, e]) => [id, seguro(e, id, temFrente) as Estado]));
+    return {
+      ...cena,
+      ...(cena.estados ? { estados: ajustar(cena.estados) } : {}),
+      ...(cena.meio ? { meio: ajustar(cena.meio) } : {}),
+      ...(cena.noiva ? { noiva: seguro(cena.noiva, "noiva", temFrente) } : {}),
+      ...(cena.organizadora ? { organizadora: seguro(cena.organizadora, "organizadora", temFrente) } : {}),
+    } as Cena;
+  });
 }
 
 // Expressões de fim ruim: o cartão final não comemora depois delas
@@ -417,7 +456,9 @@ const lugaresDo = (elenco: PersonagemDaCena[]) => (elenco.length === 1 ? SOZINHO
 export const Conversa: React.FC<ConversaProps> = (props) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
-  const linha = linhaDoTempo(props.cenas);
+  const linha = linhaDoTempo(
+    cenasSemSentadoSolto(props.cenas, props.cenario, props.cenariosProprios as CenarioProprio[] | undefined, elencoDa(props)),
+  );
   const elenco = elencoDa(props);
   const lugares = lugaresDo(elenco);
   const naCena = (i: number) => linha[Math.min(Math.max(i, 0), linha.length - 1)].inicio;
@@ -461,7 +502,7 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
   const naLuz = linha.find((l) => l.cena.luz);
   const luzEm = naLuz?.inicio;
   const quemAcende = naLuz
-    ? Math.max(0, elenco.findIndex((p) => ["celular", "sentado"].includes(estadoNaCena(naLuz.cena, p.id)?.pose ?? "")))
+    ? elenco.findIndex((p) => p.tipo !== "criatura" && comCelular(estadoNaCena(naLuz.cena, p.id)?.pose))
     : -1;
   // A criatura cresce quando a pessoa cede e encolhe quando resiste (campo "sombra" da cena)
   let tamanhoAntes = 1;
@@ -544,7 +585,8 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
               const k = linha.findIndex((l, n) => frame >= l.inicio && frame < (linha[n + 1]?.inicio ?? fimDasFalas));
               if (k < 0 || (luzEm !== undefined && frame >= luzEm)) return null;
               return elenco.map((p, indice) => {
-                const pose = estadoNaCena(linha[k].cena, p.id)?.pose ?? momentosDe(p.id, linha).filter((m) => m.em <= frame).pop()?.pose;
+                // A pose de agora (com a virada no meio da fala): guardou o celular, o feixe apaga
+                const pose = momentosDe(p.id, linha).filter((m) => m.em <= frame).pop()?.pose;
                 if (p.tipo === "criatura" || !comCelular(pose)) return null;
                 const sentado = pose === "sentado";
                 const m = maoDe(lugares[indice], sentado);
@@ -565,15 +607,16 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
         </AbsoluteFill>
         {linha.map(({ cena, inicio }, i) => {
           if (!cena.luz) return null;
-          // A luz nasce no celular de quem está com ele na mão nesta fala
-          const indice = Math.max(
-            0,
-            elenco.findIndex((p) => ["celular", "sentado"].includes(estadoNaCena(cena, p.id)?.pose ?? "")),
-          );
+          // A luz nasce no celular de quem está com ele na mão nesta fala; sem
+          // ninguém com o celular, não acende (antes acendia na mão vazia do primeiro)
+          const indice = elenco.findIndex((p) => p.tipo !== "criatura" && comCelular(estadoNaCena(cena, p.id)?.pose));
+          if (indice < 0) return null;
           const sentado = estadoNaCena(cena, elenco[indice].id)?.pose === "sentado";
           const mao = maoDe(lugares[indice], sentado);
-          // Apaga quando a próxima fala começa
-          return <LuzDoAviso key={`luz-${i}`} em={inicio} ate={linha[i + 1]?.inicio ?? fimDasFalas} x={mao.x} y={mao.y} />;
+          // Apaga quando a próxima fala começa ou quando ele guarda o celular (a virada no meio da fala)
+          const proxima = linha[i + 1]?.inicio ?? fimDasFalas;
+          const guardou = momentosDe(elenco[indice].id, linha).find((m) => m.em > inicio && m.em < proxima && !comCelular(m.pose))?.em;
+          return <LuzDoAviso key={`luz-${i}`} em={inicio} ate={guardou ?? proxima} x={mao.x} y={mao.y} />;
         })}
         {linha.map(({ cena, inicio }, i) => {
           const fim = linha[i + 1]?.inicio ?? fimDasFalas;
@@ -725,7 +768,10 @@ export const CapaConversa: React.FC<CapaDaConversa> = (props) => {
         break;
       }
     }
-    return { pose: daCapa?.pose ?? daFala.pose, expressao: daCapa?.expressao ?? daFala.expressao };
+    const pose = daCapa?.pose ?? daFala.pose;
+    // Sentado só com a frente do cenário cobrindo as pernas, no lugar da esquerda
+    const podeSentar = Boolean(lugar.Frente) && elenco.length === 2 && elenco[0].id === quem;
+    return { pose: pose === "sentado" && !podeSentar ? "celular" : pose, expressao: daCapa?.expressao ?? daFala.expressao };
   };
   return (
     <AbsoluteFill style={{ background: fundo === "noite" ? "#0A0F26" : "#FBE7DA" }}>

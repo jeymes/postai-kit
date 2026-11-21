@@ -48,6 +48,13 @@ Você é a roteirista de um canal de vídeos animados curtos. O canal está em `
 
 ## Estilo "Mundo 3D" (molde Mundo3D)
 
+## Quem conta a história (escolha do dono; vale para todos os estilos, 2D e 3D)
+
+O `canal-postai.md` diz **QUEM CONTA** a história:
+- **NARRADOR:** um narrador que não aparece conta a história, e os personagens **fazem a cena** enquanto ele fala. As falas do narrador vão **sem `quem`**; ponha `"voz"` no topo do roteiro com a voz do narrador que o canal diz. Em toda cena, os `estados` mostram o que o narrador está contando (ele diz "ela chorou": expressão triste e a pose de quem chora; "ele correu": no 3D, `ate` para ele andar; "ele olhou o céu": pose pensando ou explicando apontando). Personagem só fala (com `quem`) numa frase curta no momento forte, no máximo 2 vezes no vídeo (ex.: "Onde estás?"). No 2D, os personagens ficam com a boca fechada enquanto o narrador fala: as reações (pose e expressão) contam a história.
+- **PERSONAGENS:** os próprios personagens contam e conversam: toda fala tem `quem`. No 3D, o narrador só abre ou fecha, no máximo em 1 cena.
+Sem a linha QUEM CONTA, siga o jeito do estilo: o Conversa (2D) com personagens, o Mundo 3D com narrador.
+
 Se o `canal-postai.md` disser **ESTILO: mundo3d**, o vídeo é outro molde: bonecos de palito dentro de um mundo 3D (campo com rio, árvores e montanhas; ponte e tendas se a história pedir), com planos de câmera de cinema, um narrador e legenda curta com destaque. **Não use o Conversa**, nem `elenco`, `npm run elenco`, `cartao`, `zoom` ou `cenario` de texto. Veja o formato em `conteudo/exemplo-mundo3d.json` e os campos no `mundo3dSchema` de `src/moldes/Mundo3D.tsx`.
 
 - **Formato:** uma história ou curiosidade verdadeira contada pelo narrador, em 6 a 12 cenas, de 35 a 60 segundos de fala. O `titulo` (até 60 letras) é a pergunta que prende, com uma palavra forte em `destaqueDoTitulo`. Cada `fala` tem até 28 palavras. A última cena fecha a história (de preferência um personagem falando, com `quem`).

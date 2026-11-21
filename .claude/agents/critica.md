@@ -17,7 +17,9 @@ Leia `out/<arquivo>/info.json` (duração), o roteiro em `conteudo/<arquivo>.jso
 source ferramentas/nuvem.sh && for t in <segundos>; do npx remotion ffmpeg -y -loglevel error -ss $t -i out/<arquivo>/video.mp4 -frames:v 1 -vf scale=540:-2 out/<arquivo>/critica-$t.jpg; done
 ```
 
-Abra (Read) **todos** os quadros, em ordem, e a `out/<arquivo>/capa.jpg`.
+Depois, **de perto, cena por cena**: `source ferramentas/nuvem.sh && npm run quadros -- conteudo/<arquivo>.json`. Ele tira três quadros grandes de cada cena (começo, meio e fim: pega a troca de pose no meio da fala) e diz ao lado de cada um o que TEM que aparecer (a pose e a expressão de cada personagem, quem está com o celular, a luz do aviso).
+
+Abra (Read) **todos** os quadros, em ordem (os de 1,5 s e os de `out/<arquivo>/quadros/`), e a `out/<arquivo>/capa.jpg`. Em cada quadro de `quadros/`, compare com o que o comando disse que tem que aparecer.
 
 ## 2. Confira
 
@@ -26,6 +28,8 @@ Abra (Read) **todos** os quadros, em ordem, e a `out/<arquivo>/capa.jpg`.
 **Erros (qualquer um reprova):**
 - **o vídeo não segue o combinado com o dono:** o modelo e o fundo do `estilo` do roteiro não aparecem (ex.: era palito na noite e saiu boneco colorido no claro), ou, se o `canal-postai.md` tiver a "Receita de cada vídeo", algum passo dela falta ou está fora de ordem. Diga qual passo faltou e quem corrige (roteirista, se o roteiro não tem o passo; diretora de arte, se o roteiro tem e o quadro não mostra). Se o kit não desenha o passo, anote com `npm run limite` e não reprove por isso;
 - algo cortado, sobreposto ou fora do lugar; rosto coberto por título, cartão, balão ou legenda;
+- **objeto que some ou que não está lá:** quem está na pose celular ou sentado SEM o celular na mão; luz, brilho ou feixe de celular sem o celular (só a luz na mão vazia); um objeto que estava na mão e some de uma cena para a outra sem a história pedir (devolva à diretora-de-arte: a pose certa na cena certa);
+- **corpo errado:** personagem sem pernas, cortado no quadril ou "dentro" do sofá, da cama ou da mesa (atrás do móvel, com as pernas cobertas pela frente dele, está certo); pés afundados ou flutuando; parte do corpo fora da tela (devolva à diretora-de-arte; sentado só funciona no quarto, na sala ou num cenário com frente, e só para quem está à esquerda);
 - texto com erro de português ou palavra faltando (título, balão, cartão do fim, legendas);
 - sobrancelha dobrada (duas linhas em cima do olho; devolva à designer-de-personagens);
 - personagem com braço a mais (4 braços: um par parado e outro mexendo) ou mão sobrando (devolva à designer-de-personagens: o braço desenhado sai do corpo);

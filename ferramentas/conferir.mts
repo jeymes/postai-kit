@@ -251,6 +251,27 @@ for (const cena of cenas) {
   }
 }
 
+// ---- Objetos e corpo: o celular, a luz do aviso e o sentado ----
+// Defeitos que a crítica deixava passar: luz acesa sem ninguém com o celular e
+// pessoa sentada sem a cama ou o sofá na frente (as pernas sumiam; o molde
+// agora põe de pé, mas o roteiro tem que pedir certo)
+{
+  const cenariosComFrente = new Set(["quarto", "sala", ...(((peca as Record<string, unknown>).cenariosProprios as Array<{ id: string; frente?: string }> | undefined) ?? []).filter((c) => c.frente).map((c) => c.id)]);
+  let cenario = (peca as Record<string, unknown>).cenario as string | undefined;
+  const daEsquerda = ids.length === 2 ? ids[0] : null;
+  cenas.forEach((cena, i) => {
+    cenario = (cena.cenario as string | undefined) ?? cenario;
+    const poses = [...Object.entries(cena.estados ?? {}), ...ids.filter((id) => cena[id]).map((id) => [id, cena[id] as Estado] as const)];
+    if (cena.luz && !poses.some(([, e]) => e?.pose === "celular" || e?.pose === "sentado"))
+      erro("diretora-de-arte", `cena ${i + 1}: tem "luz" mas ninguém está com o celular (pose celular ou sentado); a luz acenderia numa mão vazia`);
+    for (const [id, e] of [...poses, ...Object.entries(cena.meio ?? {})]) {
+      if (e?.pose !== "sentado") continue;
+      if (!cenariosComFrente.has(cenario ?? "") || id !== daEsquerda)
+        aviso("diretora-de-arte", `cena ${i + 1}: "${id}" sentado sem a cama ou o sofá na frente dele (só no quarto, na sala ou num cenário com frente, e só o da esquerda numa conversa de dois): o vídeo vai mostrar de pé com o celular`);
+    }
+  });
+}
+
 // ---- Narração: ou todas as falas, ou nenhuma ----
 const narradas = cenas.filter((c) => c.narracao).length;
 if (narradas > 0 && narradas < cenas.length) erro("producao", `só ${narradas} de ${cenas.length} falas narradas: rode o narrar de novo`);

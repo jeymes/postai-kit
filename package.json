@@ -33,6 +33,7 @@
     "materiais": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --import ./ferramentas/falhas.mts ferramentas/materiais.mts",
     "salvar-canal": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --import ./ferramentas/falhas.mts ferramentas/salvar-canal.mts",
     "previa": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --import ./ferramentas/falhas.mts ferramentas/renderizar.mts --previa",
+    "quadros": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --import ./ferramentas/falhas.mts ferramentas/quadros.mts",
     "lottie": "node ferramentas/lottie/gerar.mjs",
     "capturar-site": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --import ./ferramentas/falhas.mts ferramentas/capturar-site.mts",
     "buscar-fotos": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --import ./ferramentas/falhas.mts ferramentas/buscar-fotos.mts",

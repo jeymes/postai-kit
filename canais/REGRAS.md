@@ -8,6 +8,13 @@ O roteiro é um `conteudo/<data>-<assunto>.json` no molde **Conversa**. O format
 
 O `canal-postai.md` diz o **idioma dos vídeos** (português, inglês ou espanhol) e o `npm run canal` grava em `.postai-idioma`. Escreva **tudo** nesse idioma: as falas, o título, a capa, os capítulos, o texto na tela, o cartão do fim e o post (título, legenda e hashtags). Ponha `"idioma": "pt" | "en" | "es"` no roteiro. A voz, a legenda e o botão do fim saem nele sozinhos (o `npm run narrar` usa o idioma). Em inglês e em espanhol, escreva os números como se fala na língua (a voz lê os algarismos) e nada de português no vídeo. Todas as vozes do catálogo falam as três línguas: nunca pare o vídeo por causa do idioma ou da voz.
 
+## Quem conta a história (escolha do dono; vale para todos os estilos, 2D e 3D)
+
+O `canal-postai.md` diz **QUEM CONTA** a história:
+- **NARRADOR:** um narrador que não aparece conta a história, e os personagens **fazem a cena** enquanto ele fala. As falas do narrador vão **sem `quem`**; ponha `"voz"` no topo do roteiro com a voz do narrador que o canal diz. Em toda cena, os `estados` mostram o que o narrador está contando (ele diz "ela chorou": expressão triste e a pose de quem chora; "ele correu": no 3D, `ate` para ele andar; "ele olhou o céu": pose pensando ou explicando apontando). Personagem só fala (com `quem`) numa frase curta no momento forte, no máximo 2 vezes no vídeo (ex.: "Onde estás?"). No 2D, os personagens ficam com a boca fechada enquanto o narrador fala: as reações (pose e expressão) contam a história.
+- **PERSONAGENS:** os próprios personagens contam e conversam: toda fala tem `quem`. No 3D, o narrador só abre ou fecha, no máximo em 1 cena.
+Sem a linha QUEM CONTA, siga o jeito do estilo: o Conversa (2D) com personagens, o Mundo 3D com narrador.
+
 ## Roteiro
 
 - **Título:** até 50 caracteres, para caber em 2 linhas. Na série, use `"parte": "PARTE N"`; fora da série, não use `parte`.
