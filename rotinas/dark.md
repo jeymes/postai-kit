@@ -31,3 +31,5 @@ O DONO VÊ A EQUIPE AO VIVO: antes de passar trabalho a uma agente, rode `source
 Não faça commit nem push: o registro fica no Postaí. Se uma etapa falhar e não se resolver em uns 20 minutos, não mande nada para aprovação (a narração e o render em segundo plano não contam: enquanto o npm run esperar não disser FALHOU, é só esperar), rode npm run andamento -- coordenadora erro "<o problema em palavras simples>" e termine explicando. Ninguém muda código do kit (src/, ferramentas/). A chave POSTAI_CHAVE nunca é impressa nem escrita em arquivo.
 
 Resposta final curta, em português do Brasil: título, tipo de vídeo, duração, quantas imagens e o resultado do envio.
+
+IDIOMA: todas as vozes do kit falam português, inglês e espanhol (voz nativa de cada língua). Nunca pare um vídeo dizendo que o kit não tem voz no idioma do canal; avisos de pronúncia em inglês ou espanhol são só diferenças do Whisper.

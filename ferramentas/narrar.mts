@@ -153,4 +153,6 @@ console.log(`\nPronto: ${total.toFixed(1)} s de fala, gravados em ${caminho}.`);
 if (avisos.length) {
   console.log("\nConfira (pode ser pronúncia errada). Se for, ajuste em \"pronuncia\" e narre de novo:");
   console.log(avisos.join("\n"));
+  if (idioma !== "pt")
+    console.log(`\nA voz fala ${{ en: "inglês", es: "espanhol" }[idioma]} de verdade (voz nativa da língua): estes avisos são só diferenças do que o Whisper escreveu (nome próprio, número, sigla). Nunca pare o vídeo por eles; corrija só a palavra que estiver errada.`);
 } else console.log("A conferência não achou diferença entre o roteiro e o que a voz disse.");

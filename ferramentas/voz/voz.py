@@ -4,8 +4,8 @@
 # Entrada: um JSON com {"voz", "velocidade", "idioma"?, "falas": [{"texto", "saida", "voz"?}]}.
 # "idioma": pt (padrão), en ou es: a língua que a voz fala e que o Whisper escuta.
 # A voz pode ser uma só ("pf_dora") ou a mistura de várias, com o peso de cada
-# uma ("pf_dora*0.6+if_sara*0.4"): dá timbres diferentes, sempre falando
-# português. Uma fala com "voz" própria usa a dela (um personagem por voz).
+# uma ("pf_dora*0.6+if_sara*0.4"): dá timbres diferentes, falando no idioma
+# pedido. Uma fala com "voz" própria usa a dela (um personagem por voz).
 # Para cada fala, o Kokoro (Apache 2.0) gera o áudio em "saida" e o
 # faster-whisper (MIT) escuta de volta, palavra por palavra, com o tempo de
 # cada uma. Saída (stdout): [{"duracao", "palavras": [{"palavra", "inicio", "fim"}]}].

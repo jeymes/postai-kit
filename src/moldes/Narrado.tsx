@@ -16,7 +16,7 @@ import { Legendas } from "../componentes/texto/Legendas";
 import { Texto } from "../componentes/texto/Texto";
 import { duracaoDoMolde, quadrosDaFala, TEMPOS } from "./tempos";
 
-// Vídeo 9:16 com narração: uma voz em português lê a "fala" de cada cena, com
+// Vídeo 9:16 com narração: uma voz (no idioma do canal: português, inglês ou espanhol) lê a "fala" de cada cena, com
 // legenda animada palavra por palavra e, se quiser, o mascote falando junto.
 // Cada cena mostra um título, uma foto, o site no celular ou uma animação, e
 // dura o tempo da fala. A voz é gerada no computador com `npm run narrar`

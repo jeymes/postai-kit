@@ -66,7 +66,7 @@ fotos, músicas, moldes próprios e o que você instalou (voz, avatar) ficam com
 | AntesDepois | vídeo, ~11 s | transformação: a cortina revela o depois |
 | Depoimento | vídeo, 1 a 3 falas | o que clientes disseram, com estrelas (só depoimento real) |
 | Trend | vídeo, 3 a 14 cortes | cortes na batida da música, com zoom e clarão |
-| Narrado | vídeo, 1 a 12 cenas | voz em português, legenda animada, mascote ou você falando |
+| Narrado | vídeo, 1 a 12 cenas | voz em português, inglês ou espanhol, legenda animada, mascote ou você falando |
 | Vitrine3D | vídeo, 1 a 5 produtos | título em letras 3D e produtos em cartões 3D girando |
 | Carrossel | fotos 4:5, 2 a 10 | capa, itens com foto e preço, e final |
 | Capa | imagem 9:16 | capa do vídeo, feita junto com ele |
@@ -88,7 +88,7 @@ minutos e diz o que roda bem e quanto tempo leva cada vídeo.
 
 ## Narração com voz
 
-Uma voz em português lê o roteiro, com legenda palavra por palavra e, se quiser, um mascote na cor
+Uma voz (português, inglês ou espanhol, o idioma do canal) lê o roteiro, com legenda palavra por palavra e, se quiser, um mascote na cor
 da marca falando junto. A voz é gerada no seu computador, sem custo por vídeo.
 
 > instala a narração do kit, com o mascote, e faz um vídeo narrado de 20 segundos explicando como

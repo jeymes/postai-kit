@@ -35,8 +35,18 @@ export function porExtenso(n: number, feminino = false): string {
   return feminino ? texto.replace(/\bum$/, "uma").replace(/\bdois$/, "duas") : texto;
 }
 
+// Os números em inglês e em espanhol: o Whisper devolve em algarismo ("three
+// hundred" volta "300"), e sem estas palavras cada número virava aviso de
+// pronúncia (em 21/11/2026 a agente leu dezenas desses avisos num roteiro de
+// carros em inglês e parou o vídeo achando que a voz não falava inglês).
+const NUMEROS_EM_INGLES = "zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty thirty forty fifty sixty seventy eighty ninety hundred hundreds thousand thousands million millions billion billions and percent dollar dollars cent cents first second third fourth fifth sixth seventh eighth ninth tenth".split(" ");
+const NUMEROS_EM_ESPANHOL = "cero uno una dos tres cuatro cinco seis siete ocho nueve diez once doce trece catorce quince dieciséis diecisiete dieciocho diecinueve veinte veintiuno veintidós veintitrés veinticuatro veinticinco veintiséis veintisiete veintiocho veintinueve treinta cuarenta cincuenta sesenta setenta ochenta noventa cien ciento doscientos trescientos cuatrocientos quinientos seiscientos setecientos ochocientos novecientos mil millón millones y dólares dólar centavos".split(" ");
+
 const PALAVRAS_DE_NUMERO = new Set(
-  [...UNIDADES, ...DEZENAS, ...CENTENAS, "cem", "mil", "e", "reais", "real", "centavos", "centavo", "uma", "duas", "hora", "horas", "por", "cento"]
+  [
+    ...UNIDADES, ...DEZENAS, ...CENTENAS, "cem", "mil", "e", "reais", "real", "centavos", "centavo", "uma", "duas", "hora", "horas", "por", "cento",
+    ...NUMEROS_EM_INGLES, ...NUMEROS_EM_ESPANHOL,
+  ]
     .filter(Boolean)
     .map((p) => normalizar(p)),
 );
