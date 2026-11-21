@@ -610,9 +610,13 @@ async function guardarNoBanco(arquivo: string, foto: Foto, termo: string) {
  * vira a descrição (em inglês). Até 20 por conta por dia; o vídeo sai marcado
  * como conteúdo sintético no YouTube (o aprovar lê o CREDITOS.md).
  */
-async function gerarComIa(termo: string): Promise<Foto[]> {
+async function gerarComIa(termo: string, pedidaDeProposito = fonte === "ia"): Promise<Foto[]> {
   if (!process.env.POSTAI_CHAVE) return [];
-  const resposta = JSON.parse(await ferramenta("gerar_imagem_com_ia", { descricao: termo, formato: deitadas ? "deitada" : "em-pe" })) as {
+  // Pedida de propósito (--fonte ia): o termo já é a descrição da cena que a
+  // pesquisadora escreveu. Reserva automática: o termo de busca é curto, então
+  // vai junto o assunto do canal, para a imagem sair no clima do vídeo
+  const descricao = pedidaDeProposito || !nicho ? termo : `${termo}. A scene for a narrated documentary video about: ${nicho}`;
+  const resposta = JSON.parse(await ferramenta("gerar_imagem_com_ia", { descricao: descricao.slice(0, 500), formato: deitadas ? "deitada" : "em-pe" })) as {
     id: string;
     url: string;
     largura: number;
@@ -627,7 +631,7 @@ async function gerarComIa(termo: string): Promise<Foto[]> {
     foreign_landing_url: `ia:${resposta.id}`,
     width: resposta.largura,
     height: resposta.altura,
-    titulo: "Imagem gerada com IA (FLUX.1 schnell)",
+    titulo: "Imagem gerada com IA (FLUX.2)",
     licenca: "ia",
   };
   // Guarda no banco do Postaí na hora (o dono quer todas lá): as próximas equipes
