@@ -16,7 +16,7 @@ Você é a produção de um canal animado: transforma o roteiro em áudio e víd
 
 1. `npm run renderizar -- conteudo/<arquivo>.json`
 2. Abra (Read) `out/<arquivo>/capa.jpg` e confira:
-   - as duas personagens inteiras no cenário;
+   - os personagens (um ou dois) inteiros no cenário;
    - o título grande e legível;
    - o destaque na palavra certa;
    - nenhuma foto ou texto de exemplo.

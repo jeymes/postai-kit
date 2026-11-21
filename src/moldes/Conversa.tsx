@@ -72,7 +72,8 @@ const ELENCO_PADRAO: PersonagemDaCena[] = [
   { id: "noiva", nome: ELENCO.noiva.nome, visual: ELENCO.noiva.visual as Visual },
   { id: "organizadora", nome: ELENCO.organizadora.nome, visual: ELENCO.organizadora.visual as Visual },
 ];
-const elencoDa = (props: { elenco?: PersonagemDaCena[] }) => (props.elenco?.length === 2 ? props.elenco : ELENCO_PADRAO);
+const elencoDa = (props: { elenco?: PersonagemDaCena[] }) =>
+  props.elenco?.length === 1 || props.elenco?.length === 2 ? props.elenco : ELENCO_PADRAO;
 
 const narracaoSchema = z
   .object({
@@ -86,7 +87,12 @@ const narracaoSchema = z
 
 export const conversaSchema = z.object({
   estilo: estiloSchema.optional(),
-  elenco: z.array(personagemSchema).length(2).optional().describe("As 2 personagens do episódio, do elenco do canal (sem isso: a Bia e a Lu)"),
+  elenco: z
+    .array(personagemSchema)
+    .min(1)
+    .max(2)
+    .optional()
+    .describe("Os personagens do episódio, do elenco do canal: 2 (conversa) ou 1 (sozinho, no meio da tela). Sem isso: a Bia e a Lu"),
   titulo: z.string().describe('Cartão do topo, ex.: "POV: ..."'),
   parte: z.string().optional().describe('Selo da parte (no vídeo, embaixo do título; na capa, em cima), ex.: "PARTE 1"'),
   cartaoFinal: z
@@ -389,24 +395,29 @@ const Cartao: React.FC<{ cartao: NonNullable<ConversaProps["cartao"]>; entra: nu
   );
 };
 
-// Onde fica a mão com o celular e o rosto de quem está no lugar 0 ou 1 (na tela
+// Onde fica a mão com o celular e o rosto de quem está num lugar (na tela
 // 1080x1920), em pé ou sentado: a luz do aviso, o feixe da tela e a criatura
 // que sai do celular partem daqui
-const maoDe = (indice: number, sentado: boolean) => ({ x: indice === 0 ? 261 : 819, y: sentado ? 1289 : 1190 });
-const rostoDe = (indice: number, sentado: boolean) => ({ x: indice === 0 ? 320 : 760, y: sentado ? 1098 : 999 });
+type Lugar = { left: number; espelhar: boolean; origem: string; semente: number };
+const maoDe = (lugar: Lugar, sentado: boolean) => ({ x: lugar.left + (lugar.espelhar ? 329 : 211), y: sentado ? 1289 : 1190 });
+const rostoDe = (lugar: Lugar, sentado: boolean) => ({ x: lugar.left + 270, y: sentado ? 1098 : 999 });
 const comCelular = (pose?: string) => pose === "celular" || pose === "sentado";
 
 // A primeira do elenco fica à esquerda; a segunda, à direita, virada para ela
-const LUGAR = [
+const LUGAR: Lugar[] = [
   { left: 50, espelhar: false, origem: "320px 1150px", semente: 0 },
   { left: 490, espelhar: true, origem: "760px 1150px", semente: 3 },
-] as const;
+];
+// Um personagem sozinho fica no meio da tela, de frente
+const SOZINHO: Lugar[] = [{ left: 270, espelhar: false, origem: "540px 1150px", semente: 0 }];
+const lugaresDo = (elenco: PersonagemDaCena[]) => (elenco.length === 1 ? SOZINHO : LUGAR);
 
 export const Conversa: React.FC<ConversaProps> = (props) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const linha = linhaDoTempo(props.cenas);
   const elenco = elencoDa(props);
+  const lugares = lugaresDo(elenco);
   const naCena = (i: number) => linha[Math.min(Math.max(i, 0), linha.length - 1)].inicio;
   const fimDaCena = (i: number) => (i >= linha.length ? linha[linha.length - 1].inicio + 60 : naCena(i));
 
@@ -418,7 +429,7 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
     const afasta = spring({ frame: frame - fimDaCena(props.zoom.ate + 1) + 8, fps, config: { damping: 18 } });
     zoom = 1 + 0.14 * (aproxima - afasta);
     const indice = Math.max(0, elenco.findIndex((p) => p.id === props.zoom?.em));
-    origem = LUGAR[indice].origem;
+    origem = lugares[indice].origem;
   }
 
   const legendas = linha.flatMap((l) => l.legendas);
@@ -468,7 +479,7 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
           <estilo.Fundo fundo={fundo} Cenario={Cenario} cenario={lugarAgora.nome} />
           {elenco.map(({ id: quem, visual, desenho, tipo, objeto }, indice) => {
             const minhas = linha.filter((l) => l.cena.quem === quem);
-            const lugar = LUGAR[indice];
+            const lugar = lugares[indice];
             if (tipo === "criatura") {
               // A Sombra sai do objeto pouco antes da primeira vez que aparece
               const primeira = linha.find((l) => l.cena.quem === quem || estadoNaCena(l.cena, quem));
@@ -477,7 +488,7 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
               const quemSegura = primeira ? elenco.findIndex((p) => p.tipo !== "criatura" && comCelular(estadoNaCena(primeira.cena, p.id)?.pose)) : -1;
               const pontoNaTela =
                 quemSegura >= 0
-                  ? maoDe(quemSegura, estadoNaCena(primeira!.cena, elenco[quemSegura].id)?.pose === "sentado")
+                  ? maoDe(lugares[quemSegura], estadoNaCena(primeira!.cena, elenco[quemSegura].id)?.pose === "sentado")
                   : resolverCenario(cenarioNaFala(primeira ? linha.indexOf(primeira) : 0), props.cenariosProprios as CenarioProprio[] | undefined).origem;
               const xNoDesenho = pontoNaTela ? (pontoNaTela.x - lugar.left) / 0.9 - 100 : 0;
               const de = pontoNaTela
@@ -534,8 +545,8 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
                 const pose = estadoNaCena(linha[k].cena, p.id)?.pose ?? momentosDe(p.id, linha).filter((m) => m.em <= frame).pop()?.pose;
                 if (p.tipo === "criatura" || !comCelular(pose)) return null;
                 const sentado = pose === "sentado";
-                const m = maoDe(indice, sentado);
-                const r = rostoDe(indice, sentado);
+                const m = maoDe(lugares[indice], sentado);
+                const r = rostoDe(lugares[indice], sentado);
                 return (
                   <svg key={`feixe-${p.id}`} viewBox="0 0 1080 1920" width={1080} height={1920} style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
                     <defs>
@@ -558,7 +569,7 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
             elenco.findIndex((p) => ["celular", "sentado"].includes(estadoNaCena(cena, p.id)?.pose ?? "")),
           );
           const sentado = estadoNaCena(cena, elenco[indice].id)?.pose === "sentado";
-          const mao = maoDe(indice, sentado);
+          const mao = maoDe(lugares[indice], sentado);
           // Apaga quando a próxima fala começa
           return <LuzDoAviso key={`luz-${i}`} em={inicio} ate={linha[i + 1]?.inicio ?? fimDasFalas} x={mao.x} y={mao.y} />;
         })}
@@ -698,6 +709,7 @@ export const CapaConversa: React.FC<CapaDaConversa> = (props) => {
   const CamadaDaFrente = estilo.Frente ?? estilo.Camada;
   const titulo = props.capa?.titulo ?? props.titulo ?? "";
   const elenco = elencoDa(props);
+  const lugares = lugaresDo(elenco);
   // A pose da capa: em capa.estados (como nas cenas) ou direto em capa.<id>;
   // o que faltar vem da primeira fala em que a pessoa aparece
   const estadoDe = (quem: string): Estado => {
@@ -724,10 +736,10 @@ export const CapaConversa: React.FC<CapaDaConversa> = (props) => {
             momentos={[{ em: 0, ...estadoDe(id) }]}
             palavras={[]}
             altura={960}
-            espelhar={LUGAR[indice].espelhar}
-            semente={LUGAR[indice].semente}
+            espelhar={lugares[indice].espelhar}
+            semente={lugares[indice].semente}
             objeto={objeto}
-            style={{ position: "absolute", left: LUGAR[indice].left - 20, top: 700 }}
+            style={{ position: "absolute", left: lugares[indice].left - 20, top: 700 }}
           />
         ) : (
         <estilo.Personagem
@@ -738,9 +750,9 @@ export const CapaConversa: React.FC<CapaDaConversa> = (props) => {
           momentos={[{ em: 0, ...estadoDe(id) }]}
           palavras={[]}
           altura={960}
-          espelhar={LUGAR[indice].espelhar}
-          semente={LUGAR[indice].semente}
-          style={{ position: "absolute", left: LUGAR[indice].left - 20, top: 700 }}
+          espelhar={lugares[indice].espelhar}
+          semente={lugares[indice].semente}
+          style={{ position: "absolute", left: lugares[indice].left - 20, top: 700 }}
         />
         ),
       )}

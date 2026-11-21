@@ -1,9 +1,10 @@
-// Põe no roteiro de um episódio os 2 personagens que vão aparecer, copiados do
+// Põe no roteiro de um episódio os personagens que vão aparecer (2 numa
+// conversa, ou 1 sozinho, no meio da tela), copiados do
 // elenco do canal (canais/<canal>/elenco.json, gravado pelo npm run canal),
 // com o desenho próprio de cada um. A roteirista escolhe os ids; o desenho não
 // passa pela mão dela.
 //
-// Uso: npm run elenco -- conteudo/<arquivo>.json <id-da-esquerda> <id-da-direita> [--canal canais/<canal>]
+// Uso: npm run elenco -- conteudo/<arquivo>.json <id-da-esquerda> [<id-da-direita>] [--canal canais/<canal>]
 // No Mundo 3D (molde Mundo3D), sem ids: npm run elenco -- conteudo/<arquivo>.json --canal canais/<canal>
 // põe as cores (visual) e a voz de cada personagem do roteiro que está no elenco.
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
@@ -19,8 +20,8 @@ const [caminho, ...ids] = soltos;
 
 const peca3d = caminho && existsSync(caminho) ? JSON.parse(readFileSync(caminho, "utf8")) : null;
 const ehMundo3D = peca3d?.molde === "Mundo3D";
-if (!caminho || (!ehMundo3D && ids.length !== 2)) {
-  console.error("Uso: npm run elenco -- conteudo/<arquivo>.json <id> <id> [--canal canais/<canal>]");
+if (!caminho || (!ehMundo3D && (ids.length < 1 || ids.length > 2))) {
+  console.error("Uso: npm run elenco -- conteudo/<arquivo>.json <id> [<id>] [--canal canais/<canal>] (1 personagem sozinho ou 2 numa conversa)");
   process.exit(1);
 }
 
@@ -87,6 +88,6 @@ const arquivoDeCenarios = join(pastaDoCanal ?? "", "cenarios.json");
 const cenariosFaltando = porCenariosNoRoteiro(peca, existsSync(arquivoDeCenarios) ? JSON.parse(readFileSync(arquivoDeCenarios, "utf8")) : []);
 writeFileSync(caminho, `${JSON.stringify(peca, null, 2)}\n`);
 console.log(
-  `Elenco do episódio: ${escolhidos.map((p) => `${p.nome}${p.desenho ? " (desenho próprio)" : p.tipo === "criatura" ? " (criatura do kit)" : ""}`).join(" e ")}.${peca.estilo ? ` Estilo: ${peca.estilo.modelo}, fundo ${peca.estilo.fundo}.` : ""}`,
+  `Elenco do episódio${escolhidos.length === 1 ? " (sozinho, no meio da tela)" : ""}: ${escolhidos.map((p) => `${p.nome}${p.desenho ? " (desenho próprio)" : p.tipo === "criatura" ? " (criatura do kit)" : ""}`).join(" e ")}.${peca.estilo ? ` Estilo: ${peca.estilo.modelo}, fundo ${peca.estilo.fundo}.` : ""}`,
 );
 if (cenariosFaltando.length) console.log(`Cenários ainda não desenhados: ${cenariosFaltando.join(", ")} (a designer cria; depois npm run cenarios).`);
