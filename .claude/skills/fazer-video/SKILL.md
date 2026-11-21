@@ -5,7 +5,7 @@ description: Roteiro para um vídeo sob medida no Kit Estúdio, quando nenhum mo
 
 # Fazer um vídeo sob medida
 
-Tudo em pt-BR. Vídeo 1080×1920, 30 quadros por segundo, em Remotion. Para um post comum, use a skill
+O vídeo sai no idioma do canal (português, inglês ou espanhol; o canal-postai.md diz qual); as mensagens para o dono, em pt-BR. Vídeo 1080×1920, 30 quadros por segundo, em Remotion. Para um post comum, use a skill
 `criar-post`; esta é para o que os moldes não fazem.
 
 ## 1. Antes de tudo

@@ -30,7 +30,7 @@ Abra (Read) **todos** os quadros, em ordem (os de 1,5 s e os de `out/<arquivo>/q
 - algo cortado, sobreposto ou fora do lugar; rosto coberto por título, cartão, balão ou legenda;
 - **objeto que some ou que não está lá:** quem está na pose celular ou sentado SEM o celular na mão; luz, brilho ou feixe de celular sem o celular (só a luz na mão vazia); um objeto que estava na mão e some de uma cena para a outra sem a história pedir (devolva à diretora-de-arte: a pose certa na cena certa);
 - **corpo errado:** personagem sem pernas, cortado no quadril ou "dentro" do sofá, da cama ou da mesa (atrás do móvel, com as pernas cobertas pela frente dele, está certo); pés afundados ou flutuando; parte do corpo fora da tela (devolva à diretora-de-arte; sentado só funciona no quarto, na sala ou num cenário com frente, e só para quem está à esquerda);
-- texto com erro de português ou palavra faltando (título, balão, cartão do fim, legendas);
+- texto com erro de escrita na língua do canal (português, inglês ou espanhol: a do roteiro) ou palavra faltando (título, balão, cartão do fim, legendas);
 - sobrancelha dobrada (duas linhas em cima do olho; devolva à designer-de-personagens);
 - personagem com braço a mais (4 braços: um par parado e outro mexendo) ou mão sobrando (devolva à designer-de-personagens: o braço desenhado sai do corpo);
 - cenário criado pela equipe feio, irreconhecível ou cobrindo o rosto de alguém (devolva à designer-de-personagens);

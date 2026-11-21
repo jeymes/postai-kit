@@ -5,7 +5,7 @@ description: Vídeo com narração no Kit Estúdio: uma voz lê o roteiro no idi
 
 # Vídeo narrado
 
-Tudo em pt-BR. A voz é gerada no computador do dono, sem custo por vídeo: Kokoro (voz, Apache 2.0),
+A voz fala o idioma do canal (português, inglês ou espanhol, voz nativa de cada língua); as mensagens para o dono, em pt-BR. A voz é gerada no computador do dono, sem custo por vídeo: Kokoro (voz, Apache 2.0),
 faster-whisper (confere a fala e dá o tempo da legenda, MIT) e, para o mascote, o Rhubarb (boca, MIT).
 
 ## 1. Instalar (só na primeira vez)

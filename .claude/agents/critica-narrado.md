@@ -26,7 +26,7 @@ Se um quadro levantar dúvida (texto pequeno, rosto), tire só esse de novo sem 
 
 **Erros (qualquer um reprova):**
 - imagem errada para o que a fala diz (pessoa, lugar ou época errada), anacrônica, com marca d'água ou borda;
-- legenda cobrindo o que importa na imagem, texto cortado ou com erro de português;
+- legenda cobrindo o que importa na imagem, texto cortado ou com erro de escrita na língua do canal (a do roteiro; inglês e espanhol são normais);
 - cartão de capítulo ilegível ou com erro;
 - a mesma imagem em mais de 3 cenas;
 - a capa ilegível pequena (imagine do tamanho de um polegar), com o título cortado ou o destaque na palavra errada;

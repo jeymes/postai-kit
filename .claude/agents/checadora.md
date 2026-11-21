@@ -26,7 +26,7 @@ fatos e o texto.
 3. **Forma:** os erros do `npm run conferir` (já rodado no começo). Confira só o que ele não vê: a `busca` em
    inglês faz sentido para a cena, e a legenda do post tem a linha das imagens em domínio público.
 4. **Gancho e fim:** os primeiros 30 segundos prometem algo; a última cena cumpre a promessa e puxa o próximo vídeo.
-5. **Português:** frases completas, concordância, nada de palavra faltando. Leia como quem vai ouvir.
+5. **Língua do canal** (a do roteiro e do canal-postai.md: português, inglês ou espanhol; nunca peça para traduzir para o português): frases completas, concordância, nada de palavra faltando. Leia como quem vai ouvir.
 6. **Único:** a abertura e as transições não são as mesmas dos vídeos anteriores.
 
 Responda **APROVADO** ou **CORRIGIR** seguido da lista numerada: a cena, o problema, a correção e, nos fatos, a fonte
