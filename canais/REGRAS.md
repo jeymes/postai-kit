@@ -4,6 +4,10 @@ Valem para todos os canais. O que é de cada canal (produto, tom, personagens, C
 
 O roteiro é um `conteudo/<data>-<assunto>.json` no molde **Conversa**. O formato está em `conteudo/exemplo-conversa.json` e os campos válidos no `conversaSchema` de `src/moldes/Conversa.tsx`.
 
+## Idioma
+
+O `canal-postai.md` diz o **idioma dos vídeos** (português, inglês ou espanhol) e o `npm run canal` grava em `.postai-idioma`. Escreva **tudo** nesse idioma: as falas, o título, a capa, os capítulos, o texto na tela, o cartão do fim e o post (título, legenda e hashtags). Ponha `"idioma": "pt" | "en" | "es"` no roteiro. A voz, a legenda e o botão do fim saem nele sozinhos (o `npm run narrar` usa o idioma). Em inglês e em espanhol, escreva os números como se fala na língua (a voz lê os algarismos) e nada de português no vídeo.
+
 ## Roteiro
 
 - **Título:** até 50 caracteres, para caber em 2 linhas. Na série, use `"parte": "PARTE N"`; fora da série, não use `parte`.

@@ -50,3 +50,23 @@ export const VOZES_DO_ELENCO: Record<string, Voz> = {
   noiva: VOZES["feminina-1"],
   organizadora: VOZES["feminina-2"],
 };
+
+// ---- Outras línguas ----
+// Cada voz do catálogo é uma voz-base do português (pf_dora, pm_alex,
+// pm_santa), às vezes misturada com outra para dar o timbre. Em inglês e em
+// espanhol, a voz-base troca pela da língua e a mistura fica: o mesmo catálogo
+// serve às três línguas (o narrar.mts manda o idioma para a voz falar nele).
+export type IdiomaDaVoz = "pt" | "en" | "es";
+export const IDIOMAS_DA_VOZ: IdiomaDaVoz[] = ["pt", "en", "es"];
+
+const BASE_NO_IDIOMA: Record<Exclude<IdiomaDaVoz, "pt">, Record<string, string>> = {
+  en: { pf_dora: "af_heart", pm_alex: "am_michael", pm_santa: "am_onyx" },
+  es: { pf_dora: "ef_dora", pm_alex: "em_alex", pm_santa: "em_santa" },
+};
+
+/** A voz (um nome do Kokoro ou uma mistura "a*0.5+b*0.5") falando no idioma pedido. */
+export function vozNoIdioma(voz: string, idioma: IdiomaDaVoz = "pt"): string {
+  if (idioma === "pt") return voz;
+  const trocas = BASE_NO_IDIOMA[idioma];
+  return voz.replace(/\b(pf_dora|pm_alex|pm_santa)\b/g, (base) => trocas[base] ?? base);
+}

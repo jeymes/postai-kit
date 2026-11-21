@@ -16,7 +16,7 @@ import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
 import { alinhar, falar, type Ouvida } from "./voz/texto.ts";
 import { PYTHON, RHUBARB } from "./voz/caminhos.ts";
-import { VOZES, VOZES_DO_ELENCO, type Voz } from "../src/componentes/personagens/vozes.ts";
+import { IDIOMAS_DA_VOZ, VOZES, VOZES_DO_ELENCO, vozNoIdioma, type IdiomaDaVoz, type Voz } from "../src/componentes/personagens/vozes.ts";
 
 const args = process.argv.slice(2);
 const caminho = args.find((arg) => !arg.startsWith("--"));
@@ -39,9 +39,13 @@ if (!cenas.some((cena) => cena.fala)) {
 }
 
 const nome = basename(caminho, ".json");
+// O idioma: o do roteiro ou o do canal (o npm run canal grava em .postai-idioma);
+// sem nenhum, português. A voz fala nele e o Whisper escuta nele.
+const doCanal = existsSync(".postai-idioma") ? readFileSync(".postai-idioma", "utf8").trim() : "";
+const idioma: IdiomaDaVoz = IDIOMAS_DA_VOZ.includes(peca.idioma) ? peca.idioma : IDIOMAS_DA_VOZ.includes(doCanal as IdiomaDaVoz) ? (doCanal as IdiomaDaVoz) : "pt";
 // O narrador ("voz" no topo) aceita o id do catálogo ("masculina-4") ou o nome do Kokoro
 const doCatalogo: Voz | undefined = peca.voz ? VOZES[peca.voz as string] : undefined;
-const voz: string = doCatalogo?.voz ?? peca.voz ?? "pf_dora";
+const voz: string = vozNoIdioma(doCatalogo?.voz ?? peca.voz ?? "pf_dora", idioma);
 const velocidade: number = peca.velocidade ?? doCatalogo?.velocidade ?? 1;
 const pronuncia: Record<string, string> = peca.pronuncia ?? {};
 const comMascote = peca.mascote === true || peca.molde === "Conversa";
@@ -53,7 +57,7 @@ const doElenco: Record<string, Voz> = Object.fromEntries(
     .map((p) => [p.id, VOZES[p.voz as string] ?? { voz: p.voz as string }]),
 );
 const vozes: Record<string, Voz> = { ...VOZES_DO_ELENCO, ...doElenco, ...(peca.vozes ?? {}) };
-const vozDa = (cena: Cena) => (cena.quem && vozes[cena.quem]?.voz) || voz;
+const vozDa = (cena: Cena) => (cena.quem && vozes[cena.quem]?.voz ? vozNoIdioma(vozes[cena.quem].voz, idioma) : voz);
 const velocidadeDa = (cena: Cena) => (cena.quem && vozes[cena.quem]?.velocidade) || velocidade;
 if (comMascote && !existsSync(RHUBARB))
   console.log("O Rhubarb não está instalado: o mascote mexe a boca pelo tempo das palavras. Para a boca exata: npm run voz:instalar -- --mascote");
@@ -61,7 +65,7 @@ if (comMascote && !existsSync(RHUBARB))
 const pendentes = cenas
   .map((cena, indice) => {
     if (!cena.fala) return null;
-    const roteiro = falar(cena.fala, pronuncia);
+    const roteiro = falar(cena.fala, pronuncia, idioma);
     const textoDaVoz = roteiro.map((p) => p.falado).join(" ");
     const chave = JSON.stringify([textoDaVoz, vozDa(cena), velocidadeDa(cena), comMascote && existsSync(RHUBARB)]);
     const audio = `narracao/${nome}/cena-${String(indice + 1).padStart(2, "0")}.wav`;
@@ -75,7 +79,7 @@ if (pendentes.length === 0) {
   process.exit(0);
 }
 
-console.log(`Narrando ${pendentes.length} cena(s) com a voz ${[...new Set(pendentes.map((p) => p.voz))].join(", ")}...`);
+console.log(`Narrando ${pendentes.length} cena(s) em ${{ pt: "português", en: "inglês", es: "espanhol" }[idioma]} com a voz ${[...new Set(pendentes.map((p) => p.voz))].join(", ")}...`);
 const temporaria = mkdtempSync(join(tmpdir(), "narrar-"));
 const pedido = join(temporaria, "pedido.json");
 writeFileSync(
@@ -83,6 +87,7 @@ writeFileSync(
   JSON.stringify({
     voz,
     velocidade,
+    idioma,
     falas: pendentes.map((p) => ({ texto: p.textoDaVoz, saida: join(process.cwd(), "public", p.audio), voz: p.voz, velocidade: p.velocidade })),
   }),
 );
@@ -139,6 +144,8 @@ cenas.forEach((cena, i) => {
   }
   cenasAtuais[i].narracao = cena.narracao;
 });
+// O vídeo usa o idioma nos textos fixos (o botão do fim, o "Inscreva-se")
+atual.idioma = idioma;
 writeFileSync(caminho, `${JSON.stringify(atual, null, 2)}\n`);
 if (mudaram.length) console.log(`\nAtenção: a fala das cenas ${mudaram.join(", ")} mudou enquanto a narração rodava. Rode o narrar de novo.`);
 const total = cenasAtuais.reduce((soma, c) => soma + Number(c.narracao?.duracaoSeg ?? 0), 0);

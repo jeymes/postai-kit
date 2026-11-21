@@ -7,6 +7,10 @@ O `canal-postai.md` diz **ESTILO: NARRADO**. O vídeo é longo (8 a 15 minutos),
 com capítulos, legenda e um cartão no fim. O formato está no `documentarioSchema` de `src/moldes/Documentario.tsx`
 e um exemplo em `conteudo/exemplo-documentario.json`.
 
+## Idioma
+
+O `canal-postai.md` diz o **idioma dos vídeos** (português, inglês ou espanhol) e o `npm run canal` grava em `.postai-idioma`. Escreva **tudo** nesse idioma: as falas, o título, a capa, os capítulos, o texto na tela, o cartão do fim e o post (título, legenda e hashtags). Ponha `"idioma": "pt" | "en" | "es"` no roteiro. A voz, a legenda e o botão do fim saem nele sozinhos (o `npm run narrar` usa o idioma). Em inglês e em espanhol, escreva os números como se fala na língua (a voz lê os algarismos) e nada de português no vídeo.
+
 ## Por que tanto cuidado
 
 O YouTube não monetiza conteúdo "produzido em massa, genérico ou repetitivo", nem vídeo de IA "feito com modelos

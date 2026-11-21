@@ -1,4 +1,5 @@
 import { Audio } from "@remotion/media";
+import { textosDoIdioma } from "../nucleo/textosFixos";
 import React from "react";
 import { AbsoluteFill, interpolate, OffthreadVideo, Sequence, spring, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 import { z } from "zod";
@@ -185,6 +186,7 @@ export const conversaSchema = z.object({
     .optional()
     .describe("Personagens que só este episódio precisa: a designer desenha em canais/<canal>/convidados/<id>.json"),
   ctaInicial: z.string().max(60).optional().describe('Balão curto (até 28 caracteres, uma linha) embaixo do título nos primeiros segundos, ex.: "Marca quem é assim 😂"'),
+  idioma: z.enum(["pt", "en", "es"]).optional().describe("O idioma do vídeo (o narrar grava): o botão do fim sai nele"),
   ctaFinal: z.string().max(80).optional().describe('Frase completa no cartão do fim, sem @ e sem "link na bio" (isso vai no botão), ex.: "Organize o seu casamento no Laços"'),
   botaoFinal: z.string().max(24).optional().describe('Texto do botão do cartão do fim, ex.: "Link na bio 👆", "Baixe grátis 👆". Padrão: "Link na bio 👆"'),
   final: z
@@ -626,7 +628,7 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
             <FraseNaLuz
               frase={props.final.frase}
               linha={props.final.linha}
-              botao={props.final.botao ?? props.botaoFinal}
+              botao={props.final.botao ?? props.botaoFinal ?? textosDoIdioma(props.idioma).linkNaBio}
               figura={(() => {
                 // A pessoa do episódio, pequena, de pé embaixo do feixe de luz
                 const pessoa = elenco.find((p) => p.tipo !== "criatura");
@@ -644,7 +646,7 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
         )}
         {props.ctaFinal && (
           <Sequence from={inicioDoCta} layout="none" name="CTA final">
-            <CartaoDeChamada chamada={props.ctaFinal} botao={props.botaoFinal} />
+            <CartaoDeChamada chamada={props.ctaFinal} botao={props.botaoFinal ?? textosDoIdioma(props.idioma).linkNaBio} />
             <Som tipo="sucesso" em={2} />
           </Sequence>
         )}

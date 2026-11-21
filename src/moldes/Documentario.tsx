@@ -1,4 +1,5 @@
 import { Audio, Video } from "@remotion/media";
+import { textosDoIdioma } from "../nucleo/textosFixos";
 import React from "react";
 import { AbsoluteFill, Easing, Img, interpolate, Loop, Sequence, Series, staticFile, useCurrentFrame } from "remotion";
 import { z } from "zod";
@@ -77,6 +78,7 @@ export const documentarioSchema = z.object({
   /** Frase do cartão final (ex.: "Inscreva-se para a parte 2"). Sem ela, o vídeo termina na última cena. */
   encerramento: z.string().optional(),
   estilo: estiloDoNarradoSchema,
+  idioma: z.enum(["pt", "en", "es"]).optional().describe("O idioma do vídeo (o narrar grava): o botão do fim sai nele"),
 });
 
 export type Documentario = z.infer<typeof documentarioSchema>;
@@ -312,7 +314,7 @@ const CenaDoDocumentario: React.FC<{ cena: Cena; indice: number; props: Document
   );
 };
 
-const Encerramento: React.FC<{ texto: string; ap: Aparencia; foto?: string }> = ({ texto, ap, foto }) => {
+const Encerramento: React.FC<{ texto: string; ap: Aparencia; foto?: string; idioma?: string }> = ({ texto, ap, foto, idioma }) => {
   const frame = useCurrentFrame();
   const entrada = interpolate(frame, [0, 20], [0, 1], { extrapolateRight: "clamp", easing: suave });
   return (
@@ -343,7 +345,7 @@ const Encerramento: React.FC<{ texto: string; ap: Aparencia; foto?: string }> = 
           scale: String(0.9 + 0.1 * entrada),
         }}
       >
-        Inscreva-se
+        {textosDoIdioma(idioma).inscrevase}
       </div>
     </AbsoluteFill>
   );
@@ -362,7 +364,7 @@ export const Documentario: React.FC<Documentario> = (props) => {
         ))}
         {props.encerramento && (
           <Series.Sequence durationInFrames={QUADROS_DO_ENCERRAMENTO}>
-            <Encerramento texto={props.encerramento} ap={ap} foto={[...props.cenas].reverse().find((c) => c.foto)?.foto} />
+            <Encerramento texto={props.encerramento} ap={ap} idioma={props.idioma} foto={[...props.cenas].reverse().find((c) => c.foto)?.foto} />
           </Series.Sequence>
         )}
       </Series>

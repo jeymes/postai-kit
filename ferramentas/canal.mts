@@ -86,6 +86,8 @@ try {
   try {
     const dark = pasta.replace(/\/+$/, "").endsWith("dark");
     const elenco = JSON.parse(await ferramenta("ver_elenco", dark ? { canal: "dark" } : {})) as {
+      // O idioma dos vídeos do canal (pt, en ou es): o narrar fala nele
+      idioma?: string;
       personagens: unknown[];
       estiloVisual?: { modelo: string; fundo: string };
       cenarios?: unknown[];
@@ -98,6 +100,10 @@ try {
       writeFileSync(join(pasta, "estilo-narrado.json"), `${JSON.stringify(limpo, null, 2)}\n`);
       console.log(`Estilo visual do Canal dark: ${limpo.modelo ?? "classico"}${limpo.letra ? `, letra ${limpo.letra}` : ""}${limpo.cor ? `, cor ${limpo.cor}` : ""}.`);
     }
+    // O idioma do canal: o narrar.mts lê (a voz fala nele e o Whisper escuta nele)
+    const idioma = ["pt", "en", "es"].includes(elenco.idioma ?? "") ? (elenco.idioma as string) : "pt";
+    writeFileSync(".postai-idioma", `${idioma}\n`);
+    console.log(`Idioma dos vídeos: ${{ pt: "português", en: "inglês", es: "espanhol" }[idioma]}.`);
     // Os cenários que a equipe já criou para o canal: o npm run cenarios põe no roteiro
     writeFileSync(join(pasta, "cenarios.json"), `${JSON.stringify(elenco.cenarios ?? [], null, 2)}\n`);
     if (elenco.cenarios?.length) console.log(`Cenários criados pela equipe: ${elenco.cenarios.length} em ${join(pasta, "cenarios.json")}.`);
