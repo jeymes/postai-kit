@@ -6,12 +6,14 @@ import * as THREE from "three";
 import { z } from "zod";
 import { SONS, Som, type TipoSom } from "../componentes/audio/Som";
 import { BalaoDeChamada, CartaoDeChamada } from "../componentes/cenas/ChamadaAnimada";
+import { FraseNaLuz } from "../componentes/cenas/FraseNaLuz";
 import type { FormaDaBoca, Momento, Palavra, Visual } from "../componentes/personagens/Boneco";
 import { Palito } from "../componentes/personagens/Palito";
 import { fontes } from "../nucleo/marca";
 import { ACESSORIOS, AMBIENTES, FIGURINOS, PALETAS, trajeDoAmbiente, trajeDoChapeu, visualDeFigurante, type Traje } from "./mundo3d/ambientes";
 import { aplicar, distancia, PLANOS, poseDoPlano, poseNoTempo, projetar, type Plano, type Ponto } from "./mundo3d/camera";
 import { BonecoDePecas } from "./mundo3d/BonecoDePecas";
+import { ObjetoDeCena, OBJETOS } from "./mundo3d/objetos";
 import { Mundo, PONTE, sorteio } from "./mundo3d/Mundo";
 import { duracaoDoMolde, estimarPalavras, FPS, MUNDO3D, quadrosDaCenaDoMundo3D } from "./tempos";
 
@@ -100,6 +102,18 @@ export const mundo3dSchema = z.object({
         destaque: z.array(z.string()).default([]).describe("Palavras que saem em amarelo na legenda"),
         estados: z.record(z.string(), estadoSchema).optional(),
         multidao: estadoSchema.optional(),
+        mudancas: z
+          .array(
+            z.object({
+              em: z.number().min(0).describe("Segundos desde o começo da cena"),
+              quem: z.string().describe('Id do personagem ou "multidao"'),
+              pose: z.enum(POSES),
+              expressao: z.enum(EXPRESSOES),
+            }),
+          )
+          .optional()
+          .describe("Troca a pose e a expressão no meio da cena (nada fica parado mais de 4 s)"),
+        luz: z.boolean().optional().describe("A luz do céu sobre quem está no foco (ex.: Deus falando): um feixe dourado nesta cena"),
         balanco: z.number().min(0).max(1).default(0).describe("O quanto a ponte balança nesta cena"),
         queda: z.string().optional().describe("A palavra em que a ponte cai (com o estalo), ex.: desabou"),
         sons: z
@@ -138,6 +152,35 @@ export const mundo3dSchema = z.object({
     .describe("O mundo da história"),
   ctaFinal: z.string().max(80).optional().describe("Frase do cartão do fim (com o logo da marca), sem @ e sem link na bio"),
   botaoFinal: z.string().max(24).optional().describe('O botão do cartão do fim, ex.: "Siga o canal 👆"'),
+  objetos: z
+    .array(
+      z.object({
+        tipo: z.enum(OBJETOS),
+        onde: z.tuple([z.number(), z.number()]).optional().describe("[x, z] no chão do mundo"),
+        perto: z.string().optional().describe("Id do personagem: o objeto fica ao lado dele (segue quando ele anda)"),
+        lado: z.enum(["esquerda", "direita"]).default("direita"),
+        escala: z.number().min(0.3).max(3).default(1),
+        cenas: z.array(z.number().int().min(1)).optional().describe("Só nestas cenas (1 = a primeira); sem isso, em todas"),
+      }),
+    )
+    .optional()
+    .describe("Objetos e animais da história: ovelha, cordeiro, altar, altar-com-fogo, fogueira, cesto-de-frutos, feixe-de-trigo, cajado, serpente, jarro, arvore-com-frutos, pedra-grande"),
+  final: z
+    .object({
+      frase: z.string().max(180).describe("A frase grande (versículo, citação, lição)"),
+      linha: z.string().max(60).optional().describe("A linha menor embaixo: a referência, o autor"),
+      botao: z.string().max(30).optional(),
+    })
+    .optional()
+    .describe("Frase na luz: cena final escura com feixe de luz e a frase (versículo com a referência), antes do cartão do fim"),
+  capa: z
+    .object({
+      titulo: z.string().optional().describe("O título da capa (sem isso, o do vídeo)"),
+      destaque: z.string().optional().describe("A palavra do título em amarelo"),
+      cena: z.number().int().min(1).optional().describe("De qual cena sai a imagem da capa (1 = a primeira)"),
+      estados: z.record(z.string(), estadoSchema).optional().describe("A pose e a expressão de cada um na capa"),
+    })
+    .optional(),
   semLegenda: z.boolean().default(false).describe("Só para a capa (o renderizar põe): sem a legenda"),
 });
 
@@ -225,7 +268,8 @@ const Tufo: React.FC<{ largura: number }> = ({ largura }) => (
   </svg>
 );
 
-const Legenda: React.FC<{ palavras: PalavraDita[]; destaque: string[] }> = ({ palavras, destaque }) => {
+// No close, o rosto ocupa o meio da tela: a legenda desce para não cobrir a boca e a barba
+const Legenda: React.FC<{ palavras: PalavraDita[]; destaque: string[]; close?: boolean }> = ({ palavras, destaque, close = false }) => {
   const frame = useCurrentFrame();
   const atual = palavras.findIndex((p) => p.inicio <= frame && frame < p.fim + 6);
   if (atual < 0) return null;
@@ -237,7 +281,7 @@ const Legenda: React.FC<{ palavras: PalavraDita[]; destaque: string[] }> = ({ pa
     <div
       style={{
         position: "absolute",
-        top: 1180,
+        top: close ? 1540 : 1180,
         left: 60,
         right: 60,
         textAlign: "center",
@@ -268,10 +312,33 @@ const Legenda: React.FC<{ palavras: PalavraDita[]; destaque: string[] }> = ({ pa
   );
 };
 
-const Titulo: React.FC<{ texto: string; destaque?: string }> = ({ texto, destaque }) => {
+/** O feixe de luz do céu sobre quem está no foco (Deus falando, um milagre) */
+const LuzDoCeu: React.FC<{ x: number; y: number; desde: number }> = ({ x, y, desde }) => {
+  const entra = Math.min(1, Math.max(0, desde / 14));
+  const brilho = 0.85 + Math.sin(desde / 9) * 0.15;
+  const chao = Math.min(1920, Math.max(700, y + 120));
+  return (
+    <svg viewBox="0 0 1080 1920" width={1080} height={1920} style={{ position: "absolute", inset: 0, opacity: entra * brilho, mixBlendMode: "screen" }}>
+      <defs>
+        <linearGradient id="luz-do-ceu" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#FFF6CF" stopOpacity={0.85} />
+          <stop offset="1" stopColor="#FFE58A" stopOpacity={0.12} />
+        </linearGradient>
+        <radialGradient id="luz-no-chao">
+          <stop offset="0" stopColor="#FFF3B0" stopOpacity={0.7} />
+          <stop offset="1" stopColor="#FFF3B0" stopOpacity={0} />
+        </radialGradient>
+      </defs>
+      <polygon points={`${x - 90},0 ${x + 90},0 ${x + 300},${chao} ${x - 300},${chao}`} fill="url(#luz-do-ceu)" />
+      <ellipse cx={x} cy={chao - 40} rx={320} ry={110} fill="url(#luz-no-chao)" />
+    </svg>
+  );
+};
+
+const Titulo: React.FC<{ texto: string; destaque?: string; fixo?: boolean }> = ({ texto, destaque, fixo = false }) => {
   const frame = useCurrentFrame();
-  if (frame > 84) return null;
-  const opacidade = Math.min(1, (84 - frame) / 10);
+  if (frame > 84 && !fixo) return null;
+  const opacidade = fixo ? 1 : Math.min(1, (84 - frame) / 10);
   const marcar = (destaque ?? "").toLowerCase();
   return (
     <div
@@ -311,6 +378,7 @@ export const Mundo3D: React.FC<Mundo3DProps> = (props) => {
   const { width, height } = useVideoConfig();
   const linha = useMemo(() => linhaDoTempo(props.cenas), [props.cenas]);
   const agora = linha.find((t) => frame < t.fim) ?? linha[linha.length - 1];
+  const fimDasCenas = linha[linha.length - 1].fim;
   const cena = agora.cena;
   const camera = useMemo(() => new THREE.PerspectiveCamera(40, width / height, 0.1, 400), [width, height]);
 
@@ -415,21 +483,48 @@ export const Mundo3D: React.FC<Mundo3DProps> = (props) => {
     return { ...trajeDoAmbiente(ambiente, visual, p.semente), ...trajeDoChapeu(p.chapeu), ...(d?.figurino && { figurino: d.figurino }), ...(d?.acessorio && { acessorio: d.acessorio }), ...(d?.pano && { pano: d.pano }) };
   };
 
+  // Na capa, a pose e a expressão da "capa.estados" valem por cima das da cena
+  const naCapa = props.semLegenda;
   const estadoDe = (id: string, ehMultidao: boolean): Momento[] => {
-    const estado = ehMultidao ? cena.multidao : cena.estados?.[id];
+    const daCapa = naCapa && !ehMultidao ? props.capa?.estados?.[id] : undefined;
+    const estado = daCapa ?? (ehMultidao ? cena.multidao : cena.estados?.[id]);
+    const quem = ehMultidao ? "multidao" : id;
     return [
       {
         em: 0,
         pose: estado?.pose ?? "normal",
         expressao: estado?.expressao ?? "neutra",
       },
+      // As trocas no meio da cena (a capa fica na pose escolhida)
+      ...(daCapa ? [] : (cena.mudancas ?? []))
+        .filter((m) => m.quem === quem)
+        .sort((a, b) => a.em - b.em)
+        .map((m) => ({ em: agora.inicio + Math.round(m.em * FPS), pose: m.pose, expressao: m.expressao })),
     ];
   };
+
+  // Os objetos desta cena: num lugar fixo ou ao lado de um personagem
+  const objetosDaCena = (props.objetos ?? [])
+    .filter((o) => !o.cenas || o.cenas.includes(indiceDaCena + 1))
+    .flatMap((o, i) => {
+      const dono = o.perto ? pessoas.find((p) => p.id === o.perto) : undefined;
+      const base: Ponto | null = dono ? pontoDe(dono) : o.onde ? [o.onde[0], 0, o.onde[1]] : null;
+      if (!base) return [];
+      const lado = o.lado === "esquerda" ? -1 : 1;
+      const posicao: [number, number, number] = dono ? [base[0] + lado * 0.75, dono.naPonte ? base[1] : 0, base[2] + 0.25] : base;
+      return [{ ...o, posicao, chave: `${o.tipo}-${i}` }];
+    });
+
+  // A luz do céu: um feixe dourado que desce sobre o foco
+  const focoNaTela = cena.luz ? projetar(camera, foco, width, height) : null;
 
   return (
     <AbsoluteFill style={{ backgroundColor: "#9ED2F6" }}>
       <ThreeCanvas width={width} height={height} camera={camera} gl={{ antialias: true }} style={{ position: "absolute", inset: 0 }}>
         <Mundo balanco={balanco} queda={queda} ponte={temPonte} rio={temRio} tendas={temTendas} ambiente={ambiente} />
+        {objetosDaCena.map((o) => (
+          <ObjetoDeCena key={o.chave} tipo={o.tipo} posicao={o.posicao} escala={o.escala} giro={o.lado === "esquerda" ? Math.PI : 0} />
+        ))}
         {/* Bonecos de peças: todos em 3D, o elenco com as cores dele; a multidão e os figurantes, variados */}
         {pecas && pessoas.map((p) => {
           const visual = "visual" in p && p.visual ? (p.visual as unknown as Visual) : visualDeFigurante(p.semente, p.veste);
@@ -499,7 +594,8 @@ export const Mundo3D: React.FC<Mundo3DProps> = (props) => {
           </div>
         );
       })}
-      {!props.semLegenda && <Legenda palavras={agora.palavras} destaque={cena.destaque} />}
+      {focoNaTela && <LuzDoCeu x={focoNaTela.x} y={focoNaTela.y} desde={frame - agora.inicio} />}
+      {!props.semLegenda && <Legenda palavras={agora.palavras} destaque={cena.destaque} close={cena.plano === "close"} />}
       {/* A voz de cada cena, a música baixinho e os sons do mundo */}
       {linha.map((t, i) => (
         <Sequence key={i} from={t.inicio} durationInFrames={t.fim - t.inicio} layout="none" name={`Cena ${i + 1}`}>
@@ -512,15 +608,25 @@ export const Mundo3D: React.FC<Mundo3DProps> = (props) => {
       ))}
       {props.musica && <Audio src={staticFile(props.musica)} volume={() => props.volumeMusica} />}
       {/* O cartão do fim, com o logo e a chamada da marca, por cima do último plano */}
+      {/* O versículo (ou a lição) na luz, antes do cartão do fim */}
+      {props.final && (
+        <Sequence from={fimDasCenas} durationInFrames={MUNDO3D.final} name="Frase na luz">
+          <FraseNaLuz frase={props.final.frase} linha={props.final.linha} botao={props.final.botao ?? props.botaoFinal} />
+        </Sequence>
+      )}
       {props.ctaFinal && (
-        <Sequence from={linha[linha.length - 1].fim} layout="none" name="CTA final">
+        <Sequence from={fimDasCenas + (props.final ? MUNDO3D.final : 0)} layout="none" name="CTA final">
           <CartaoDeChamada chamada={props.ctaFinal} botao={props.botaoFinal} />
           <Som tipo="sucesso" em={2} />
         </Sequence>
       )}
-      <Titulo texto={props.titulo} destaque={props.destaqueDoTitulo} />
+      <Titulo
+        texto={(naCapa && props.capa?.titulo) || props.titulo}
+        destaque={(naCapa && props.capa?.destaque) || props.destaqueDoTitulo}
+        fixo={naCapa}
+      />
       {/* A chamada inicial embaixo do título (antes só o Conversa desenhava): uns 17 caracteres por linha do título */}
-      {props.ctaInicial && (
+      {props.ctaInicial && !naCapa && (
         <BalaoDeChamada texto={props.ctaInicial} topo={190 + Math.ceil(props.titulo.length / 17) * 98 + 30} jaNaTela />
       )}
     </AbsoluteFill>

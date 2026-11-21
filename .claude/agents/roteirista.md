@@ -81,6 +81,16 @@ Se o `canal-postai.md` disser **ESTILO: bonecos3d**, use o molde Mundo3D com `"b
 - **Começo:** `titulo`, `destaqueDoTitulo` e `ctaInicial` (o balão embaixo do título, como no Conversa).
 - **Fim e post:** `ctaFinal` e `botaoFinal` como nos outros vídeos (o cartão do fim tem o logo da marca), e `post` com `titulo` e `legenda`.
 
+
+## Mundo 3D e Bonecos 3D: objetos, luz, trocas de pose, versículo e capa
+
+Valem para os dois estilos 3D (campos no `mundo3dSchema` de `src/moldes/Mundo3D.tsx`). A crítica reclamava de vídeo "só com os personagens": **mostre o que o narrador conta**.
+- **`objetos`** (no topo do roteiro): `[{ "tipo", "onde": [x, z] ou "perto": "<id>", "lado": "esquerda" | "direita", "escala", "cenas": [2, 3] }]`. Tipos: `ovelha`, `cordeiro`, `altar`, `altar-com-fogo`, `fogueira`, `cesto-de-frutos`, `feixe-de-trigo`, `cajado`, `serpente`, `jarro`, `arvore-com-frutos` (o jardim do Éden), `pedra-grande`. Com `perto`, o objeto fica ao lado do personagem e anda com ele (o cordeiro do pastor, o cesto da colheita). Sem `cenas`, ele aparece no vídeo todo. Se a história fala de uma oferta, de um animal ou de um fogo, ponha o objeto na cena em que o narrador fala dele, perto do foco, para aparecer no plano.
+- **`luz: true`** numa cena: um feixe de luz do céu desce sobre quem está no `foco` (Deus falando, um anjo, um milagre).
+- **`mudancas`** numa cena: `[{ "em": 2.5, "quem": "<id>" ou "multidao", "pose", "expressao" }]` troca a pose e a expressão no meio da cena. Use em toda cena com mais de 4 s, para ninguém ficar parado (ex.: começa `pensando` e, na palavra forte, `surpresa`).
+- **`final`**: `{ "frase": "o versículo ou a lição", "linha": "Gênesis 4:7" }`. É a frase na luz, numa cena escura com o feixe, antes do cartão do fim. Em história bíblica, ponha o versículo da história com a referência.
+- **`capa`**: `{ "titulo", "destaque", "cena": 3, "estados": { "<id>": { "pose", "expressao" } } }`. A capa sai de um quadro da `cena` escolhida (a mais forte, com o personagem bem visível), com o título grande e a pose de `estados`. Sem `capa`, ela sai da 1ª cena com o título do vídeo.
+- **No `close`**, a legenda fica mais embaixo: pode usar o close para a frase forte sem medo de cobrir o rosto.
 ## O que faz um bom roteiro
 
 - **Gancho:** a primeira fala prende em 2 segundos.

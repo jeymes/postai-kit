@@ -44,7 +44,10 @@ if (fimDoVideo === "vinheta" && !args.includes("--previa")) {
     delete props.ctaFinal;
   }
   if (molde === "Documentario") delete props.encerramento;
-  if (molde === "Mundo3D") delete props.ctaFinal;
+  if (molde === "Mundo3D") {
+    delete props.final;
+    delete props.ctaFinal;
+  }
 }
 
 function lerJson<T>(arquivo: string): T | null {
@@ -268,7 +271,13 @@ if (molde === "Carrossel") {
   // Vídeo animado: a capa é a cena com os personagens
   if (molde === "Conversa") imagem("CapaConversa", { ...props, capa: capa ?? {} }, destinoDaCapa);
   // Mundo 3D: o primeiro plano, já com o título inteiro na tela
-  else if (molde === "Mundo3D") imagem("Mundo3D", { ...props, semLegenda: true }, destinoDaCapa, 45);
+  // Mundo3D: a capa é um quadro da cena escolhida (capa.cena; sem ela, a 1ª), com o título
+  // e o destaque da capa e as poses de capa.estados
+  else if (molde === "Mundo3D") {
+    const cenaDaCapa = Math.min(Math.max(1, capa?.cena ?? 1), props.cenas.length) - 1;
+    const quadro = iniciosDasCenas("Mundo3D", props)[cenaDaCapa] + 45;
+    imagem("Mundo3D", { ...props, capa: capa ?? {}, semLegenda: true }, destinoDaCapa, quadro);
+  }
   else if (molde === "Documentario") {
     imagem("CapaDoDocumentario", { ...(capa ?? capaPadrao()), ...(props.estilo ? { estilo: props.estilo } : {}) }, destinoDaCapa);
     capitulos = capitulosDoYouTube();
