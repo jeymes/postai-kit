@@ -17,6 +17,32 @@ if (!pasta || !existsSync(pasta)) {
 }
 exigirChave();
 
+// A marca começa do zero a cada canal: a mesma pasta do kit pode servir a
+// mais de uma conta (no PC, ou numa máquina da nuvem que guarda os arquivos),
+// e o que sobrava da conta anterior (o logo, o @, o site) saía no vídeo de
+// outra conta. Só fica o modelo do kit; o resto vem do Postaí desta conta.
+const MARCA_DO_KIT = {
+  nome: "Sua Marca",
+  site: "",
+  instagram: "",
+  cores: {
+    fundo: "#FFF8F0",
+    superficie: "#FFFFFF",
+    texto: "#1F1A17",
+    textoSuave: "#6B625B",
+    destaque: "#E8572A",
+    textoNoDestaque: "#FFFFFF",
+  },
+  fontes: { titulo: "Bricolage Grotesque", texto: "Inter" },
+  logo: null,
+  tom: "próximo e animado, frases curtas, sem gíria pesada",
+  publico: "",
+  chamada: "Siga para ver mais",
+};
+mkdirSync("marca", { recursive: true });
+writeFileSync("marca/marca.json", `${JSON.stringify(MARCA_DO_KIT, null, 2)}\n`);
+for (const velho of [join(pasta, "logo.png"), "public/marca/logo-canal.png"]) rmSync(velho, { force: true });
+
 try {
   const texto = await ferramenta("ver_canal_animado");
   const destino = join(pasta, "canal-postai.md");
@@ -30,14 +56,17 @@ try {
     const { logoUrl, vinhetaUrl, fimDoVideo, ...marca } = JSON.parse(await ferramenta("ver_marca")) ?? {};
     // A marca completa (nome e cores) ou só a cor de destaque escolhida na tela
     if (marca.nome || marca.cores) {
-      const atual = JSON.parse(readFileSync("marca/marca.json", "utf8"));
-      writeFileSync("marca/marca.json", `${JSON.stringify({ ...atual, ...marca, cores: { ...atual.cores, ...marca.cores } }, null, 2)}\n`);
-      console.log(`Marca do canal: ${marca.nome ?? atual.nome}${marca.cores?.destaque ? `, destaque ${marca.cores.destaque}` : ""}.`);
+      writeFileSync(
+        "marca/marca.json",
+        `${JSON.stringify({ ...MARCA_DO_KIT, ...marca, cores: { ...MARCA_DO_KIT.cores, ...marca.cores } }, null, 2)}\n`,
+      );
+      console.log(`Marca do canal: ${marca.nome ?? MARCA_DO_KIT.nome}${marca.cores?.destaque ? `, destaque ${marca.cores.destaque}` : ""}.`);
     }
     // O logo que a pessoa enviou no Postaí (curl: na nuvem passa pelo proxy)
     if (logoUrl) {
       const baixou = spawnSync("curl", ["-sSfL", "-o", join(pasta, "logo.png"), logoUrl], { stdio: "inherit" });
-      console.log(baixou.status === 0 ? "Logo do canal baixado do Postaí." : "Não consegui baixar o logo: sigo sem ele.");
+      if (baixou.status !== 0) rmSync(join(pasta, "logo.png"), { force: true });
+      console.log(baixou.status === 0 ? "Logo do canal baixado do Postaí." : "Não consegui baixar o logo: sigo sem logo (nunca o de outra conta).");
     }
     // A vinheta do fim (o motion do app ou do site): o npm run renderizar cola
     // no fim de cada vídeo. Sem ela no Postaí (o dono apagou), sai daqui também.
