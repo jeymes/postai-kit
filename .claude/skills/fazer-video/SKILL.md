@@ -38,7 +38,7 @@ Mostre o plano e **espere o dono aprovar**:
 | QR do site | chamada final | `midia/QrAnimado` |
 | Fotos CC0 | quando o dono não tem foto | `npm run buscar-fotos` (olhe as opções antes de escolher) |
 | Transições do Remotion | troca de cena com fade, slide, wipe | `@remotion/transitions` (já instalado) |
-| Narração e legenda animada | voz em português, legenda palavra por palavra | skill `narrar`; `texto/Legendas`, áudio de `npm run narrar` |
+| Narração e legenda animada | voz em português, inglês ou espanhol (o idioma do canal), legenda palavra por palavra | skill `narrar`; `texto/Legendas`, áudio de `npm run narrar` |
 | Mascote que fala | personagem na cor da marca, boca no tempo da voz | `personagens/Mascote` |
 | 3D | título com volume, foto em cartão girando, formas ao fundo | `3d/` (`Palco3D`, `Titulo3D`, `Cartao3D`, `Formas3D`); antes, `npm run diagnostico` |
 | Pessoa falando | o dono apresentando, com a boca no tempo da voz (placa NVIDIA) | skill `avatar`; `personagens/Apresentador` |

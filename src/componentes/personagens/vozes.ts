@@ -1,8 +1,10 @@
 // Vozes do kit (sem import de runtime: o ferramentas/narrar.mts também lê
-// daqui). O Kokoro tem uma voz feminina (pf_dora) e duas masculinas (pm_alex,
-// pm_santa) em português; as outras saem da mistura com vozes de outras
-// línguas, que continuam falando português com outro timbre (todas conferidas
-// com o Whisper em 19/11/2026: o português sai claro).
+// daqui). TODAS falam português, inglês e espanhol: o idioma vem do canal
+// (.postai-idioma) ou do roteiro ("idioma"), e o narrar troca a voz-base pela
+// da língua (vozNoIdioma, no fim deste arquivo), mantendo o timbre. Em
+// português, o Kokoro tem uma voz feminina (pf_dora) e duas masculinas
+// (pm_alex, pm_santa); as outras saem da mistura com vozes de outras línguas
+// (conferidas com o Whisper em 19/11/2026; inglês e espanhol em 20/11/2026).
 //
 // No criador de personagens do Postaí a pessoa escolhe uma destas (o nome).
 

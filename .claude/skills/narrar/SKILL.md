@@ -1,6 +1,6 @@
 ---
 name: narrar
-description: Vídeo com narração no Kit Estúdio: uma voz em português lê o roteiro, com legenda animada palavra por palavra e, se o dono quiser, o mascote da marca falando junto (molde Narrado). Instala a voz no computador na primeira vez. Usar quando o dono pedir vídeo narrado, com voz, locução, "alguém falando", legenda animada ou mascote, mesmo sem citar a skill.
+description: Vídeo com narração no Kit Estúdio: uma voz lê o roteiro no idioma do canal (português, inglês ou espanhol), com legenda animada palavra por palavra e, se o dono quiser, o mascote da marca falando junto (molde Narrado). Instala a voz no computador na primeira vez. Usar quando o dono pedir vídeo narrado, com voz, locução, "alguém falando", legenda animada ou mascote, mesmo sem citar a skill.
 ---
 
 # Vídeo narrado
