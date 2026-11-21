@@ -96,7 +96,14 @@ Num **ajuste** pedido pelo dono, o roteiro guardado vem em `conteudo/ajuste-<cor
 - **Capa:** `capa.titulo` com **até 4 palavras** (saem grandes, em maiúsculas e com contorno), que dão curiosidade sem
   repetir o título do vídeo e sem mentir (ex.: "SÓ UMA PEDRA"); `destaque` na palavra mais forte (sai em amarelo);
   `lado`: `esquerda` ou `direita`, o oposto ao rosto ou à figura principal da foto (o texto fica no alto desse lado);
-  `foto` a imagem mais marcante.
+  `foto` a imagem mais marcante. **Modelo da capa** (`capa.modelo`), um dos que a seção "Capa dos vídeos" do
+  `canal-postai.md` permite (sem a seção, qualquer um): `classico` (só o título), `circulo` (círculo vermelho no
+  detalhe), `seta` (seta do título até o detalhe), `zoom` (lupa com o detalhe ampliado), `dois-lados` (`foto` e
+  `foto2` lado a lado com VS e `rotulos`, ex.: antes e depois) ou `selo` (carimbo inclinado com `selo`, ex.:
+  "PROIBIDO"). Os que marcam um detalhe pedem `capa.marca` ({ x, y, raio } em % da CAPA): rode
+  `npm run renderizar -- conteudo/<arquivo>.json --capa` (só a capa, em segundos, sem voz), abra
+  `out/<arquivo>/capa.jpg` e ajuste a marca até cair no detalhe que dá curiosidade (um rosto, um objeto, uma
+  inscrição). Escolha o modelo que mais combina com a história deste vídeo.
 - **Post:** `post.titulo` com até 70 caracteres (o título do YouTube: a palavra-chave e o mais curioso nas
   primeiras palavras, porque a busca e a tela inicial cortam o resto) e
   `post.legenda` com 2 ou 3 parágrafos sobre o vídeo, as fontes principais e, por último, a linha

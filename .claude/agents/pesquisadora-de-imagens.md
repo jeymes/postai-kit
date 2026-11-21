@@ -101,6 +101,6 @@ Regras:
   (ela continua a imagem anterior, mais tempo na tela) e espalhe as imagens que achou, uma a cada 2 ou 3 cenas. Só a
   cena 1 precisa de imagem; o vídeo só não sai com mais de 2/3 das cenas sem imagem;
 - use as imagens mais fortes nos começos de capítulo;
-- `capa.foto`: a imagem mais marcante e legível pequena.
+- `capa.foto`: a imagem mais marcante e legível pequena. Escolha também o `capa.modelo` (ver "Capa" no `canais/NARRADO.md`; só os que o `canal-postai.md` permite) e, se ele marca um detalhe, a `capa.marca`: confira com `npm run renderizar -- conteudo/<arquivo>.json --capa` e abra a `out/<arquivo>/capa.jpg` até o círculo, a seta, a lupa ou o carimbo cair no lugar certo.
 
 Responda com quantas imagens diferentes, as cenas que ficaram sem uma boa (se alguma) e o que você fez com elas.

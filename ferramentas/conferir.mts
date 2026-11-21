@@ -59,7 +59,16 @@ if (peca.molde === "Documentario") {
   const doc = peca as unknown as {
     cenas?: CenaLonga[];
     encerramento?: string;
-    capa?: { titulo?: string; destaque?: string; foto?: string };
+    capa?: {
+      titulo?: string;
+      destaque?: string;
+      foto?: string;
+      modelo?: string;
+      foto2?: string;
+      rotulos?: unknown;
+      selo?: string;
+      marca?: { x?: unknown; y?: unknown };
+    };
     post?: { titulo?: string; legenda?: string };
   };
   const longas = doc.cenas ?? [];
@@ -136,13 +145,28 @@ if (peca.molde === "Documentario") {
       erro("roteirista-narrado", `capa.destaque "${doc.capa.destaque}" não está no título da capa`);
   }
   if (!doc.capa?.foto) erro("pesquisadora-de-imagens", "falta capa.foto");
+  else if (!existsSync(`public/${doc.capa.foto}`)) erro("pesquisadora-de-imagens", `a capa.foto ${doc.capa.foto} não existe em public/`);
+  // Os modelos de capa: o que cada um precisa (antes, o erro só aparecia no fim do render, depois do vídeo inteiro)
+  const modelo = doc.capa?.modelo;
+  if (modelo && !["classico", "circulo", "seta", "zoom", "dois-lados", "selo"].includes(modelo))
+    erro("pesquisadora-de-imagens", `capa.modelo "${modelo}" não existe (classico, circulo, seta, zoom, dois-lados ou selo)`);
+  if (modelo === "dois-lados") {
+    if (!doc.capa?.foto2) erro("pesquisadora-de-imagens", "capa.modelo dois-lados precisa da capa.foto2");
+    else if (!existsSync(`public/${doc.capa.foto2}`)) erro("pesquisadora-de-imagens", `a capa.foto2 ${doc.capa.foto2} não existe em public/`);
+    const rotulos = doc.capa?.rotulos;
+    if (rotulos !== undefined && !(Array.isArray(rotulos) && rotulos.length === 2 && rotulos.every((r) => typeof r === "string" && r.length <= 14)))
+      erro("pesquisadora-de-imagens", 'capa.rotulos: dois textos de até 14 letras, ex.: ["1957", "HOJE"]');
+  }
+  if ((modelo === "circulo" || modelo === "seta" || modelo === "zoom") && !(typeof doc.capa?.marca?.x === "number" && typeof doc.capa?.marca?.y === "number"))
+    erro("pesquisadora-de-imagens", `capa.modelo ${modelo} precisa da capa.marca { x, y } (em % da capa): confira com npm run renderizar -- <roteiro> --capa`);
+  if (modelo === "selo" && !doc.capa?.selo) erro("pesquisadora-de-imagens", 'capa.modelo selo precisa do capa.selo (ex.: "PROIBIDO")');
   if (!doc.post?.titulo || !doc.post.legenda) erro("roteirista-narrado", "falta post.titulo ou post.legenda");
   else {
     if (tamanho(doc.post.titulo) > 100) erro("roteirista-narrado", `post.titulo com ${tamanho(doc.post.titulo)} caracteres (até 100)`);
     if (tamanho(doc.post.legenda) > 1800) erro("roteirista-narrado", `post.legenda com ${tamanho(doc.post.legenda)} caracteres (até 1.800: os capítulos entram depois)`);
   }
   // Foto do Unsplash (e a capa): o crédito na legenda do post é obrigatório (o buscar-fotos anota no CREDITOS.md)
-  const usadas = new Set([...usos.keys(), ...(doc.capa?.foto ? [doc.capa.foto] : [])]);
+  const usadas = new Set([...usos.keys(), ...(doc.capa?.foto ? [doc.capa.foto] : []), ...(doc.capa?.foto2 ? [doc.capa.foto2] : [])]);
   for (const pasta of new Set([...usadas].map((f) => f.split("/").slice(0, -1).join("/")))) {
     const caminho = `public/${pasta}/CREDITOS.md`;
     if (!existsSync(caminho)) continue;

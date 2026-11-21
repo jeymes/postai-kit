@@ -410,6 +410,190 @@ const MusicaEmLoop: React.FC<{ src: string; volume: number }> = ({ src, volume }
 
 // ---- Capa do YouTube (1280×720) ----
 
+/** Os modelos de capa do vídeo longo (Configurar > Capa dos vídeos escolhe quais a equipe usa) */
+export const MODELOS_DE_CAPA = ["classico", "circulo", "seta", "zoom", "dois-lados", "selo"] as const;
+const VERMELHO = "#FF2B2B";
+
+/**
+ * O que a capa marca por cima da foto: o círculo desenhado à mão, a seta, a lupa
+ * com o detalhe ampliado ou o carimbo. Medidas em % da capa (1280x720).
+ */
+const MarcasDaCapa: React.FC<{ capa: CapaDocumentario; fotoSrc: string | null; naDireita: boolean; filtroDaFoto: string }> = ({
+  capa,
+  fotoSrc,
+  naDireita,
+  filtroDaFoto,
+}) => {
+  const { modelo = "classico" } = capa;
+  // O selo sem marca vai no lado oposto ao título, embaixo (antes ele sumia sem aviso)
+  const marca = capa.marca ?? (modelo === "selo" ? { x: naDireita ? 28 : 72, y: 66 } : undefined);
+  if (!marca || modelo === "classico" || modelo === "dois-lados") return null;
+  const W = 1280;
+  const H = 720;
+  const cx = (marca.x / 100) * W;
+  const cy = (marca.y / 100) * H;
+  const r = ((marca.raio ?? 12) / 100) * H;
+  if (modelo === "circulo")
+    return (
+      <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} style={{ position: "absolute", inset: 0, overflow: "visible" }}>
+        {/* Dois traços levemente tortos: parece desenhado à mão */}
+        <ellipse cx={cx} cy={cy} rx={r * 1.18} ry={r} fill="none" stroke="#000" strokeOpacity={0.45} strokeWidth={22} transform={`rotate(-8 ${cx} ${cy})`} />
+        <ellipse cx={cx} cy={cy} rx={r * 1.18} ry={r} fill="none" stroke={VERMELHO} strokeWidth={13} transform={`rotate(-8 ${cx} ${cy})`} />
+        <ellipse cx={cx + 4} cy={cy - 3} rx={r * 1.24} ry={r * 1.05} fill="none" stroke={VERMELHO} strokeWidth={6} strokeOpacity={0.85} transform={`rotate(-4 ${cx} ${cy})`} />
+      </svg>
+    );
+  if (modelo === "seta") {
+    // Seta curta e grossa (como nas capas dos canais grandes): sai de perto do
+    // detalhe, do lado que tem mais espaço (rumo ao meio da capa), e aponta o
+    // círculo. Nunca atravessa a capa nem passa por trás do título.
+    const raio = r * 1.12;
+    // Direção: do detalhe para o meio da capa, puxada para baixo (abaixo do título)
+    let dx = W / 2 - cx;
+    let dy = H * 0.62 - cy;
+    const tam = Math.hypot(dx, dy) || 1;
+    dx /= tam;
+    dy /= tam;
+    const comprimento = Math.min(260, Math.max(170, r * 2.4));
+    // A ponta encosta no círculo; o começo fica a "comprimento" dela, dentro da capa
+    const ex = cx + dx * (raio + 8);
+    const ey = cy + dy * (raio + 8);
+    const sx = Math.min(W - 40, Math.max(40, ex + dx * comprimento));
+    const sy = Math.min(H - 40, Math.max(40, ey + dy * comprimento));
+    // Uma curva leve (o controle sai para o lado)
+    const mx = (sx + ex) / 2 - dy * 40;
+    const my = (sy + ey) / 2 + dx * 40;
+    const ang = Math.atan2(ey - my, ex - mx);
+    const cabeca = 62;
+    const a1 = ang + Math.PI * 0.78;
+    const a2 = ang - Math.PI * 0.78;
+    const ponta = `${ex},${ey} ${ex + Math.cos(a1) * cabeca},${ey + Math.sin(a1) * cabeca} ${ex + Math.cos(a2) * cabeca},${ey + Math.sin(a2) * cabeca}`;
+    const corpo = `M${sx},${sy} Q${mx},${my} ${ex - Math.cos(ang) * cabeca * 0.6},${ey - Math.sin(ang) * cabeca * 0.6}`;
+    return (
+      <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} style={{ position: "absolute", inset: 0, overflow: "visible" }}>
+        <circle cx={cx} cy={cy} r={raio} fill="none" stroke="#000" strokeOpacity={0.4} strokeWidth={18} />
+        <circle cx={cx} cy={cy} r={raio} fill="none" stroke={VERMELHO} strokeWidth={11} />
+        <path d={corpo} fill="none" stroke="#FFF" strokeWidth={44} strokeLinecap="round" />
+        <polygon points={ponta} fill="#FFF" stroke="#FFF" strokeWidth={16} strokeLinejoin="round" />
+        <path d={corpo} fill="none" stroke={VERMELHO} strokeWidth={28} strokeLinecap="round" />
+        <polygon points={ponta} fill={VERMELHO} />
+      </svg>
+    );
+  }
+  if (modelo === "zoom" && fotoSrc) {
+    // A lupa no canto oposto ao título, embaixo: a MESMA foto com o mesmo corte da
+    // capa (cover, 50% 22%, scale 1.06), ampliada 2,6x em volta da marca. Antes era
+    // uma imagem de fundo esticada para 16:9, que mostrava outro pedaço da foto
+    const lr = 190;
+    const borda = 10;
+    const lx = naDireita ? 60 + lr : W - 60 - lr;
+    const ly = H - 40 - lr;
+    const aumento = 2.6;
+    const centro = lr - borda;
+    return (
+      <>
+        <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} style={{ position: "absolute", inset: 0 }}>
+          <circle cx={cx} cy={cy} r={r * 0.75} fill="none" stroke={VERMELHO} strokeWidth={8} />
+          <line x1={cx} y1={cy} x2={lx} y2={ly} stroke={VERMELHO} strokeWidth={8} />
+        </svg>
+        <div
+          style={{
+            position: "absolute",
+            left: lx - lr,
+            top: ly - lr,
+            width: lr * 2,
+            height: lr * 2,
+            boxSizing: "border-box",
+            borderRadius: "50%",
+            border: `${borda}px solid ${VERMELHO}`,
+            boxShadow: "0 0 0 6px #FFF, 0 18px 40px rgba(0,0,0,0.6)",
+            overflow: "hidden",
+            backgroundColor: "#0d0b10",
+          }}
+        >
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              top: 0,
+              width: W,
+              height: H,
+              transformOrigin: "0 0",
+              transform: `translate(${centro - cx * aumento}px, ${centro - cy * aumento}px) scale(${aumento})`,
+            }}
+          >
+            <Img
+              src={fotoSrc}
+              style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "50% 22%", filter: filtroDaFoto, transform: "scale(1.06)" }}
+            />
+          </div>
+        </div>
+      </>
+    );
+  }
+  if (modelo === "selo" && capa.selo)
+    return (
+      <div
+        style={{
+          position: "absolute",
+          left: cx,
+          top: cy,
+          transform: "translate(-50%, -50%) rotate(-12deg)",
+          padding: "10px 28px",
+          border: `9px solid ${VERMELHO}`,
+          borderRadius: 14,
+          color: VERMELHO,
+          fontFamily: fontes.titulo,
+          fontWeight: 900,
+          fontSize: 92,
+          letterSpacing: "0.04em",
+          textTransform: "uppercase",
+          background: "rgba(255,255,255,0.08)",
+          textShadow: "0 0 18px rgba(0,0,0,0.5)",
+          boxShadow: "0 0 30px rgba(0,0,0,0.45)",
+          whiteSpace: "nowrap",
+        }}
+      >
+        {capa.selo}
+      </div>
+    );
+  return null;
+};
+
+/** Dois lados: a foto e a foto2 lado a lado, cortadas na diagonal, com o VS no meio */
+const DoisLados: React.FC<{ foto: string; foto2: string; rotulos?: [string, string]; filtro: string }> = ({ foto, foto2, rotulos, filtro }) => (
+  <AbsoluteFill>
+    <Img src={arquivo(foto)} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", filter: filtro, clipPath: "polygon(0 0, 56% 0, 44% 100%, 0 100%)" }} />
+    <Img src={arquivo(foto2)} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", filter: filtro, clipPath: "polygon(56% 0, 100% 0, 100% 100%, 44% 100%)" }} />
+    <svg viewBox="0 0 1280 720" width={1280} height={720} style={{ position: "absolute", inset: 0 }}>
+      <line x1={717} y1={0} x2={563} y2={720} stroke="#FFF" strokeWidth={14} />
+      <circle cx={640} cy={430} r={70} fill={VERMELHO} stroke="#FFF" strokeWidth={8} />
+      <text x={640} y={455} textAnchor="middle" fontFamily={fontes.titulo} fontWeight={900} fontSize={68} fill="#FFF">
+        VS
+      </text>
+    </svg>
+    {rotulos?.map((rotulo, i) => (
+      <div
+        key={i}
+        style={{
+          position: "absolute",
+          // Acima do canto de baixo à direita: lá o YouTube põe a duração do vídeo
+          bottom: 130,
+          [i === 0 ? "left" : "right"]: 48,
+          background: i === 0 ? "#000" : VERMELHO,
+          color: "#FFF",
+          fontFamily: fontes.titulo,
+          fontWeight: 900,
+          fontSize: 54,
+          padding: "6px 22px",
+          borderRadius: 10,
+        }}
+      >
+        {rotulo.toUpperCase()}
+      </div>
+    ))}
+  </AbsoluteFill>
+);
+
 export const capaDocumentarioSchema = z.object({
   titulo: z.string().describe("Até 4 palavras, que dão curiosidade sem repetir o título do vídeo (ex.: SÓ UMA PEDRA)"),
   destaque: z.string().optional().describe("A palavra do título que sai em amarelo"),
@@ -418,6 +602,23 @@ export const capaDocumentarioSchema = z.object({
     .enum(["esquerda", "direita"])
     .optional()
     .describe("De que lado fica o texto: o oposto ao rosto ou à figura principal da foto (padrão: esquerda)"),
+  modelo: z
+    .enum(MODELOS_DE_CAPA)
+    .optional()
+    .describe(
+      'O modelo da capa: classico (só o título), circulo (círculo vermelho no detalhe), seta (seta do título até o detalhe), zoom (lupa com o detalhe ampliado), dois-lados (foto e foto2 lado a lado, com VS) ou selo (carimbo inclinado, ex.: PROIBIDO)',
+    ),
+  marca: z
+    .object({
+      x: z.number().min(0).max(100),
+      y: z.number().min(0).max(100),
+      raio: z.number().min(3).max(40).optional(),
+    })
+    .optional()
+    .describe("O detalhe que a capa marca (circulo, seta, zoom, selo): a posição em % da CAPA (0,0 = canto de cima à esquerda), olhando a capa.jpg; raio em % da altura (padrão 12)"),
+  foto2: z.string().optional().describe("dois-lados: a segunda foto (a da direita)"),
+  rotulos: z.tuple([z.string().max(14), z.string().max(14)]).optional().describe('dois-lados: o rótulo de cada foto, ex.: ["1957", "HOJE"]'),
+  selo: z.string().max(14).optional().describe('selo: o texto do carimbo, ex.: "PROIBIDO", "SEGREDO", "REAL"'),
   estilo: estiloDoNarradoSchema,
 });
 export type CapaDocumentario = z.infer<typeof capaDocumentarioSchema>;
@@ -432,7 +633,9 @@ export const capaDocumentarioExemplo: CapaDocumentario = {
 // com contraste, as bordas escurecidas, no máximo 4 palavras grossas em
 // maiúsculas com contorno preto (amarelo no destaque), do lado oposto à figura
 // e nunca no canto de baixo à direita, onde o YouTube põe a duração do vídeo.
-export const CapaDoDocumentario: React.FC<CapaDocumentario> = ({ titulo, destaque, foto, lado = "esquerda", estilo }) => {
+export const CapaDoDocumentario: React.FC<CapaDocumentario> = (capa) => {
+  const { titulo, destaque, foto, lado = "esquerda", estilo } = capa;
+  const doisLados = capa.modelo === "dois-lados" && foto && capa.foto2;
   // O modelo do canal: o tratamento da foto, a letra e a cor do destaque (o Clássico fica como sempre)
   const ap = aparenciaDo(estilo);
   const classico = ap.modelo === "classico" && !estilo?.letra && !estilo?.cor;
@@ -445,7 +648,9 @@ export const CapaDoDocumentario: React.FC<CapaDocumentario> = ({ titulo, destaqu
   const naDireita = lado === "direita";
   return (
     <AbsoluteFill style={{ backgroundColor: "#0d0b10" }}>
-      {foto ? (
+      {doisLados ? (
+        <DoisLados foto={foto} foto2={capa.foto2 as string} rotulos={capa.rotulos} filtro={`contrast(1.18) saturate(1.15) brightness(1.04)${ap.filtro === "none" ? "" : ` ${ap.filtro}`}`} />
+      ) : foto ? (
         <Img
           src={arquivo(foto)}
           // O corte puxa para cima: em retrato e cena com gente, o rosto fica na parte de cima
@@ -466,8 +671,17 @@ export const CapaDoDocumentario: React.FC<CapaDocumentario> = ({ titulo, destaqu
       <AbsoluteFill style={{ background: "radial-gradient(ellipse at center, rgba(0,0,0,0) 45%, rgba(0,0,0,0.65) 100%)" }} />
       <AbsoluteFill
         style={{
-          background: `linear-gradient(${naDireita ? 270 : 90}deg, rgba(8,7,10,0.85) 0%, rgba(8,7,10,0.55) 38%, rgba(8,7,10,0) 62%)`,
+          background: doisLados
+            ? "linear-gradient(180deg, rgba(8,7,10,0.8) 0%, rgba(8,7,10,0.2) 40%, rgba(8,7,10,0) 60%)"
+            : `linear-gradient(${naDireita ? 270 : 90}deg, rgba(8,7,10,0.85) 0%, rgba(8,7,10,0.55) 38%, rgba(8,7,10,0) 62%)`,
         }}
+      />
+      {/* O círculo, a seta, a lupa ou o carimbo no detalhe que a capa quer mostrar */}
+      <MarcasDaCapa
+        capa={capa}
+        fotoSrc={foto ? arquivo(foto) : null}
+        naDireita={naDireita}
+        filtroDaFoto={`contrast(1.18) saturate(1.15) brightness(1.04)${ap.filtro === "none" ? "" : ` ${ap.filtro}`}`}
       />
       {/* O texto fica em cima, do lado escolhido: o canto de baixo à direita fica livre */}
       <div

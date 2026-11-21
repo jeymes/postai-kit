@@ -84,7 +84,7 @@ if (!MOLDES.includes(molde)) {
   process.exit(1);
 }
 
-if ((molde === "Narrado" || molde === "Documentario" || molde === "Mundo3D") && !previa && props.cenas.some((c: { narracao?: unknown }) => !c.narracao)) {
+if ((molde === "Narrado" || molde === "Documentario" || molde === "Mundo3D") && !previa && !(args.includes("--capa") && molde === "Documentario") && props.cenas.some((c: { narracao?: unknown }) => !c.narracao)) {
   console.error(`Falta a voz de alguma cena. Rode antes: npm run narrar -- ${caminho}`);
   process.exit(1);
 }
@@ -240,6 +240,16 @@ const tamanho = (arquivo: string) => statSync(arquivo).size;
 const arquivos: Array<{ arquivo: string; tipo: string; tamanho: number }> = [];
 let duracaoSeg: number | null = null;
 let capitulos: string | null = null;
+
+// --capa: só a capa do vídeo longo, em segundos (para ajustar a capa.marca do
+// círculo, da seta, da lupa ou do carimbo olhando o resultado, sem renderizar o vídeo)
+if (args.includes("--capa") && molde === "Documentario") {
+  const destinoDaCapa = join(saida, "capa.jpg");
+  imagem("CapaDoDocumentario", { ...(capa ?? capaPadrao()), ...(props.estilo ? { estilo: props.estilo } : {}) }, destinoDaCapa);
+  rmSync(arquivoDeProps, { force: true });
+  console.log(`Capa pronta: ${destinoDaCapa} (abra e confira; o vídeo não foi renderizado)`);
+  process.exit(0);
+}
 
 if (molde === "Carrossel") {
   // O carrossel já é feito de imagens: a prévia são os próprios slides.
