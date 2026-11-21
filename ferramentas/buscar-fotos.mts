@@ -20,6 +20,8 @@
 //   (--nicho "<tema>" organiza; sem ele, o do canal-postai.md; --sem-banco desliga).
 //   --fonte unsplash (fotos modernas do Unsplash, uso comercial; passa pelo Postaí; avisa o Unsplash no download
 //   final e o CRÉDITO vai obrigatório na legenda do post, anotado no CREDITOS.md),
+//   --fonte ia (gera a imagem com IA pelo Postaí: só cena de clima, sem nome de modelo, marca ou pessoa real;
+//   é também o último recurso sozinho quando nenhum acervo tem a cena; até 20 por dia; marca o vídeo como sintético),
 //   --fonte pixabay (fotos e ilustrações modernas do Pixabay, uso comercial sem crédito; passa pelo
 //   Postaí, que tem a chave: precisa do passe da rotina ou da POSTAI_CHAVE)
 // As opções de cada item ficam em _candidatos/<item>.json: a escolha (#n) pega exatamente a que
@@ -533,14 +535,16 @@ async function buscarNoBanco(termo: string): Promise<Foto[]> {
       id: r.id,
       url: r.url,
       previa: r.previa,
-      source: "banco",
+      // A imagem de IA do banco continua marcada (o vídeo sai como sintético)
+      source: r.licenca === "ia" ? "banco-ia" : "banco",
       foreign_landing_url: r.original || `banco:${r.id}`,
       width: r.largura,
       height: r.altura,
       titulo: `${r.titulo || "sem título"} (banco, de ${r.fonte}${r.usadaPorEstaContaHaDias !== null ? `; esta conta usou há ${r.usadaPorEstaContaHaDias} dias` : ""})`,
       licenca: r.licenca,
     }))
-    .filter(filtroDeTamanho);
+    // A de IA é quadrada: o vídeo recorta (o filtro de tamanho a tiraria do vídeo deitado)
+    .filter((f) => f.source === "banco-ia" || filtroDeTamanho(f));
 }
 
 async function buscar(termo: string): Promise<Foto[]> {
@@ -562,7 +566,9 @@ async function buscar(termo: string): Promise<Foto[]> {
 }
 
 const licencaDa = (foto: Foto) =>
-  foto.source === "pixabay"
+  foto.source === "ia"
+    ? "ia"
+    : foto.source === "pixabay"
     ? "pixabay"
     : foto.source === "clevelandart" || foto.source === "met" || foto.licenca === "cc0"
       ? "cc0"
@@ -590,14 +596,60 @@ async function guardarNoBanco(arquivo: string, foto: Foto, termo: string) {
     altura: dim.height,
     fonte: foto.source.toLowerCase().replace(/[^a-z0-9_.-]/g, "").slice(0, 40) || "outra",
     licenca: licencaDa(foto),
-    original: foto.foreign_landing_url,
+    // A de IA não tem página de origem
+    original: foto.source === "ia" ? "" : foto.foreign_landing_url,
     titulo: foto.titulo ?? "",
     etiquetas,
     nicho,
   });
 }
 
+/**
+ * Último recurso (21/11/2026): a imagem gerada com IA pelo Postaí (FLUX no
+ * Cloudflare), quando nenhum acervo livre tem a cena. Só cena de clima: o termo
+ * vira a descrição (em inglês). Até 20 por conta por dia; o vídeo sai marcado
+ * como conteúdo sintético no YouTube (o aprovar lê o CREDITOS.md).
+ */
+async function gerarComIa(termo: string): Promise<Foto[]> {
+  if (!process.env.POSTAI_CHAVE) return [];
+  const resposta = JSON.parse(await ferramenta("gerar_imagem_com_ia", { descricao: termo, formato: deitadas ? "deitada" : "em-pe" })) as {
+    id: string;
+    url: string;
+    largura: number;
+    altura: number;
+  };
+  console.log(`  (nenhum acervo tinha "${termo}": imagem gerada com IA)`);
+  const foto: Foto = {
+    id: resposta.id,
+    url: resposta.url,
+    previa: resposta.url,
+    source: "ia",
+    foreign_landing_url: `ia:${resposta.id}`,
+    width: resposta.largura,
+    height: resposta.altura,
+    titulo: "Imagem gerada com IA (FLUX.1 schnell)",
+    licenca: "ia",
+  };
+  // Guarda no banco do Postaí na hora (o dono quer todas lá): as próximas equipes
+  // reaproveitam sem gerar de novo
+  if (usarBanco) {
+    const arquivo = join(tmpdir(), `ia-${resposta.id}.jpg`);
+    try {
+      const r = await fetch(resposta.url);
+      if (!r.ok) throw new Error(`não baixou (${r.status})`);
+      writeFileSync(arquivo, Buffer.from(await r.arrayBuffer()));
+      await guardarNoBanco(arquivo, foto, termo);
+    } catch (erro) {
+      console.log(`  (a imagem de IA não foi para o banco: ${erro instanceof Error ? erro.message : String(erro)})`);
+    } finally {
+      rmSync(arquivo, { force: true });
+    }
+  }
+  return [foto];
+}
+
 async function buscarNaFonte(termo: string): Promise<Foto[]> {
+  if (fonte === "ia") return gerarComIa(termo);
   if (fonte === "commons") return buscarNoCommons(termo);
   if (fonte === "museus") return buscarNosMuseus(termo);
   if (fonte === "pixabay") return buscarNoPixabay(termo);
@@ -611,7 +663,15 @@ async function buscarNaFonte(termo: string): Promise<Foto[]> {
  * o Pixabay e o Unsplash). Antes o item só falhava e o vídeo saía com menos fotos.
  */
 async function buscarNaInternet(termo: string): Promise<Foto[]> {
-  if (fonte === "museus") return buscarNosMuseus(termo);
+  if (fonte === "ia") return gerarComIa(termo);
+  if (fonte === "museus") {
+    const dosMuseus = await buscarNosMuseus(termo);
+    if (dosMuseus.length) return dosMuseus;
+    return gerarComIa(termo).catch((erro) => {
+      console.log(`  (imagem de IA: ${erro instanceof Error ? erro.message : String(erro)})`);
+      return [] as Foto[];
+    });
+  }
   const nome = fonte ?? "Openverse";
   try {
     const fotos = await buscarNaFonte(termo);
@@ -620,7 +680,13 @@ async function buscarNaInternet(termo: string): Promise<Foto[]> {
   } catch (erro) {
     console.log(`  (${erro instanceof Error ? erro.message : String(erro)}: procuro em todos os acervos)`);
   }
-  return buscarNosMuseus(termo);
+  const deTodos = await buscarNosMuseus(termo);
+  if (deTodos.length) return deTodos;
+  // Nenhum acervo tem a cena: a imagem de IA (se a conta ainda tiver vaga hoje)
+  return gerarComIa(termo).catch((erro) => {
+    console.log(`  (imagem de IA: ${erro instanceof Error ? erro.message : String(erro)})`);
+    return [] as Foto[];
+  });
 }
 
 /** Baixa e grava em JPEG, com o lado menor em 1080 px (candidata: 480 px de largura, só para olhar) */
@@ -708,8 +774,9 @@ for (const [n, item] of itens.entries()) {
       await baixar(foto, join(destino, `${item.arquivo}.jpg`));
       // Banco: conta o uso (e esta conta não repete a imagem em vídeos seguidos).
       // Nova e livre: guarda no banco para as próximas equipes (o Unsplash nunca)
-      if (foto.source === "banco") await ferramenta("usar_do_banco", { id: foto.id }).catch(() => undefined);
-      else if (usarBanco && foto.source !== "unsplash")
+      if (foto.source.startsWith("banco")) await ferramenta("usar_do_banco", { id: foto.id }).catch(() => undefined);
+      // A de IA já foi guardada quando foi gerada (gerarComIa)
+      else if (usarBanco && foto.source !== "unsplash" && foto.source !== "ia")
         await guardarNoBanco(join(destino, `${item.arquivo}.jpg`), foto, item.termo).catch((erro) =>
           console.log(`  (não guardou no banco: ${erro instanceof Error ? erro.message : String(erro)})`),
         );

@@ -97,7 +97,7 @@ lugares, tire `lugares` e use a cena como foto comum.
 Regras:
 
 - toda cena com foto, se der; a mesma imagem no máximo 3 vezes no vídeo, e com `movimento` diferente quando repetir em cenas
-  seguidas. Se o acervo bloquear ou não achar depois de tentar termos mais gerais, NÃO pare: deixe a cena sem `foto`
+  seguidas. Quando nenhum acervo tem a cena, o `buscar-fotos` GERA A IMAGEM COM IA sozinho (pelo Postaí, até 20 por conta por dia; ela vai para o banco do Postaí e o vídeo sai marcado como conteúdo sintético no YouTube). Para pedir de propósito, use `--fonte ia` com o item `arquivo="descrição da cena em inglês"` (o lugar, a luz, a época, o que aparece; ex.: `garagem="dusty 1950s barn with an old station wagon, warm light through wooden planks"`). O dono autorizou IA para qualquer nicho; só evite o nome exato de modelo, marca ou pessoa real na descrição (a IA erra os detalhes). Se nem a IA der (limite do dia), NÃO pare: deixe a cena sem `foto`
   (ela continua a imagem anterior, mais tempo na tela) e espalhe as imagens que achou, uma a cada 2 ou 3 cenas. Só a
   cena 1 precisa de imagem; o vídeo só não sai com mais de 2/3 das cenas sem imagem;
 - use as imagens mais fortes nos começos de capítulo;

@@ -47,6 +47,30 @@ if (!existsSync(arquivoDeInfo)) {
 }
 const info: Info = JSON.parse(readFileSync(arquivoDeInfo, "utf8"));
 const peca = JSON.parse(readFileSync(caminho, "utf8"));
+
+/**
+ * O vídeo usa imagem gerada com IA? As fotos do roteiro (fotos/<pasta>/<nome>.jpg)
+ * cuja linha no CREDITOS.md da pasta diz a fonte "ia". Com uma só, o vídeo sai no
+ * YouTube marcado como conteúdo alterado ou sintético (exigência do YouTube).
+ */
+function usaImagemDeIa(valor: unknown): boolean {
+  const fotos = new Set<string>();
+  const juntar = (v: unknown) => {
+    if (typeof v === "string" && /^fotos\/.+\.(jpe?g|png|webp)$/i.test(v)) fotos.add(v);
+    else if (Array.isArray(v)) v.forEach(juntar);
+    else if (v && typeof v === "object") Object.values(v).forEach(juntar);
+  };
+  juntar(valor);
+  for (const foto of fotos) {
+    const partes = foto.split("/");
+    const nome = partes.pop() as string;
+    const creditos = join("public", ...partes, "CREDITOS.md");
+    if (!existsSync(creditos)) continue;
+    if (readFileSync(creditos, "utf8").split("\n").some((linha) => linha.startsWith(`| ${nome} | ia |`) || linha.startsWith(`| ${nome} | banco-ia |`))) return true;
+  }
+  return false;
+}
+const sintetico = usaImagemDeIa(peca);
 const video = info.arquivos.find((a) => a.tipo.startsWith("video/"));
 const capa = info.arquivos.find((a) => a.tipo.startsWith("image/"));
 if (!video) {
@@ -109,7 +133,10 @@ try {
     ...(peca.molde === "Documentario" ? { longo: true } : {}),
     ...(substitui ? { substitui } : {}),
     ...(duvida ? { duvida } : {}),
+    // Imagem de IA no vídeo: o YouTube recebe a marcação de conteúdo sintético
+    ...(sintetico ? { sintetico: true } : {}),
   });
+  if (sintetico) console.log("(Este vídeo tem imagem gerada com IA: no YouTube ele sai marcado como conteúdo sintético.)");
   console.log(`\nPronto: ${resposta}`);
   console.log(doCanal ? "Abra o Postaí, na tela Animação, para aprovar ou recusar." : "Abra o Postaí, no menu Cortes, para aprovar ou recusar.");
 } catch (erro) {
