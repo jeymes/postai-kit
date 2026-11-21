@@ -10,6 +10,7 @@
 // Uso: npm run conferir -- conteudo/<arquivo>.json
 import { existsSync, readFileSync } from "node:fs";
 import { cenariosFaltando } from "./cenarios-do-roteiro.ts";
+import { FPS, quadrosDaFala } from "../src/moldes/tempos.ts";
 
 const arquivo = process.argv.slice(2).find((arg) => !arg.startsWith("--"));
 if (!arquivo || !existsSync(arquivo)) {
@@ -102,8 +103,27 @@ if (peca.molde === "Documentario") {
     if (c.foto && !existsSync(`public/${c.foto}`)) erro("pesquisadora-de-imagens", `cena ${n}: a imagem ${c.foto} não existe em public/`);
     if (c.video && !existsSync(`public/${c.video}`)) erro("pesquisadora-de-imagens", `cena ${n}: o vídeo ${c.video} não existe em public/`);
   });
-  const semFoto = longas.filter((c) => !c.foto && !c.video).length;
-  if (semFoto) erro("pesquisadora-de-imagens", `${semFoto} cena(s) sem foto nem vídeo`);
+  // Cena sem imagem continua a imagem da anterior (o molde faz): o vídeo não para por
+  // falta de foto. Só barra sem imagem na 1ª cena ou com mais de 2/3 das cenas sem imagem.
+  const temImagem = (c: (typeof longas)[number]) => Boolean(c.foto || c.video);
+  const semFoto = longas.filter((c) => !temImagem(c)).length;
+  if (longas[0] && !temImagem(longas[0])) erro("pesquisadora-de-imagens", "a cena 1 precisa de foto ou vídeo (as cenas sem imagem continuam a anterior)");
+  else if (semFoto > (longas.length * 2) / 3)
+    erro("pesquisadora-de-imagens", `${semFoto} de ${longas.length} cenas sem imagem: é imagem de menos (tente termos mais gerais ou outra fonte)`);
+  else if (semFoto) {
+    // Quanto tempo a mesma imagem fica na tela (aviso: o ideal é até uns 30 s)
+    let maior = 0;
+    let atual = 0;
+    for (const c of longas) {
+      const quadros = quadrosDaFala({ fala: c.fala, narracao: c.narracao?.duracaoSeg ? { duracaoSeg: c.narracao.duracaoSeg } : undefined });
+      atual = temImagem(c) ? quadros : atual + quadros;
+      maior = Math.max(maior, atual);
+    }
+    aviso(
+      "pesquisadora-de-imagens",
+      `${semFoto} cena(s) sem imagem: continuam a imagem anterior (a mais longa fica ${Math.round(maior / FPS)} s na tela; o ideal é até uns 30 s, mas não pare o vídeo por isso)`,
+    );
+  }
   const usos = new Map<string, number>();
   for (const c of longas) if (c.foto) usos.set(c.foto, (usos.get(c.foto) ?? 0) + 1);
   for (const [foto, vezes] of usos) if (vezes > 3) erro("pesquisadora-de-imagens", `${foto} aparece em ${vezes} cenas (no máximo 3)`);

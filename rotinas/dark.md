@@ -33,3 +33,7 @@ Não faça commit nem push: o registro fica no Postaí. Se uma etapa falhar e n�
 Resposta final curta, em português do Brasil: título, tipo de vídeo, duração, quantas imagens e o resultado do envio.
 
 IDIOMA: todas as vozes do kit falam português, inglês e espanhol (voz nativa de cada língua). Nunca pare um vídeo dizendo que o kit não tem voz no idioma do canal; avisos de pronúncia em inglês ou espanhol são só diferenças do Whisper.
+
+IMAGENS: nunca pare o vídeo por falta de foto (acervo bloqueado, 429, nada achado). A cena sem foto continua a imagem da anterior, que fica mais tempo na tela. Só a cena 1 precisa de imagem; o vídeo só não sai com mais de 2/3 das cenas sem imagem.
+
+KIT ATUALIZADO: se o dono mandar mensagem nesta sessão depois que ela começou (continuar, refazer, tentar de novo), rode primeiro git pull --ff-only na pasta do kit (ou git fetch && git reset --hard origin/HEAD se o pull falhar): o Postaí pode ter corrigido o kit no meio, e a sessão só tem o kit de quando começou. Depois siga do ponto em que parou, sem refazer o que já está pronto.

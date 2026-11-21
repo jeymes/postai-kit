@@ -254,11 +254,28 @@ const TextoNaTela: React.FC<{ texto: string; inicio: number; ap: Aparencia }> = 
   );
 };
 
-const CenaDoDocumentario: React.FC<{ cena: Cena; indice: number; props: Documentario; ap: Aparencia }> = ({ cena, indice, props, ap }) => {
+/**
+ * A cena com a imagem que ela mostra: a própria ou, sem foto nem vídeo (o acervo
+ * bloqueou, não achou), a da última cena que tinha. A imagem fica mais tempo na
+ * tela, com outro movimento, e o vídeo não para por falta de foto (pedido do
+ * dono em 21/11/2026). O mapa animado (rota) é só da própria cena.
+ */
+function comImagem(cenas: Cena[], indice: number): Cena {
+  const cena = cenas[indice];
+  if (cena.foto || cena.video) return cena;
+  for (let j = indice - 1; j >= 0; j--) {
+    const antes = cenas[j];
+    if (antes.foto || antes.video) return { ...cena, foto: antes.foto, video: antes.video, inteira: antes.inteira };
+  }
+  return cena;
+}
+
+const CenaDoDocumentario: React.FC<{ cena: Cena; indice: number; props: Documentario; ap: Aparencia }> = ({ indice, props, ap }) => {
   const frame = useCurrentFrame();
+  const cena = comImagem(props.cenas, indice);
   const duracao = quadrosDaFala(cena);
   // Dentro do capítulo, a foto nova se mistura com a anterior; no começo de capítulo, entra do preto
-  const anterior = indice > 0 && !cena.capitulo ? props.cenas[indice - 1] : undefined;
+  const anterior = indice > 0 && !cena.capitulo ? comImagem(props.cenas, indice - 1) : undefined;
   const entrada = anterior?.foto ? Math.max(MISTURA, ap.mistura) : Math.max(ENTRADA_DO_CAPITULO, ap.mistura);
   const fade = interpolate(frame, [0, entrada], [0, 1], { extrapolateRight: "clamp", easing: cinema });
   return (

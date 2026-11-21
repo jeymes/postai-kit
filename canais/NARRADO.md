@@ -74,8 +74,12 @@ Num **ajuste** pedido pelo dono, o roteiro guardado vem em `conteudo/ajuste-<cor
 - **Gancho:** os primeiros 30 segundos dizem do que é o vídeo e por que ficar até o fim, com uma pergunta ou uma
   promessa que só se resolve no final. Nada de "Olá, pessoal" nem "Neste vídeo".
 - **Texto na tela** (`texto`): só data, lugar ou número, até 40 caracteres, e no máximo 1 a cada 5 cenas.
-- **Imagens:** toda cena tem `foto`. Uma imagem pode voltar em cenas seguidas com `movimento` diferente, mas não mais
+- **Imagens:** o ideal é toda cena ter `foto`. Uma imagem pode voltar em cenas seguidas com `movimento` diferente, mas não mais
   que 3 vezes no vídeo. Retrato em pé ou mapa: `"inteira": true`.
+- **Faltou imagem (o acervo bloqueou, não achou):** NUNCA pare o vídeo por isso. Deixe a cena sem `foto`: ela continua a
+  imagem da cena anterior, que fica mais tempo na tela com outro movimento. Só a cena 1 precisa de imagem, e o `conferir`
+  só barra com mais de 2/3 das cenas sem imagem. Espalhe as imagens que achou pelo vídeo (uma a cada 2 ou 3 cenas) para
+  nenhuma ficar mais de uns 30 s parada.
 - **Vídeo de fundo:** uma cena pode ter `video` (paisagem do Pixabay: céu, deserto, mar, fogo) no lugar da `foto`, no
   máximo 1 a cada 6 cenas e sem nada moderno na tela. A pesquisadora busca com `npm run buscar-videos`.
 - **Movimento:** sem `movimento`, a câmera alterna sozinha entre aproximar, esquerda, afastar, direita, subir, diagonal

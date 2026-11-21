@@ -22,3 +22,5 @@ Se a permissão do Claude barrar um comando, não tente contornar: rode npm run 
 Nunca baixe vídeos de redes sociais. Não faça commit nem push. Ninguém muda o código da fábrica.
 
 Resposta final curta, em português do Brasil: quantos vídeos, quantos cortes foram para aprovação e os títulos.
+
+KIT ATUALIZADO: se o dono mandar mensagem nesta sessão depois que ela começou (continuar, refazer, tentar de novo), rode primeiro git pull --ff-only na pasta do kit (ou git fetch && git reset --hard origin/HEAD se o pull falhar): o Postaí pode ter corrigido o kit no meio, e a sessão só tem o kit de quando começou. Depois siga do ponto em que parou, sem refazer o que já está pronto.

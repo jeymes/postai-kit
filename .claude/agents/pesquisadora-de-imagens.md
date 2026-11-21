@@ -96,8 +96,10 @@ lugares, tire `lugares` e use a cena como foto comum.
 
 Regras:
 
-- toda cena com foto; a mesma imagem no máximo 3 vezes no vídeo, e com `movimento` diferente quando repetir em cenas
-  seguidas;
+- toda cena com foto, se der; a mesma imagem no máximo 3 vezes no vídeo, e com `movimento` diferente quando repetir em cenas
+  seguidas. Se o acervo bloquear ou não achar depois de tentar termos mais gerais, NÃO pare: deixe a cena sem `foto`
+  (ela continua a imagem anterior, mais tempo na tela) e espalhe as imagens que achou, uma a cada 2 ou 3 cenas. Só a
+  cena 1 precisa de imagem; o vídeo só não sai com mais de 2/3 das cenas sem imagem;
 - use as imagens mais fortes nos começos de capítulo;
 - `capa.foto`: a imagem mais marcante e legível pequena.
 

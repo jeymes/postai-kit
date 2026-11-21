@@ -156,3 +156,20 @@ if (avisos.length) {
   if (idioma !== "pt")
     console.log(`\nA voz fala ${{ en: "inglês", es: "espanhol" }[idioma]} de verdade (voz nativa da língua): estes avisos são só diferenças do que o Whisper escreveu (nome próprio, número, sigla). Nunca pare o vídeo por eles; corrija só a palavra que estiver errada.`);
 } else console.log("A conferência não achou diferença entre o roteiro e o que a voz disse.");
+
+// Na rotina da nuvem (com o passe do Postaí), o ponto do vídeo é guardado aqui,
+// sozinho: o roteiro já está aprovado (a narração vem depois da checadora) e a
+// voz acabou de ficar pronta. Antes dependia da agente rodar o npm run ponto, e
+// em 21/11 ela pulou: o vídeo parou nas imagens e o "Continuar de onde parou"
+// não apareceu. O ponto de antes do render, se a equipe guardar depois, substitui este.
+if (process.env.POSTAI_CHAVE && !mudaram.length && /(^|\/)conteudo\//.test(caminho)) {
+  const ponto = spawnSync("npm", ["run", "--silent", "ponto", "--", "guardar", caminho, "roteiro"], {
+    encoding: "utf8",
+    shell: process.platform === "win32",
+  });
+  console.log(
+    ponto.status === 0
+      ? "\nPonto guardado no Postaí (roteiro e voz): se a execução parar, o dono continua daqui."
+      : `\n(O ponto não foi guardado: ${(ponto.stderr || ponto.stdout || "").trim().slice(-200)}. Rode npm run ponto -- guardar ${caminho} roteiro)`,
+  );
+}

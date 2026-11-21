@@ -39,3 +39,5 @@ Não faça commit nem push: o registro fica no Postaí. Se uma etapa falhar e n�
 Resposta final curta, em português do Brasil: título, formato, convidados, CTAs, duração e o resultado do envio.
 
 IDIOMA: todas as vozes do kit falam português, inglês e espanhol (voz nativa de cada língua). Nunca pare um vídeo dizendo que o kit não tem voz no idioma do canal; avisos de pronúncia em inglês ou espanhol são só diferenças do Whisper.
+
+KIT ATUALIZADO: se o dono mandar mensagem nesta sessão depois que ela começou (continuar, refazer, tentar de novo), rode primeiro git pull --ff-only na pasta do kit (ou git fetch && git reset --hard origin/HEAD se o pull falhar): o Postaí pode ter corrigido o kit no meio, e a sessão só tem o kit de quando começou. Depois siga do ponto em que parou, sem refazer o que já está pronto.
