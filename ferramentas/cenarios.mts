@@ -13,7 +13,8 @@ const indice = args.indexOf("--canal");
 // Sem --canal, usa a única pasta de canais/ (o caso normal: um canal por conta).
 const unico = existsSync("canais") ? readdirSync("canais", { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => join("canais", d.name)) : [];
 const pasta = indice >= 0 ? args[indice + 1] : unico.length === 1 ? unico[0] : null;
-const caminho = args.find((arg, i) => !arg.startsWith("--") && i !== indice + 1);
+// Sem --canal, indice é -1: o "indice + 1" (0) jogava fora o próprio roteiro
+const caminho = args.find((arg, i) => !arg.startsWith("--") && (indice < 0 || i !== indice + 1));
 if (!caminho || !existsSync(caminho) || !pasta) {
   if (!caminho || !existsSync(caminho)) console.error(`Arquivo do roteiro não encontrado${caminho ? `: ${caminho}` : ""}.`);
   if (!pasta) console.error("Falta o canal (--canal canais/<canal>).");

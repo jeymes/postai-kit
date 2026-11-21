@@ -52,6 +52,19 @@ type Foto = {
 };
 
 const args = process.argv.slice(2);
+// --help: o uso (antes dava "Item inválido: --help")
+if (args.includes("--help") || args.includes("-h")) {
+  const fonte = readFileSync(new URL(import.meta.url), "utf8");
+  console.log(
+    fonte
+      .split("\n")
+      .filter((linha) => linha.startsWith("//"))
+      .slice(0, 30)
+      .map((linha) => linha.replace(/^\/\/ ?/, ""))
+      .join("\n"),
+  );
+  process.exit(0);
+}
 const opcao = (nome: string) => {
   const i = args.indexOf(`--${nome}`);
   if (i < 0) return undefined;
@@ -69,6 +82,9 @@ const pasta = opcao("pasta") ?? "fotos";
 const fonte = opcao("fonte");
 const candidatos = flag("candidatos");
 const deitadas = flag("deitadas");
+// Estas opções saem de args antes de os itens serem lidos (senão "--sem-banco" vira "item inválido")
+const semBanco = flag("sem-banco");
+const nichoPedido = opcao("nicho");
 if (args.length === 0) {
   console.error('Uso: npm run buscar-fotos -- [--candidatos] arquivo="termo em inglês"[#n] ...');
   process.exit(1);
@@ -121,9 +137,19 @@ function marcarCansado(url: string | URL) {
  * fetch que tenta de novo quando o site pede calma (429) ou cai (5xx). Depois
  * de 2 bloqueios seguidos, desiste do site por 10 minutos (ver CANSADOS).
  */
+// O Wikimedia pede um pedido de cada vez, sem rajada: pelo menos 1 s entre eles
+let ultimoNoWikimedia = 0;
+async function calmaNoWikimedia(url: string | URL) {
+  if (grupo(url) !== "wikimedia") return;
+  const falta = ultimoNoWikimedia + 1000 - Date.now();
+  if (falta > 0) await espera(falta);
+  ultimoNoWikimedia = Date.now();
+}
+
 async function pedir(url: string | URL, cabecalhos: Record<string, string> = { "User-Agent": AGENTE }, tentativas = 3): Promise<Response> {
   if (cansado(url)) return new Response(null, { status: 429 });
   for (let vez = 1; ; vez++) {
+    await calmaNoWikimedia(url);
     const resp = await fetch(url, { headers: cabecalhos });
     if (resp.status !== 429 && resp.status < 500) return resp;
     if (resp.status === 429 && vez >= 2) {
@@ -451,8 +477,16 @@ async function buscarNoOpenverse(termo: string, soFotos = true): Promise<Foto[]>
   url.searchParams.set("license", deitadas || !soFotos ? "cc0,pdm" : "cc0");
   if (soFotos) url.searchParams.set("category", "photograph");
   url.searchParams.set("page_size", "20");
-  if (fonte && fonte !== "museus") url.searchParams.set("source", fonte);
-  const resp = await pedir(url);
+  // Nos museus (e na reserva quando a fonte pedida falha) o Openverse busca em todas as fontes dele
+  if (soFotos && fonte && !["museus", "commons", "pixabay", "unsplash"].includes(fonte)) url.searchParams.set("source", fonte);
+  let resp = await pedir(url);
+  // 400 com --fonte: o Openverse não conhece essa fonte (ex.: "wikimedia" escrito
+  // diferente). Tenta sem filtrar a fonte em vez de perder o item.
+  if (resp.status === 400 && url.searchParams.has("source")) {
+    console.log(`  (o Openverse não aceitou a fonte "${fonte}": procuro em todas as fontes dele)`);
+    url.searchParams.delete("source");
+    resp = await pedir(url);
+  }
   if (!resp.ok) throw new Error(`Openverse respondeu ${resp.status} para "${termo}"`);
   const { results } = (await resp.json()) as { results: Array<Foto & { title?: string }> };
   // Grandes o bastante e não muito compridas
@@ -467,8 +501,8 @@ async function buscarNoOpenverse(termo: string, soFotos = true): Promise<Foto[]>
 // Antes da internet, procura no banco: o que outra equipe já escolheu (mesma
 // pintura, mesmo mapa) vem de lá, sem pedir de novo ao Commons. A imagem nova
 // que a equipe escolher (menos as do Unsplash) é guardada para as próximas.
-const usarBanco = Boolean(process.env.POSTAI_CHAVE) && !flag("sem-banco");
-const nicho = opcao("nicho") ?? nichoDoCanal();
+const usarBanco = Boolean(process.env.POSTAI_CHAVE) && !semBanco;
+const nicho = nichoPedido ?? nichoDoCanal();
 
 /** O nicho do canal (o tema ou o que divulga), do canal-postai.md, para o banco organizar */
 function nichoDoCanal(): string {
@@ -518,7 +552,12 @@ async function buscar(termo: string): Promise<Foto[]> {
     : [];
   // Com 4 ou mais boas no banco, nem vai à internet (mais rápido e sem o limite do Commons)
   if (doBanco.length >= 4) return doBanco;
-  const daInternet = await buscarNaInternet(termo);
+  // A internet falhou de vez: o que o banco tinha ainda serve
+  const daInternet = await buscarNaInternet(termo).catch((erro) => {
+    if (!doBanco.length) throw erro;
+    console.log(`  (${erro instanceof Error ? erro.message : String(erro)}: fico com as do banco)`);
+    return [] as Foto[];
+  });
   return [...doBanco, ...daInternet.filter((f) => !doBanco.some((b) => b.foreign_landing_url === f.foreign_landing_url))];
 }
 
@@ -558,12 +597,30 @@ async function guardarNoBanco(arquivo: string, foto: Foto, termo: string) {
   });
 }
 
-async function buscarNaInternet(termo: string): Promise<Foto[]> {
+async function buscarNaFonte(termo: string): Promise<Foto[]> {
   if (fonte === "commons") return buscarNoCommons(termo);
   if (fonte === "museus") return buscarNosMuseus(termo);
   if (fonte === "pixabay") return buscarNoPixabay(termo);
   if (fonte === "unsplash") return buscarNoUnsplash(termo);
   return buscarNoOpenverse(termo);
+}
+
+/**
+ * A fonte pedida e, se ela bloquear a máquina (o Commons dá 429 na nuvem), cair
+ * ou não achar nada, todos os acervos juntos (os museus, o Commons, o Openverse,
+ * o Pixabay e o Unsplash). Antes o item só falhava e o vídeo saía com menos fotos.
+ */
+async function buscarNaInternet(termo: string): Promise<Foto[]> {
+  if (fonte === "museus") return buscarNosMuseus(termo);
+  const nome = fonte ?? "Openverse";
+  try {
+    const fotos = await buscarNaFonte(termo);
+    if (fotos.length) return fotos;
+    console.log(`  (nada em ${nome} para "${termo}": procuro em todos os acervos)`);
+  } catch (erro) {
+    console.log(`  (${erro instanceof Error ? erro.message : String(erro)}: procuro em todos os acervos)`);
+  }
+  return buscarNosMuseus(termo);
 }
 
 /** Baixa e grava em JPEG, com o lado menor em 1080 px (candidata: 480 px de largura, só para olhar) */
@@ -615,7 +672,9 @@ for (const [n, item] of itens.entries()) {
     }
     fotos ??= await buscar(item.termo);
     if (fotos.length === 0) {
-      console.error(`✗ ${item.arquivo}: nada em CC0 para "${item.termo}" (tente outro termo em inglês)`);
+      console.error(
+        `✗ ${item.arquivo}: nenhuma imagem livre para "${item.termo}" em nenhum acervo (tente um termo mais geral em inglês: o lugar, o objeto ou a época, sem nome próprio raro)`,
+      );
       process.exitCode = 1;
       continue;
     }
@@ -639,10 +698,13 @@ for (const [n, item] of itens.entries()) {
         const nome = foto.titulo || decodeURIComponent(foto.foreign_landing_url.split("/").pop() ?? "").replace(/^File:/, "");
         return `${i + 1}: ${nome.slice(0, 70)} (${foto.source}, ${foto.width}×${foto.height})`;
       });
-      console.log(`• ${item.arquivo}: ${opcoes.length} opções em ${pastaCandidatos}/${item.arquivo}-N.jpg (480 px)\n    ${nomes.join("\n    ")}`);
+      console.log(`• ${item.arquivo}: ${opcoes.length} ${opcoes.length === 1 ? "opção" : "opções"} em ${pastaCandidatos}/${item.arquivo}-N.jpg (480 px)\n    ${nomes.join("\n    ")}`);
     } else {
       const foto = fotos[item.escolha - 1];
-      if (!foto) throw new Error(`só há ${fotos.length} opções para "${item.termo}"`);
+      if (!foto)
+        throw new Error(
+          `a escolha #${item.escolha} não existe: "${item.termo}" tem ${fotos.length} ${fotos.length === 1 ? "opção (use #1)" : `opções (use #1 a #${fotos.length})`}`,
+        );
       await baixar(foto, join(destino, `${item.arquivo}.jpg`));
       // Banco: conta o uso (e esta conta não repete a imagem em vídeos seguidos).
       // Nova e livre: guarda no banco para as próximas equipes (o Unsplash nunca)
