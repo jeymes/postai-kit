@@ -78,6 +78,7 @@ narre tudo. Depois renderize, crítica e `npm run aprovar -- ... --substitui <co
 - **Texto na tela** (`texto`): só data, lugar ou número, até 40 caracteres, e no máximo 1 a cada 5 cenas.
 - **Imagens:** o ideal é toda cena ter `foto`. Uma imagem pode voltar em cenas seguidas com `movimento` diferente, mas não mais
   que 3 vezes no vídeo. Retrato em pé ou mapa: `"inteira": true`.
+- **Imagem errada não entra:** se os acervos só trazem imagens que não mostram o que a fala diz (outra pessoa, outra época, outro modelo), gere a cena com IA (`--fonte ia` com a descrição em inglês) em vez de usar a errada.
 - **Faltou imagem (o acervo bloqueou, não achou):** o `buscar-fotos` gera com IA sozinho (ou `--fonte ia` com a cena descrita em inglês; até 40 por dia; o vídeo sai marcado como sintético no YouTube). NUNCA pare o vídeo por isso. Deixe a cena sem `foto`: ela continua a
   imagem da cena anterior, que fica mais tempo na tela com outro movimento. Só a cena 1 precisa de imagem, e o `conferir`
   só barra com mais de 2/3 das cenas sem imagem. Espalhe as imagens que achou pelo vídeo (uma a cada 2 ou 3 cenas) para
