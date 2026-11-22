@@ -124,8 +124,12 @@ function remotion(...comando: string[]) {
   if (resultado.status !== 0) {
     const saida = `${resultado.stdout ?? ""}\n${resultado.stderr ?? ""}`
       .split("\n")
-      .filter((linha) => linha.trim() && !/^(Rendered|Encoded|Bundled|Bundling|Getting composition)/.test(linha.trim()));
-    console.error(saida.slice(-15).join("\n"));
+      .filter((linha) => linha.trim() && !/^(Rendered|Encoded|Bundled|Bundling|Getting composition)/.test(linha.trim()))
+      // O aviso de memória do Docker (inofensivo) vinha no fim e escondia o motivo real do erro
+      .filter((linha) => !/docker run|Docker memory limit|lower amount of memory|--memory flag/i.test(linha));
+    // Se a validação do Zod falhou, o motivo vem antes de avisos de memória do Docker: mostra mais linhas
+    const comZod = saida.some((linha) => /ZodError|Zod/.test(linha));
+    console.error(saida.slice(comZod ? -40 : -15).join("\n"));
     console.error(`\nFalhou: npx remotion ${comando.join(" ")}`);
     process.exit(resultado.status ?? 1);
   }

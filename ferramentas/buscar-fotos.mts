@@ -21,7 +21,7 @@
 //   --fonte unsplash (fotos modernas do Unsplash, uso comercial; passa pelo Postaí; avisa o Unsplash no download
 //   final e o CRÉDITO vai obrigatório na legenda do post, anotado no CREDITOS.md),
 //   --fonte ia (gera a imagem com IA pelo Postaí: só cena de clima, sem nome de modelo, marca ou pessoa real;
-//   é também o último recurso sozinho quando nenhum acervo tem a cena; até 20 por dia; marca o vídeo como sintético),
+//   é também o último recurso sozinho quando nenhum acervo tem a cena; até 40 por dia; marca o vídeo como sintético),
 //   --fonte pixabay (fotos e ilustrações modernas do Pixabay, uso comercial sem crédito; passa pelo
 //   Postaí, que tem a chave: precisa do passe da rotina ou da POSTAI_CHAVE)
 // As opções de cada item ficam em _candidatos/<item>.json: a escolha (#n) pega exatamente a que
@@ -121,7 +121,11 @@ function lerCansados(): Record<string, number> {
     return {};
   }
 }
+// Na rotina (com a chave do Postaí), o Commons vai pelo servidor do Postaí: a
+// máquina da nuvem divide o IP com muitos robôs e o Commons bloqueava (429)
+const commonsPeloPostai = Boolean(process.env.POSTAI_CHAVE);
 function cansado(url: string | URL) {
+  if (commonsPeloPostai && grupo(url) === "wikimedia") return false;
   return (lerCansados()[grupo(url)] ?? 0) > Date.now();
 }
 function marcarCansado(url: string | URL) {
@@ -185,6 +189,18 @@ async function contarNaTela(feitos: number) {
 
 /** Wikimedia Commons: só domínio público e CC0 (sem crédito obrigatório nem "compartilha igual") */
 async function buscarNoCommons(termo: string): Promise<Foto[]> {
+  if (commonsPeloPostai) {
+    try {
+      const { fotos } = JSON.parse(await ferramenta("buscar_no_commons", { termo })) as { fotos: Foto[] };
+      return fotos.filter(filtroDeTamanho);
+    } catch (erro) {
+      console.log(`  (o Commons pelo Postaí não respondeu: ${erro instanceof Error ? erro.message : String(erro)}; tento direto)`);
+    }
+  }
+  return buscarNoCommonsDireto(termo);
+}
+
+async function buscarNoCommonsDireto(termo: string): Promise<Foto[]> {
   const url = new URL("https://commons.wikimedia.org/w/api.php");
   for (const [k, v] of Object.entries({
     action: "query",
@@ -607,7 +623,7 @@ async function guardarNoBanco(arquivo: string, foto: Foto, termo: string) {
 /**
  * Último recurso (21/11/2026): a imagem gerada com IA pelo Postaí (FLUX no
  * Cloudflare), quando nenhum acervo livre tem a cena. Só cena de clima: o termo
- * vira a descrição (em inglês). Até 20 por conta por dia; o vídeo sai marcado
+ * vira a descrição (em inglês). Até 40 por conta por dia; o vídeo sai marcado
  * como conteúdo sintético no YouTube (o aprovar lê o CREDITOS.md).
  */
 async function gerarComIa(termo: string, pedidaDeProposito = fonte === "ia"): Promise<Foto[]> {
@@ -694,13 +710,25 @@ async function buscarNaInternet(termo: string): Promise<Foto[]> {
 }
 
 /** Baixa e grava em JPEG, com o lado menor em 1080 px (candidata: 480 px de largura, só para olhar) */
+/** A imagem do Commons vem pelo servidor do Postaí (guardada lá); se ele falhar, direto. */
+async function pelaRota(url: string): Promise<string> {
+  if (!commonsPeloPostai || new URL(url).hostname !== "upload.wikimedia.org") return url;
+  try {
+    return (JSON.parse(await ferramenta("baixar_do_commons", { url })) as { url: string }).url;
+  } catch (erro) {
+    console.log(`  (o Commons pelo Postaí não baixou: ${erro instanceof Error ? erro.message : String(erro)}; tento direto)`);
+    return url;
+  }
+}
+
 async function baixar(foto: Foto, saida: string, pequena = false) {
   // A prévia vem na versão pequena do acervo: sai rápido e não gasta o limite
   let url = pequena && foto.previa ? foto.previa : foto.url;
+  url = await pelaRota(url);
   let resp = await pedir(url, foto.cabecalhos);
   // A versão pequena falhou (o Openverse às vezes não gera): tenta a grande
-  if (!resp.ok && url !== foto.url) {
-    url = foto.url;
+  if (!resp.ok && foto.previa && pequena) {
+    url = await pelaRota(foto.url);
     resp = await pedir(url, foto.cabecalhos);
   }
   if (!resp.ok) throw new Error(`Não baixou ${url} (${resp.status})`);
