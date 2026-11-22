@@ -16,8 +16,9 @@
 // Uso: POSTAI_CHAVE=postai.xxx.yyy npm run aprovar -- conteudo/<peça>.json [--substitui <corteId>]
 //      (POSTAI_URL troca o endereço; o padrão é o do Postaí)
 import { spawnSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
-import { basename, join } from "node:path";
+import { existsSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { basename, dirname, join } from "node:path";
 import { exigirChave, ferramenta } from "./postai.ts";
 
 const args = process.argv.slice(2);
@@ -96,9 +97,53 @@ function semNarracao(p: { cenas?: Array<Record<string, unknown>> }) {
 // O pedir_envio devolve um comando curl por arquivo; daqui só sai a URL assinada.
 const urlDoComando = (comando: string) => /'(https:\/\/[^']+)'\s*$/.exec(comando)?.[1];
 
+// Tenta 3 vezes (a rede da nuvem às vezes cai no meio de um vídeo grande) e,
+// se não der, diz o motivo do curl (antes só dizia "não consegui subir")
 function subir(url: string, tipo: string, arquivo: string) {
-  const r = spawnSync("curl", ["--fail", "-sS", "-X", "PUT", "-H", `Content-Type: ${tipo}`, "-T", arquivo, url], { stdio: "inherit" });
-  if (r.status !== 0) throw new Error(`Não consegui subir ${arquivo}.`);
+  let motivo = "";
+  for (let vez = 1; vez <= 3; vez++) {
+    const r = spawnSync("curl", ["--fail", "-sS", "--retry", "2", "-X", "PUT", "-H", `Content-Type: ${tipo}`, "-T", arquivo, url], {
+      encoding: "utf8",
+      stdio: ["ignore", "inherit", "pipe"],
+    });
+    if (r.status === 0) return;
+    motivo = (r.stderr || `curl saiu com ${r.status}`).trim().slice(-300);
+    console.log(`  (não subiu ${arquivo}, tentativa ${vez} de 3: ${motivo})`);
+    if (vez < 3) spawnSync("sleep", [String(5 * vez)]);
+  }
+  throw new Error(`Não consegui subir ${arquivo}: ${motivo}`);
+}
+
+/**
+ * O pacote do vídeo para a refação: o roteiro como está (com a narração), as
+ * pastas das fotos e vídeos que ele usa e a voz (public/narracao/<peça>). Na
+ * refação, o npm run ajustes traz tudo de volta e a equipe não busca nem narra
+ * de novo o que não mudou. Só nos vídeos dos canais.
+ */
+function montarPacote(): string | null {
+  // O caminho já foi conferido no começo (sem ele, o aprovar sai antes)
+  const roteiro = caminho as string;
+  const nome = basename(roteiro, ".json");
+  const itens = new Set<string>([roteiro]);
+  const juntar = (v: unknown) => {
+    if (typeof v === "string" && /^(fotos|videos)\/.+\.[a-z0-9]{2,5}$/i.test(v)) itens.add(join("public", dirname(v)));
+    else if (Array.isArray(v)) v.forEach(juntar);
+    else if (v && typeof v === "object") Object.values(v).forEach(juntar);
+  };
+  juntar(peca);
+  const voz = join("public", "narracao", nome);
+  if (existsSync(voz)) itens.add(voz);
+  const manifesto = ".postai-pacote.json";
+  writeFileSync(manifesto, JSON.stringify({ roteiro, nome }));
+  itens.add(manifesto);
+  const arquivo = join(tmpdir(), `pacote-${nome}.tar.gz`);
+  const r = spawnSync("tar", ["-czf", arquivo, ...[...itens].filter((i) => existsSync(i))], { encoding: "utf8" });
+  rmSync(manifesto, { force: true });
+  if (r.status !== 0) {
+    console.log(`  (o pacote não foi montado: ${(r.stderr || "").trim().slice(-200)})`);
+    return null;
+  }
+  return arquivo;
 }
 
 try {
@@ -118,6 +163,22 @@ try {
     const local = a.arquivo === "capa" ? capa : video;
     if (!local) continue;
     subir(url, local.tipo, local.arquivo);
+  }
+
+  // O pacote para a refação (não trava a aprovação se falhar)
+  if (doCanal) {
+    const pacote = montarPacote();
+    if (pacote) {
+      try {
+        const { url } = JSON.parse(await ferramenta("pedir_envio_do_pacote", { envioId: envio.envioId, tamanho: statSync(pacote).size })) as { url: string };
+        subir(url, "application/gzip", pacote);
+        console.log(`  (pacote da refação guardado: ${(statSync(pacote).size / 1024 / 1024).toFixed(1)} MB)`);
+      } catch (erro) {
+        console.log(`  (o pacote da refação não foi guardado: ${erro instanceof Error ? erro.message : String(erro)}; uma refação começaria do roteiro)`);
+      } finally {
+        rmSync(pacote, { force: true });
+      }
+    }
   }
 
   console.log("3/3 Mandando para aprovação");

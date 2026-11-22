@@ -59,9 +59,11 @@ Conte o andamento de cada agente como sempre (`npm run andamento`). Antes de cad
 7. **publicacao:** mandar para aprovação (o `npm run aprovar` já manda como vídeo longo, só para o YouTube, com os
    capítulos na descrição) e registrar o episódio.
 
-Num **ajuste** pedido pelo dono, o roteiro guardado vem em `conteudo/ajuste-<corteId>.json`: mude só o que ele pediu
-(texto com a roteirista e a checadora, imagem com a pesquisadora), narre de novo, renderize, crítica e
-`npm run aprovar -- ... --substitui <corteId>`.
+Num **ajuste** (pedido pelo dono ou a refação que a crítica pediu), o roteiro vem em `conteudo/ajuste-<corteId>.json`.
+Se o `npm run ajustes` disser **"pacote de volta"**, as fotos e a voz do vídeo já estão nesta máquina: mude só o que foi
+pedido (texto com a roteirista e a checadora, imagem com a pesquisadora), NÃO busque de novo as fotos que não mudaram
+e rode o `narrar` normal (ele só refaz a voz das cenas que mudaram). Sem o pacote (vídeo antigo), busque as imagens e
+narre tudo. Depois renderize, crítica e `npm run aprovar -- ... --substitui <corteId>`.
 
 ## Regras de forma
 
