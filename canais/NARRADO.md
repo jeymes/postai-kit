@@ -29,7 +29,7 @@ genéricos". Monetiza quando **cada vídeo tem história, foco e conceito própr
 | `checadora` | confere cada fato com as fontes e a forma do roteiro; devolve APROVADO ou CORRIGIR |
 | `pesquisadora-de-imagens` | baixa as imagens livres (Wikimedia Commons e Openverse), **olha cada uma** e põe no roteiro |
 | `producao` | narra e renderiza (o mesmo de sempre) |
-| `critica-narrado` | assiste por amostras, ouve o começo e decide se está bom para o dono |
+| `critica-narrado` | olha a prévia antes do render (imagens, legendas, capa) e depois confere o vídeo pronto |
 | `publicacao` | manda para aprovação e registra o episódio (o mesmo de sempre) |
 
 ## Passo a passo da coordenadora
@@ -52,18 +52,26 @@ Conte o andamento de cada agente como sempre (`npm run andamento`). Antes de cad
    - se o `narrar` avisou que alguma fala mudou, narre de novo;
    - confira a duração total: se ficou mais de 20% longe da duração do canal, a roteirista corta ou acrescenta cenas
      (ela mantém as fontes), a pesquisadora põe imagem só nas cenas novas e a produção narra de novo.
-5. **producao:** só com o `npm run conferir -- conteudo/<arquivo>.json --com-voz` limpo, `npm run previa` e depois renderizar (`npm run renderizar`), também em segundo plano. O vídeo longo demora: uns 4 a 5 minutos de
-   narração e render por minuto de vídeo (num Mac M1, 6 minutos levaram 26). Não pare no meio.
-6. **critica-narrado:** assistir. Se vier CORRIGIR, mande cada item para quem ela disse e renderize de novo (no máximo
-   2 voltas). Se ainda ficar algo, a publicação usa `--duvida`.
-7. **publicacao:** mandar para aprovação (o `npm run aprovar` já manda como vídeo longo, só para o YouTube, com os
+5. **producao:** só com o `npm run conferir -- conteudo/<arquivo>.json --com-voz` limpo, a prévia: `npm run previa`
+   (um quadro de CADA cena, uns 30 segundos num vídeo de 80 cenas) e `npm run renderizar -- conteudo/<arquivo>.json --capa`
+   (só a capa).
+6. **critica-narrado, na prévia (antes do render):** olha cada quadro da prévia, a capa e as falas. Se vier CORRIGIR,
+   mande cada item para quem ela disse, refaça a prévia e chame a crítica de novo (no máximo 3 voltas: a prévia é
+   barata). **Só renderize com a prévia APROVADA.** Antes, um erro de imagem só aparecia no vídeo pronto e custava um
+   render inteiro de novo (até 1 hora num vídeo de 10 minutos).
+7. **producao:** renderizar (`npm run renderizar`) em segundo plano, uma vez. O vídeo longo demora: uns 4 a 5 minutos
+   de narração e render por minuto de vídeo. Não pare no meio.
+8. **critica-narrado, no vídeo pronto:** a conferência rápida (voz, música, duração, quadro quebrado). Se vier
+   CORRIGIR, mande cada item para quem ela disse e renderize de novo (no máximo 1 volta). Se ainda ficar algo, a
+   publicação usa `--duvida`.
+9. **publicacao:** mandar para aprovação (o `npm run aprovar` já manda como vídeo longo, só para o YouTube, com os
    capítulos na descrição) e registrar o episódio.
 
 Num **ajuste** (pedido pelo dono ou a refação que a crítica pediu), o roteiro vem em `conteudo/ajuste-<corteId>.json`.
 Se o `npm run ajustes` disser **"pacote de volta"**, as fotos e a voz do vídeo já estão nesta máquina: mude só o que foi
 pedido (texto com a roteirista e a checadora, imagem com a pesquisadora), NÃO busque de novo as fotos que não mudaram
 e rode o `narrar` normal (ele só refaz a voz das cenas que mudaram). Sem o pacote (vídeo antigo), busque as imagens e
-narre tudo. Depois renderize, crítica e `npm run aprovar -- ... --substitui <corteId>`.
+narre tudo. Depois prévia, crítica na prévia, renderize, crítica no vídeo pronto e `npm run aprovar -- ... --substitui <corteId>`.
 
 ## Regras de forma
 

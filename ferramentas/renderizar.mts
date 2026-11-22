@@ -21,6 +21,7 @@ import { cpus, totalmem } from "node:os";
 import { basename, join } from "node:path";
 import { duracaoDoMolde, FPS, iniciosDasCenas, MOLDES_3D, MOLDES_DE_VIDEO, QUADROS_DA_IMAGEM, quadrosDaPrevia } from "../src/moldes/tempos.ts";
 import { fonte3dDesatualizada, prepararFonte3d } from "./fonte-3d.mts";
+import { tirarImagens, type Imagem } from "./varias-imagens.mts";
 
 const MOLDES = [...MOLDES_DE_VIDEO, "Carrossel"];
 
@@ -141,6 +142,17 @@ function imagem(composicao: string, dados: unknown, destino: string, quadro = QU
   remotion("still", composicao, destino, `--frame=${quadro}`, "--image-format=jpeg", "--jpeg-quality=90");
 }
 
+/** Várias imagens no mesmo navegador (ferramentas/varias-imagens.mts); se der erro, uma por vez como antes */
+async function variasImagens(composicao: string, lista: Imagem[]) {
+  try {
+    await tirarImagens(composicao, lista, gl[0]?.replace("--gl=", ""));
+  } catch (erro) {
+    console.log(`As imagens de uma vez falharam (${erro instanceof Error ? erro.message.split("\n")[0] : erro}); tirando uma por vez.`);
+    for (const { dados, quadro, destino } of lista) imagem(composicao, dados, destino, quadro);
+  }
+  for (const { destino } of lista) arquivos.push({ arquivo: destino, tipo: "image/jpeg", tamanho: tamanho(destino) });
+}
+
 /** Capa padrão do vídeo, quando a peça não traz a sua: a primeira frase e a primeira foto */
 function capaPadrao() {
   const primeira = props.cenas?.[0];
@@ -259,17 +271,15 @@ if (args.includes("--capa") && molde === "Documentario") {
 
 if (molde === "Carrossel") {
   // O carrossel já é feito de imagens: a prévia são os próprios slides.
-  props.slides.forEach((_: unknown, indice: number) => {
-    const destino = join(saida, `slide-${String(indice + 1).padStart(2, "0")}.jpg`);
-    imagem("Carrossel", { ...props, indice }, destino);
-    arquivos.push({ arquivo: destino, tipo: "image/jpeg", tamanho: tamanho(destino) });
-  });
+  const slides = props.slides.map((_: unknown, indice: number) => ({
+    dados: { ...props, indice },
+    quadro: QUADROS_DA_IMAGEM - 1,
+    destino: join(saida, `slide-${String(indice + 1).padStart(2, "0")}.jpg`),
+  }));
+  await variasImagens("Carrossel", slides);
 } else if (previa) {
-  quadrosDaPrevia(molde, props).forEach((quadro, i) => {
-    const destino = join(saida, `previa-${i + 1}.jpg`);
-    imagem(molde, props, destino, quadro);
-    arquivos.push({ arquivo: destino, tipo: "image/jpeg", tamanho: tamanho(destino) });
-  });
+  const quadros = quadrosDaPrevia(molde, props).map((quadro, i) => ({ dados: props, quadro, destino: join(saida, `previa-${i + 1}.jpg`) }));
+  await variasImagens(molde, quadros);
 } else {
   duracaoSeg = Math.round((duracaoDoMolde(molde, props) / FPS) * 10) / 10;
   const video = join(saida, "video.mp4");

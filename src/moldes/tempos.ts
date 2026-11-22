@@ -147,10 +147,13 @@ export function iniciosDasCenas(molde: string, c: Conteudo) {
 export const quadrosDaPrevia = (molde: string, c: Conteudo) => {
   const inicios = iniciosDasCenas(molde, c);
   let quadros = cenasDoMolde(molde, c).map((d, i) => inicios[i] + Math.round(d * 0.75));
-  // Vídeo longo: no máximo 12 quadros, espalhados pelo vídeo
-  if (molde === "Documentario" && quadros.length > 12) {
-    const passo = quadros.length / 12;
-    quadros = Array.from({ length: 12 }, (_, i) => quadros[Math.floor(i * passo)]);
+  // Vídeo longo: todas as cenas (desde 22/11/2026 a prévia tira tudo no mesmo
+  // navegador, uns 0,3 s por cena), para a crítica ver cada imagem antes do
+  // render. Acima de 150, espalhadas pelo vídeo.
+  const MAX = 150;
+  if (molde === "Documentario" && quadros.length > MAX) {
+    const passo = quadros.length / MAX;
+    quadros = Array.from({ length: MAX }, (_, i) => quadros[Math.floor(i * passo)]);
   }
   // Na Conversa, o primeiro quadro mostra o balão do CTA inicial já inteiro
   if (molde === "Conversa" && c.ctaInicial) quadros[0] = 50;

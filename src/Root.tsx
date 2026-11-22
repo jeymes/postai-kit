@@ -1,5 +1,6 @@
 import React from "react";
 import { Composition, Folder } from "remotion";
+import { TexturaDoNarrado } from "./estilos/narrado";
 import { AntesDepois, antesDepoisExemplo, antesDepoisSchema } from "./moldes/AntesDepois";
 import { Capa, capaExemplo, capaSchema } from "./moldes/Capa";
 import { Carrossel, carrosselExemplo, carrosselSchema } from "./moldes/Carrossel";
@@ -38,6 +39,8 @@ const duracao = <T extends Record<string, unknown>>(id: string, schema: { parse:
 export const RemotionRoot: React.FC = () => (
   <>
     <Folder name="Videos">
+      {/* As texturas do Canal dark, desenhadas uma vez (public/texturas/LEIA.md) */}
+      <Composition id="TexturaDoNarrado" component={TexturaDoNarrado} defaultProps={{ tipo: "grao" as const, semente: 0 }} width={1920} height={1080} fps={30} durationInFrames={1} />
       <Composition id="Oferta" component={Oferta} schema={ofertaSchema} defaultProps={ofertaExemplo} {...video} durationInFrames={duracaoDoMolde("Oferta", ofertaExemplo)} {...duracao("Oferta", ofertaSchema)} />
       <Composition id="Lista" component={Lista} schema={listaSchema} defaultProps={listaExemplo} {...video} durationInFrames={duracaoDoMolde("Lista", listaExemplo)} {...duracao("Lista", listaSchema)} />
       <Composition id="Tutorial" component={Tutorial} schema={tutorialSchema} defaultProps={tutorialExemplo} {...video} durationInFrames={duracaoDoMolde("Tutorial", tutorialExemplo)} {...duracao("Tutorial", tutorialSchema)} />

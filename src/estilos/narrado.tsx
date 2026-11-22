@@ -6,7 +6,7 @@ import { loadFont as garamond } from "@remotion/google-fonts/EBGaramond";
 import { loadFont as lora } from "@remotion/google-fonts/Lora";
 import { loadFont as specialElite } from "@remotion/google-fonts/SpecialElite";
 import React from "react";
-import { AbsoluteFill, random, useCurrentFrame } from "remotion";
+import { AbsoluteFill, Img, random, staticFile, useCurrentFrame } from "remotion";
 import { z } from "zod";
 import { cores, fontes } from "../nucleo/marca";
 
@@ -63,18 +63,42 @@ function fonteDa(letra: LetraDoNarrado): string | null {
 // ---- Texturas por cima da imagem (desenhadas pelo kit, sem arquivo) ----
 
 /** Grão de filme que muda a cada quadro */
+/**
+ * As texturas desenhadas UMA vez (npx remotion still TexturaDoNarrado, ver
+ * public/texturas/LEIA.md): o papel velho e 6 quadros de granulado. Antes o
+ * filtro de ruído do navegador redesenhava tudo a cada quadro e o Pergaminho
+ * renderizava 2,1x mais devagar que o Clássico (medido em 22/11/2026).
+ */
+export const TexturaDoNarrado: React.FC<{ tipo: "papel" | "grao"; semente: number }> = ({ tipo, semente }) => (
+  <svg width="100%" height="100%">
+    {tipo === "papel" ? (
+      <filter id="papel-velho">
+        <feTurbulence type="fractalNoise" baseFrequency="0.012 0.02" numOctaves="4" seed="7" />
+        <feColorMatrix type="matrix" values="0 0 0 0 0.86  0 0 0 0 0.72  0 0 0 0 0.48  0 0 0 0.9 0" />
+      </filter>
+    ) : (
+      <filter id="grao">
+        <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed={semente} stitchTiles="stitch" />
+        <feColorMatrix type="saturate" values="0" />
+      </filter>
+    )}
+    <rect width="100%" height="100%" filter={`url(#${tipo === "papel" ? "papel-velho" : "grao"})`} />
+  </svg>
+);
+
+// O granulado: 6 quadros prontos (public/texturas/grao-N.webp) que se revezam.
+// Os 6 ficam montados e só o do quadro aparece: nenhum carrega no meio do vídeo
 const Grao: React.FC<{ forca: number }> = ({ forca }) => {
   const frame = useCurrentFrame();
-  const id = `grao-${frame % 6}`;
   return (
     <AbsoluteFill style={{ opacity: forca, mixBlendMode: "overlay", pointerEvents: "none" }}>
-      <svg width="100%" height="100%">
-        <filter id={id}>
-          <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed={frame % 6} stitchTiles="stitch" />
-          <feColorMatrix type="saturate" values="0" />
-        </filter>
-        <rect width="100%" height="100%" filter={`url(#${id})`} />
-      </svg>
+      {[0, 1, 2, 3, 4, 5].map((i) => (
+        <Img
+          key={i}
+          src={staticFile(`texturas/grao-${i}.webp`)}
+          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: frame % 6 === i ? 1 : 0 }}
+        />
+      ))}
     </AbsoluteFill>
   );
 };
@@ -94,13 +118,8 @@ const Vinheta: React.FC<{ cor: string; forca: number }> = ({ cor, forca }) => (
 const Papel: React.FC = () => (
   <>
     <AbsoluteFill style={{ opacity: 0.45, mixBlendMode: "multiply", pointerEvents: "none" }}>
-      <svg width="100%" height="100%">
-        <filter id="papel-velho">
-          <feTurbulence type="fractalNoise" baseFrequency="0.012 0.02" numOctaves="4" seed="7" />
-          <feColorMatrix type="matrix" values="0 0 0 0 0.86  0 0 0 0 0.72  0 0 0 0 0.48  0 0 0 0.9 0" />
-        </filter>
-        <rect width="100%" height="100%" filter="url(#papel-velho)" />
-      </svg>
+      {/* O papel velho pronto (public/texturas/papel.webp): é o mesmo em todo quadro */}
+      <Img src={staticFile("texturas/papel.webp")} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
     </AbsoluteFill>
     <Vinheta cor="rgba(48,26,8,0.95)" forca={0.9} />
   </>
