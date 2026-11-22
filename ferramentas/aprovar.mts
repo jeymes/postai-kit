@@ -196,6 +196,8 @@ try {
     ...(duvida ? { duvida } : {}),
     // Imagem de IA no vídeo: o YouTube recebe a marcação de conteúdo sintético
     ...(sintetico ? { sintetico: true } : {}),
+    // Quanto o render levou e em que máquina (para medir a troca das abas)
+    ...((info as { render?: unknown }).render ? { render: (info as { render?: unknown }).render } : {}),
   });
   if (sintetico) console.log("(Este vídeo tem imagem gerada com IA: no YouTube ele sai marcado como conteúdo sintético.)");
   console.log(`\nPronto: ${resposta}`);

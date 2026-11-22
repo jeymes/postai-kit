@@ -17,6 +17,7 @@
 //   (--detalhes mostra o progresso do Remotion; sem ele, só o resumo ou o erro)
 import { spawnSync } from "node:child_process";
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { cpus, totalmem } from "node:os";
 import { basename, join } from "node:path";
 import { duracaoDoMolde, FPS, iniciosDasCenas, MOLDES_3D, MOLDES_DE_VIDEO, QUADROS_DA_IMAGEM, quadrosDaPrevia } from "../src/moldes/tempos.ts";
 import { fonte3dDesatualizada, prepararFonte3d } from "./fonte-3d.mts";
@@ -244,6 +245,7 @@ const tamanho = (arquivo: string) => statSync(arquivo).size;
 const arquivos: Array<{ arquivo: string; tipo: string; tamanho: number }> = [];
 let duracaoSeg: number | null = null;
 let capitulos: string | null = null;
+let desempenho: { nucleos: number; memoriaGb: number; abas: number; segundos: number } | null = null;
 
 // --capa: só a capa do vídeo longo, em segundos (para ajustar a capa.marca do
 // círculo, da seta, da lupa ou do carimbo olhando o resultado, sem renderizar o vídeo)
@@ -276,7 +278,19 @@ if (molde === "Carrossel") {
   // 450 MB em 10 minutos, abaixo do limite de 1 GB do Postaí. Pintura e foto se
   // movendo comprimem mal com o crf: 10 minutos passariam de 600 MB.
   const qualidade = molde === "Documentario" ? ["--video-bitrate=6M", "--audio-bitrate=192k"] : ["--crf=20"];
-  remotion("render", molde, video, "--codec=h264", ...qualidade);
+  // Quantas abas do Chrome desenham ao mesmo tempo (22/11/2026): todos os núcleos,
+  // no máximo o que a memória aguenta (cada aba gasta uns 450 MB; no 3D, uns 800).
+  // Antes valia o padrão do Remotion (metade dos núcleos). O tempo fica anotado
+  // no info.json para comparar.
+  const nucleos = cpus().length;
+  const memoriaGb = totalmem() / 2 ** 30;
+  const abas = Math.max(1, Math.min(nucleos, Math.floor((memoriaGb - 1.5) / (com3d ? 0.8 : 0.45))));
+  console.log(`Render: ${nucleos} núcleos, ${memoriaGb.toFixed(1)} GB de memória, ${abas} abas ao mesmo tempo.`);
+  const inicioDoRender = Date.now();
+  remotion("render", molde, video, "--codec=h264", `--concurrency=${abas}`, ...qualidade);
+  const segundosDoRender = Math.round((Date.now() - inicioDoRender) / 1000);
+  console.log(`Render levou ${Math.floor(segundosDoRender / 60)} min ${segundosDoRender % 60} s.`);
+  desempenho = { nucleos, memoriaGb: Math.round(memoriaGb * 10) / 10, abas, segundos: segundosDoRender };
   const vinheta = fimDoVideo === "chamada" ? 0 : colarVinheta(video, molde === "Documentario" ? { largura: 1920, altura: 1080 } : { largura: 1080, altura: 1920 }, qualidade);
   if (vinheta) duracaoSeg = Math.round((duracaoSeg + vinheta) * 10) / 10;
   arquivos.push({ arquivo: video, tipo: "video/mp4", tamanho: tamanho(video) });
@@ -301,7 +315,7 @@ if (molde === "Carrossel") {
 }
 
 rmSync(arquivoDeProps, { force: true });
-const info = { molde, previa, duracaoSeg, arquivos, post: post ?? null, ...(capitulos ? { capitulos } : {}) };
+const info = { molde, previa, duracaoSeg, arquivos, post: post ?? null, ...(capitulos ? { capitulos } : {}), ...(desempenho ? { render: desempenho } : {}) };
 writeFileSync(join(saida, "info.json"), JSON.stringify(info, null, 2));
 console.log(`\nPronto: ${saida}/`);
 console.log(JSON.stringify(info, null, 2));
