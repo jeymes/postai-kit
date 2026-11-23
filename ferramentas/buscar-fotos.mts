@@ -92,9 +92,13 @@ if (args.length === 0) {
   process.exit(1);
 }
 const itens = args.map((a) => {
-  const m = a.match(/^([\w-]+)=(.+?)(?:#(\d+))?$/);
+  const m = a.match(/^([\p{L}\p{N}_-]+)=(.+?)(?:#(\d+))?$/u);
   if (!m) throw new Error(`Item inválido: ${a} (use arquivo="termo"#n)`);
-  return { arquivo: m[1], termo: m[2], escolha: Number(m[3] ?? 1) };
+  // Aceita acento no nome, mas grava sem ele (poços → pocos.jpg): nome com acento
+  // dava problema em link, no R2 e no pacote da refação
+  const arquivo = m[1].normalize("NFD").replace(/\p{M}/gu, "");
+  if (arquivo !== m[1]) console.log(`(o arquivo "${m[1]}" fica sem acento: ${arquivo}.jpg; use esse nome no roteiro)`);
+  return { arquivo, termo: m[2], escolha: Number(m[3] ?? 1) };
 });
 
 const destino = join("public", pasta);
