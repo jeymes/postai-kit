@@ -491,7 +491,14 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
     const aproxima = spring({ frame: frame - naCena(props.zoom.de) + 8, fps, config: { damping: 18 } });
     const afasta = spring({ frame: frame - fimDaCena(props.zoom.ate + 1) + 8, fps, config: { damping: 18 } });
     // Era fixo em 0.14: no feed quase não aparecia (23/11/2026); agora 0.25 ou o que o roteiro pedir
-    zoom = 1 + (props.zoom.forca ?? 0.25) * (aproxima - afasta);
+    // Braços para cima (comemorando, mãos na cabeça) durante o zoom: aproxima menos, senão
+    // o braço sai do quadro (anotação da crítica de 23/11/2026)
+    const deZoom = naCena(props.zoom.de);
+    const ateZoom = fimDaCena(props.zoom.ate);
+    const bracosAlto = momentosDe(props.zoom.em, linha).some(
+      (m) => m.em >= deZoom - 1 && m.em <= ateZoom && (m.pose === "comemorando" || m.pose === "cabeca"),
+    );
+    zoom = 1 + (props.zoom.forca ?? 0.25) * (bracosAlto ? 0.5 : 1) * (aproxima - afasta);
     const indice = Math.max(0, elenco.findIndex((p) => p.id === props.zoom?.em));
     origem = lugares[indice].origem;
   }
@@ -707,7 +714,15 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
           <React.Fragment key={i}>
             {cena.narracao && (
               <Sequence from={inicio} layout="none" name={`Fala ${i + 1}`}>
-                <Audio src={staticFile(cena.narracao.audio)} />
+                {/* Entra e sai suave (2 e 4 quadros): a fala terminava num corte seco e a do
+                    outro parecia cortar a anterior */}
+                <Audio
+                  src={staticFile(cena.narracao.audio)}
+                  volume={(f) => {
+                    const fim = Math.ceil(cena.narracao!.duracaoSeg * fps);
+                    return interpolate(f, [0, 2, fim - 4, fim], [0, 1, 1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+                  }}
+                />
               </Sequence>
             )}
             {cena.som && <Som tipo={cena.som} em={Math.max(0, inicio - 4)} />}
