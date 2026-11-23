@@ -6,9 +6,11 @@ export type Legenda = {
   fimMs: number;
   /** Começa uma página nova aqui (a primeira palavra de cada cena): nunca junta falas de cenas diferentes */
   nova?: boolean;
+  /** A frase termina nesta palavra (o ponto final sai do texto, mas a página fecha aqui) */
+  fimDeFrase?: boolean;
 };
 
-type Pagina = { startMs: number; tokens: Array<{ text: string; fromMs: number; toMs: number }> };
+type Pagina = { startMs: number; tokens: Array<{ text: string; fromMs: number; toMs: number; fimDeFrase?: boolean }> };
 
 /**
  * Junta as palavras em páginas de uma linha só: palavras próximas no tempo (até
@@ -23,9 +25,10 @@ export function paginar(legendas: Legenda[], maxLetras: number, juntarMs = 1100)
     const texto = l.texto.trim();
     if (!texto) continue;
     const atual = paginas[paginas.length - 1];
-    const token = { text: texto, fromMs: l.inicioMs, toMs: l.fimMs };
-    // Fim de frase (. ! ? …) fecha a página: a próxima frase começa noutra
-    const fimDeFrase = atual ? /[.!?…]["”')]*$/.test(atual.tokens[atual.tokens.length - 1].text) : false;
+    const token = { text: texto, fromMs: l.inicioMs, toMs: l.fimMs, ...(l.fimDeFrase ? { fimDeFrase: true } : {}) };
+    // Fim de frase (. ! ? …, ou a marca do narrar quando o ponto saiu do texto) fecha a página
+    const ultimaDaPagina = atual?.tokens[atual.tokens.length - 1];
+    const fimDeFrase = ultimaDaPagina ? ultimaDaPagina.fimDeFrase === true || /[.!?…]["”')]*$/.test(ultimaDaPagina.text) : false;
     if (!atual || l.nova || fimDeFrase || l.inicioMs - atual.startMs > juntarMs || letras(atual) + 1 + texto.length > maxLetras) {
       paginas.push({ startMs: l.inicioMs, tokens: [token] });
     } else {
@@ -38,7 +41,9 @@ export function paginar(legendas: Legenda[], maxLetras: number, juntarMs = 1100)
     const agora = paginas[i];
     const mesmaFala = agora.startMs - antes.tokens[antes.tokens.length - 1].toMs < 400;
     const cabe = antes.tokens[antes.tokens.length - 1].text.length + 1 + agora.tokens[0].text.length <= maxLetras;
-    if (agora.tokens.length === 1 && antes.tokens.length >= 3 && mesmaFala && cabe) {
+    const ultimaDeAntes = antes.tokens[antes.tokens.length - 1];
+    const acabouFrase = ultimaDeAntes.fimDeFrase === true || /[.!?…]["”')]*$/.test(ultimaDeAntes.text);
+    if (agora.tokens.length === 1 && antes.tokens.length >= 3 && mesmaFala && cabe && !acabouFrase) {
       const passa = antes.tokens.pop()!;
       agora.tokens.unshift(passa);
       agora.startMs = passa.fromMs;
@@ -50,7 +55,7 @@ export function paginar(legendas: Legenda[], maxLetras: number, juntarMs = 1100)
     const pagina = paginas[i];
     const seguinte = paginas[i + 1];
     const ultima = pagina.tokens[pagina.tokens.length - 1];
-    const curta = ultima.text.replace(/[^\p{L}]/gu, "").length <= 2 && !/[.!?…,;:]$/.test(ultima.text);
+    const curta = ultima.text.replace(/[^\p{L}]/gu, "").length <= 2 && !/[.!?…,;:]$/.test(ultima.text) && !ultima.fimDeFrase;
     const mesmaFala = seguinte.startMs - ultima.toMs < 400;
     const cabe = letras(seguinte) + 1 + ultima.text.length <= maxLetras;
     if (curta && pagina.tokens.length >= 2 && mesmaFala && cabe) {

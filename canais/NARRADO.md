@@ -103,7 +103,8 @@ narre tudo. Depois prévia, crítica na prévia, renderize, crítica no vídeo p
   perdão) ou `musica/calma-drama.mp3` (batalha, perigo, provação, mistério). Se a crítica disser que a música atrapalha
   a voz, baixe para 0.1.
 - **Fim:** a última cena fecha a pergunta do começo e puxa o próximo vídeo. `encerramento` com até 50 caracteres
-  (ex.: "Inscreva-se para a parte 2").
+  (ex.: "Inscreva-se para a parte 2") e `chamadaFinal` com a chamada do canal do `canal-postai.md` (até 90 caracteres,
+  ex.: "Está lutando? Comente que a gente ora por você"): ela aparece no cartão final, acima do botão.
 - **Pronúncia:** nomes estrangeiros e siglas em `pronuncia`.
 - **Capa:** `capa.titulo` com **até 4 palavras** (saem grandes, em maiúsculas e com contorno), que dão curiosidade sem
   repetir o título do vídeo e sem mentir (ex.: "SÓ UMA PEDRA"); `destaque` na palavra mais forte (sai em amarelo);

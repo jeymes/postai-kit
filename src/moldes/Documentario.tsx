@@ -77,6 +77,11 @@ export const documentarioSchema = z.object({
   volumeMusica: z.number().min(0).max(0.5).default(0.15),
   /** Frase do cartão final (ex.: "Inscreva-se para a parte 2"). Sem ela, o vídeo termina na última cena. */
   encerramento: z.string().optional(),
+  chamadaFinal: z
+    .string()
+    .max(90)
+    .optional()
+    .describe('A chamada do canal no cartão final (a do canal-postai.md), ex.: "Está lutando? Comente que a gente ora por você". Sem ela, só o encerramento e o botão'),
   estilo: estiloDoNarradoSchema,
   idioma: z.enum(["pt", "en", "es"]).optional().describe("O idioma do vídeo (o narrar grava): o botão do fim sai nele"),
 });
@@ -198,21 +203,35 @@ const Capitulo: React.FC<{ titulo: string; ap: Aparencia }> = ({ titulo, ap }) =
         opacity: opacidade,
       }}
     >
-      <div style={{ width: 180 * linha, height: 6, borderRadius: 3, backgroundColor: ap.destaque, marginBottom: 34 }} />
+      {/* O título numa placa escura própria (23/11/2026): o véu sozinho não bastava em
+          gravura clara e ficava em cima da figura da cena; a placa garante a leitura */}
       <div
         style={{
-          fontFamily: ap.fonteTitulo,
-          fontWeight: ap.pesoTitulo,
-          fontSize: 92,
-          lineHeight: 1.1,
-          color: ap.textoClaro,
-          textAlign: "center",
-          maxWidth: 1500,
-          textShadow: "0 4px 24px rgba(0,0,0,0.9), 0 0 3px rgba(0,0,0,0.9)",
-          translate: tremorDo(frame, ap.tremor),
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          backgroundColor: "rgba(8,7,10,0.78)",
+          borderRadius: 28,
+          padding: "44px 72px 52px",
+          boxShadow: "0 20px 60px rgba(0,0,0,0.55)",
+          maxWidth: 1600,
         }}
       >
-        {titulo}
+        <div style={{ width: 180 * linha, height: 6, borderRadius: 3, backgroundColor: ap.destaque, marginBottom: 34 }} />
+        <div
+          style={{
+            fontFamily: ap.fonteTitulo,
+            fontWeight: ap.pesoTitulo,
+            fontSize: 92,
+            lineHeight: 1.1,
+            color: ap.textoClaro,
+            textAlign: "center",
+            textShadow: "0 4px 24px rgba(0,0,0,0.9), 0 0 3px rgba(0,0,0,0.9)",
+            translate: tremorDo(frame, ap.tremor),
+          }}
+        >
+          {titulo}
+        </div>
       </div>
     </AbsoluteFill>
   );
@@ -305,6 +324,8 @@ const CenaDoDocumentario: React.FC<{ cena: Cena; indice: number; props: Document
             <Audio src={staticFile(cena.narracao.audio)} />
           </Sequence>
           {props.legendas && (
+            // No começo do capítulo a legenda espera o cartão sair (aparecia junto, por cima dele)
+            <AbsoluteFill style={{ opacity: cena.capitulo ? interpolate(frame, [70, 86], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }) : 1 }}>
             <Legendas
               legendas={cena.narracao.legendas}
               atraso={TEMPOS.antesDaFala}
@@ -319,6 +340,7 @@ const CenaDoDocumentario: React.FC<{ cena: Cena; indice: number; props: Document
                 : { fonte: ap.fonteTexto, peso: Math.max(500, Math.min(800, ap.pesoTitulo)), destaque: ap.destaque, textoNoDestaque: ap.textoNoDestaque })}
               style={{ top: 920, padding: "0 260px" }}
             />
+            </AbsoluteFill>
           )}
         </>
       )}
@@ -331,7 +353,16 @@ const CenaDoDocumentario: React.FC<{ cena: Cena; indice: number; props: Document
   );
 };
 
-const Encerramento: React.FC<{ texto: string; ap: Aparencia; foto?: string; idioma?: string }> = ({ texto, ap, foto, idioma }) => {
+// "Inscreva-se" quebrava no hífen ("Inscreva- / se!"): o hífen que não quebra linha
+const semQuebrarNoHifen = (texto: string) => texto.replace(/-/g, "\u2011");
+
+const Encerramento: React.FC<{ texto: string; chamada?: string; ap: Aparencia; foto?: string; idioma?: string }> = ({
+  texto,
+  chamada,
+  ap,
+  foto,
+  idioma,
+}) => {
   const frame = useCurrentFrame();
   const entrada = interpolate(frame, [0, 20], [0, 1], { extrapolateRight: "clamp", easing: suave });
   return (
@@ -346,11 +377,31 @@ const Encerramento: React.FC<{ texto: string; ap: Aparencia; foto?: string; idio
       <ap.Camadas />
       {/* position: relative: por cima da imagem do fundo (que é absoluta) */}
       <div style={{ position: "relative", fontFamily: ap.fonteTitulo, fontWeight: ap.pesoTitulo, fontSize: 84, color: ap.textoClaro, opacity: entrada, textAlign: "center", maxWidth: 1500, textShadow: "0 4px 24px rgba(0,0,0,0.7)" }}>
-        {texto}
+        {semQuebrarNoHifen(texto)}
       </div>
+      {/* A chamada do canal (ex.: "Comente que a gente ora por você"): antes o fim só tinha o encerramento */}
+      {chamada && (
+        <div
+          style={{
+            position: "relative",
+            fontFamily: ap.fonteTexto,
+            fontWeight: 600,
+            fontSize: 50,
+            lineHeight: 1.25,
+            color: ap.textoClaro,
+            opacity: interpolate(frame, [12, 32], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }),
+            textAlign: "center",
+            maxWidth: 1300,
+            textShadow: "0 3px 18px rgba(0,0,0,0.75)",
+          }}
+        >
+          {semQuebrarNoHifen(chamada)}
+        </div>
+      )}
       <div
         style={{
           position: "relative",
+          whiteSpace: "nowrap",
           fontFamily: ap.fonteTitulo,
           fontWeight: ap.pesoTitulo,
           fontSize: 44,
@@ -362,7 +413,7 @@ const Encerramento: React.FC<{ texto: string; ap: Aparencia; foto?: string; idio
           scale: String(0.9 + 0.1 * entrada),
         }}
       >
-        {textosDoIdioma(idioma).inscrevase}
+        {semQuebrarNoHifen(textosDoIdioma(idioma).inscrevase)}
       </div>
     </AbsoluteFill>
   );
@@ -381,7 +432,7 @@ export const Documentario: React.FC<Documentario> = (props) => {
         ))}
         {props.encerramento && (
           <Series.Sequence durationInFrames={QUADROS_DO_ENCERRAMENTO}>
-            <Encerramento texto={props.encerramento} ap={ap} idioma={props.idioma} foto={[...props.cenas].reverse().find((c) => c.foto)?.foto} />
+            <Encerramento texto={props.encerramento} chamada={props.chamadaFinal} ap={ap} idioma={props.idioma} foto={[...props.cenas].reverse().find((c) => c.foto)?.foto} />
           </Series.Sequence>
         )}
       </Series>

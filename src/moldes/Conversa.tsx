@@ -515,6 +515,12 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
   });
   const tamanhoDaCriatura =
     1 + mudancasDeTamanho.reduce((soma, m) => soma + m.delta * spring({ frame: frame - m.em, fps, config: { damping: 14 } }), 0);
+  // Quando o cartão final entra, os personagens sobem (23/11/2026): o cartão começa na
+  // altura 1150 e o logo dele chega a 1040, onde ficavam a boca e o queixo deles. Os pés
+  // ficam atrás do cartão; o cenário fica no lugar
+  const subirNoCartao = props.ctaFinal
+    ? 180 * spring({ frame: frame - inicioDoCta, fps, config: { damping: 16, stiffness: 110 } })
+    : 0;
   return (
     <AbsoluteFill style={{ background: noite ? "#0A0F26" : "#FBE7DA" }}>
       <EfeitosContexto.Provider value={props.efeitos}>
@@ -553,7 +559,7 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
                   objeto={objeto}
                   de={de}
                   sussurro={falaAgora?.cena.fala}
-                  style={{ position: "absolute", left: lugar.left, top: 790 }}
+                  style={{ position: "absolute", left: lugar.left, top: 790 - subirNoCartao }}
                 />
               );
             }
@@ -569,7 +575,7 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
                 altura={900}
                 espelhar={lugar.espelhar}
                 semente={lugar.semente}
-                style={{ position: "absolute", left: lugar.left, top: 790 }}
+                style={{ position: "absolute", left: lugar.left, top: 790 - subirNoCartao }}
               />
               </CelularAceso.Provider>
             );

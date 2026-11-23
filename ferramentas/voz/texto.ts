@@ -243,6 +243,9 @@ export function alinhar(roteiro: Palavra[], ouvidas: Ouvida[], duracao: number) 
     texto: p.original.replace(/(?<!\.)\.$/, "").replace(/^R\$(?=\d)/, "R$ "),
     inicioMs: Math.round(tempos[indice].inicio * 1000),
     fimMs: Math.round(Math.max(tempos[indice].fim, tempos[indice].inicio + 0.05) * 1000),
+    // O ponto sai da legenda, mas a frase termina aqui: a página fecha (23/11/2026; sem
+    // isso as frases se emendavam: "Que bom Só que a tia", 10 anotações da crítica)
+    ...(/[.!?…]["”')]*$/.test(p.original) ? { fimDeFrase: true } : {}),
   }));
   return { legendas, diferencas };
 }
