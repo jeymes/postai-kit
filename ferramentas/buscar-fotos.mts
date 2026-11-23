@@ -735,7 +735,17 @@ async function baixar(foto: Foto, saida: string, pequena = false) {
     url = await pelaRota(foto.url);
     resp = await pedir(url, foto.cabecalhos);
   }
+  // O acervo do Met às vezes devolve 200 com uma página HTML de bloqueio no lugar da imagem
+  // grande: tenta a versão pequena antes de desistir (o ffmpeg só dizia "Não converteu")
+  const ehPagina = (r: Response) => /text\/html/i.test(r.headers.get("content-type") ?? "");
+  if (resp.ok && ehPagina(resp) && foto.previa && url !== foto.previa) {
+    url = await pelaRota(foto.previa);
+    resp = await pedir(url, foto.cabecalhos);
+  }
   if (!resp.ok) throw new Error(`Não baixou ${url} (${resp.status})`);
+  // Página HTML no lugar da imagem (bloqueio do acervo): erro claro. Tipo genérico
+  // (application/octet-stream) passa, porque alguns acervos mandam a imagem assim
+  if (ehPagina(resp)) throw new Error(`Não baixou ${url} (o acervo mandou uma página, não a imagem)`);
   // O ffmpeg reconhece a imagem pela extensão (o Commons tem PNG e TIFF também)
   // O tipo vem da resposta (o nome pode mentir: .jpg que é WebP) e, sem ele, do nome
   const tipo = resp.headers.get("content-type") ?? "";

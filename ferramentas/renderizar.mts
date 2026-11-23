@@ -118,13 +118,38 @@ const arquivoDeProps = join(saida, ".props.json");
 // 11 mil linhas): isso enche o contexto do Claude à toa. A saída fica guardada
 // e só aparece, em 15 linhas, se der erro. --detalhes mostra tudo.
 const detalhes = args.includes("--detalhes");
-function remotion(...comando: string[]) {
-  const resultado = spawnSync("npx", ["remotion", ...comando, ...gl, `--props=${arquivoDeProps}`], {
+function rodarRemotion(comando: string[]) {
+  return spawnSync("npx", ["remotion", ...comando, ...gl, `--props=${arquivoDeProps}`], {
     stdio: detalhes ? "inherit" : "pipe",
     encoding: "utf8",
     maxBuffer: 512 * 1024 * 1024,
     shell: process.platform === "win32",
   });
+}
+
+/**
+ * O navegador do render fechou no meio ("Target closed", 23/11/2026: 2 vezes num
+ * vídeo longo do Canal dark). Costuma ser memória apertada com muitas abas:
+ * tenta de novo uma vez com metade das abas antes de desistir.
+ */
+const navegadorFechou = (saida: string) => /Target closed|Target\.closeTarget|No target with given id/i.test(saida);
+function renderComReserva(abas: number, ...comando: string[]) {
+  const primeira = rodarRemotion([...comando, `--concurrency=${abas}`]);
+  const saida = `${primeira.stdout ?? ""}\n${primeira.stderr ?? ""}`;
+  if (primeira.status === 0) return abas;
+  if (abas > 1 && navegadorFechou(saida)) {
+    const menos = Math.max(1, Math.floor(abas / 2));
+    console.log(`O navegador do render fechou no meio (memória?). Tentando de novo com ${menos} abas em vez de ${abas}.`);
+    remotion(...comando, `--concurrency=${menos}`);
+    return menos;
+  }
+  // Mesmo caminho do erro de sempre (mostra o motivo e sai)
+  remotion(...comando, `--concurrency=${abas}`);
+  return abas;
+}
+
+function remotion(...comando: string[]) {
+  const resultado = rodarRemotion(comando);
   if (resultado.status !== 0) {
     const saida = `${resultado.stdout ?? ""}\n${resultado.stderr ?? ""}`
       .split("\n")
@@ -371,10 +396,10 @@ if (molde === "Carrossel") {
   const abas = Math.max(1, Math.min(nucleos, Math.floor((memoriaGb - 1.5) / (com3d ? 0.8 : 0.45))));
   console.log(`Render: ${nucleos} núcleos, ${memoriaGb.toFixed(1)} GB de memória, ${abas} abas ao mesmo tempo.`);
   const inicioDoRender = Date.now();
-  remotion("render", molde, video, "--codec=h264", `--concurrency=${abas}`, ...qualidade);
+  const abasUsadas = renderComReserva(abas, "render", molde, video, "--codec=h264", ...qualidade);
   const segundosDoRender = Math.round((Date.now() - inicioDoRender) / 1000);
   console.log(`Render levou ${Math.floor(segundosDoRender / 60)} min ${segundosDoRender % 60} s.`);
-  desempenho = { nucleos, memoriaGb: Math.round(memoriaGb * 10) / 10, abas, segundos: segundosDoRender };
+  desempenho = { nucleos, memoriaGb: Math.round(memoriaGb * 10) / 10, abas: abasUsadas, segundos: segundosDoRender };
   const vinheta = fimDoVideo === "chamada" ? 0 : colarVinheta(video, molde === "Documentario" ? { largura: 1920, altura: 1080 } : { largura: 1080, altura: 1920 }, qualidade);
   if (vinheta) duracaoSeg = Math.round((duracaoSeg + vinheta) * 10) / 10;
   arquivos.push({ arquivo: video, tipo: "video/mp4", tamanho: tamanho(video) });
