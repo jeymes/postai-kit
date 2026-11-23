@@ -101,3 +101,5 @@ Valem para os dois estilos 3D (campos no `mundo3dSchema` de `src/moldes/Mundo3D.
 - **Produto:** aparece como solução natural, no máximo uma vez pelo nome, e só com o que ele faz de verdade (a lista está na bíblia).
 
 Se a revisora devolver correções, corrija **com a ferramenta Edit, só no trecho** (nunca reescreva o arquivo com Write; o Write é só para criar) exatamente o que ela pediu e não reescreva o resto. Responda com o caminho do arquivo e um resumo de 2 linhas do episódio.
+
+**Trilha de fundo (Conversa):** se o `canal-postai.md` pedir música de fundo, ponha `musica` com uma das trilhas do kit pelo tom do episódio (`musica/calma-esperanca.mp3`, `calma-reflexao.mp3` ou `calma-drama.mp3`). O `volumeMusica` padrão (0.08) já fica baixinho por baixo das falas; a crítica mede com `npm run volume`.

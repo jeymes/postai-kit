@@ -199,6 +199,11 @@ export const conversaSchema = z.object({
     .describe("Personagens que só este episódio precisa: a designer desenha em canais/<canal>/convidados/<id>.json"),
   ctaInicial: z.string().max(60).optional().describe('Balão curto (até 36 caracteres, uma linha; acima de 28 a letra diminui) embaixo do título nos primeiros segundos, ex.: "Marca quem é assim 😂". Sem ele, não há balão'),
   idioma: z.enum(["pt", "en", "es"]).optional().describe("O idioma do vídeo (o narrar grava): o botão do fim sai nele"),
+  musica: z
+    .string()
+    .optional()
+    .describe("Trilha de fundo, baixinha por baixo das falas: musica/calma-esperanca.mp3, calma-reflexao.mp3 ou calma-drama.mp3 (só se o canal pedir)"),
+  volumeMusica: z.number().min(0).max(0.3).optional().describe("Volume da trilha (padrão 0.08, baixinho)"),
   ctaFinal: z.string().max(80).optional().describe('Frase completa no cartão do fim, sem @ e sem "link na bio" (isso vai no botão), ex.: "Organize o seu casamento no Laços"'),
   botaoFinal: z.string().max(24).optional().describe('Texto do botão do cartão do fim, ex.: "Link na bio 👆", "Baixe grátis 👆". Padrão: "Link na bio 👆"'),
   final: z
@@ -728,6 +733,15 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
           <Sequence from={inicioDoApp} durationInFrames={quadrosDoApp} name="Vídeo do app">
             <VideoDoApp arquivo={props.videoDoApp.arquivo} de={props.videoDoApp.de} quadros={quadrosDoApp} />
           </Sequence>
+        )}
+        {/* A trilha de fundo do canal (23/11/2026: o dono pediu uma trilha suave por baixo
+            da narração; antes a Conversa só tinha os efeitos de cada cena) */}
+        {props.musica && (
+          <Audio
+            src={staticFile(props.musica)}
+            volume={(f) => (props.volumeMusica ?? 0.08) * interpolate(f, [0, 20], [0, 1], { extrapolateRight: "clamp" })}
+            name="Trilha"
+          />
         )}
         {props.ctaFinal && (
           <Sequence from={inicioDoCta} layout="none" name="CTA final">
