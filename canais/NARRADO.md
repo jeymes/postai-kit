@@ -75,8 +75,8 @@ narre tudo. Depois prévia, crítica na prévia, renderize, crítica no vídeo p
 
 ## Regras de forma
 
-- **Duração:** a do canal (8, 10 ou 15 minutos), com uns 140 palavras por minuto de fala. Um vídeo de 10 minutos tem
-  umas 1.400 palavras em 60 a 90 cenas.
+- **Duração:** a do canal (8, 10 ou 15 minutos), com uns 185 palavras por minuto de fala (a voz fala rápido: medido em 22/11/2026). Um vídeo de 10
+  minutos tem umas 1.850 palavras em 80 a 110 cenas. Com 140 por minuto, o roteiro saía 30% curto e voltava.
 - **Cenas:** cada `fala` com 1 a 3 frases (uns 8 a 20 segundos). Frases faladas, curtas, do jeito que se conta uma
   história em voz alta. Números e datas como se fala ("mil oitocentos e oito" pode ficar "1808": a voz lê certo).
 - **Capítulos:** de 4 a 8, o primeiro na cena 1 (vira o "00:00" da descrição do YouTube). Título de capítulo com até

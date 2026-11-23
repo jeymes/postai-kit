@@ -42,7 +42,7 @@ seguindo as regras de forma do `NARRADO.md`:
   história, as frases e o título são seus: nunca copie. Se a referência disser "Buscar as mesmas obras na fonte de
   domínio público: ...", use essas obras e esses artistas na `busca` das cenas (ex.: `"Gustave Doré Samson"`,
   `"Rembrandt Samson"`), para o vídeo ter o mesmo tipo de imagem, tirado da fonte original.
-- `voz` e a duração vêm do `canal-postai.md`. Conte as palavras: uns 140 por minuto.
+- `voz` e a duração vêm do `canal-postai.md`. Conte as palavras: uns 185 por minuto (10 minutos = umas 1.850 palavras). Com menos, a narração sai curta e o roteiro volta para você.
 - `pronuncia` para nomes estrangeiros.
 - `encerramento`, `capa` (`titulo`, `destaque`; a `foto` a pesquisadora escolhe) e `post` (`titulo`, `legenda`). Se
   alguma foto veio do Unsplash, o fim da legenda leva o crédito de cada uma (ex.: `Fotos: Ana Souza e Lee Park no

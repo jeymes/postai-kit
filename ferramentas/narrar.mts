@@ -11,6 +11,7 @@
 // Uso: npm run narrar -- conteudo/<peça>.json [--refazer]
 // Antes, uma vez: npm run voz:instalar
 import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
@@ -68,8 +69,12 @@ const pendentes = cenas
     const roteiro = falar(cena.fala, pronuncia, idioma);
     const textoDaVoz = roteiro.map((p) => p.falado).join(" ");
     const chave = JSON.stringify([textoDaVoz, vozDa(cena), velocidadeDa(cena), comMascote && existsSync(RHUBARB)]);
-    const audio = `narracao/${nome}/cena-${String(indice + 1).padStart(2, "0")}.wav`;
-    const pronta = cena.narracao?.chave === chave && existsSync(join("public", audio));
+    // O nome do áudio leva uma marca da fala (22/11/2026): com só o número da cena,
+    // cenas novas no meio do roteiro gravavam por cima do áudio das que mudaram de
+    // número, e o vídeo saía com a fala de uma cena na outra.
+    const audio = `narracao/${nome}/cena-${String(indice + 1).padStart(2, "0")}-${createHash("sha1").update(chave).digest("hex").slice(0, 8)}.wav`;
+    const anterior = cena.narracao?.audio;
+    const pronta = cena.narracao?.chave === chave && typeof anterior === "string" && existsSync(join("public", anterior));
     return pronta && !refazer ? null : { indice, roteiro, textoDaVoz, chave, audio, voz: vozDa(cena), velocidade: velocidadeDa(cena) };
   })
   .filter((p) => p !== null);

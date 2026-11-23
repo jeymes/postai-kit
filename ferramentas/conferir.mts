@@ -76,7 +76,9 @@ if (peca.molde === "Documentario") {
   const canalMd = ["canais/dark/canal-postai.md", ...process.argv.slice(2).filter((a) => a.endsWith(".md"))].find(existsSync);
   const minutos = Number(/Uns (\d+) minutos/.exec(canalMd ? readFileSync(canalMd, "utf8") : "")?.[1] ?? 10);
   const total = longas.reduce((soma, c) => soma + palavras(c.fala), 0);
-  const alvo = minutos * 140;
+  // A voz fala uns 185 palavras por minuto, contando as pausas entre as cenas
+  // (medido em 22/11/2026; com 140, o roteiro saía 30% curto e voltava depois da narração)
+  const alvo = minutos * 185;
   const narrado = longas.every((c) => c.narracao?.duracaoSeg);
   // Cena sem voz vai muda para o vídeo. Parte narrada e parte não = algo gravou o
   // roteiro por cima da narração; com --com-voz (antes da prévia e do render),
@@ -86,6 +88,15 @@ if (peca.molde === "Documentario") {
   if (semVoz.length && (exigirVoz || semVoz.length < longas.length)) {
     erro("producao", `${semVoz.length} cena(s) sem voz (${semVoz.slice(0, 8).join(", ")}${semVoz.length > 8 ? "…" : ""}): rode o narrar de novo, ele só narra as que faltam`);
   }
+  // Duas cenas no mesmo áudio = uma fala tocando no lugar da outra (o defeito de
+  // 22/11/2026, quando cenas entravam no meio do roteiro)
+  const porAudio = new Map<string, number[]>();
+  longas.forEach((c, i) => {
+    const audio = (c.narracao as { audio?: string } | undefined)?.audio;
+    if (audio) porAudio.set(audio, [...(porAudio.get(audio) ?? []), i + 1]);
+  });
+  for (const cenas of porAudio.values())
+    if (cenas.length > 1) erro("producao", `as cenas ${cenas.join(", ")} usam o mesmo áudio: rode npm run narrar -- <arquivo> --refazer`);
   if (narrado) {
     const seg = longas.reduce((soma, c) => soma + Number(c.narracao?.duracaoSeg ?? 0), 0);
     if (Math.abs(seg - minutos * 60) > minutos * 60 * 0.2)
