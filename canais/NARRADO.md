@@ -56,8 +56,9 @@ Conte o andamento de cada agente como sempre (`npm run andamento`). Antes de cad
    (um quadro de CADA cena, uns 30 segundos num vídeo de 80 cenas) e `npm run renderizar -- conteudo/<arquivo>.json --capa`
    (só a capa).
 6. **critica-narrado, na prévia (antes do render):** olha cada quadro da prévia, a capa e as falas. Se vier CORRIGIR,
-   mande cada item para quem ela disse, refaça a prévia e chame a crítica de novo (no máximo 3 voltas: a prévia é
-   barata). **Só renderize com a prévia APROVADA.** Antes, um erro de imagem só aparecia no vídeo pronto e custava um
+   mande cada item para quem ela disse, refaça a prévia (o `npm run previa` só refaz as cenas que mudaram e lista
+   quais em `previaMudou` no info.json) e chame a crítica de novo dizendo que é a 2ª (ou 3ª) volta (no máximo 3
+   voltas: a prévia é barata). **Só renderize com a prévia APROVADA.** Antes, um erro de imagem só aparecia no vídeo pronto e custava um
    render inteiro de novo (até 1 hora num vídeo de 10 minutos).
 7. **producao:** renderizar (`npm run renderizar`) em segundo plano, uma vez. O vídeo longo demora: uns 4 a 5 minutos
    de narração e render por minuto de vídeo. Não pare no meio.

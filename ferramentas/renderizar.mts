@@ -12,10 +12,12 @@
 // do fim) ou as duas (o padrão).
 //
 // Uso:
-//   npm run previa -- conteudo/<nome>.json       um quadro de cada cena (rápido, para conferir)
+//   npm run previa -- conteudo/<nome>.json       um quadro de cada cena (rápido, para conferir;
+//                                                só refaz as cenas que mudaram, --tudo refaz todas)
 //   npm run renderizar -- conteudo/<nome>.json   o vídeo ou as imagens finais
 //   (--detalhes mostra o progresso do Remotion; sem ele, só o resumo ou o erro)
 import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { cpus, totalmem } from "node:os";
 import { basename, join } from "node:path";
@@ -142,15 +144,87 @@ function imagem(composicao: string, dados: unknown, destino: string, quadro = QU
   remotion("still", composicao, destino, `--frame=${quadro}`, "--image-format=jpeg", "--jpeg-quality=90");
 }
 
-/** Várias imagens no mesmo navegador (ferramentas/varias-imagens.mts); se der erro, uma por vez como antes */
-async function variasImagens(composicao: string, lista: Imagem[]) {
+async function tirarOuUmaPorVez(composicao: string, lista: Imagem[]) {
   try {
     await tirarImagens(composicao, lista, gl[0]?.replace("--gl=", ""));
   } catch (erro) {
     console.log(`As imagens de uma vez falharam (${erro instanceof Error ? erro.message.split("\n")[0] : erro}); tirando uma por vez.`);
     for (const { dados, quadro, destino } of lista) imagem(composicao, dados, destino, quadro);
   }
+}
+
+/** Várias imagens no mesmo navegador (ferramentas/varias-imagens.mts); se der erro, uma por vez como antes */
+async function variasImagens(composicao: string, lista: Imagem[]) {
+  await tirarOuUmaPorVez(composicao, lista);
   for (const { destino } of lista) arquivos.push({ arquivo: destino, tipo: "image/jpeg", tamanho: tamanho(destino) });
+}
+
+/**
+ * Prévia que só refaz o que mudou (23/11/2026): cada volta da crítica refazia a
+ * prévia inteira (uns 5 min na nuvem) mesmo quando ela pedia para trocar 3
+ * imagens. Cada quadro ganha uma marca (a cena, as vizinhas, o resto da peça e
+ * a data dos arquivos que ela usa); o quadro com a mesma marca vem guardado de
+ * out/<nome>/.previa/. --tudo refaz todas. Diz quais mudaram, para a crítica
+ * olhar só essas.
+ */
+async function previaSoDoQueMudou() {
+  const quadros = quadrosDaPrevia(molde, props);
+  const cenas: unknown[] | null = Array.isArray(props.cenas) ? props.cenas : null;
+  const inicios = cenas ? iniciosDasCenas(molde, props) : [];
+  const resto = { ...props, cenas: undefined };
+  const arquivosUsados = (valor: unknown): string[] => {
+    const achados: string[] = [];
+    const andar = (v: unknown) => {
+      if (typeof v === "string") {
+        const arquivo = join("public", v);
+        if (v.length < 300 && existsSync(arquivo) && statSync(arquivo).isFile()) {
+          const { mtimeMs, size } = statSync(arquivo);
+          achados.push(`${v}:${mtimeMs}:${size}`);
+        }
+      } else if (Array.isArray(v)) v.forEach(andar);
+      else if (v && typeof v === "object") Object.values(v).forEach(andar);
+    };
+    andar(valor);
+    return achados;
+  };
+  const marcaDoResto = JSON.stringify([molde, resto, arquivosUsados(resto)]);
+  const guardadas = join(saida, ".previa");
+  if (args.includes("--tudo")) rmSync(guardadas, { recursive: true, force: true });
+  mkdirSync(guardadas, { recursive: true });
+  const itens = quadros.map((quadro, i) => {
+    let marca: string;
+    if (cenas) {
+      let cena = 0;
+      while (cena + 1 < inicios.length && inicios[cena + 1] <= quadro) cena++;
+      // A cena, a seguinte e as de antes até a última com foto (a cena sem foto usa a dela; o
+      // número da cena entra porque o movimento da foto muda com ele)
+      let desde = Math.max(0, cena - 1);
+      const temImagem = (c: unknown) => !!c && typeof c === "object" && ("foto" in c || "video" in c);
+      while (desde > 0 && !temImagem(cenas[desde])) desde--;
+      const vizinhas = cenas.slice(desde, cena + 2);
+      marca = JSON.stringify([marcaDoResto, cena, quadro - inicios[cena], vizinhas, arquivosUsados(vizinhas)]);
+    } else marca = JSON.stringify([marcaDoResto, props, quadro]);
+    const guardada = join(guardadas, `${createHash("sha1").update(marca).digest("hex").slice(0, 16)}.jpg`);
+    return { quadro, guardada, destino: join(saida, `previa-${i + 1}.jpg`), numero: i + 1 };
+  });
+  const faltam = itens.filter((item) => !existsSync(item.guardada));
+  await tirarOuUmaPorVez(molde, faltam.map(({ quadro, guardada }) => ({ dados: props, quadro, destino: guardada })));
+  for (const { guardada, destino } of itens) copyFileSync(guardada, destino);
+  // Apaga as prévias que sobraram de uma versão com mais cenas
+  for (const nomeDoArquivo of readdirSync(saida)) {
+    const numero = /^previa-(\d+)\.jpg$/.exec(nomeDoArquivo)?.[1];
+    if (numero && Number(numero) > itens.length) rmSync(join(saida, nomeDoArquivo), { force: true });
+  }
+  // As guardadas que ninguém usa mais (de voltas antigas)
+  const emUso = new Set(itens.map((item) => basename(item.guardada)));
+  for (const nomeDoArquivo of readdirSync(guardadas)) if (!emUso.has(nomeDoArquivo)) rmSync(join(guardadas, nomeDoArquivo), { force: true });
+  for (const { destino } of itens) arquivos.push({ arquivo: destino, tipo: "image/jpeg", tamanho: tamanho(destino) });
+  previaMudou = faltam.map((item) => item.numero);
+  if (faltam.length === itens.length) console.log(`Prévia: ${itens.length} quadros, todos novos.`);
+  else
+    console.log(
+      `Prévia: ${faltam.length} de ${itens.length} quadros refeitos (os outros não mudaram)${faltam.length ? `: previa-${previaMudou.join(", previa-")}` : ""}.`,
+    );
 }
 
 /** Capa padrão do vídeo, quando a peça não traz a sua: a primeira frase e a primeira foto */
@@ -258,6 +332,7 @@ const arquivos: Array<{ arquivo: string; tipo: string; tamanho: number }> = [];
 let duracaoSeg: number | null = null;
 let capitulos: string | null = null;
 let desempenho: { nucleos: number; memoriaGb: number; abas: number; segundos: number } | null = null;
+let previaMudou: number[] | null = null;
 
 // --capa: só a capa do vídeo longo, em segundos (para ajustar a capa.marca do
 // círculo, da seta, da lupa ou do carimbo olhando o resultado, sem renderizar o vídeo)
@@ -278,8 +353,7 @@ if (molde === "Carrossel") {
   }));
   await variasImagens("Carrossel", slides);
 } else if (previa) {
-  const quadros = quadrosDaPrevia(molde, props).map((quadro, i) => ({ dados: props, quadro, destino: join(saida, `previa-${i + 1}.jpg`) }));
-  await variasImagens(molde, quadros);
+  await previaSoDoQueMudou();
 } else {
   duracaoSeg = Math.round((duracaoDoMolde(molde, props) / FPS) * 10) / 10;
   const video = join(saida, "video.mp4");
@@ -325,7 +399,7 @@ if (molde === "Carrossel") {
 }
 
 rmSync(arquivoDeProps, { force: true });
-const info = { molde, previa, duracaoSeg, arquivos, post: post ?? null, ...(capitulos ? { capitulos } : {}), ...(desempenho ? { render: desempenho } : {}) };
+const info = { molde, previa, ...(previaMudou ? { previaMudou } : {}), duracaoSeg, arquivos, post: post ?? null, ...(capitulos ? { capitulos } : {}), ...(desempenho ? { render: desempenho } : {}) };
 writeFileSync(join(saida, "info.json"), JSON.stringify(info, null, 2));
 console.log(`\nPronto: ${saida}/`);
 console.log(JSON.stringify(info, null, 2));

@@ -18,6 +18,10 @@ Leia o roteiro inteiro, o `canais/<canal>/canal-postai.md` e abra (Read) **todos
 em ordem (um por cena: o `previa-1` é a cena 1), e a `out/<arquivo>/capa.jpg`. Para cada quadro, compare com a fala
 da cena. Aqui vale tudo da seção 2 (erros, gosto, capa) e da seção 3 (o público), menos a duração e a voz.
 
+Na 2ª e na 3ª volta, a prévia só refaz os quadros que mudaram e o `out/<arquivo>/info.json` traz a lista em
+`previaMudou` (ex.: `[10, 11, 12]`). Abra só esses, a capa (se ela mudou) e confira se cada item que você pediu foi
+feito; os outros você já aprovou na volta anterior.
+
 ## 1b. No vídeo pronto (depois do render)
 
 A prévia já foi aprovada: **não reprove por gosto nem por imagem que já estava na prévia**. Leia
