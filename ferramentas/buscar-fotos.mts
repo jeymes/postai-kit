@@ -568,7 +568,9 @@ async function buscarNoBanco(termo: string): Promise<Foto[]> {
 }
 
 async function buscar(termo: string): Promise<Foto[]> {
-  const doBanco = usarBanco
+  // --fonte ia pede uma imagem NOVA: não pega a do banco (23/11/2026: devolvia a do
+  // banco de outra cena em vez de gerar a do Antíoco IV)
+  const doBanco = usarBanco && fonte !== "ia"
     ? await buscarNoBanco(termo).catch((erro) => {
         console.log(`  (banco de imagens não respondeu: ${erro instanceof Error ? erro.message : String(erro)})`);
         return [] as Foto[];

@@ -46,6 +46,10 @@ export const documentarioSchema = z.object({
           .optional()
           .describe("Como a foto se move: aproximar, afastar, esquerda, direita, subir, descer ou diagonal (padrão: alterna sozinho)"),
         inteira: z.boolean().optional().describe("Mostra a imagem inteira, sem cortar (retrato em pé, mapa), sobre ela mesma desfocada"),
+        legendaNoAlto: z
+          .boolean()
+          .optional()
+          .describe("A legenda sobe para o alto nesta cena: quando a imagem tem texto escrito embaixo (legenda de gravura, letreiro, inscrição)"),
         rota: z
           .array(z.tuple([z.number().min(0).max(100), z.number().min(0).max(100)]))
           .min(2)
@@ -294,11 +298,23 @@ const CenaDoDocumentario: React.FC<{ cena: Cena; indice: number; props: Document
   const cena = comImagem(props.cenas, indice);
   const duracao = quadrosDaFala(cena);
   // Dentro do capítulo, a foto nova se mistura com a anterior; no começo de capítulo, entra do preto
-  const anterior = indice > 0 && !cena.capitulo ? comImagem(props.cenas, indice - 1) : undefined;
-  const entrada = anterior?.foto ? Math.max(MISTURA, ap.mistura) : Math.max(ENTRADA_DO_CAPITULO, ap.mistura);
+  const antes = indice > 0 && !cena.capitulo ? comImagem(props.cenas, indice - 1) : undefined;
+  // A mesma imagem (cena sem foto que continua a anterior): troca direto. Misturar
+  // a mesma foto em duas posições dava uma dupla exposição desalinhada (23/11/2026)
+  const mesmaImagem = Boolean(antes?.foto && antes.foto === cena.foto && !cena.video && !antes.video);
+  const anterior = mesmaImagem ? undefined : antes;
+  // Com vídeo de um lado, a mistura é curta: o recorte da foto aparecia por trás do vídeo
+  const comVideo = Boolean(cena.video || antes?.video);
+  const entrada = mesmaImagem
+    ? 0
+    : anterior?.foto
+      ? comVideo
+        ? MISTURA
+        : Math.max(MISTURA, ap.mistura)
+      : Math.max(ENTRADA_DO_CAPITULO, ap.mistura);
   // A primeira cena já começa com a imagem (23/11/2026: o quadro 0 saía preto e a
   // miniatura tirada do começo ficava escura)
-  const fade = indice === 0 ? 1 : interpolate(frame, [0, entrada], [0, 1], { extrapolateRight: "clamp", easing: cinema });
+  const fade = indice === 0 || entrada === 0 ? 1 : interpolate(frame, [0, entrada], [0, 1], { extrapolateRight: "clamp", easing: cinema });
   return (
     <AbsoluteFill style={{ backgroundColor: "#000" }}>
       {anterior?.foto && frame < entrada && (
@@ -340,7 +356,8 @@ const CenaDoDocumentario: React.FC<{ cena: Cena; indice: number; props: Document
                 ? // O Clássico mantém a letra de sempre, mas a palavra falada usa a cor que o dono escolheu
                   { destaque: ap.destaque, textoNoDestaque: ap.textoNoDestaque }
                 : { fonte: ap.fonteTexto, peso: Math.max(500, Math.min(800, ap.pesoTitulo)), destaque: ap.destaque, textoNoDestaque: ap.textoNoDestaque })}
-              style={{ top: 920, padding: "0 260px" }}
+              // No alto quando a imagem tem texto escrito embaixo (a legenda caía em cima dele)
+              style={{ top: cena.legendaNoAlto ? 110 : 920, padding: "0 260px" }}
             />
             </AbsoluteFill>
           )}

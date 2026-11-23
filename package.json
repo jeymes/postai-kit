@@ -28,6 +28,7 @@
     "pauta": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --import ./ferramentas/falhas.mts ferramentas/pauta.mts",
     "nicho": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --import ./ferramentas/falhas.mts ferramentas/nicho.mts",
     "conferir": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --import ./ferramentas/falhas.mts ferramentas/conferir.mts",
+    "volume": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON ferramentas/volume.mts",
     "ajustes": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --import ./ferramentas/falhas.mts ferramentas/ajustes.mts",
     "registrar": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --import ./ferramentas/falhas.mts ferramentas/registrar.mts",
     "materiais": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --import ./ferramentas/falhas.mts ferramentas/materiais.mts",

@@ -86,7 +86,9 @@ Use **o mesmo termo** da busca das candidatas: assim o comando pega exatamente a
 guardadas), sem buscar de novo.
 
 Na dúvida sobre uma (rosto pequeno, texto), abra a imagem grande gravada antes de pô-la no roteiro.
-Ponha `"foto": "fotos/<peça>/<nome>.jpg"` em cada cena (e `"inteira": true` nos retratos e mapas).
+Ponha `"foto": "fotos/<peça>/<nome>.jpg"` em cada cena (e `"inteira": true` nos retratos e mapas). Se a imagem
+tem texto escrito na parte de baixo (legenda de gravura, letreiro, inscrição), ponha `"legendaNoAlto": true` na cena: a
+legenda do vídeo sobe e não fica em cima do texto.
 
 **Cena com `lugares` (mapa animado):** escolha um mapa antigo de domínio público onde **todos** os lugares
 aparecem, abra a imagem (Read) e ponha em `rota` onde fica cada lugar, em % da imagem, na mesma ordem:

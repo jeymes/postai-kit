@@ -107,6 +107,8 @@ const POSES_DE_PECAS: Record<Pose, { esq: Direcao; dir: Direcao; sentado?: boole
   apontando: { esq: [-0.12, -1, 0.04], dir: [0.5, 0.12, 0.86] },
   // Caído: os braços junto do corpo; o corpo inteiro deita de lado (ver "deitar" abaixo)
   caido: { esq: [-0.12, -1, 0.04], dir: [0.12, -1, 0.04] },
+  // Abraço: os dois braços para a frente, abertos (no 3D, os dois se aproximam pelo "ate")
+  abraco: { esq: [-0.35, -0.1, 0.93], dir: [0.35, -0.1, 0.93] },
 };
 const BAIXO = new THREE.Vector3(0, -1, 0);
 const giroDoBraco = (d: Direcao) => new THREE.Quaternion().setFromUnitVectors(BAIXO, new THREE.Vector3(...d).normalize());

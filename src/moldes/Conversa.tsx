@@ -26,7 +26,7 @@ import { CONVERSA, estimarPalavras, FPS, quadrosDaFalaConversa, quadrosDoVideoDo
 // momento. A voz (uma por personagem), a legenda e a boca vêm do
 // `npm run narrar`; sem ela, a prévia sai muda, com o tempo estimado.
 
-const POSES = ["normal", "cintura", "celular", "cabeca", "explicando", "comemorando", "pensando", "sentado"] as const;
+const POSES = ["normal", "cintura", "celular", "cabeca", "explicando", "comemorando", "pensando", "sentado", "abraco"] as const;
 const EXPRESSOES = ["neutra", "feliz", "radiante", "preocupada", "surpresa", "brava", "sem-graca", "medo", "aliviada"] as const;
 const nomesDosSons = Object.keys(SONS) as [TipoSom, ...TipoSom[]];
 
@@ -150,6 +150,10 @@ export const conversaSchema = z.object({
         sombra: z.enum(["cresce", "encolhe"]).optional().describe("A criatura cresce (a pessoa cedeu) ou encolhe (resistiu) no começo desta fala"),
         hora: z.string().max(8).optional().describe('Hora no canto de cima durante esta fala, ex.: "2:07" (madrugada)'),
         cenario: z.string().optional().describe("Troca de lugar a partir desta fala (um cenário do kit ou criado pela equipe); vale até outra fala trocar"),
+        noite: z
+          .boolean()
+          .optional()
+          .describe("Vira noite (true) ou volta ao dia (false) a partir desta fala, no mesmo vídeo (ex.: a cena da madrugada no quarto); vale até outra fala mudar"),
         notificacao: z
           .object({ titulo: z.string().max(30).optional().describe("Sem ele: o nome da marca"), texto: z.string().max(60) })
           .optional()
@@ -371,7 +375,10 @@ const Cartao: React.FC<{ cartao: NonNullable<ConversaProps["cartao"]>; entra: nu
   const dentro = spring({ frame: frame - entra, fps, config: { damping: 12, stiffness: 150 } });
   const fora = spring({ frame: frame - sai, fps, config: { damping: 20 } });
   const escala = dentro * (1 - fora);
-  if (escala <= 0.01) return null;
+  // Na saída, some de vez antes de virar um toquinho (sobrava um retângulo branco
+  // minúsculo no meio da cena por alguns quadros: 3 anotações da crítica)
+  if (escala <= 0.01 || fora > 0.85) return null;
+  const sumindo = 1 - Math.min(1, Math.max(0, (fora - 0.5) / 0.35));
   const numero = cartao.numero ?? 0;
   const contado = Math.round(interpolate(frame, [contaDe, contaDe + 40], [0, numero], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }));
   const itens = cartao.itens;
@@ -388,6 +395,7 @@ const Cartao: React.FC<{ cartao: NonNullable<ConversaProps["cartao"]>; entra: nu
         top: compacto ? 400 : 425,
         width: 410,
         scale: String(escala),
+        opacity: sumindo,
         rotate: `${(1 - dentro) * 8}deg`,
         background: "#FFFFFF",
         border: `7px solid ${TRACO}`,
@@ -445,7 +453,9 @@ const Cartao: React.FC<{ cartao: NonNullable<ConversaProps["cartao"]>; entra: nu
 // 1080x1920), em pé ou sentado: a luz do aviso, o feixe da tela e a criatura
 // que sai do celular partem daqui
 type Lugar = { left: number; espelhar: boolean; origem: string; semente: number };
-const maoDe = (lugar: Lugar, sentado: boolean) => ({ x: lugar.left + (lugar.espelhar ? 329 : 211), y: sentado ? 1289 : 1190 });
+// A mão com o celular, medida no quadro (23/11/2026: era 211 e 329, e a luz nascia uns
+// 45 px ao lado do celular; com zoom ficava pior, porque a luz estava fora dele)
+const maoDe = (lugar: Lugar, sentado: boolean) => ({ x: lugar.left + (lugar.espelhar ? 284 : 255), y: sentado ? 1289 : 1190 });
 const rostoDe = (lugar: Lugar, sentado: boolean) => ({ x: lugar.left + 270, y: sentado ? 1098 : 999 });
 const comCelular = (pose?: string) => pose === "celular" || pose === "sentado";
 
@@ -500,7 +510,15 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
   });
   const lugarAgora = resolverCenario(cenarioNaFala(falaAgora), props.cenariosProprios as CenarioProprio[] | undefined);
   const { Cenario, Frente } = lugarAgora;
-  const { fundo, def: estilo, escuro } = estiloDe(props.estilo);
+  // Dia ou noite agora: o da última fala que mudou (campo "noite"), senão o do estilo do canal
+  const noiteNaFala = (k: number) => {
+    for (let i = k; i >= 0; i--) if (typeof linha[i]?.cena.noite === "boolean") return linha[i].cena.noite;
+    return undefined;
+  };
+  const mudouANoite = noiteNaFala(falaAgora);
+  const { fundo, def: estilo, escuro } = estiloDe(
+    mudouANoite === undefined ? props.estilo : { ...props.estilo, fundo: mudouANoite ? "noite" : "claro" },
+  );
   const CamadaDaFrente = estilo.Frente ?? estilo.Camada;
   const noite = fundo === "noite";
   // A primeira fala com a luz do aviso: a Sombra é empurrada e some ali, e o
@@ -569,6 +587,13 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
                 />
               );
             }
+            // Abraço: quem está na pose chega perto do outro (os dois andam até o meio)
+            const poseDe = (id: string) => momentosDe(id, linha).filter((m) => m.em <= frame).pop();
+            const meuAbraco = poseDe(quem);
+            const chegarPerto =
+              elenco.length === 2 && meuAbraco?.pose === "abraco"
+                ? spring({ frame: frame - meuAbraco.em, fps, config: { damping: 15 } }) * (indice === 0 ? 125 : -125)
+                : 0;
             return (
               <CelularAceso.Provider key={quem} value={luzEm !== undefined && frame >= luzEm && indice === quemAcende}>
               <estilo.Personagem
@@ -581,15 +606,19 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
                 altura={900}
                 espelhar={lugar.espelhar}
                 semente={lugar.semente}
-                style={{ position: "absolute", left: lugar.left, top: 790 - subirNoCartao }}
+                // De pé, na frente do móvel (cama, sofá): atrás dele os pés apareciam por baixo,
+                // como se flutuasse; sentado, fica atrás (o móvel cobre as pernas)
+                style={{ position: "absolute", left: lugar.left + chegarPerto, top: 790 - subirNoCartao, zIndex: meuAbraco?.pose === "sentado" ? 0 : 2 }}
               />
               </CelularAceso.Provider>
             );
           })}
           {Frente && (
-            <CamadaDaFrente fundo={fundo}>
-              <Frente />
-            </CamadaDaFrente>
+            <AbsoluteFill style={{ zIndex: 1 }}>
+              <CamadaDaFrente fundo={fundo}>
+                <Frente />
+              </CamadaDaFrente>
+            </AbsoluteFill>
           )}
           {/* No escuro, a tela do celular ilumina o rosto de quem está com ele (um feixe claro e fraco) */}
           {escuro &&
@@ -604,7 +633,7 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
                 const m = maoDe(lugares[indice], sentado);
                 const r = rostoDe(lugares[indice], sentado);
                 return (
-                  <svg key={`feixe-${p.id}`} viewBox="0 0 1080 1920" width={1080} height={1920} style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
+                  <svg key={`feixe-${p.id}`} viewBox="0 0 1080 1920" width={1080} height={1920} style={{ position: "absolute", inset: 0, pointerEvents: "none", zIndex: 3 }}>
                     <defs>
                       <linearGradient id={`feixe-${indice}`} x1={m.x} y1={m.y} x2={r.x} y2={r.y} gradientUnits="userSpaceOnUse">
                         <stop offset="0" stopColor="#D8E6FF" stopOpacity={0.32} />
@@ -616,7 +645,7 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
                 );
               });
             })()}
-        </AbsoluteFill>
+        {/* A luz do aviso dentro do zoom: fora dele, com a câmera perto, ela ficava ao lado do celular */}
         {linha.map(({ cena, inicio }, i) => {
           if (!cena.luz) return null;
           // A luz nasce no celular de quem está com ele na mão nesta fala; sem
@@ -630,6 +659,7 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
           const guardou = momentosDe(elenco[indice].id, linha).find((m) => m.em > inicio && m.em < proxima && !comCelular(m.pose))?.em;
           return <LuzDoAviso key={`luz-${i}`} em={inicio} ate={guardou ?? proxima} x={mao.x} y={mao.y} />;
         })}
+        </AbsoluteFill>
         {linha.map(({ cena, inicio }, i) => {
           const fim = linha[i + 1]?.inicio ?? fimDasFalas;
           return (

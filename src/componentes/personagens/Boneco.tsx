@@ -16,7 +16,7 @@ const LINGUA = "#E0607A";
 const BOCHECHA = "#FF8FA3";
 
 export type Expressao = "neutra" | "feliz" | "radiante" | "preocupada" | "surpresa" | "brava" | "sem-graca" | "medo" | "aliviada";
-export type Pose = "normal" | "cintura" | "celular" | "cabeca" | "explicando" | "comemorando" | "pensando" | "sentado" | "apontando" | "caido";
+export type Pose = "normal" | "cintura" | "celular" | "cabeca" | "explicando" | "comemorando" | "pensando" | "sentado" | "apontando" | "caido" | "abraco";
 export type Momento = { em: number; pose: Pose; expressao: Expressao };
 /** Intervalo de uma palavra dita pelo personagem, em quadros */
 export type Palavra = { inicio: number; fim: number };
@@ -94,6 +94,9 @@ export const POSES: Record<Pose, { esq: Angulos; dir: Angulos }> = {
   // Só no Mundo 3D: o braço direito esticado apontando; caído no chão (o corpo deita)
   apontando: { esq: [10, -6], dir: [100, -4] },
   caido: { esq: [40, -10], dir: [40, -10] },
+  // Abraço: o braço do lado de quem abraça passa por cima do ombro do outro (no
+  // Conversa os dois chegam perto; o braço direito é o do lado do outro)
+  abraco: { esq: [14, -10], dir: [104, -38] },
 };
 
 /** Quanto o corpo desce quando o personagem está sentado (no espaço do desenho) */

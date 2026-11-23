@@ -31,10 +31,15 @@ export function poseDoPlano(plano: Plano, foco: Ponto, escala = 1): PoseDaCamera
       return longe(2.6, 1.9, 6.2, 1.2, 36);
     case "close":
       return longe(0.5, 1.5, 3.3, 1.38, 30);
-    case "de-baixo":
-      return longe(-2.8, -0.25, 6, 1.4, 50);
+    case "de-baixo": {
+      // De baixo, mas acima da grama (até 0,6): rente ao chão (0,35) as folhas da
+      // frente cobriam o personagem (23/11/2026)
+      const pose = longe(-2.8, -0.25, 6, 1.4, 50);
+      return { ...pose, posicao: [pose.posicao[0], Math.max(0.8, pose.posicao[1]), pose.posicao[2]] };
+    }
     case "por-cima":
-      return longe(1.2, 9, 6.5, 0, 40);
+      // Mais perto: de 9 m de altura o personagem ficava pequeno demais no celular
+      return longe(1, 6, 5, 0, 38);
   }
 }
 

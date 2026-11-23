@@ -32,6 +32,8 @@ de cada capítulo e dois no fim.
 source ferramentas/nuvem.sh && for t in <segundos>; do npx remotion ffmpeg -y -loglevel error -ss $t -i out/<arquivo>/video.mp4 -frames:v 1 -vf scale=640:-2 out/<arquivo>/critica-$t.jpg; done
 ```
 
+Meça o volume com `source ferramentas/nuvem.sh && npm run volume -- out/<arquivo>/video.mp4` (diz se a música está alta contra a voz).
+
 Abra (Read) todos. Reprove só por: quadro preto, quebrado ou congelado; cartão de capítulo ilegível ou com erro (a
 prévia não mostra o cartão); legenda fora do tempo da fala; duração mais de 20% longe da do canal; voz falhando ou
 música cobrindo a voz. Se um quadro levantar dúvida, tire só esse de novo sem o `scale` para ver grande.
@@ -40,7 +42,7 @@ música cobrindo a voz. Se um quadro levantar dúvida, tire só esse de novo sem
 
 **Erros (qualquer um reprova):**
 - imagem errada para o que a fala diz (pessoa, lugar ou época errada), anacrônica, com marca d'água ou borda;
-- legenda cobrindo o que importa na imagem, texto cortado ou com erro de escrita na língua do canal (a do roteiro; inglês e espanhol são normais);
+- legenda cobrindo o que importa na imagem (se for texto escrito embaixo da imagem, a correção é `"legendaNoAlto": true` na cena, para a pesquisadora), texto cortado ou com erro de escrita na língua do canal (a do roteiro; inglês e espanhol são normais);
 - cartão de capítulo ilegível ou com erro;
 - a mesma imagem em mais de 3 cenas;
 - a capa ilegível pequena (imagine do tamanho de um polegar), com o título cortado ou o destaque na palavra errada;
