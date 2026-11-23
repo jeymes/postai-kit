@@ -124,9 +124,17 @@ export const Recorte: React.FC<{
           <div style={{ position: "absolute", inset: 0, backgroundColor: "#f3eee2", clipPath: borda }} />
           {/* A imagem, recortada dentro da margem */}
           <div style={{ position: "absolute", inset: 22, clipPath: bordaDaFoto, overflow: "hidden", backgroundColor: "#2a2420" }}>
+            {/* Retrato em pé (inteira): a própria imagem desfocada preenche os lados (antes, faixas escuras) */}
+            {inteira && (
+              <Img
+                src={arquivo(src)}
+                style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", filter: `blur(24px) brightness(0.55)`, scale: "1.15" }}
+              />
+            )}
             <Img
               src={arquivo(src)}
               style={{
+                position: "relative",
                 width: "100%",
                 height: "100%",
                 objectFit: inteira ? "contain" : "cover",

@@ -18,7 +18,11 @@ export const FraseNaLuz: React.FC<{ frase: string; linha?: string; botao?: strin
   const DOURADO = cor;
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
-  const feixe = interpolate(frame, [0, 30], [0, 1], { extrapolateRight: "clamp" });
+  // O feixe acende rápido e a frase entra logo (23/11/2026: o feixe ficava ~0,6 s
+  // vazio e escuro antes da frase, e a frase demorava a aparecer inteira)
+  const feixe = interpolate(frame, [0, 10], [0, 1], { extrapolateRight: "clamp" });
+  const INICIO = 4;
+  const PASSO = 2;
   const palavras = versiculo.split(/\s+/).filter(Boolean);
   const tamanho = versiculo.length > 110 ? 58 : versiculo.length > 70 ? 66 : 76;
   return (
@@ -43,9 +47,22 @@ export const FraseNaLuz: React.FC<{ frase: string; linha?: string; botao?: strin
         ))}
       </svg>
       <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", padding: "0 110px", flexDirection: "column", gap: 40 }}>
-        <div style={{ fontFamily: fontes.titulo, fontWeight: 800, fontSize: tamanho, lineHeight: 1.25, color: DOURADO, textAlign: "center", textShadow: `0 0 28px ${cor}73` }}>
+        <div
+          style={{
+            fontFamily: fontes.titulo,
+            fontWeight: 800,
+            fontSize: tamanho,
+            lineHeight: 1.25,
+            color: DOURADO,
+            textAlign: "center",
+            // Contorno escuro: a cor do canal (rosé, laranja) quase sumia em cima do feixe claro
+            WebkitTextStroke: `${Math.round(tamanho / 14)}px #0F1320`,
+            paintOrder: "stroke fill",
+            textShadow: `0 0 14px rgba(15,19,32,0.9), 0 0 30px ${cor}66`,
+          }}
+        >
           {palavras.map((palavra, i) => {
-            const p = spring({ frame: frame - 18 - i * 3, fps, config: { damping: 16 } });
+            const p = spring({ frame: frame - INICIO - i * PASSO, fps, config: { damping: 16 } });
             return (
               <span key={i} style={{ opacity: p, display: "inline-block", translate: `0 ${(1 - p) * 16}px`, marginRight: "0.28em" }}>
                 {palavra}
@@ -61,14 +78,14 @@ export const FraseNaLuz: React.FC<{ frase: string; linha?: string; botao?: strin
               fontWeight: 700,
               letterSpacing: 2,
               color: "rgba(255,255,255,0.78)",
-              opacity: interpolate(frame, [18 + palavras.length * 3, 30 + palavras.length * 3], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }),
+              opacity: interpolate(frame, [INICIO + palavras.length * PASSO, INICIO + 12 + palavras.length * PASSO], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }),
             }}
           >
             {referencia}
           </div>
         )}
         {figura && (
-          <div style={{ opacity: interpolate(frame, [10, 30], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }), marginTop: 10 }}>{figura}</div>
+          <div style={{ opacity: interpolate(frame, [2, 14], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }), marginTop: 10 }}>{figura}</div>
         )}
         {botao && (
           <div
@@ -81,7 +98,7 @@ export const FraseNaLuz: React.FC<{ frase: string; linha?: string; botao?: strin
               fontSize: 44,
               padding: "22px 56px",
               borderRadius: 60,
-              scale: String(spring({ frame: frame - 30 - palavras.length * 3, fps, config: { damping: 12 } })),
+              scale: String(spring({ frame: frame - INICIO - 12 - palavras.length * PASSO, fps, config: { damping: 12 } })),
             }}
           >
             {botao}

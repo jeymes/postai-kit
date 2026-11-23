@@ -147,6 +147,17 @@ if (peca.molde === "Documentario") {
   const usos = new Map<string, number>();
   for (const c of longas) if (c.foto) usos.set(c.foto, (usos.get(c.foto) ?? 0) + 1);
   for (const [foto, vezes] of usos) if (vezes > 3) erro("pesquisadora-de-imagens", `${foto} aparece em ${vezes} cenas (no máximo 3)`);
+  // Contando as cenas sem foto, que continuam a imagem anterior: a mesma imagem fica em
+  // mais cenas do que parece (23/11/2026: a moeda de Alexandre ficou em 4 cenas sem aviso)
+  const naTela = new Map<string, number>();
+  let ultima: string | undefined;
+  for (const c of longas) {
+    if (c.foto) ultima = c.foto;
+    if (ultima) naTela.set(ultima, (naTela.get(ultima) ?? 0) + 1);
+  }
+  for (const [foto, vezes] of naTela)
+    if (vezes > 3 && (usos.get(foto) ?? 0) <= 3)
+      aviso("pesquisadora-de-imagens", `${foto} fica na tela em ${vezes} cenas, contando as sem foto que continuam ela: ponha imagem em algumas dessas cenas`);
   if (!doc.encerramento) aviso("roteirista-narrado", "sem encerramento: o vídeo acaba na última cena");
   else if (tamanho(doc.encerramento) > 50) erro("roteirista-narrado", `encerramento com ${tamanho(doc.encerramento)} caracteres (até 50)`);
   if (!doc.capa?.titulo) erro("roteirista-narrado", "falta capa.titulo");
@@ -269,7 +280,8 @@ cenas.forEach((cena, i) => {
 
 // ---- CTAs: curtos, frase inteira, nunca @ ----
 const temContato = (texto = "") => /@\w|https?:|www\.|\.com\b|\.app\b|link na bio/i.test(texto);
-if (!peca.ctaInicial) erro("roteirista", "falta o ctaInicial");
+// Sem ctaInicial não há balão no começo: o dono pode pedir para tirar (22/11/2026)
+if (!peca.ctaInicial) aviso("roteirista", "sem ctaInicial: o vídeo começa sem o balão (só se o dono pediu)");
 else if (tamanho(peca.ctaInicial) > 36) erro("roteirista", `ctaInicial com ${tamanho(peca.ctaInicial)} caracteres (até 36; acima de 28 o balão diminui a letra para caber numa linha)`);
 if (!peca.ctaFinal) erro("roteirista", "falta o ctaFinal");
 else {

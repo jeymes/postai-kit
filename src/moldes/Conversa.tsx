@@ -181,14 +181,19 @@ export const conversaSchema = z.object({
     })
     .optional(),
   zoom: z
-    .object({ em: z.string(), de: z.number().int(), ate: z.number().int() })
+    .object({
+      em: z.string(),
+      de: z.number().int(),
+      ate: z.number().int(),
+      forca: z.number().min(0.05).max(0.6).optional().describe("Quanto aproxima: 0.15 leve, 0.25 (padrão) bem visível no celular, 0.4 a 0.6 susto ou surpresa"),
+    })
     .optional()
     .describe("A câmera aproxima de um personagem da cena `de` até a `ate`"),
   convidados: z
     .array(z.object({ id: z.string(), nome: z.string(), descricao: z.string() }))
     .optional()
     .describe("Personagens que só este episódio precisa: a designer desenha em canais/<canal>/convidados/<id>.json"),
-  ctaInicial: z.string().max(60).optional().describe('Balão curto (até 28 caracteres, uma linha) embaixo do título nos primeiros segundos, ex.: "Marca quem é assim 😂"'),
+  ctaInicial: z.string().max(60).optional().describe('Balão curto (até 36 caracteres, uma linha; acima de 28 a letra diminui) embaixo do título nos primeiros segundos, ex.: "Marca quem é assim 😂". Sem ele, não há balão'),
   idioma: z.enum(["pt", "en", "es"]).optional().describe("O idioma do vídeo (o narrar grava): o botão do fim sai nele"),
   ctaFinal: z.string().max(80).optional().describe('Frase completa no cartão do fim, sem @ e sem "link na bio" (isso vai no botão), ex.: "Organize o seu casamento no Laços"'),
   botaoFinal: z.string().max(24).optional().describe('Texto do botão do cartão do fim, ex.: "Link na bio 👆", "Baixe grátis 👆". Padrão: "Link na bio 👆"'),
@@ -470,7 +475,8 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
   if (props.zoom) {
     const aproxima = spring({ frame: frame - naCena(props.zoom.de) + 8, fps, config: { damping: 18 } });
     const afasta = spring({ frame: frame - fimDaCena(props.zoom.ate + 1) + 8, fps, config: { damping: 18 } });
-    zoom = 1 + 0.14 * (aproxima - afasta);
+    // Era fixo em 0.14: no feed quase não aparecia (23/11/2026); agora 0.25 ou o que o roteiro pedir
+    zoom = 1 + (props.zoom.forca ?? 0.25) * (aproxima - afasta);
     const indice = Math.max(0, elenco.findIndex((p) => p.id === props.zoom?.em));
     origem = lugares[indice].origem;
   }

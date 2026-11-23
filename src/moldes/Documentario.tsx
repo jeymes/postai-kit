@@ -296,7 +296,9 @@ const CenaDoDocumentario: React.FC<{ cena: Cena; indice: number; props: Document
   // Dentro do capítulo, a foto nova se mistura com a anterior; no começo de capítulo, entra do preto
   const anterior = indice > 0 && !cena.capitulo ? comImagem(props.cenas, indice - 1) : undefined;
   const entrada = anterior?.foto ? Math.max(MISTURA, ap.mistura) : Math.max(ENTRADA_DO_CAPITULO, ap.mistura);
-  const fade = interpolate(frame, [0, entrada], [0, 1], { extrapolateRight: "clamp", easing: cinema });
+  // A primeira cena já começa com a imagem (23/11/2026: o quadro 0 saía preto e a
+  // miniatura tirada do começo ficava escura)
+  const fade = indice === 0 ? 1 : interpolate(frame, [0, entrada], [0, 1], { extrapolateRight: "clamp", easing: cinema });
   return (
     <AbsoluteFill style={{ backgroundColor: "#000" }}>
       {anterior?.foto && frame < entrada && (
