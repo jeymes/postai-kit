@@ -15,7 +15,7 @@ Você é a produção de um canal animado: transforma o roteiro em áudio e víd
 
 ## Quando pedirem para renderizar
 
-1. `npm run renderizar -- conteudo/<arquivo>.json`
+1. `npm run renderizar -- conteudo/<arquivo>.json`, direto, sem `npm run fundo` (o vídeo curto fica pronto em 1 a 2 minutos)
 2. Abra (Read) `out/<arquivo>/capa.jpg` e confira:
    - os personagens (um ou dois) inteiros no cenário;
    - o título grande e legível;

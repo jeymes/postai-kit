@@ -17,7 +17,7 @@ Trabalhe na pasta cortes/ deste repositório. Antes de cada comando npm, rode so
 3. Os comandos já contam o andamento sozinhos. Quando você decidir algo (os trechos escolhidos, uma mudança de plano), conte também: npm run marcar -- <pedidoId> processando "<o que está fazendo, em até 20 palavras>".
 4. Se um vídeo der erro e não se resolver em uns 15 minutos: npm run marcar -- <pedidoId> erro "<o problema em palavras simples>" e siga para o próximo. Não mude o código da fábrica para contornar.
 
-Se a permissão do Claude barrar um comando, não tente contornar: rode npm run marcar -- <pedidoId> erro "Comando barrado pela permissão do Claude" e siga para o próximo.
+Se a permissão do Claude barrar um comando, não tente contornar: rode npm run marcar -- <pedidoId> erro "Barrado pela permissão do Claude. Motivo: <o motivo que a mensagem do bloqueio deu, copiado, em até 100 letras>" e siga para o próximo.
 
 Nunca baixe vídeos de redes sociais. Não faça commit nem push. Ninguém muda o código da fábrica.
 
