@@ -1,0 +1,10 @@
+{
+  "molde": "Carrossel",
+  "modelo": "foto-frase",
+  "slides": [
+    { "tipo": "capa", "rotulo": "Casamento", "titulo": "5 erros que estragam a festa", "destaque": "5 erros", "subtitulo": "Arraste para o lado", "foto": "exemplos/carrossel-casal.jpg" },
+    { "tipo": "item", "numero": "1", "titulo": "Deixar a lista de convidados para o fim", "texto": "Feche a lista 90 dias antes: é ela que decide o buffet, o salão e o convite.", "foto": "exemplos/carrossel-flores.jpg" },
+    { "tipo": "final", "titulo": "Qual desses você já viu acontecer?", "botao": "Salve para não esquecer", "foto": "exemplos/carrossel-casal.jpg" }
+  ],
+  "post": { "titulo": "5 erros que estragam a festa", "legenda": "Os 5 erros que mais vemos nas festas, e como fugir de cada um. #casamento #noiva #dicasdecasamento" }
+}

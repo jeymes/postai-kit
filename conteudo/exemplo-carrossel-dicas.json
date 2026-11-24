@@ -1,0 +1,11 @@
+{
+  "molde": "Carrossel",
+  "modelo": "dicas",
+  "slides": [
+    { "tipo": "capa", "rotulo": "Guia rápido", "titulo": "Checklist dos 90 dias antes do casamento", "destaque": "90 dias", "subtitulo": "Salve para não esquecer" },
+    { "tipo": "item", "rotulo": "90 dias antes", "titulo": "O que já precisa estar pronto", "itens": ["Fechar a lista de convidados", "Mandar o save the date", "Escolher o buffet", "Provar o vestido"], "marcados": 2 },
+    { "tipo": "item", "numero": "2", "titulo": "Confirme presença pelo link", "texto": "Ninguém precisa ligar para ninguém: quem abre o link já diz se vai e quantos levam." },
+    { "tipo": "final", "titulo": "Quer a lista completa?", "texto": "Tem tudo no app, com lembrete de cada passo.", "botao": "Link na bio" }
+  ],
+  "post": { "titulo": "Checklist dos 90 dias", "legenda": "O que precisa estar pronto 90 dias antes do casamento. Salve e mande para quem vai casar. #casamento #noiva #checklist" }
+}

@@ -1,0 +1,10 @@
+{
+  "molde": "Carrossel",
+  "modelo": "post",
+  "slides": [
+    { "tipo": "capa", "titulo": "Opinião impopular: casamento pequeno é mais bonito que festa de 300 pessoas." },
+    { "tipo": "item", "titulo": "Com 80 convidados você conversa com todo mundo, gasta metade e lembra de cada rosto.", "foto": "exemplos/carrossel-casal.jpg" },
+    { "tipo": "final", "titulo": "Você faria pequeno ou grande?", "botao": "Salve e mande pro noivo" }
+  ],
+  "post": { "titulo": "Casamento pequeno", "legenda": "Pequeno ou grande? Cada casal tem o seu jeito. #casamento #noiva #miniwedding" }
+}

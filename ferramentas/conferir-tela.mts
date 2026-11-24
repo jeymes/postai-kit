@@ -24,12 +24,19 @@ const peca = JSON.parse(readFileSync(caminho, "utf8"));
 const { molde, capa: _capa, post: _post, ...props } = peca;
 void [_capa, _post];
 
+// Carrossel (24/11/2026): cada slide é uma imagem; confere todos (o "quadro" é o número do slide)
+const carrossel = molde === "Carrossel";
 // Um quadro no meio de cada trecho do vídeo (no máximo 30, espalhados)
-const duracoes = cenasDoMolde(molde, props);
-const inicios = iniciosDasCenas(molde, props);
-let quadros = duracoes.map((d, i) => inicios[i] + Math.floor(d / 2));
+let quadros: number[];
+if (carrossel) quadros = (props.slides as unknown[]).map((_, i) => i);
+else {
+  const duracoes = cenasDoMolde(molde, props);
+  const inicios = iniciosDasCenas(molde, props);
+  quadros = duracoes.map((d, i) => inicios[i] + Math.floor(d / 2));
+}
 if (quadros.length > 30) quadros = Array.from({ length: 30 }, (_, i) => quadros[Math.floor((i * quadros.length) / 30)]);
 const tempo = (q: number) => {
+  if (carrossel) return `slide ${q + 1}`;
   const s = Math.round(q / FPS);
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 };
@@ -78,15 +85,16 @@ const navegador = await openBrowser("chrome", { browserExecutable, chromiumOptio
 const dados = { ...props, __conferir: true };
 try {
   const composicao = await selectComposition({ serveUrl, id: molde, inputProps: dados, puppeteerInstance: navegador, chromiumOptions, browserExecutable, logLevel: "error" });
-  const emPe = composicao.height > composicao.width;
-  const escala = composicao.height / (emPe ? 1920 : 1080);
+  // O carrossel (4:5) não tem os botões do app por cima: a regra de vídeo em pé não vale
+  const emPe = !carrossel && composicao.height > composicao.width;
+  const escala = carrossel ? composicao.width / 1080 : composicao.height / (emPe ? 1920 : 1080);
   for (const quadro of quadros) {
     const textos: Texto[] = [];
     const { buffer } = await renderStill({
       serveUrl,
-      composition: composicao,
-      inputProps: dados,
-      frame: Math.min(quadro, composicao.durationInFrames - 1),
+      composition: carrossel ? { ...composicao, props: { ...composicao.props, indice: quadro } } : composicao,
+      inputProps: carrossel ? { ...dados, indice: quadro } : dados,
+      frame: carrossel ? 0 : Math.min(quadro, composicao.durationInFrames - 1),
       imageFormat: "png",
       puppeteerInstance: navegador,
       chromiumOptions,
@@ -109,6 +117,13 @@ try {
         if ((t.x + t.w) / escala > 1010 && baixo > 700 && t.y / escala < 1480) avisos.push(`${onde}: o texto vai até a borda direita, onde ficam os botões de curtir e comentar.`);
         if (t.y / escala < 110 && t.nome !== "titulo") avisos.push(`${onde}: o texto encosta no alto, onde fica a busca e o relógio do celular.`);
       }
+      if (carrossel) {
+        // O texto não pode passar do slide nem cobrir o pé (o @ e o número, a partir de ~1250 de 1350)
+        const altura = composicao.height / escala;
+        if (baixo > altura - 105) avisos.push(`${onde}: o texto desce até ${Math.round(baixo)} px de ${Math.round(altura)} e cobre o pé do slide (o @ e o número). Encurte o texto ou divida em dois slides.`);
+        if (t.x / escala < 40 || (t.x + t.w) / escala > 1040) avisos.push(`${onde}: o texto passa da borda do slide. Encurte as palavras ou o texto.`);
+        if (t.y / escala < 40) avisos.push(`${onde}: o texto passa do alto do slide. Encurte o texto ou divida em dois slides.`);
+      }
       // Contraste: só quando a letra está solta em cima da imagem
       if (!t.caixa && !t.contorno) {
         const fundo = fundoEmVolta(png, t);
@@ -125,7 +140,7 @@ try {
 }
 
 const unicos = [...new Set(avisos)];
-if (!unicos.length) console.log(`Tela conferida (${quadros.length} quadros): nenhum texto embaixo dos botões do app nem difícil de ler.`);
+if (!unicos.length) console.log(carrossel ? `Slides conferidos (${quadros.length}): nenhum texto passando do slide nem difícil de ler.` : `Tela conferida (${quadros.length} quadros): nenhum texto embaixo dos botões do app nem difícil de ler.`);
 else {
   for (const a of unicos) console.log(`AVISO  ${a}`);
   console.log(`\n${unicos.length} aviso(s) em ${quadros.length} quadros. Texto do roteiro: roteirista; imagem atrás da legenda: pesquisadora ou diretora-de-arte; posição fixa do molde: npm run limite -- texto-na-tela "...".`);

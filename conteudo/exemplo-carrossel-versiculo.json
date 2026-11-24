@@ -1,0 +1,10 @@
+{
+  "molde": "Carrossel",
+  "modelo": "versiculo",
+  "slides": [
+    { "tipo": "capa", "titulo": "Quando a tempestade vier, lembre quem acalma o mar.", "referencia": "Marcos 4", "foto": "exemplos/carrossel-pintura.jpg" },
+    { "tipo": "item", "titulo": "Ele se levantou, repreendeu o vento e disse ao mar: Aquiete-se! Acalme-se!", "referencia": "Marcos 4:39", "foto": "exemplos/carrossel-pintura.jpg" },
+    { "tipo": "final", "titulo": "Mande para alguém que está no meio da tempestade.", "botao": "Compartilhe", "foto": "exemplos/carrossel-pintura.jpg" }
+  ],
+  "post": { "titulo": "Quem acalma o mar", "legenda": "Para quem está no meio da tempestade hoje. #fe #biblia #versiculododia" }
+}
