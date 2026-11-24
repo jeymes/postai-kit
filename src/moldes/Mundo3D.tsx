@@ -9,6 +9,7 @@ import { BalaoDeChamada, CartaoDeChamada } from "../componentes/cenas/ChamadaAni
 import { FraseNaLuz } from "../componentes/cenas/FraseNaLuz";
 import type { FormaDaBoca, Momento, Palavra, Visual } from "../componentes/personagens/Boneco";
 import { Palito } from "../componentes/personagens/Palito";
+import { paginar } from "../componentes/texto/paginar";
 import { fontes } from "../nucleo/marca";
 import { ACESSORIOS, AMBIENTES, FIGURINOS, PALETAS, trajeDoAmbiente, trajeDoChapeu, visualDeFigurante, type Traje } from "./mundo3d/ambientes";
 import { aplicar, distancia, PLANOS, poseDoPlano, poseNoTempo, projetar, type Plano, type Ponto } from "./mundo3d/camera";
@@ -39,7 +40,7 @@ const narracaoSchema = z
   .object({
     audio: z.string(),
     duracaoSeg: z.number(),
-    legendas: z.array(z.object({ texto: z.string(), inicioMs: z.number(), fimMs: z.number() })),
+    legendas: z.array(z.object({ texto: z.string(), inicioMs: z.number(), fimMs: z.number(), fimDeFrase: z.boolean().optional() })),
     boca: z.array(z.object({ inicio: z.number(), forma: z.string() })).optional(),
     chave: z.string().optional(),
   })
@@ -191,7 +192,7 @@ const ALTURA_DO_BONECO = 1.75;
 const QUADROS_DA_QUEDA = MUNDO3D.queda;
 const DESCIDA_DA_QUEDA = 1.1;
 
-type PalavraDita = Palavra & { texto: string };
+type PalavraDita = Palavra & { texto: string; fimDeFrase?: boolean };
 
 // Onde começa cada cena e o tempo de cada palavra: o da voz (npm run narrar)
 // ou, antes dela, a estimativa
@@ -207,6 +208,7 @@ function linhaDoTempo(cenas: Mundo3DProps["cenas"]) {
         texto: l.texto,
         inicio: inicio + Math.round((l.inicioMs / 1000) * FPS),
         fim: inicio + Math.round((l.fimMs / 1000) * FPS),
+        ...(l.fimDeFrase ? { fimDeFrase: true } : {}),
       }));
       fala = Math.ceil(cena.narracao.duracaoSeg * FPS);
       boca = cena.narracao.boca?.map((b) => ({
@@ -269,13 +271,34 @@ const Tufo: React.FC<{ largura: number }> = ({ largura }) => (
 );
 
 // No close, o rosto ocupa o meio da tela: a legenda desce para não cobrir a boca e a barba
+// As páginas vêm do paginar, como na Conversa e no Documentario (24/11/2026): antes
+// eram grupos fixos de 3 palavras, que emendavam o fim de uma frase com o começo
+// da outra ("CALMA, LIA VOU OLHAR"), separavam "dali a" e piscavam entre palavras.
+// Uma página cabe em 2 linhas desta letra (uns 15 caracteres por linha); no close,
+// que começa em 1420, uma linha só (2 passariam de 1540, embaixo dos botões do app).
+const LETRAS_DA_LEGENDA = 24;
+const LETRAS_NO_CLOSE = 15;
 const Legenda: React.FC<{ palavras: PalavraDita[]; destaque: string[]; close?: boolean }> = ({ palavras, destaque, close = false }) => {
   const frame = useCurrentFrame();
-  const atual = palavras.findIndex((p) => p.inicio <= frame && frame < p.fim + 6);
-  if (atual < 0) return null;
-  // Até 3 palavras por vez, como nos vídeos curtos
-  const comeco = Math.floor(atual / 3) * 3;
-  const grupo = palavras.slice(comeco, comeco + 3);
+  const paginas = useMemo(
+    () =>
+      paginar(
+        palavras.map((p, n) => ({
+          texto: p.texto,
+          inicioMs: (p.inicio / FPS) * 1000,
+          fimMs: (p.fim / FPS) * 1000,
+          nova: n === 0,
+          ...(p.fimDeFrase ? { fimDeFrase: true } : {}),
+        })),
+        close ? LETRAS_NO_CLOSE : LETRAS_DA_LEGENDA,
+      ),
+    [palavras, close],
+  );
+  const agoraMs = (frame / FPS) * 1000;
+  // A página fica até a próxima começar; depois da última palavra, some em 0,7 s
+  const pagina = paginas.filter((p) => p.startMs <= agoraMs).pop();
+  if (!pagina || agoraMs > pagina.tokens[pagina.tokens.length - 1].toMs + 700) return null;
+  const grupo = pagina.tokens.map((t) => ({ texto: t.text }));
   const marcar = new Set(destaque.map((d) => d.toLowerCase()));
   return (
     <div

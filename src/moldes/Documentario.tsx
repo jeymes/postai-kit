@@ -23,7 +23,7 @@ const narracaoSchema = z
   .object({
     audio: z.string(),
     duracaoSeg: z.number(),
-    legendas: z.array(z.object({ texto: z.string(), inicioMs: z.number(), fimMs: z.number() })),
+    legendas: z.array(z.object({ texto: z.string(), inicioMs: z.number(), fimMs: z.number(), fimDeFrase: z.boolean().optional() })),
     chave: z.string().optional(),
   })
   .passthrough()
