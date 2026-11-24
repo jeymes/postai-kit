@@ -23,6 +23,7 @@ import { cpus, totalmem } from "node:os";
 import { basename, join } from "node:path";
 import { duracaoDoMolde, FPS, iniciosDasCenas, MOLDES_3D, MOLDES_DE_VIDEO, QUADROS_DA_IMAGEM, quadrosDaPrevia } from "../src/moldes/tempos.ts";
 import { fonte3dDesatualizada, prepararFonte3d } from "./fonte-3d.mts";
+import { quadrosQuebrados } from "./quadros-quebrados.mts";
 import { tirarImagens, type Imagem } from "./varias-imagens.mts";
 
 const MOLDES = [...MOLDES_DE_VIDEO, "Carrossel"];
@@ -118,34 +119,61 @@ const arquivoDeProps = join(saida, ".props.json");
 // 11 mil linhas): isso enche o contexto do Claude à toa. A saída fica guardada
 // e só aparece, em 15 linhas, se der erro. --detalhes mostra tudo.
 const detalhes = args.includes("--detalhes");
+
+/**
+ * O 3D na nuvem usa o navegador do próprio Remotion (24/11/2026). Com o Chromium
+ * da máquina (KIT_NAVEGADOR) e o 3D desenhado no processador, 7% a 24% dos
+ * quadros saíam em mosaico e o vídeo piscava; com o navegador do Remotion, o
+ * mesmo swangle sai limpo. Ele não confia no certificado do proxy da nuvem, por
+ * isso o --ignore-certificate-errors (só as fontes e imagens da peça passam por ali).
+ */
+let navegadorDoRemotion = com3d && Boolean(process.env.KIT_NAVEGADOR) && !args.includes("--navegador-da-maquina");
 function rodarRemotion(comando: string[]) {
-  return spawnSync("npx", ["remotion", ...comando, ...gl, `--props=${arquivoDeProps}`], {
+  const env = { ...process.env };
+  const extra: string[] = [];
+  if (navegadorDoRemotion) {
+    delete env.KIT_NAVEGADOR;
+    extra.push("--ignore-certificate-errors");
+  }
+  return spawnSync("npx", ["remotion", ...comando, ...gl, ...extra, `--props=${arquivoDeProps}`], {
     stdio: detalhes ? "inherit" : "pipe",
     encoding: "utf8",
     maxBuffer: 512 * 1024 * 1024,
     shell: process.platform === "win32",
+    env,
   });
 }
 
 /**
  * O navegador do render fechou no meio ("Target closed", 23/11/2026: 2 vezes num
  * vídeo longo do Canal dark). Costuma ser memória apertada com muitas abas:
- * tenta de novo uma vez com metade das abas antes de desistir.
+ * tenta de novo com metade das abas (e de novo, até 1 aba) antes de desistir.
  */
 const navegadorFechou = (saida: string) => /Target closed|Target\.closeTarget|No target with given id/i.test(saida);
 function renderComReserva(abas: number, ...comando: string[]) {
-  const primeira = rodarRemotion([...comando, `--concurrency=${abas}`]);
-  const saida = `${primeira.stdout ?? ""}\n${primeira.stderr ?? ""}`;
-  if (primeira.status === 0) return abas;
-  if (abas > 1 && navegadorFechou(saida)) {
-    const menos = Math.max(1, Math.floor(abas / 2));
-    console.log(`O navegador do render fechou no meio (memória?). Tentando de novo com ${menos} abas em vez de ${abas}.`);
-    remotion(...comando, `--concurrency=${menos}`);
-    return menos;
+  // Se o navegador fechar de novo, continua baixando as abas (metade a cada vez,
+  // até 1) antes de desistir: com metade só, a memória ainda podia não bastar.
+  let atual = abas;
+  for (;;) {
+    let r = rodarRemotion([...comando, `--concurrency=${atual}`]);
+    // O navegador do Remotion não abriu na nuvem (não baixou, por exemplo): volta ao da máquina
+    if (r.status !== 0 && navegadorDoRemotion && !navegadorFechou(`${r.stdout ?? ""}\n${r.stderr ?? ""}`)) {
+      console.log("O navegador do Remotion falhou; tentando com o navegador da máquina.");
+      navegadorDoRemotion = false;
+      r = rodarRemotion([...comando, `--concurrency=${atual}`]);
+    }
+    if (r.status === 0) return atual;
+    const saida = `${r.stdout ?? ""}\n${r.stderr ?? ""}`;
+    if (atual > 1 && navegadorFechou(saida)) {
+      const menos = Math.max(1, Math.floor(atual / 2));
+      console.log(`O navegador do render fechou no meio (memória?). Tentando de novo com ${menos} abas em vez de ${atual}.`);
+      atual = menos;
+      continue;
+    }
+    // Mesmo caminho do erro de sempre (mostra o motivo e sai)
+    remotion(...comando, `--concurrency=${atual}`);
+    return atual;
   }
-  // Mesmo caminho do erro de sempre (mostra o motivo e sai)
-  remotion(...comando, `--concurrency=${abas}`);
-  return abas;
 }
 
 function remotion(...comando: string[]) {
@@ -396,7 +424,26 @@ if (molde === "Carrossel") {
   const abas = Math.max(1, Math.min(nucleos, Math.floor((memoriaGb - 1.5) / (com3d ? 0.8 : 0.45))));
   console.log(`Render: ${nucleos} núcleos, ${memoriaGb.toFixed(1)} GB de memória, ${abas} abas ao mesmo tempo.`);
   const inicioDoRender = Date.now();
-  const abasUsadas = renderComReserva(abas, "render", molde, video, "--codec=h264", ...qualidade);
+  let abasUsadas = renderComReserva(abas, "render", molde, video, "--codec=h264", ...qualidade);
+  // 3D: confere se algum quadro saiu quebrado (pisca); se sim, faz de novo com
+  // menos abas (metade, depois 1). Se ainda piscar, para com erro: nada é enviado.
+  if (com3d) {
+    for (let volta = 0; ; volta++) {
+      const quebrados = quadrosQuebrados(video);
+      if (!quebrados.length) {
+        console.log("Quadros conferidos: nenhum quebrado.");
+        break;
+      }
+      const lista = `${quebrados.slice(0, 12).join(", ")}${quebrados.length > 12 ? "…" : ""}`;
+      if (abasUsadas <= 1 || volta >= 2) {
+        console.error(`O vídeo 3D saiu com ${quebrados.length} quadros quebrados (piscam), mesmo com ${abasUsadas} aba(s): ${lista}. Não envie este vídeo.`);
+        process.exit(1);
+      }
+      const menos = volta === 0 ? Math.max(1, Math.floor(abasUsadas / 2)) : 1;
+      console.log(`${quebrados.length} quadros quebrados (piscam): ${lista}. Fazendo de novo com ${menos} aba(s) em vez de ${abasUsadas}.`);
+      abasUsadas = renderComReserva(menos, "render", molde, video, "--codec=h264", ...qualidade);
+    }
+  }
   const segundosDoRender = Math.round((Date.now() - inicioDoRender) / 1000);
   console.log(`Render levou ${Math.floor(segundosDoRender / 60)} min ${segundosDoRender % 60} s.`);
   desempenho = { nucleos, memoriaGb: Math.round(memoriaGb * 10) / 10, abas: abasUsadas, segundos: segundosDoRender };
