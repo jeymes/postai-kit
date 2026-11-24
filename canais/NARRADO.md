@@ -67,9 +67,10 @@ Conte o andamento de cada agente como sempre (`npm run andamento`). Antes de cad
    publicação usa `--duvida`.
 9. **publicacao:** mandar para aprovação (o `npm run aprovar` já manda como vídeo longo, só para o YouTube, com os
    capítulos na descrição) e registrar o episódio.
-10. **Shorts do vídeo longo** (só se o `canal-postai.md` ou um aprendizado pedir "shorts do vídeo longo"; senão,
-   pule): depois do aprovar do longo, ache os shorts escondidos nele.
-   - Rode `npm run corte-vertical -- conteudo/<arquivo>.json` (lista as cenas com o tempo) e escolha **2 trechos**
+10. **Shorts do vídeo longo** (só se o `canal-postai.md` disser "SHORTS DO LONGO: SIM", ou um aprendizado pedir;
+   senão, pule): depois do aprovar do longo, ache os shorts escondidos nele. O vídeo longo não muda: os shorts são
+   vídeos à parte.
+   - Rode `npm run corte-vertical -- conteudo/<arquivo>.json` (lista as cenas com o tempo) e escolha **os trechos** (quantos o `canal-postai.md` disser; sem número, 2)
      de cenas seguidas, de **20 a 55 s** cada, que: começam com uma ideia inteira (quem vê não precisa do resto do
      vídeo), têm uma virada ou revelação e fecham numa frase completa. Nada de trecho que termina no meio da ideia.
    - Para cada um, escreva o gancho escrito no alto (até ~50 letras) pelo `canais/GANCHOS.md` (5 opções, nota, fica

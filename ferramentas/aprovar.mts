@@ -20,6 +20,25 @@ import { existsSync, readFileSync, rmSync, statSync, writeFileSync } from "node:
 import { tmpdir } from "node:os";
 import { basename, dirname, join } from "node:path";
 import { exigirChave, ferramenta } from "./postai.ts";
+import { FPS, iniciosDasCenas, TEMPOS } from "../src/moldes/tempos.ts";
+
+// O que é falado em cada segundo (23/11/2026): a retenção do YouTube mostra a
+// fala de cada queda. Uma fala por cena, no segundo em que a voz começa.
+function falasNoTempo(p: { molde?: string; cenas?: Array<{ fala?: string }> } & Record<string, unknown>) {
+  const molde = String(p.molde ?? "");
+  const cenas = p.cenas ?? [];
+  if (!cenas.length || !["Conversa", "Documentario", "CorteVertical", "Narrado", "Mundo3D"].includes(molde)) return undefined;
+  const inicios = iniciosDasCenas(molde, p as Parameters<typeof iniciosDasCenas>[1]);
+  // Na Conversa o primeiro trecho é o respiro antes da primeira fala
+  const desloca = molde === "Conversa" ? 1 : 0;
+  const atraso = molde === "Conversa" || molde === "Mundo3D" ? 0 : TEMPOS.antesDaFala;
+  const falas = cenas.flatMap((c, i) => {
+    const quadro = inicios[i + desloca];
+    const texto = (c.fala ?? "").trim();
+    return quadro === undefined || !texto ? [] : [{ seg: Math.round(((quadro + atraso) / FPS) * 10) / 10, texto: texto.slice(0, 240) }];
+  });
+  return falas.length ? falas : undefined;
+}
 
 const args = process.argv.slice(2);
 const posSubstitui = args.indexOf("--substitui");
@@ -190,6 +209,8 @@ try {
     ...(typeof peca.titulo === "string" ? { gancho: peca.titulo } : {}),
     // Episódio do canal (animado ou narrado): aparece na tela Animação, com "Pedir ajuste"
     ...(doCanal ? { origem: "animacao", roteiro: JSON.stringify(semNarracao(peca)) } : {}),
+    // O que é falado em cada segundo (a retenção mostra a fala de cada queda)
+    ...(falasNoTempo(peca) ? { falas: falasNoTempo(peca) } : {}),
     // Narrado: vídeo longo e deitado, só no YouTube
     ...(peca.molde === "Documentario" ? { longo: true } : {}),
     ...(substitui ? { substitui } : {}),
