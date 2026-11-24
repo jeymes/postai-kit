@@ -25,7 +25,7 @@ Sem a linha QUEM CONTA, siga o jeito do estilo: o Conversa (2D) com personagens,
 
 ## Cena
 
-- **Poses:** `normal`, `cintura`, `celular`, `cabeca`, `explicando`, `comemorando`, `pensando`.
+- **Poses:** `normal`, `cintura`, `celular`, `celular-baixo` (o celular largado na mão, virado), `cabeca`, `explicando`, `comemorando`, `pensando`.
 - **Expressões:** `neutra`, `feliz`, `radiante`, `preocupada`, `surpresa`, `brava`, `sem-graca`.
 - Em toda cena, cada personagem tem pose e expressão em `estados`, e cada um muda pelo menos uma das duas de uma cena para a outra. Com dois, quem escuta também reage. O vídeo pode ter **um personagem sozinho** (ele fica no meio da tela, falando com quem assiste) quando o dono pedir ou a história for de uma pessoa só.
 - Fala com mais de 3 segundos (umas 9 palavras ou mais): ponha também `meio` (mesmo formato de `estados`), com a pose ou a expressão que muda na metade da fala, para ninguém ficar parado. Ex.: quem fala passa de `explicando` para `celular` quando mostra o app; quem ouve passa de `surpresa` para `feliz`.

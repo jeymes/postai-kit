@@ -99,6 +99,8 @@ const POSES_DE_PECAS: Record<Pose, { esq: Direcao; dir: Direcao; sentado?: boole
   normal: { esq: [-0.12, -1, 0.04], dir: [0.12, -1, 0.04] },
   cintura: { esq: [-0.12, -1, 0.04], dir: [0.75, -0.65, -0.1] },
   celular: { esq: [-0.12, -1, 0.04], dir: [0.05, -0.35, 0.95] },
+  // Celular baixado: no 3D, o braço desce ao lado do corpo (um pouco para a frente)
+  "celular-baixo": { esq: [-0.12, -1, 0.04], dir: [0.15, -0.95, 0.25] },
   cabeca: { esq: [0.45, 0.85, 0.3], dir: [-0.45, 0.85, 0.3] },
   explicando: { esq: [-0.12, -1, 0.04], dir: [0.45, -0.15, 0.88] },
   comemorando: { esq: [-0.55, 0.83, 0.1], dir: [0.55, 0.83, 0.1] },

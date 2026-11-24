@@ -6,10 +6,12 @@ import {
   estadoAgora,
   FALANDO,
   formaDoRhubarb,
+  CostasDoCelular,
+  modoDoCelular,
   OMBRO,
-  segurandoCelular,
   TelaDoCelular,
   type Angulos,
+  type ModoDoCelular,
   type Expressao,
   type FormaDaBoca,
   type Momento,
@@ -77,7 +79,7 @@ const Rosto: React.FC<{ expressao: Expressao; forma: string | null; piscando: bo
   );
 };
 
-const Braco: React.FC<{ angulos: Angulos; visual: Visual; celular?: boolean }> = ({ angulos: [ombro, cotovelo], visual, celular }) => (
+const Braco: React.FC<{ angulos: Angulos; visual: Visual; celular?: ModoDoCelular }> = ({ angulos: [ombro, cotovelo], visual, celular }) => (
   <g transform={`translate(${OMBRO.x + 12} ${OMBRO.y - 26}) rotate(${ombro})`}>
     <line x1={0} y1={0} x2={0} y2={BRACO} stroke={visual.roupa} strokeWidth={46} strokeLinecap="round" />
     <g transform={`translate(0 ${BRACO}) rotate(${cotovelo})`}>
@@ -85,8 +87,14 @@ const Braco: React.FC<{ angulos: Angulos; visual: Visual; celular?: boolean }> =
       <circle cx={0} cy={BRACO + 4} r={20} fill={visual.pele} />
       {celular && (
         <g transform={`translate(0 ${BRACO}) rotate(${-(ombro + cotovelo)})`}>
-          <rect x={-22} y={-42} width={44} height={74} rx={8} fill="#1E1A24" />
-          <TelaDoCelular x={-17} y={-36} largura={34} altura={60} cor="#D8E8FF" />
+          {celular === "costas" ? (
+            <CostasDoCelular largura={44} altura={74} cor="#1E1A24" />
+          ) : (
+            <>
+              <rect x={-22} y={-42} width={44} height={74} rx={8} fill="#1E1A24" />
+              <TelaDoCelular x={-17} y={-36} largura={34} altura={60} cor="#D8E8FF" />
+            </>
+          )}
         </g>
       )}
     </g>
@@ -111,7 +119,7 @@ export const Liso: React.FC<{
   const forma = boca?.length ? formaDoRhubarb(boca, frame) : falando ? FALANDO[Math.floor(frame / 3) % FALANDO.length] : null;
   const piscando = (frame + semente * 37 + 50) % 97 < 4 && estado.expressao !== "radiante";
   const respira = Math.sin(frame / 14 + semente) * 3;
-  const celular = segurandoCelular(estado.pose);
+  const celular = modoDoCelular(estado.pose);
   const largura = altura * 0.6;
   const descida = estado.pose === "sentado" ? DESCIDA_SENTADO : 0;
   return (

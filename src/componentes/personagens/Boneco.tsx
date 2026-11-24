@@ -16,7 +16,19 @@ const LINGUA = "#E0607A";
 const BOCHECHA = "#FF8FA3";
 
 export type Expressao = "neutra" | "feliz" | "radiante" | "preocupada" | "surpresa" | "brava" | "sem-graca" | "medo" | "aliviada";
-export type Pose = "normal" | "cintura" | "celular" | "cabeca" | "explicando" | "comemorando" | "pensando" | "sentado" | "apontando" | "caido" | "abraco";
+export type Pose =
+  | "normal"
+  | "cintura"
+  | "celular"
+  | "celular-baixo"
+  | "cabeca"
+  | "explicando"
+  | "comemorando"
+  | "pensando"
+  | "sentado"
+  | "apontando"
+  | "caido"
+  | "abraco";
 export type Momento = { em: number; pose: Pose; expressao: Expressao };
 /** Intervalo de uma palavra dita pelo personagem, em quadros */
 export type Palavra = { inicio: number; fim: number };
@@ -85,6 +97,9 @@ export const POSES: Record<Pose, { esq: Angulos; dir: Angulos }> = {
   normal: { esq: [10, -6], dir: [10, -6] },
   cintura: { esq: [10, -6], dir: [42, -100] },
   celular: { esq: [10, -6], dir: [6, -125] },
+  // O celular baixado, na mão ao lado do corpo, virado (tela para baixo): largou o celular,
+  // desistiu de olhar, não quer ver a mensagem (24/11/2026, pedido da crítica)
+  "celular-baixo": { esq: [10, -6], dir: [12, -24] },
   cabeca: { esq: [150, 51], dir: [150, 51] },
   explicando: { esq: [10, -6], dir: [25, 95] },
   comemorando: { esq: [150, 15], dir: [150, 15] },
@@ -102,6 +117,18 @@ export const POSES: Record<Pose, { esq: Angulos; dir: Angulos }> = {
 /** Quanto o corpo desce quando o personagem está sentado (no espaço do desenho) */
 export const DESCIDA_SENTADO = 110;
 export const segurandoCelular = (pose: Pose) => pose === "celular" || pose === "sentado";
+/** Como o celular aparece na mão: com a tela (olhando) ou de costas (baixado); sem celular, nada */
+export type ModoDoCelular = "tela" | "costas" | undefined;
+export const modoDoCelular = (pose: Pose): ModoDoCelular => (segurandoCelular(pose) ? "tela" : pose === "celular-baixo" ? "costas" : undefined);
+
+/** As costas do celular (virado): a capa escura e a câmera */
+export const CostasDoCelular: React.FC<{ largura: number; altura: number; cor?: string }> = ({ largura, altura, cor = TRACO }) => (
+  <g>
+    <rect x={-largura / 2} y={-altura / 2} width={largura} height={altura} rx={largura * 0.2} fill={cor} />
+    <rect x={-largura / 2 + 5} y={-altura / 2 + 6} width={largura * 0.36} height={largura * 0.36} rx={4} fill="#4A4458" />
+    <circle cx={-largura / 2 + 5 + largura * 0.18} cy={-altura / 2 + 6 + largura * 0.18} r={largura * 0.1} fill="#9C95B0" />
+  </g>
+);
 
 // Formas da boca (as mesmas letras do Rhubarb), no tamanho do rosto
 const FORMAS: Record<string, { l: number; a: number; dentes?: boolean; lingua?: boolean }> = {
@@ -176,7 +203,7 @@ const Braco: React.FC<{
   angulos: Angulos;
   visual: Visual;
   camada: "contorno" | "cor";
-  celular?: boolean;
+  celular?: ModoDoCelular;
 }> = ({ angulos: [ombro, cotovelo], visual, camada, celular }) => {
   const contorno = camada === "contorno";
   const largura = contorno ? 46 : 34;
@@ -191,7 +218,7 @@ const Braco: React.FC<{
         <circle cx={0} cy={BRACO + 10} r={contorno ? 25 : 19} fill={contorno ? TRACO : visual.pele} />
         {celular && !contorno && (
           <g transform={`translate(0 ${BRACO + 2}) rotate(${-(ombro + cotovelo)})`}>
-            <Celular />
+            {celular === "costas" ? <CostasDoCelular largura={46} altura={78} /> : <Celular />}
           </g>
         )}
       </g>
@@ -200,7 +227,7 @@ const Braco: React.FC<{
 };
 
 // Os dois braços: o direito é o esquerdo espelhado no meio do corpo (x = 200)
-const Bracos: React.FC<{ esq: Angulos; dir: Angulos; visual: Visual; celular: boolean }> = ({ esq, dir, visual, celular }) => (
+const Bracos: React.FC<{ esq: Angulos; dir: Angulos; visual: Visual; celular: ModoDoCelular }> = ({ esq, dir, visual, celular }) => (
   <>
     {(["contorno", "cor"] as const).map((camada) => (
       <g key={camada}>
@@ -450,7 +477,7 @@ export const Boneco: React.FC<{
                 {desenho.sobrancelhas !== false && <Sobrancelhas expressao={estado.expressao} />}
                 <Svg html={rosto.boca} />
               </g>
-              <Bracos esq={estado.esq} dir={estado.dir} visual={visual} celular={segurandoCelular(estado.pose)} />
+              <Bracos esq={estado.esq} dir={estado.dir} visual={visual} celular={modoDoCelular(estado.pose)} />
             </g>
           </g>
         </g>
@@ -507,7 +534,7 @@ export const Boneco: React.FC<{
                 />
               )}
             </g>
-            <Bracos esq={estado.esq} dir={estado.dir} visual={visual} celular={segurandoCelular(estado.pose)} />
+            <Bracos esq={estado.esq} dir={estado.dir} visual={visual} celular={modoDoCelular(estado.pose)} />
           </g>
         </g>
       </g>

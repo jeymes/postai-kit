@@ -27,7 +27,7 @@ import { useConferirTexto } from "../componentes/conferir";
 // momento. A voz (uma por personagem), a legenda e a boca vêm do
 // `npm run narrar`; sem ela, a prévia sai muda, com o tempo estimado.
 
-const POSES = ["normal", "cintura", "celular", "cabeca", "explicando", "comemorando", "pensando", "sentado", "abraco"] as const;
+const POSES = ["normal", "cintura", "celular", "celular-baixo", "cabeca", "explicando", "comemorando", "pensando", "sentado", "abraco"] as const;
 const EXPRESSOES = ["neutra", "feliz", "radiante", "preocupada", "surpresa", "brava", "sem-graca", "medo", "aliviada"] as const;
 const nomesDosSons = Object.keys(SONS) as [TipoSom, ...TipoSom[]];
 

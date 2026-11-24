@@ -3,9 +3,12 @@ import { useCurrentFrame, useVideoConfig } from "remotion";
 import {
   BRACO,
   DESCIDA_SENTADO,
+  CostasDoCelular,
   estadoAgora,
+  modoDoCelular,
   segurandoCelular,
   TelaDoCelular,
+  type ModoDoCelular,
   FALANDO,
   formaDoRhubarb,
   OMBRO,
@@ -127,7 +130,7 @@ const Celular: React.FC<{ noite: boolean }> = ({ noite }) => (
 
 // Um braço de traço: ombro e cotovelo nos ângulos da pose (como no Boneco)
 // No palito os braços saem do meio do corpo: abre um pouco para não colarem nele
-const Braco: React.FC<{ angulos: Angulos; cor: string; celular?: boolean; noite: boolean }> = ({ angulos: [ombroDaPose, cotovelo], cor, celular, noite }) => {
+const Braco: React.FC<{ angulos: Angulos; cor: string; celular?: ModoDoCelular; noite: boolean }> = ({ angulos: [ombroDaPose, cotovelo], cor, celular, noite }) => {
   const ombro = ombroDaPose + 16;
   return (
   <g transform={`translate(200 ${OMBRO.y - 14}) rotate(${ombro})`}>
@@ -137,7 +140,7 @@ const Braco: React.FC<{ angulos: Angulos; cor: string; celular?: boolean; noite:
       <circle cx={0} cy={BRACO + 6} r={20} fill={cor} />
       {celular && (
         <g transform={`translate(0 ${BRACO + 2}) rotate(${-(ombro + cotovelo)})`}>
-          <Celular noite={noite} />
+          {celular === "costas" ? <CostasDoCelular largura={48} altura={80} cor="#1E1A24" /> : <Celular noite={noite} />}
         </g>
       )}
     </g>
@@ -217,7 +220,7 @@ export const Palito: React.FC<{
             {/* Braços: o direito é o esquerdo espelhado no meio do corpo */}
             <Braco angulos={estado.esq} cor={cor} noite={noite} />
             <g transform="translate(400 0) scale(-1 1)">
-              <Braco angulos={estado.dir} cor={cor} celular={celular} noite={noite} />
+              <Braco angulos={estado.dir} cor={cor} celular={modoDoCelular(estado.pose)} noite={noite} />
             </g>
           </g>
         </g>
