@@ -19,6 +19,11 @@ source ferramentas/nuvem.sh && for t in <segundos>; do npx remotion ffmpeg -y -l
 
 Depois, **de perto, cena por cena**: `source ferramentas/nuvem.sh && npm run quadros -- conteudo/<arquivo>.json`. Ele tira três quadros grandes de cada cena (começo, meio e fim: pega a troca de pose no meio da fala) e diz ao lado de cada um o que TEM que aparecer (a pose e a expressão de cada personagem, quem está com o celular, a luz do aviso).
 
+Rode também `source ferramentas/nuvem.sh && npm run conferir-tela -- conteudo/<arquivo>.json` (uns 15 s): ele mede
+cada texto na tela e avisa texto embaixo dos botões do TikTok, do Reels e do Shorts (a faixa de baixo e a coluna da
+direita) e letra difícil de ler. Cada AVISO é erro: se vem do roteiro (título longo, fala longa), devolva à
+roteirista; se é uma posição fixa do molde, anote com `npm run limite -- texto-na-tela "..."`.
+
 Abra (Read) **todos** os quadros, em ordem (os de 1,5 s e os de `out/<arquivo>/quadros/`), e a `out/<arquivo>/capa.jpg`. Em cada quadro de `quadros/`, compare com o que o comando disse que tem que aparecer.
 
 ## 2. Confira

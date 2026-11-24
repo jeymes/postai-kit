@@ -20,6 +20,7 @@ import { CelularAceso } from "../componentes/personagens/Boneco";
 import { LuzDoAviso } from "../componentes/efeitos/LuzDoAviso";
 import { FraseNaLuz } from "../componentes/cenas/FraseNaLuz";
 import { CONVERSA, estimarPalavras, FPS, quadrosDaFalaConversa, quadrosDoVideoDoApp } from "./tempos";
+import { useConferirTexto } from "../componentes/conferir";
 
 // Cena de conversa entre personagens fixos do elenco, em desenho 2D: cada
 // cena é a fala de um personagem, com a pose e a expressão de cada um naquele
@@ -345,8 +346,9 @@ const TituloPov: React.FC<{ titulo: string; parte?: string; abaixo?: React.React
   const { fps } = useVideoConfig();
   // Já na tela no quadro 0: é o que aparece na prévia do feed. Só cresce um pouco.
   const p = spring({ frame, fps, config: { damping: 14 } });
+  const medida = useConferirTexto<HTMLDivElement>("titulo");
   return (
-    <div style={{ position: "absolute", top: 120, left: 0, right: 0, display: "flex", flexDirection: "column", alignItems: "center", gap: 14, scale: String(0.94 + 0.06 * p) }}>
+    <div ref={medida} style={{ position: "absolute", top: 120, left: 0, right: 0, display: "flex", flexDirection: "column", alignItems: "center", gap: 14, scale: String(0.94 + 0.06 * p) }}>
       <div
         style={{
           width: 900,
@@ -763,7 +765,7 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
             {/* Na área segura (23/11/2026): abaixo de ~1530 px a descrição e os botões do TikTok,
                 do Reels e do Shorts cobrem a legenda; ela sobe para a altura das pernas, numa caixa
                 clara para ler em cima dos personagens */}
-            <Legendas legendas={legendas} noite={escuro} caixa={!escuro} tamanho={estilo.legenda} largura={940} style={{ top: 1440, padding: "0 70px" }} />
+            <Legendas legendas={legendas} noite={escuro} caixa={!escuro} tamanho={estilo.legenda} largura={940} style={{ top: 1420, padding: "0 70px" }} />
           </Sequence>
         )}
         {linha.map(({ cena, inicio }, i) => (

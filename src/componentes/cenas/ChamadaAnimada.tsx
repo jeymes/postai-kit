@@ -3,6 +3,7 @@ import { AbsoluteFill, Img, interpolate, spring, useCurrentFrame, useVideoConfig
 import { cores, fontes, marca } from "../../nucleo/marca";
 import { TRACO } from "../personagens/Boneco";
 import { Texto } from "../texto/Texto";
+import { useConferirTexto } from "../conferir";
 
 // As chamadas (CTA) dos vídeos animados, no mesmo traço dos personagens:
 // - BalaoDeChamada: o CTA do começo, um balão de fala com o logo da marca,
@@ -93,18 +94,21 @@ export const CartaoDeChamada: React.FC<{ chamada?: string; botao?: string }> = (
   const entraBotao = spring({ frame: frame - 26, fps, config: { damping: 11 } });
   const pulsa = 1 + 0.05 * Math.max(0, Math.sin((frame - 30) / 5));
   const explosao = interpolate(frame, [8, 30], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  const medida = useConferirTexto<HTMLDivElement>("cartao");
 
   return (
     <AbsoluteFill>
       {/* Escurece um pouco a cena para o cartão aparecer */}
       <AbsoluteFill style={{ background: "rgba(43,35,64,0.28)", opacity: sobe }} />
       <div
+        ref={medida}
         style={{
           position: "absolute",
           left: 70,
           right: 70,
-          // 1040 (antes 1150): o botão ficava embaixo da descrição e dos botões do TikTok/Reels
-          top: 1040,
+          // 1020 (antes 1150): o botão ficava embaixo da descrição e dos botões do TikTok/Reels
+          // (o conferir-tela mede: a caixa termina acima de 1540)
+          top: 1020,
           translate: `0px ${(1 - sobe) * 900}px`,
           background: "#FFFFFF",
           border: `8px solid ${TRACO}`,

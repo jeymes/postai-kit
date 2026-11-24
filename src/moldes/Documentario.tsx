@@ -10,6 +10,8 @@ import { suave } from "../nucleo/animacao";
 import { cores, fontes } from "../nucleo/marca";
 import { duracaoDoMolde, QUADROS_DO_ENCERRAMENTO, quadrosDaFala, TEMPOS } from "./tempos";
 import { Giz, MapaAnimado, Recorte } from "./documentario/apresentacoes";
+import { useConferirTexto } from "../componentes/conferir";
+import { loadFont as carregarBebas } from "@remotion/google-fonts/BebasNeue";
 
 // Vídeo longo e deitado (1920×1080) para canal narrado no YouTube: uma voz lê a
 // "fala" de cada cena por cima de uma foto em tela cheia que se move devagar
@@ -268,8 +270,10 @@ const Capitulo: React.FC<{ titulo: string; ap: Aparencia }> = ({ titulo, ap }) =
 const TextoNaTela: React.FC<{ texto: string; inicio: number; ap: Aparencia }> = ({ texto, inicio, ap }) => {
   const frame = useCurrentFrame();
   const entrada = interpolate(frame - inicio, [0, 16], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: suave });
+  const medida = useConferirTexto<HTMLDivElement>("texto-na-tela");
   return (
     <div
+      ref={medida}
       style={{
         position: "absolute",
         left: 90,
@@ -504,7 +508,7 @@ const MusicaEmLoop: React.FC<{ src: string; volume: number }> = ({ src, volume }
 // ---- Capa do YouTube (1280×720) ----
 
 /** Os modelos de capa do vídeo longo (Configurar > Capa dos vídeos escolhe quais a equipe usa) */
-export const MODELOS_DE_CAPA = ["classico", "circulo", "seta", "zoom", "dois-lados", "selo"] as const;
+export const MODELOS_DE_CAPA = ["classico", "circulo", "seta", "zoom", "dois-lados", "selo", "cinema"] as const;
 const VERMELHO = "#FF2B2B";
 
 /**
@@ -726,7 +730,95 @@ export const capaDocumentarioExemplo: CapaDocumentario = {
 // com contraste, as bordas escurecidas, no máximo 4 palavras grossas em
 // maiúsculas com contorno preto (amarelo no destaque), do lado oposto à figura
 // e nunca no canto de baixo à direita, onde o YouTube põe a duração do vídeo.
+/**
+ * Capa "cinema" (teste de 23/11/2026, ideia do dono): a foto de cinema (o
+ * personagem em close, com emoção) e o título de filme, dourado com brilho e
+ * contorno, do lado oposto ao rosto.
+ */
+const { fontFamily: letraDeCinema } = carregarBebas();
+const CapaDeCinema: React.FC<CapaDocumentario> = ({ titulo, destaque, foto, lado = "esquerda" }) => {
+  const palavras = titulo.toUpperCase().split(/\s+/).filter(Boolean);
+  const alvo = destaque?.toUpperCase().split(/\s+/) ?? [];
+  const limpa = (p: string) => p.replace(/[^\p{L}\p{N}]/gu, "");
+  const naDireita = lado === "direita";
+  // Linhas de até ~11 letras; a palavra de destaque fica maior, e as palavras
+  // curtas antes dela (de, da, o) vão na mesma linha ("DE FOGO")
+  const ehForte = (p: string) => alvo.includes(limpa(p));
+  const linhas: string[][] = [];
+  for (const p of palavras) {
+    const ultima = linhas[linhas.length - 1];
+    const soCurtas = ultima?.every((x) => x.length <= 3 && !ehForte(x));
+    if (ultima && ehForte(p) && soCurtas) ultima.push(p);
+    else if (!ultima || ultima.join(" ").length + p.length > 13 || ehForte(p) !== ultima.some(ehForte)) linhas.push([p]);
+    else ultima.push(p);
+  }
+  // Curtas que sobraram no fim de uma linha descem para a do destaque
+  for (let i = 0; i < linhas.length - 1; i++) {
+    const proxima = linhas[i + 1];
+    const ultima = linhas[i][linhas[i].length - 1];
+    if (linhas[i].length > 1 && proxima.some(ehForte) && ultima.length <= 3) proxima.unshift(linhas[i].pop() as string);
+  }
+  const dourado = {
+    background: "linear-gradient(180deg, #FFF6C9 0%, #FFD772 35%, #E9A93A 62%, #A8661A 100%)",
+    WebkitBackgroundClip: "text",
+    backgroundClip: "text",
+    color: "transparent",
+    WebkitTextStroke: "3px #2B1704",
+    paintOrder: "stroke fill",
+  } as const;
+  return (
+    <AbsoluteFill style={{ backgroundColor: "#07060a" }}>
+      {foto && (
+        <Img
+          src={arquivo(foto)}
+          style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "50% 30%", filter: "contrast(1.12) saturate(1.1)" }}
+        />
+      )}
+      <AbsoluteFill style={{ background: "radial-gradient(ellipse at center, rgba(0,0,0,0) 50%, rgba(0,0,0,0.6) 100%)" }} />
+      <AbsoluteFill
+        style={{
+          background: `linear-gradient(${naDireita ? 270 : 90}deg, rgba(5,4,8,0.88) 0%, rgba(5,4,8,0.6) 34%, rgba(5,4,8,0) 58%)`,
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          top: 0,
+          bottom: 0,
+          [naDireita ? "right" : "left"]: 50,
+          width: 600,
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
+          textAlign: "center",
+          fontFamily: letraDeCinema,
+          lineHeight: 0.92,
+          filter: "drop-shadow(0 8px 14px rgba(0,0,0,0.85)) drop-shadow(0 0 22px rgba(255,186,73,0.35))",
+        }}
+      >
+        {linhas.map((linha, i) => {
+          const forte = linha.some(ehForte);
+          const letras = linha.filter(ehForte).join(" ").length || linha.join(" ").length;
+          // As linhas comuns sempre menores que a do destaque
+          const tamanho = forte ? Math.min(210, Math.round(1100 / Math.max(letras, 4))) : Math.min(96, Math.round(860 / Math.max(letras, 8)));
+          return (
+            <div key={i} style={{ display: "flex", alignItems: "baseline", gap: "0.22em", fontSize: tamanho }}>
+              {linha.map((p, j) => (
+                <span key={j} style={{ ...dourado, fontSize: forte && !ehForte(p) ? "0.5em" : "1em", letterSpacing: "0.01em" }}>
+                  {p}
+                </span>
+              ))}
+            </div>
+          );
+        })}
+      </div>
+    </AbsoluteFill>
+  );
+};
+
 export const CapaDoDocumentario: React.FC<CapaDocumentario> = (capa) => {
+  if (capa.modelo === "cinema") return <CapaDeCinema {...capa} />;
   const { titulo, destaque, foto, lado = "esquerda", estilo } = capa;
   const doisLados = capa.modelo === "dois-lados" && foto && capa.foto2;
   // O modelo do canal: o tratamento da foto, a letra e a cor do destaque (o Clássico fica como sempre)

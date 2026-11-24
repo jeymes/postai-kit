@@ -4,6 +4,7 @@ import { z } from "zod";
 import { Legendas } from "../componentes/texto/Legendas";
 import { Documentario, documentarioSchema, documentarioExemplo } from "./Documentario";
 import { duracaoDoMolde, QUADROS_DO_FIM_DO_CORTE, quadrosDaFala, TEMPOS } from "./tempos";
+import { useConferirTexto } from "../componentes/conferir";
 
 // Short do vídeo longo do Canal dark (23/11/2026): um trecho de cenas seguidas
 // do Documentario (já narradas: a voz é reaproveitada) em pé, 1080x1920. No
@@ -42,10 +43,12 @@ export const CorteVertical: React.FC<CorteVertical> = (props) => {
     cenas: props.cenas.map((cena) => ({ ...cena, capitulo: undefined })),
   };
   const entrada = interpolate(frame, [0, 12], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  const medida = useConferirTexto<HTMLDivElement>("titulo");
   return (
     <AbsoluteFill style={{ background: "radial-gradient(ellipse at 50% 40%, #1d1b22 0%, #08080b 70%)" }}>
       {/* O gancho no alto (abaixo da faixa de cima do app) */}
       <div
+        ref={medida}
         style={{
           position: "absolute",
           top: 190,

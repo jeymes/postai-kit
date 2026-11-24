@@ -2,6 +2,7 @@ import React, { useMemo } from "react";
 import { AbsoluteFill, interpolate, useCurrentFrame, useVideoConfig } from "remotion";
 import { cores, fontes } from "../../nucleo/marca";
 import { paginar, type Legenda } from "./paginar";
+import { useConferirTexto } from "../conferir";
 
 // Legenda animada da narração, no estilo das redes: poucas palavras por vez e
 // a palavra que está sendo dita numa etiqueta na cor de destaque. O tempo de cada
@@ -29,6 +30,7 @@ export const Legendas: React.FC<{
 }> = ({ legendas, atraso = 0, tamanho = 76, caixa = false, largura = 940, noite = false, fonte, peso, destaque, textoNoDestaque, style }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
+  const medida = useConferirTexto<HTMLDivElement>("legenda");
   const agora = ((frame - atraso) / fps) * 1000;
   // Letras que cabem numa linha nesta fonte (grossa: ~0,62 da altura por letra), menos a caixa e a etiqueta
   const maxLetras = Math.max(8, Math.floor((largura - (caixa ? tamanho * 0.7 : 0)) / (tamanho * 0.62)));
@@ -44,6 +46,7 @@ export const Legendas: React.FC<{
   return (
     <AbsoluteFill style={{ justifyContent: "flex-start", alignItems: "center", ...style }}>
       <div
+        ref={medida}
         style={{
           scale: String(entrada),
           display: "flex",
