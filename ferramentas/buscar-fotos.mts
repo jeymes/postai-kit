@@ -92,8 +92,20 @@ if (args.length === 0) {
   process.exit(1);
 }
 const itens = args.map((a) => {
+  // Só a escolha, sem o termo (24/11/2026: "ia_ora#1" depois do --candidatos
+  // dava "Item inválido"): o termo vem das opções guardadas desse item
+  const soEscolha = a.match(/^([\p{L}\p{N}_-]+)#(\d+)$/u);
+  if (soEscolha) {
+    const arquivo = soEscolha[1].normalize("NFD").replace(/\p{M}/gu, "");
+    const guardadas = join("public", pasta, "_candidatos", `${arquivo}.json`);
+    if (!existsSync(guardadas)) {
+      throw new Error(`Item inválido: ${a}. Não há opções guardadas de "${arquivo}": rode antes com --candidatos ${arquivo}="termo em inglês", ou escreva ${arquivo}="termo"#${soEscolha[2]}`);
+    }
+    const { termo } = JSON.parse(readFileSync(guardadas, "utf8")) as { termo: string };
+    return { arquivo, termo, escolha: Number(soEscolha[2]) };
+  }
   const m = a.match(/^([\p{L}\p{N}_-]+)=(.+?)(?:#(\d+))?$/u);
-  if (!m) throw new Error(`Item inválido: ${a} (use arquivo="termo"#n)`);
+  if (!m) throw new Error(`Item inválido: ${a} (use arquivo="termo"#n, ou arquivo#n depois do --candidatos)`);
   // Aceita acento no nome, mas grava sem ele (poços → pocos.jpg): nome com acento
   // dava problema em link, no R2 e no pacote da refação
   const arquivo = m[1].normalize("NFD").replace(/\p{M}/gu, "");
@@ -637,7 +649,14 @@ async function gerarComIa(termo: string, pedidaDeProposito = fonte === "ia"): Pr
   // Pedida de propósito (--fonte ia): o termo já é a descrição da cena que a
   // pesquisadora escreveu. Reserva automática: o termo de busca é curto, então
   // vai junto o assunto do canal, para a imagem sair no clima do vídeo
-  const descricao = pedidaDeProposito || !nicho ? termo : `${termo}. A scene for a narrated documentary video about: ${nicho}`;
+  // Termo curto demais para descrever uma cena (24/11/2026: "portrait" e "stones"
+  // voltavam do Postaí com "Descreva a cena em inglês"): leva junto o assunto do
+  // canal; sem ele, avisa aqui o que escrever, sem gastar a chamada
+  const curto = termo.trim().split(/\s+/).length < 4 || termo.trim().length < 8;
+  if (termo.trim().length < 8 && !nicho) {
+    throw new Error(`a imagem de IA precisa de uma cena descrita em inglês (o lugar, a luz, a época, o que aparece), com pelo menos 4 palavras. Veio só "${termo}". Ex.: "old stone altar on a desert hill at dawn, warm light"`);
+  }
+  const descricao = (pedidaDeProposito && !curto) || !nicho ? termo : `${termo}. A scene for a narrated documentary video about: ${nicho}`;
   const resposta = JSON.parse(await ferramenta("gerar_imagem_com_ia", { descricao: descricao.slice(0, 500), formato: deitadas ? "deitada" : "em-pe" })) as {
     id: string;
     url: string;

@@ -57,7 +57,17 @@ const doElenco: Record<string, Voz> = Object.fromEntries(
     .filter((p) => p.voz)
     .map((p) => [p.id, VOZES[p.voz as string] ?? { voz: p.voz as string }]),
 );
-const vozes: Record<string, Voz> = { ...VOZES_DO_ELENCO, ...doElenco, ...(peca.vozes ?? {}) };
+// "vozes" também aceita o id do catálogo (24/11/2026: { voz: "masculina-5" } ia
+// cru para o Kokoro e a voz falhava): troca pela voz dele, e a velocidade
+// escrita no roteiro vale mais que a do catálogo.
+const doRoteiro: Record<string, Voz> = Object.fromEntries(
+  Object.entries((peca.vozes ?? {}) as Record<string, Voz | string>).map(([quem, v]) => {
+    const pedida = typeof v === "string" ? { voz: v } : v;
+    const catalogo = VOZES[pedida.voz];
+    return [quem, catalogo ? { ...catalogo, ...pedida, voz: catalogo.voz, velocidade: pedida.velocidade ?? catalogo.velocidade } : pedida];
+  }),
+);
+const vozes: Record<string, Voz> = { ...VOZES_DO_ELENCO, ...doElenco, ...doRoteiro };
 const vozDa = (cena: Cena) => (cena.quem && vozes[cena.quem]?.voz ? vozNoIdioma(vozes[cena.quem].voz, idioma) : voz);
 const velocidadeDa = (cena: Cena) => (cena.quem && vozes[cena.quem]?.velocidade) || velocidade;
 if (comMascote && !existsSync(RHUBARB))
