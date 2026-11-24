@@ -66,7 +66,10 @@ for (const arquivo of videos) {
   const info = infoDoVideo(arquivo);
   console.log(`  ${info.largura}x${info.altura}, ${tempo(info.duracaoSeg)}`);
   const lateral = arquivo.slice(0, -extname(arquivo).length) + ".pedido.json";
-  const pedidoId = existsSync(lateral) ? lerJson<{ pedidoId: string }>(lateral).pedidoId : undefined;
+  const doPedido = existsSync(lateral) ? lerJson<{ pedidoId: string; instrucao?: string }>(lateral) : undefined;
+  const pedidoId = doPedido?.pedidoId;
+  // Pedido com instrução do Postaí (ex.: shorts do vídeo longo do Canal dark): vai no alto da transcrição
+  const instrucao = doPedido?.instrucao?.trim();
   await avisar(pedidoId, `Transcrevendo a fala (vídeo de ${Math.round(info.duracaoSeg / 60)} min; leva um tempo).`);
 
   const audio = join(destino, "audio.wav");
@@ -79,7 +82,8 @@ for (const arquivo of videos) {
   const linhas = t.segmentos.map((s) => `[${tempo(s.i)} → ${tempo(s.f)}] ${s.texto}`);
   writeFileSync(
     join(destino, "transcricao.txt"),
-    `Vídeo: ${basename(arquivo)} | ${tempo(info.duracaoSeg)} | ${info.largura}x${info.altura}\n` +
+    (instrucao ? `PEDIDO DO POSTAÍ (siga): ${instrucao}\n\n` : "") +
+      `Vídeo: ${basename(arquivo)} | ${tempo(info.duracaoSeg)} | ${info.largura}x${info.altura}\n` +
       `Tempos em minutos:segundos. Nos cortes.json, use segundos (ex.: 01:02.5 = 62.5).\n\n` +
       linhas.join("\n") + "\n",
   );

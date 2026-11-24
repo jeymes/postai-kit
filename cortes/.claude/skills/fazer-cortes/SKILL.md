@@ -40,6 +40,8 @@ Leia o `trabalho/<id>/transcricao.txt` inteiro e escreva o `trabalho/<id>/cortes
 }
 ```
 
+Se a transcrição começar com **PEDIDO DO POSTAÍ**, siga o que ele diz (ex.: shorts do vídeo longo do Canal dark: um vídeo narrado sobre imagens, deitado; você escolhe quantos cortes valem a pena). Ele vale mais que as regras abaixo quando se chocam.
+
 O que faz um bom corte:
 - **De 20 a 45 segundos** (aceita de 10 a 90). Corte curto é assistido mais vezes até o fim, e é isso que faz a rede mostrar para mais gente. Só passe de 45 s se a história precisar. Se o dono ligou a chamada do fim no Postaí, o `cortar` acrescenta sozinho um cartão de 3,5 s (então o trecho vai até 86,5 s). Não escreva a chamada no gancho nem na legenda. Um assunto só, que se entende sem o resto do vídeo.
 - **Começa no impacto:** o primeiro segundo já é a frase que prende (uma pergunta, uma revelação, uma opinião forte, um número). Nunca comece pela cena montando o contexto: se a frase forte vem depois de 5 s de conversa, comece nela. Corte o "então, é..." do começo. Use o tempo de início da frase, uns 0,2 s antes.
