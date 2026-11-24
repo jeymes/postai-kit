@@ -11,7 +11,7 @@ import { ELENCO } from "../componentes/personagens/elenco";
 import { PENTEADOS, type Visual } from "../componentes/personagens/Boneco";
 import { Legendas, type Legenda } from "../componentes/texto/Legendas";
 import { Texto } from "../componentes/texto/Texto";
-import { BalaoDeChamada, CartaoDeChamada } from "../componentes/cenas/ChamadaAnimada";
+import { BalaoDeChamada, CartaoDeChamada, medidaDoCartao } from "../componentes/cenas/ChamadaAnimada";
 import { cores, fontes } from "../nucleo/marca";
 import { estiloDe, estiloSchema, type EstiloDaPeca } from "../estilos/registro";
 import { FiltrosDosEstilos } from "../estilos/filtros";
@@ -590,8 +590,9 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
   // Quando o cartão final entra, os personagens sobem (23/11/2026): o cartão começa na
   // altura 1150 e o logo dele chega a 1040, onde ficavam a boca e o queixo deles. Os pés
   // ficam atrás do cartão; o cenário fica no lugar
+  // Chamada longa: o cartão começa mais alto (medidaDoCartao) e eles sobem o mesmo tanto a mais
   const subirNoCartao = props.ctaFinal
-    ? 290 * spring({ frame: frame - inicioDoCta, fps, config: { damping: 16, stiffness: 110 } })
+    ? (290 + (1020 - medidaDoCartao(props.ctaFinal).topo)) * spring({ frame: frame - inicioDoCta, fps, config: { damping: 16, stiffness: 110 } })
     : 0;
   return (
     <AbsoluteFill style={{ background: noite ? "#0A0F26" : "#FBE7DA" }}>

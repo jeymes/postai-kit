@@ -85,6 +85,42 @@ export const BalaoDeChamada: React.FC<{ texto: string; topo: number; sai?: numbe
 
 const CONFETES = ["#FFD84D", "#FF7096", "#7CC6FF", "#9FE39A", "#CDB4FF", "#FF9F1C", "#FFD84D", "#FF7096", "#7CC6FF", "#9FE39A"];
 
+// O cartão do fim termina acima de 1540 px (embaixo ficam a descrição e os
+// botões do TikTok/Reels). 24/11/2026: com a chamada em 2 a 4 linhas na letra
+// 78, ele descia até 1610 a 1774 px (anotado pela crítica em 4 contas).
+const TOPO = 1020;
+const TOPO_MINIMO = 860;
+const LIMITE = 1540;
+const ESPACO = 30;
+const FOLGA_DE_BAIXO = 48;
+// Selo e folga de cima (120) + embaixo + o nome da marca (40 px) + o botão (48 px com folga) + os 2 espaços
+const PARTE_FIXA = 120 + FOLGA_DE_BAIXO + 48 + 106 + ESPACO * 2;
+// Largura do texto: 1080 - 70 - 70 (margens) - 120 (folga) - 16 (borda)
+const LARGURA_DO_TEXTO = 804;
+
+/** A letra da chamada e onde o cartão começa, para ele terminar acima de 1540 */
+export function medidaDoCartao(chamada: string): { tamanho: number; topo: number } {
+  const linhasCom = (tamanho: number) => {
+    // Quebra por palavra, com a largura média de uma letra em negrito (0,6 da letra; folga de sobra)
+    const porLinha = Math.max(1, Math.floor(LARGURA_DO_TEXTO / (tamanho * 0.6)));
+    let linhas = 1;
+    let usado = 0;
+    for (const palavra of chamada.trim().split(/\s+/)) {
+      const n = palavra.length;
+      if (usado && usado + 1 + n > porLinha) {
+        linhas++;
+        usado = n;
+      } else usado += (usado ? 1 : 0) + n;
+    }
+    return linhas;
+  };
+  const altura = (tamanho: number) => PARTE_FIXA + linhasCom(tamanho) * tamanho * 1.3;
+  for (const tamanho of [78, 68, 60, 54]) {
+    if (TOPO + altura(tamanho) <= LIMITE) return { tamanho, topo: TOPO };
+  }
+  return { tamanho: 48, topo: Math.max(TOPO_MINIMO, Math.round(LIMITE - altura(48))) };
+}
+
 /** CTA do fim: cartão que sobe por cima da cena, com selo, chamada e botão */
 export const CartaoDeChamada: React.FC<{ chamada?: string; botao?: string }> = ({ chamada, botao = "Link na bio 👆" }) => {
   const frame = useCurrentFrame();
@@ -95,6 +131,7 @@ export const CartaoDeChamada: React.FC<{ chamada?: string; botao?: string }> = (
   const pulsa = 1 + 0.05 * Math.max(0, Math.sin((frame - 30) / 5));
   const explosao = interpolate(frame, [8, 30], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
   const medida = useConferirTexto<HTMLDivElement>("cartao");
+  const { tamanho, topo } = medidaDoCartao(chamada ?? marca.chamada ?? "");
 
   return (
     <AbsoluteFill>
@@ -107,18 +144,19 @@ export const CartaoDeChamada: React.FC<{ chamada?: string; botao?: string }> = (
           left: 70,
           right: 70,
           // 1020 (antes 1150): o botão ficava embaixo da descrição e dos botões do TikTok/Reels
-          // (o conferir-tela mede: a caixa termina acima de 1540)
-          top: 1020,
+          // (o conferir-tela mede: a caixa termina acima de 1540). Chamada longa: letra menor
+          // e, se ainda não couber, o cartão sobe (medidaDoCartao)
+          top: topo,
           translate: `0px ${(1 - sobe) * 900}px`,
           background: "#FFFFFF",
           border: `8px solid ${TRACO}`,
           borderRadius: 56,
           boxShadow: SOMBRA,
-          padding: "120px 60px 56px",
+          padding: `120px 60px ${FOLGA_DE_BAIXO}px`,
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          gap: 40,
+          gap: ESPACO,
         }}
       >
         {/* Selo do logo, saindo pela borda de cima, com confete em volta */}
@@ -150,7 +188,7 @@ export const CartaoDeChamada: React.FC<{ chamada?: string; botao?: string }> = (
           </div>
         </div>
         <div style={{ fontFamily: fontes.titulo, fontWeight: 800, fontSize: 40, color: cores.destaque, letterSpacing: 2, textTransform: "uppercase" }}>{marca.nome}</div>
-        <Texto texto={chamada ?? marca.chamada} inicio={14} tamanho={78} cor={TRACO} alinhamento="center" />
+        <Texto texto={chamada ?? marca.chamada} inicio={14} tamanho={tamanho} cor={TRACO} alinhamento="center" />
         {botao && (
           <div
             style={{
