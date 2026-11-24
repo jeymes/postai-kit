@@ -6,6 +6,9 @@ import { CENAS_DOS_MEUS_MOLDES } from "./meus/tempos.ts";
 
 export const FPS = 30;
 
+/** O fim do short do vídeo longo (CorteVertical), em quadros */
+export const QUADROS_DO_FIM_DO_CORTE = 75;
+
 /** Cartão final do Documentario (vídeo longo), em quadros */
 export const QUADROS_DO_ENCERRAMENTO = 150;
 
@@ -111,6 +114,9 @@ export function cenasDoMolde(molde: string, c: Conteudo): number[] {
       return [...((c.cenas ?? []) as CenaNarrada[]).map(quadrosDaFala), TEMPOS.chamada];
     case "Documentario":
       return [...((c.cenas ?? []) as CenaNarrada[]).map(quadrosDaFala), ...(c.encerramento ? [QUADROS_DO_ENCERRAMENTO] : [])];
+    // O short do vídeo longo: as cenas do trecho e o "Vídeo completo no canal"
+    case "CorteVertical":
+      return [...((c.cenas ?? []) as CenaNarrada[]).map(quadrosDaFala), QUADROS_DO_FIM_DO_CORTE];
     case "Mundo3D":
       return [...((c.cenas ?? []) as Array<{ fala?: string; narracao?: { duracaoSeg: number }; queda?: string }>).map(quadrosDaCenaDoMundo3D), ...(c.final ? [MUNDO3D.final] : []), ...(c.ctaFinal ? [MUNDO3D.cartao] : [])];
     case "Conversa":
@@ -169,6 +175,7 @@ export const MOLDES_DE_VIDEO = [
   "Trend",
   "Narrado",
   "Documentario",
+  "CorteVertical",
   "Vitrine3D",
   "Conversa",
   "Mundo3D",

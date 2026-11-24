@@ -281,7 +281,8 @@ const Legenda: React.FC<{ palavras: PalavraDita[]; destaque: string[]; close?: b
     <div
       style={{
         position: "absolute",
-        top: close ? 1540 : 1180,
+        // No close, abaixo da boca, mas ainda na área segura (abaixo de ~1530 o app cobre)
+        top: close ? 1420 : 1180,
         left: 60,
         right: 60,
         textAlign: "center",

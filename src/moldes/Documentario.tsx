@@ -46,6 +46,15 @@ export const documentarioSchema = z.object({
           .optional()
           .describe("Como a foto se move: aproximar, afastar, esquerda, direita, subir, descer ou diagonal (padrão: alterna sozinho)"),
         inteira: z.boolean().optional().describe("Mostra a imagem inteira, sem cortar (retrato em pé, mapa), sobre ela mesma desfocada"),
+        detalhe: z
+          .tuple([z.number().min(0).max(100), z.number().min(0).max(100)])
+          .optional()
+          .describe("Só no modelo Colagem: onde está o detalhe que importa na imagem ([x, y] em %, 0,0 = canto de cima à esquerda). Ele sai ampliado num recorte redondo, com o círculo de marca-texto e a seta"),
+        palavra: z
+          .string()
+          .max(24)
+          .optional()
+          .describe("Só no modelo Colagem: a palavra-chave da cena (até 24 letras), colada em letras recortadas de jornal"),
         legendaNoAlto: z
           .boolean()
           .optional()
@@ -178,7 +187,21 @@ const ImagemDaCena: React.FC<{ cena: Cena; indice: number; duracao: number; ap: 
       <MapaAnimado src={foto} duracao={duracao} rota={cena.rota} lugares={cena.lugares} filtro={ap.filtro} destaque={ap.destaque} fonte={ap.fonteTexto} parada={parada} />
     );
   if (ap.apresentacao === "recorte")
-    return <Recorte src={foto} duracao={duracao} indice={indice} filtro={ap.filtro} destaque={ap.destaque} ritmo={ap.ritmo} inteira={cena.inteira} parada={parada} />;
+    return (
+      <Recorte
+        src={foto}
+        duracao={duracao}
+        indice={indice}
+        filtro={ap.filtro}
+        destaque={ap.destaque}
+        ritmo={ap.ritmo}
+        inteira={cena.inteira}
+        parada={parada}
+        detalhe={parada ? undefined : (cena.detalhe as [number, number] | undefined)}
+        palavra={parada ? undefined : cena.palavra}
+        fonte={ap.fonteTitulo}
+      />
+    );
   if (ap.apresentacao === "giz") return <Giz src={foto} duracao={duracao} indice={indice} ritmo={ap.ritmo} inteira={cena.inteira} parada={parada} />;
   return (
     <FotoEmMovimento src={foto} duracao={duracao} movimento={movimentoDa(cena, indice)} inteira={cena.inteira} parada={parada} filtro={ap.filtro} ritmo={ap.ritmo} />

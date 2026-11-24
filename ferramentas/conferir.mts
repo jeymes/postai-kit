@@ -42,6 +42,27 @@ const aviso = (quem: string, texto: string) => avisos.push(`${quem}: ${texto}`);
 const tamanho = (texto = "") => Array.from(texto).length;
 const palavras = (texto = "") => texto.trim().split(/\s+/).filter(Boolean).length;
 
+// Texto sem cara de IA (canais/VOZ.md, 23/11/2026): frase longa demais e os
+// vícios mais comuns viram aviso; a crítica decide se reescreve.
+const VICIOS_DE_IA: Array<[RegExp, string]> = [
+  [/\bneste v[ií]deo\b|\bin this video\b|\ben este v[ií]deo\b/i, '"neste vídeo"'],
+  [/voc[eê] j[aá] se perguntou|have you ever wondered|alguna vez te has preguntado/i, '"você já se perguntou"'],
+  [/voc[eê] n[aã]o vai acreditar|you won'?t believe|no vas a creer/i, '"você não vai acreditar"'],
+  [/fique at[eé] o final|stay until the end|qu[eé]date hasta el final/i, '"fique até o final"'],
+  [/\bmas n[aã]o [eé] s[oó] isso\b|\bbut that'?s not all\b|\bpero eso no es todo\b/i, '"mas não é só isso"'],
+  [/\bjornada\b|\bjourney\b|\bmergulh(ar|amos|e)\b|\bdelve\b|\btape[cç]aria\b|\btapestry\b|\bfascinante\b|\bdesvendar\b/i, "palavra gasta (jornada, mergulhar, fascinante, desvendar)"],
+  [/[eé] importante lembrar|vale destacar|vale ressaltar|it'?s important to note/i, '"é importante lembrar"'],
+];
+function conferirVoz(quem: string, onde: string, fala = "") {
+  for (const frase of fala.split(/(?<=[.!?…])\s+/)) {
+    const n = palavras(frase);
+    if (n > 25) aviso(quem, `${onde}: frase com ${n} palavras ("${frase.slice(0, 50)}…"): quebre em duas (canais/VOZ.md)`);
+  }
+  for (const [padrao, nome] of VICIOS_DE_IA) if (padrao.test(fala)) aviso(quem, `${onde}: ${nome} soa como texto de IA (canais/VOZ.md)`);
+  const travessoes = (fala.match(/—/g) ?? []).length;
+  if (travessoes >= 2) aviso(quem, `${onde}: ${travessoes} travessões (—) na mesma fala soam como IA`);
+}
+
 function resultado(): never {
   for (const texto of avisos) console.log(`AVISO  ${texto}`);
   for (const texto of erros) console.log(`ERRO   ${texto}`);
@@ -111,6 +132,7 @@ if (peca.molde === "Documentario") {
   longas.forEach((c, i) => {
     const n = i + 1;
     if (!c.fala?.trim()) erro("roteirista-narrado", `cena ${n}: sem fala`);
+    conferirVoz("roteirista-narrado", `cena ${n}`, c.fala);
     const frases = (c.fala ?? "").split(/[.!?…]+/).filter((f) => f.trim()).length;
     if (frases > 3) aviso("roteirista-narrado", `cena ${n}: ${frases} frases (o ideal é de 1 a 3)`);
     if (c.capitulo && tamanho(c.capitulo) > 40) erro("roteirista-narrado", `cena ${n}: capítulo com ${tamanho(c.capitulo)} caracteres (até 40)`);
@@ -236,6 +258,7 @@ if (peca.molde === "Mundo3D") {
     const n = i + 1;
     if (!cena.fala?.trim()) erro("roteirista", `cena ${n} sem fala`);
     else if (palavras(cena.fala) > 28) erro("roteirista", `cena ${n} com ${palavras(cena.fala)} palavras (até 28: divida em duas cenas)`);
+    conferirVoz("roteirista", `cena ${n}`, cena.fala);
     if (!PLANOS.includes(cena.plano ?? "")) erro("roteirista", `cena ${n}: plano "${cena.plano}" (use ${PLANOS.join(", ")})`);
     const foco = cena.foco ?? "";
     if (!(ids.has(foco) || (foco === "multidao" && m.multidao) || (foco === "ponte" && temPonte)))
@@ -276,6 +299,7 @@ else if (cenas.length > 7) aviso("roteirista", `${cenas.length} cenas: só se o 
 cenas.forEach((cena, i) => {
   const n = palavras(cena.fala);
   if (n > 12) erro("roteirista", `cena ${i + 1}: fala com ${n} palavras (até 12)`);
+  conferirVoz("roteirista", `cena ${i + 1}`, cena.fala);
 });
 
 // ---- CTAs: curtos, frase inteira, nunca @ ----

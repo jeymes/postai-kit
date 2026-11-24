@@ -90,6 +90,11 @@ Ponha `"foto": "fotos/<peça>/<nome>.jpg"` em cada cena (e `"inteira": true` nos
 tem texto escrito na parte de baixo (legenda de gravura, letreiro, inscrição), ponha `"legendaNoAlto": true` na cena: a
 legenda do vídeo sobe e não fica em cima do texto.
 
+No modelo **Colagem** (o `estilo.modelo` do roteiro), em umas 1 a cada 3 cenas, olhe a imagem e marque
+`"detalhe": [x, y]` (em % da imagem, 0,0 = canto de cima à esquerda) no ponto que a fala cita: o rosto de quem fala,
+o objeto, a inscrição. Ele sai ampliado num recorte redondo com um círculo de marca-texto. Marque um ponto que dê
+para reconhecer ampliado 3 vezes (não um borrão).
+
 **Cena com `lugares` (mapa animado):** escolha um mapa antigo de domínio público onde **todos** os lugares
 aparecem, abra a imagem (Read) e ponha em `rota` onde fica cada lugar, em % da imagem, na mesma ordem:
 `"rota": [[67, 50], [55, 75], [45, 96]]` (`[x, y]`, 0,0 = canto de cima à esquerda). Não precisa de `inteira`.

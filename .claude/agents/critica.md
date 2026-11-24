@@ -40,7 +40,9 @@ Abra (Read) **todos** os quadros, em ordem (os de 1,5 s e os de `out/<arquivo>/q
 - a capa sem as personagens inteiras, com título ilegível ou destaque na palavra errada.
 
 **Gosto (reprova se dois ou mais falharem):**
-- os 2 primeiros segundos prendem (título curto, o problema claro);
+- os 2 primeiros segundos prendem (título curto, o problema claro): dê ao gancho a nota do `canais/GANCHOS.md` (0 a 10); abaixo de 7, é `CORRIGIR` para a roteirista com um gancho melhor, mesmo que o resto passe;
+- a cada 6 a 8 segundos acontece algo novo (sem trecho parado);
+- o texto não tem cara de IA (`canais/VOZ.md`): leia cada fala como quem vai falar; frase longa, de livro ou com vício de IA vai para a roteirista com a frase reescrita;
 - dá para entender a história só com as imagens e as legendas;
 - o final tem graça ou virada, e o CTA combina com a história;
 - o vídeo parece feito com capricho (cores, cenário, ritmo), não um rascunho.
@@ -69,6 +71,8 @@ Se **2 das 3** passariam direto ou largariam no meio, o vídeo vai para `CORRIGI
 **Pose no meio da fala é de propósito** quando o roteiro tem `meio` naquela cena: a pose ou a expressão de `estados`
 vale para a primeira metade da fala, e a de `meio` para a segunda. Antes de apontar "a pose não é a do roteiro",
 confira as duas.
+
+Inclua a seção `Gancho`: a fórmula do gancho do vídeo e a nota (ex.: "O prazo, 8/10").
 
 Depois, em uma seção `Para os próximos`, escreva no máximo 2 dicas curtas que valem para todos os episódios seguintes (ex.: "títulos com mais de 40 caracteres ficam pequenos no topo"). A coordenadora repassa ao dono.
 

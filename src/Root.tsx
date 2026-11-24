@@ -6,6 +6,7 @@ import { Capa, capaExemplo, capaSchema } from "./moldes/Capa";
 import { Carrossel, carrosselExemplo, carrosselSchema } from "./moldes/Carrossel";
 import { CapaConversa, Conversa, conversaExemplo, conversaSchema, FichaDoPersonagem } from "./moldes/Conversa";
 import { CapaDoDocumentario, capaDocumentarioExemplo, capaDocumentarioSchema, Documentario, documentarioExemplo, documentarioSchema } from "./moldes/Documentario";
+import { CorteVertical, corteVerticalExemplo, corteVerticalSchema } from "./moldes/CorteVertical";
 import { Depoimento, depoimentoExemplo, depoimentoSchema } from "./moldes/Depoimento";
 import { Lista, listaExemplo, listaSchema } from "./moldes/Lista";
 import { MeusMoldes } from "./moldes/meus";
@@ -112,6 +113,16 @@ export const RemotionRoot: React.FC = () => (
         fps={FPS}
         durationInFrames={duracaoDoMolde("Documentario", documentarioExemplo)}
         {...duracao("Documentario", documentarioSchema)}
+      />
+      {/* O short do vídeo longo do Canal dark: um trecho em pé, com o gancho no alto */}
+      <Composition
+        id="CorteVertical"
+        component={CorteVertical}
+        schema={corteVerticalSchema}
+        defaultProps={corteVerticalExemplo}
+        {...video}
+        durationInFrames={duracaoDoMolde("CorteVertical", corteVerticalExemplo)}
+        {...duracao("CorteVertical", corteVerticalSchema)}
       />
       <Composition
         id="CapaDoDocumentario"

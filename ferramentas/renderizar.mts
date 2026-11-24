@@ -78,7 +78,7 @@ if (molde === "Conversa" && props.videoDoApp?.arquivo && !existsSync(join("publi
 // Sem "multidao" no roteiro, o Remotion completaria com a do exemplo do molde
 // (15 soldados): roteiro sem multidão sai sem multidão.
 if (molde === "Mundo3D" && props.multidao === undefined) props.multidao = null;
-if (molde === "Documentario" && !props.estilo) {
+if ((molde === "Documentario" || molde === "CorteVertical") && !props.estilo) {
   const doCanal = lerJson<Record<string, unknown>>("canais/dark/estilo-narrado.json");
   if (doCanal?.modelo) props.estilo = doCanal;
 }
@@ -88,7 +88,7 @@ if (!MOLDES.includes(molde)) {
   process.exit(1);
 }
 
-if ((molde === "Narrado" || molde === "Documentario" || molde === "Mundo3D") && !previa && !(args.includes("--capa") && molde === "Documentario") && props.cenas.some((c: { narracao?: unknown }) => !c.narracao)) {
+if ((molde === "Narrado" || molde === "Documentario" || molde === "CorteVertical" || molde === "Mundo3D") && !previa && !(args.includes("--capa") && molde === "Documentario") && props.cenas.some((c: { narracao?: unknown }) => !c.narracao)) {
   console.error(`Falta a voz de alguma cena. Rode antes: npm run narrar -- ${caminho}`);
   process.exit(1);
 }

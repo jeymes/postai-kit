@@ -29,6 +29,7 @@ const FERRAMENTAS_DOS_CANAIS = new Set([
   "contar_andamento",
   "conferir_parada",
   "anotar_limite_do_kit",
+  "anotar_aprendizado",
   "salvar_canal_animado",
   "ver_ajustes",
   "por_para_aprovacao",

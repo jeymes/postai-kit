@@ -67,6 +67,19 @@ Conte o andamento de cada agente como sempre (`npm run andamento`). Antes de cad
    publicação usa `--duvida`.
 9. **publicacao:** mandar para aprovação (o `npm run aprovar` já manda como vídeo longo, só para o YouTube, com os
    capítulos na descrição) e registrar o episódio.
+10. **Shorts do vídeo longo** (só se o `canal-postai.md` ou um aprendizado pedir "shorts do vídeo longo"; senão,
+   pule): depois do aprovar do longo, ache os shorts escondidos nele.
+   - Rode `npm run corte-vertical -- conteudo/<arquivo>.json` (lista as cenas com o tempo) e escolha **2 trechos**
+     de cenas seguidas, de **20 a 55 s** cada, que: começam com uma ideia inteira (quem vê não precisa do resto do
+     vídeo), têm uma virada ou revelação e fecham numa frase completa. Nada de trecho que termina no meio da ideia.
+   - Para cada um, escreva o gancho escrito no alto (até ~50 letras) pelo `canais/GANCHOS.md` (5 opções, nota, fica
+     o melhor, 7 ou mais) e, se a primeira cena do trecho não prender sozinha, um gancho falado curto (uma frase).
+   - `npm run corte-vertical -- conteudo/<arquivo>.json --cenas 12-16 --titulo "<gancho escrito>" [--gancho "<frase falada>"] --nome short-1`
+     (a voz das cenas é a mesma do longo; com `--gancho`, rode antes `npm run narrar -- <short>.json`, que faz só
+     essa voz), ajuste o `post` (título e legenda na língua do canal, sem pedir comentário) e
+     `npm run renderizar -- <short>.json` (é rápido: menos de 1 minuto de vídeo).
+   - critica-narrado, conferência rápida do short (quadros a cada 2 s: gancho legível, legenda inteira acima da faixa
+     de baixo, o trecho fecha a ideia). Se aprovar, `npm run aprovar -- <short>.json` (vai em pé, como short).
 
 Num **ajuste** (pedido pelo dono ou a refação que a crítica pediu), o roteiro vem em `conteudo/ajuste-<corteId>.json`.
 Se o `npm run ajustes` disser **"pacote de volta"**, as fotos e a voz do vídeo já estão nesta máquina: mude só o que foi
@@ -105,6 +118,11 @@ narre tudo. Depois prévia, crítica na prévia, renderize, crítica no vídeo p
 - **Fim:** a última cena fecha a pergunta do começo e puxa o próximo vídeo. `encerramento` com até 50 caracteres
   (ex.: "Inscreva-se para a parte 2") e `chamadaFinal` com a chamada do canal do `canal-postai.md` (até 90 caracteres,
   ex.: "Está lutando? Comente que a gente ora por você"): ela aparece no cartão final, acima do botão.
+- **Modelo Colagem (Colagem Viva):** quando o `estilo.modelo` é `colagem`, as cenas ganham peças de reportagem.
+  Em umas 1 a cada 3 cenas, a roteirista põe `palavra` (a palavra-chave da fala, até 24 letras, ex.: "FUGA",
+  "TRAIÇÃO"), que entra colada em letras recortadas de jornal; e a pesquisadora, ao escolher a imagem, marca
+  `detalhe` ([x, y] em % da imagem) no ponto que a fala cita (um rosto, um objeto, uma inscrição): ele sai ampliado
+  num recorte redondo, com o círculo de marca-texto e a seta. Não use `detalhe` em retrato `inteira`.
 - **Pronúncia:** nomes estrangeiros e siglas em `pronuncia`.
 - **Capa:** `capa.titulo` com **até 4 palavras** (saem grandes, em maiúsculas e com contorno), que dão curiosidade sem
   repetir o título do vídeo e sem mentir (ex.: "SÓ UMA PEDRA"); `destaque` na palavra mais forte (sai em amarelo);

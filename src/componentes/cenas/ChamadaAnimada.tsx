@@ -103,7 +103,8 @@ export const CartaoDeChamada: React.FC<{ chamada?: string; botao?: string }> = (
           position: "absolute",
           left: 70,
           right: 70,
-          top: 1150,
+          // 1040 (antes 1150): o botão ficava embaixo da descrição e dos botões do TikTok/Reels
+          top: 1040,
           translate: `0px ${(1 - sobe) * 900}px`,
           background: "#FFFFFF",
           border: `8px solid ${TRACO}`,

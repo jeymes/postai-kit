@@ -462,6 +462,40 @@ type Lugar = { left: number; espelhar: boolean; origem: string; semente: number 
 // 45 px ao lado do celular; com zoom ficava pior, porque a luz estava fora dele)
 const maoDe = (lugar: Lugar, sentado: boolean) => ({ x: lugar.left + (lugar.espelhar ? 284 : 255), y: sentado ? 1289 : 1190 });
 const rostoDe = (lugar: Lugar, sentado: boolean) => ({ x: lugar.left + 270, y: sentado ? 1098 : 999 });
+/**
+ * O colo e as pernas de quem está sentado no sofá da sala (o corpo é cortado no
+ * quadril). Na cama o cobertor cobre; no sofá a pessoa parecia sem pernas.
+ */
+const PernasNoSofa: React.FC<{ x: number; y: number; calca?: string; sapato?: string; cor?: string; palito: boolean; liso: boolean }> = ({ x, y, calca, sapato, cor, palito, liso }) => {
+  const traco = liso ? { stroke: "none" } : { stroke: TRACO, strokeWidth: 6 };
+  return (
+    <svg viewBox="0 0 1080 1920" width={1080} height={1920} style={{ position: "absolute", inset: 0, pointerEvents: "none", zIndex: 2 }}>
+      <g transform={`translate(0 ${y})`}>
+        {palito ? (
+          <path
+            d={`M${x - 14} 1415 L${x - 40} 1590 L${x - 70} 1590 M${x + 14} 1415 L${x + 40} 1590 L${x + 70} 1590`}
+            stroke={cor ?? TRACO}
+            strokeWidth={23}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            fill="none"
+          />
+        ) : (
+          <>
+            {[-40, 40].map((d) => (
+              <rect key={d} x={x + d - 26} y={1430} width={52} height={150} rx={20} fill={calca ?? "#3E4A6B"} {...traco} />
+            ))}
+            <rect x={x - 82} y={1396} width={164} height={64} rx={26} fill={calca ?? "#3E4A6B"} {...traco} />
+            {[-40, 40].map((d) => (
+              <ellipse key={`s${d}`} cx={x + d + (d < 0 ? -8 : 8)} cy={1588} rx={38} ry={20} fill={sapato ?? TRACO} {...traco} />
+            ))}
+          </>
+        )}
+      </g>
+    </svg>
+  );
+};
+
 const comCelular = (pose?: string) => pose === "celular" || pose === "sentado";
 
 // A primeira do elenco fica à esquerda; a segunda, à direita, virada para ela
@@ -555,7 +589,7 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
   // altura 1150 e o logo dele chega a 1040, onde ficavam a boca e o queixo deles. Os pés
   // ficam atrás do cartão; o cenário fica no lugar
   const subirNoCartao = props.ctaFinal
-    ? 180 * spring({ frame: frame - inicioDoCta, fps, config: { damping: 16, stiffness: 110 } })
+    ? 290 * spring({ frame: frame - inicioDoCta, fps, config: { damping: 16, stiffness: 110 } })
     : 0;
   return (
     <AbsoluteFill style={{ background: noite ? "#0A0F26" : "#FBE7DA" }}>
@@ -632,6 +666,25 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
               </CamadaDaFrente>
             </AbsoluteFill>
           )}
+          {/* No sofá não há cobertor: o colo e as pernas de quem está sentado ficam na frente do assento */}
+          {lugarAgora.nome === "sala" &&
+            elenco.map(({ id: quem, visual, tipo }, indice) => {
+              if (tipo === "criatura") return null;
+              const agora = momentosDe(quem, linha).filter((m) => m.em <= frame).pop();
+              if (agora?.pose !== "sentado") return null;
+              return (
+                <PernasNoSofa
+                  key={`pernas-${quem}`}
+                  x={lugares[indice].left + 270}
+                  y={-subirNoCartao}
+                  calca={visual?.calca}
+                  sapato={visual?.sapato}
+                  cor={visual?.roupa}
+                  palito={estilo.nome === "Palito"}
+                  liso={estilo.nome === "Liso"}
+                />
+              );
+            })}
           {/* No escuro, a tela do celular ilumina o rosto de quem está com ele (um feixe claro e fraco) */}
           {escuro &&
             (() => {
@@ -707,7 +760,10 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
         )}
         {props.legendas && (
           <Sequence durationInFrames={props.ctaFinal ? fimDasFalas : undefined} layout="none" name="Legendas">
-            <Legendas legendas={legendas} noite={escuro} tamanho={estilo.legenda} largura={940} style={{ top: estilo.legenda > 70 ? 1690 : 1730, padding: "0 70px" }} />
+            {/* Na área segura (23/11/2026): abaixo de ~1530 px a descrição e os botões do TikTok,
+                do Reels e do Shorts cobrem a legenda; ela sobe para a altura das pernas, numa caixa
+                clara para ler em cima dos personagens */}
+            <Legendas legendas={legendas} noite={escuro} caixa={!escuro} tamanho={estilo.legenda} largura={940} style={{ top: 1440, padding: "0 70px" }} />
           </Sequence>
         )}
         {linha.map(({ cena, inicio }, i) => (

@@ -68,7 +68,8 @@ const Revelacao: React.FC<{ antes: AntesDepois["antes"]; depois: AntesDepois["de
       <div
         style={{
           position: "absolute",
-          bottom: 110,
+          // Acima da descrição e dos botões do TikTok/Reels (antes 110)
+          bottom: 420,
           left: 0,
           right: 0,
           textAlign: "center",

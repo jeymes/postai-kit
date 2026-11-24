@@ -81,8 +81,22 @@ export const Recorte: React.FC<{
   ritmo: number;
   inteira?: boolean;
   parada?: boolean;
-}> = ({ src, duracao, indice, filtro, destaque, ritmo, inteira, parada }) => {
-  const frame = useCurrentFrame();
+  /** Colagem Viva: onde está o detalhe na imagem ([x, y] em %): sai ampliado num recorte à parte */
+  detalhe?: [number, number];
+  /** Colagem Viva: a palavra-chave da cena, colada em letras recortadas de jornal */
+  palavra?: string;
+  fonte?: string;
+}> = ({ src, duracao, indice, filtro, destaque, ritmo, inteira, parada, detalhe, palavra, fonte }) => {
+  const frameReal = useCurrentFrame();
+  // Colagem Viva (23/11/2026): o papel "respira" como animação quadro a quadro (stop-motion):
+  // o movimento anda de 3 em 3 quadros e cada passo tem um tremido leve
+  const passo = Math.floor(frameReal / 3);
+  const frame = parada ? frameReal : passo * 3;
+  const tremido = parada ? { x: 0, y: 0, giro: 0 } : {
+    x: (random(`trem-x-${indice}-${passo}`) - 0.5) * 3,
+    y: (random(`trem-y-${indice}-${passo}`) - 0.5) * 3,
+    giro: (random(`trem-g-${indice}-${passo}`) - 0.5) * 0.5,
+  };
   const t = (parada ? 1 : interpolate(frame, [0, duracao], [0, 1], { extrapolateRight: "clamp", easing: cinema })) * ritmo;
   const entrada = parada ? 1 : interpolate(frame, [0, 18], [0, 1], { extrapolateRight: "clamp", easing: suave });
   const semente = `recorte-${indice}`;
@@ -94,8 +108,8 @@ export const Recorte: React.FC<{
   return (
     <AbsoluteFill style={{ overflow: "hidden" }}>
       <FundoDeJornal />
-      {/* Linha vermelha da reportagem, ligando o recorte à borda */}
-      <svg width="100%" height="100%" style={{ position: "absolute", inset: 0 }} viewBox="0 0 1920 1080">
+      {/* Linha vermelha da reportagem, ligando o recorte à borda (com o detalhe ampliado, a seta faz esse papel) */}
+      <svg width="100%" height="100%" style={{ position: "absolute", inset: 0, opacity: detalhe && !inteira ? 0 : 1 }} viewBox="0 0 1920 1080">
         <path
           d={lado > 0 ? "M 1500 140 C 1700 260, 1760 520, 1860 820" : "M 420 140 C 220 260, 160 520, 60 820"}
           fill="none"
@@ -113,8 +127,8 @@ export const Recorte: React.FC<{
             position: "relative",
             width: "70%",
             height: "76%",
-            rotate: `${giro}deg`,
-            translate: `${lado * (1 - entrada) * -60}px ${(1 - entrada) * 40}px`,
+            rotate: `${giro + tremido.giro}deg`,
+            translate: `${lado * (1 - entrada) * -60 + tremido.x}px ${(1 - entrada) * 40 + tremido.y}px`,
             scale: String(0.94 + 0.04 * entrada + 0.03 * t),
             opacity: entrada,
             filter: "drop-shadow(0 18px 26px rgba(40,25,10,0.45))",
@@ -145,9 +159,178 @@ export const Recorte: React.FC<{
           </div>
           <Fita style={{ top: -22, left: 40, rotate: "-8deg" }} />
           <Fita style={{ bottom: -20, right: 50, rotate: "6deg" }} />
+          {/* O círculo de marca-texto em volta do detalhe, desenhado à mão */}
+          {detalhe && !inteira && <CirculoDeMarcaTexto x={detalhe[0]} y={detalhe[1]} cor={destaque} frame={frame} parada={parada} semente={semente} />}
         </div>
       </AbsoluteFill>
+      {detalhe && !inteira && (
+        <DetalheAmpliado src={src} filtro={filtro} x={detalhe[0]} y={detalhe[1]} lado={lado} cor={destaque} frame={frame} parada={parada} semente={semente} tremido={tremido} />
+      )}
+      {palavra && <PalavraRecortada texto={palavra} fonte={fonte} cor={destaque} frame={frame} parada={parada} semente={semente} lado={lado} />}
     </AbsoluteFill>
+  );
+};
+
+// ---- Colagem Viva: as peças que entram por cima do recorte ----
+
+const aparece = (frame: number, de: number, parada?: boolean) =>
+  parada ? 1 : interpolate(frame, [de, de + 12], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: suave });
+
+/** O círculo vermelho de marca-texto em volta do detalhe (no espaço do recorte, em %) */
+const CirculoDeMarcaTexto: React.FC<{ x: number; y: number; cor: string; frame: number; parada?: boolean; semente: string }> = ({
+  x,
+  y,
+  cor,
+  frame,
+  parada,
+  semente,
+}) => {
+  const desenho = parada ? 1 : interpolate(frame, [24, 46], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: suave });
+  const torto = (random(`${semente}-circulo`) - 0.5) * 10;
+  // Uma volta e um pouco, como quem risca rápido com caneta
+  const d = "M 6 50 C 6 18, 40 4, 64 8 C 92 13, 98 44, 92 66 C 84 92, 40 98, 18 84 C 2 72, 8 40, 30 28";
+  return (
+    <svg
+      viewBox="0 0 100 100"
+      style={{ position: "absolute", left: `${x - 9}%`, top: `${y - 13}%`, width: "18%", height: "26%", rotate: `${torto}deg`, overflow: "visible" }}
+    >
+      <path d={d} fill="none" stroke={cor} strokeWidth={4.5} strokeLinecap="round" pathLength={1} strokeDasharray={1} strokeDashoffset={1 - desenho} />
+    </svg>
+  );
+};
+
+/** O detalhe da imagem ampliado num recorte redondo, do outro lado, com a seta desenhada até ele */
+const DetalheAmpliado: React.FC<{
+  src: string;
+  filtro: string;
+  x: number;
+  y: number;
+  lado: number;
+  cor: string;
+  frame: number;
+  parada?: boolean;
+  semente: string;
+  tremido: { x: number; y: number; giro: number };
+}> = ({ src, filtro, x, y, lado, cor, frame, parada, semente, tremido }) => {
+  const entrada = aparece(frame, 40, parada);
+  const seta = parada ? 1 : interpolate(frame, [48, 66], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: suave });
+  if (entrada <= 0) return null;
+  const giro = (random(`${semente}-lupa`) - 0.5) * 8;
+  const TAMANHO = 380;
+  const esquerda = lado > 0 ? 1920 - TAMANHO - 70 : 70;
+  const topo = 560;
+  const ZOOM = 3;
+  return (
+    <>
+      <svg width="100%" height="100%" viewBox="0 0 1920 1080" style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
+        {/* Seta à mão: do círculo no recorte até o detalhe ampliado (o recorte ocupa 70% x 76% no meio da tela) */}
+        <path
+          d={(() => {
+            const cx = 1920 * 0.15 + (x / 100) * 1920 * 0.7;
+            const cy = 1080 * 0.12 + (y / 100) * 1080 * 0.76;
+            const lx = esquerda + TAMANHO / 2;
+            const ly = topo + TAMANHO / 2;
+            // Sai da borda do círculo e chega na borda do recorte redondo
+            const ang = Math.atan2(ly - cy, lx - cx);
+            const de = [cx + Math.cos(ang) * 110, cy + Math.sin(ang) * 110];
+            const ate = [lx - Math.cos(ang) * (TAMANHO / 2 + 14), ly - Math.sin(ang) * (TAMANHO / 2 + 14)];
+            const meio = [(de[0] + ate[0]) / 2, (de[1] + ate[1]) / 2 - 90];
+            return `M ${de[0]} ${de[1]} Q ${meio[0]} ${meio[1]} ${ate[0]} ${ate[1]}`;
+          })()}
+          fill="none"
+          stroke={cor}
+          strokeWidth={8}
+          strokeLinecap="round"
+          pathLength={1}
+          strokeDasharray={1}
+          strokeDashoffset={1 - seta}
+        />
+      </svg>
+      <div
+        style={{
+          position: "absolute",
+          left: esquerda + tremido.x,
+          top: topo + tremido.y,
+          width: TAMANHO,
+          height: TAMANHO,
+          rotate: `${giro + tremido.giro}deg`,
+          scale: String(0.7 + 0.3 * entrada),
+          opacity: entrada,
+          filter: "drop-shadow(0 14px 20px rgba(40,25,10,0.5))",
+        }}
+      >
+        <div style={{ position: "absolute", inset: 0, borderRadius: "50%", backgroundColor: "#f3eee2" }} />
+        <div style={{ position: "absolute", inset: 16, borderRadius: "50%", overflow: "hidden", backgroundColor: "#2a2420" }}>
+          <Img
+            src={arquivo(src)}
+            style={{
+              position: "absolute",
+              width: `${ZOOM * 100}%`,
+              height: `${ZOOM * 100}%`,
+              left: `${-(x / 100) * ZOOM * 100 + 50}%`,
+              top: `${-(y / 100) * ZOOM * 100 + 50}%`,
+              objectFit: "cover",
+              filter: filtro,
+            }}
+          />
+        </div>
+        <div style={{ position: "absolute", inset: 8, borderRadius: "50%", border: `7px solid ${cor}` }} />
+      </div>
+    </>
+  );
+};
+
+/** A palavra-chave em letras recortadas de jornal: cada letra num papel, fonte e giro diferentes */
+const PalavraRecortada: React.FC<{ texto: string; fonte?: string; cor: string; frame: number; parada?: boolean; semente: string; lado: number }> = ({
+  texto,
+  fonte,
+  cor,
+  frame,
+  parada,
+  semente,
+  lado,
+}) => {
+  const PAPEIS = ["#f3eee2", "#111111", cor, "#e9dcc0", "#ffffff"];
+  const FONTES = [fonte ?? "Georgia, serif", "Impact, 'Arial Black', sans-serif", "'Courier New', monospace", "Georgia, serif"];
+  const letras = [...texto.toUpperCase()];
+  return (
+    <div
+      style={{
+        position: "absolute",
+        top: 70,
+        ...(lado > 0 ? { left: 90 } : { right: 90 }),
+        display: "flex",
+        gap: 6,
+        alignItems: "flex-end",
+        filter: "drop-shadow(0 6px 8px rgba(40,25,10,0.4))",
+      }}
+    >
+      {letras.map((letra, i) => {
+        if (letra === " ") return <div key={i} style={{ width: 24 }} />;
+        const e = aparece(frame, 14 + i * 2, parada);
+        const papel = PAPEIS[Math.floor(random(`${semente}-papel-${i}`) * PAPEIS.length)];
+        const escuro = papel === "#111111" || papel === cor;
+        return (
+          <div
+            key={i}
+            style={{
+              opacity: e,
+              scale: String(0.6 + 0.4 * e),
+              rotate: `${(random(`${semente}-letra-${i}`) - 0.5) * 14}deg`,
+              backgroundColor: papel,
+              color: escuro ? "#ffffff" : "#111111",
+              fontFamily: FONTES[Math.floor(random(`${semente}-fonte-${i}`) * FONTES.length)],
+              fontWeight: 800,
+              fontSize: 64 + Math.floor(random(`${semente}-tam-${i}`) * 22),
+              lineHeight: 1,
+              padding: "6px 10px 8px",
+            }}
+          >
+            {letra}
+          </div>
+        );
+      })}
+    </div>
   );
 };
 

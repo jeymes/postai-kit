@@ -49,7 +49,12 @@ música cobrindo a voz. Se um quadro levantar dúvida, tire só esse de novo sem
 - duração mais de 20% longe da do canal.
 
 **Gosto (reprova se dois ou mais falharem):**
-- os primeiros 30 segundos dão vontade de ficar;
+- os primeiros 30 segundos dão vontade de ficar: dê à primeira frase a nota do `canais/GANCHOS.md` (0 a 10); abaixo de
+  7, é `CORRIGIR` para a roteirista com um gancho melhor, mesmo que o resto passe;
+- a cada 1 a 2 minutos entra algo novo (promessa, pergunta, detalhe surpreendente); trecho longo sem nada novo é
+  onde o público sai;
+- o texto não tem cara de IA (`canais/VOZ.md`): frases longas (o `npm run conferir` avisa as de mais de 25 palavras),
+  de livro ou com vício de IA vão para a roteirista com a frase reescrita;
 - as imagens variam e acompanham a história (não fica tudo igual por minutos);
 - cada capítulo puxa o próximo;
 - o fim cumpre a promessa do começo.
@@ -64,7 +69,7 @@ dizendo o que prenderia.
 
 **APROVADO** ou **CORRIGIR**, com a lista numerada: o segundo, o problema e quem corrige (`roteirista-narrado` para
 texto, `pesquisadora-de-imagens` para imagem, `producao` para voz e vídeo). Se aprovar, até 3 dicas "Para os
-próximos".
+próximos". Inclua sempre a linha `Gancho`: a fórmula e a nota da primeira frase (ex.: "A pergunta, 8/10").
 
 Se achar algo que **só o código do kit resolve** (a equipe não consegue corrigir no roteiro, nas imagens, na voz nem
 no visual: legenda que o molde quebra errado, pose que o molde não deixa mudar, movimento que não existe), não peça
