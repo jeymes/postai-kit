@@ -330,7 +330,16 @@ function momentosDe(
   // da reação) só se a história acaba bem; depois de medo ou tristeza, ficam como estavam
   if (cartaoFinalEm !== undefined) {
     const ultimo = momentos[momentos.length - 1];
-    const acabaMal = FIM_RUIM.has(ultimo.expressao);
+    // Quem acaba mal é a HISTÓRIA, pela última cena (24/11/2026): antes valia a última
+    // expressão de cada um, e a Lia, preocupada lá no começo e fora das cenas seguintes,
+    // ficava de cara fechada no cartão de um fim feliz. Sem expressão na última cena, a dela.
+    const cenaFinal = linha[linha.length - 1]?.cena;
+    const doFim = cenaFinal
+      ? [...Object.values(cenaFinal.estados ?? {}), ...Object.values(cenaFinal.meio ?? {}), cenaFinal.noiva, cenaFinal.organizadora]
+          .map((e) => e?.expressao)
+          .filter((e): e is Momento["expressao"] => Boolean(e))
+      : [];
+    const acabaMal = doFim.length ? doFim.some((e) => FIM_RUIM.has(e)) : FIM_RUIM.has(ultimo.expressao);
     momentos.push({
       em: cartaoFinalEm,
       pose: cartaoFinal?.pose ?? (acabaMal ? ultimo.pose : "comemorando"),
