@@ -5,7 +5,7 @@ import { AbsoluteFill, interpolate, OffthreadVideo, Sequence, spring, staticFile
 import { z } from "zod";
 import { EfeitosContexto, Som, SONS, type TipoSom } from "../componentes/audio/Som";
 import { resolverCenario, type CenarioProprio } from "../componentes/cenarios/Cenarios";
-import { HoraNoCanto, Notificacao } from "../componentes/cenas/Notificacao";
+import { HoraEmDestaque, Notificacao } from "../componentes/cenas/Notificacao";
 import { TRACO, type FormaDaBoca, type Momento, type Palavra } from "../componentes/personagens/Boneco";
 import { ELENCO } from "../componentes/personagens/elenco";
 import { PENTEADOS, type Visual } from "../componentes/personagens/Boneco";
@@ -737,31 +737,27 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
           return <LuzDoAviso key={`luz-${i}`} em={inicio} ate={guardou ?? proxima} x={mao.x} y={mao.y} />;
         })}
         </AbsoluteFill>
-        {linha.map(({ cena, inicio }, i) => {
-          const fim = linha[i + 1]?.inicio ?? fimDasFalas;
-          return (
-            <React.Fragment key={`extra-${i}`}>
-              {cena.hora && (
-                <Sequence from={inicio} durationInFrames={fim - inicio} layout="none" name={`Hora ${i + 1}`}>
-                  <HoraNoCanto hora={cena.hora} noite={escuro} />
-                </Sequence>
-              )}
-            </React.Fragment>
-          );
-        })}
         <TituloPov
           titulo={props.titulo}
           parte={props.parte}
           abaixo={(() => {
-            // A notificação da fala de agora, na coluna do título
-            const i = linha.findIndex((l, k) => l.cena.notificacao && frame >= l.inicio - 4 && frame < (linha[k + 1]?.inicio ?? fimDasFalas));
-            const cena = i >= 0 ? linha[i].cena : null;
-            return cena?.notificacao ? (
-              <Notificacao em={linha[i].inicio - 4} texto={cena.notificacao.texto} app={cena.notificacao.titulo} noite={escuro} noFluxo />
-            ) : null;
+            // A hora e a notificação da fala de agora, na coluna do título (uma embaixo da outra)
+            const daFala = (tem: (c: Cena) => unknown, antes = 0) =>
+              linha.findIndex((l, k) => tem(l.cena) && frame >= l.inicio - antes && frame < (linha[k + 1]?.inicio ?? fimDasFalas));
+            const h = daFala((c) => c.hora);
+            const n = daFala((c) => c.notificacao, 4);
+            const notificacao = n >= 0 ? linha[n].cena.notificacao : undefined;
+            if (h < 0 && !notificacao) return null;
+            return (
+              <>
+                {h >= 0 && <HoraEmDestaque hora={linha[h].cena.hora ?? ""} noite={escuro} em={linha[h].inicio} />}
+                {notificacao && <Notificacao em={linha[n].inicio - 4} texto={notificacao.texto} app={notificacao.titulo} noite={escuro} noFluxo />}
+              </>
+            );
           })()}
         />
-        {props.ctaInicial && <BalaoDeChamada texto={props.ctaInicial} topo={props.parte ? 450 : 395} jaNaTela />}
+        {/* O balão do começo desce se a primeira fala tem hora (o selo fica embaixo do título) */}
+        {props.ctaInicial && <BalaoDeChamada texto={props.ctaInicial} topo={(props.parte ? 450 : 395) + (linha[0]?.cena.hora ? 95 : 0)} jaNaTela />}
         {props.cartao && (
           <Cartao
             cartao={props.cartao}

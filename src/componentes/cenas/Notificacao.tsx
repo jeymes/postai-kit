@@ -41,10 +41,46 @@ export const Notificacao: React.FC<{ em: number; texto: string; app?: string; no
   );
 };
 
-/** A hora no canto de cima (ex.: "2:07"), como num celular de madrugada */
-// Fica no alto, acima da caixa do título (como a barra do celular): nunca embaixo dela
-export const HoraNoCanto: React.FC<{ hora: string; noite?: boolean }> = ({ hora, noite = true }) => (
-  <div style={{ position: "absolute", top: 26, left: 70, fontFamily: fontes.titulo, fontSize: 44, fontWeight: 700, color: noite ? "rgba(220,228,255,0.75)" : "rgba(43,35,64,0.6)" }}>
-    {hora}
-  </div>
-);
+/**
+ * A hora da cena (ex.: "2:07"), num selo com um reloginho, logo abaixo do título
+ * (na coluna dele, com a notificação). 24/11/2026: antes era um texto cinza de 44 px
+ * no canto de cima, embaixo das abas do TikTok/Reels, e a crítica não via a hora.
+ * O relógio é desenhado (sem emoji: a máquina da nuvem pode não ter a fonte).
+ */
+export const HoraEmDestaque: React.FC<{ hora: string; noite?: boolean; em: number }> = ({ hora, noite = true, em }) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const entra = spring({ frame: frame - em, fps, config: { damping: 13, stiffness: 140 } });
+  const [h, m] = hora.split(":").map(Number);
+  const anguloH = (((h % 12) + (m || 0) / 60) / 12) * 360;
+  const anguloM = ((m || 0) / 60) * 360;
+  const tinta = noite ? "#F3F0FF" : "#2B2340";
+  return (
+    <div
+      style={{
+        alignSelf: "center",
+        marginTop: 14,
+        scale: String(entra),
+        display: "flex",
+        alignItems: "center",
+        gap: 16,
+        padding: "10px 30px 10px 18px",
+        borderRadius: 999,
+        background: noite ? "rgba(20,16,40,0.82)" : "rgba(255,255,255,0.92)",
+        border: `5px solid ${noite ? "#F5C94A" : "#2B2340"}`,
+        fontFamily: fontes.titulo,
+        fontWeight: 800,
+        fontSize: 58,
+        color: tinta,
+        fontVariantNumeric: "tabular-nums",
+      }}
+    >
+      <svg width={52} height={52} viewBox="0 0 52 52" aria-hidden>
+        <circle cx={26} cy={26} r={22} fill="none" stroke={noite ? "#F5C94A" : tinta} strokeWidth={5} />
+        <line x1={26} y1={26} x2={26} y2={14} stroke={tinta} strokeWidth={5} strokeLinecap="round" transform={`rotate(${anguloH} 26 26)`} />
+        <line x1={26} y1={26} x2={26} y2={9} stroke={tinta} strokeWidth={3.5} strokeLinecap="round" transform={`rotate(${anguloM} 26 26)`} />
+      </svg>
+      {hora}
+    </div>
+  );
+};
