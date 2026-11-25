@@ -68,6 +68,50 @@ if (!existsSync(arquivoDeInfo)) {
 const info: Info = JSON.parse(readFileSync(arquivoDeInfo, "utf8"));
 const peca = JSON.parse(readFileSync(caminho, "utf8"));
 
+// Nunca mandar a mesma peça duas vezes (25/11/2026: a rede da nuvem caiu no meio
+// da resposta, o aprovar rodou de novo e o vídeo chegou duplicado). O que vai para
+// aprovação fica guardado antes (.envio-pendente.json): rodar de novo reenvia o
+// MESMO envio, sem subir nada. Depois que chega, fica marcado (.aprovado.json).
+const marcaDoEnvio = join(pasta, ".aprovado.json");
+const pendente = join(pasta, ".envio-pendente.json");
+if (existsSync(marcaDoEnvio) && !substitui && !args.includes("--de-novo")) {
+  const { resposta } = JSON.parse(readFileSync(marcaDoEnvio, "utf8")) as { resposta?: string };
+  console.log(`JÁ ENVIADO: esta peça já chegou ao Postaí (${resposta ?? "veja em Para aprovar"}). Não mande de novo. Se for mesmo uma versão nova, rode com --de-novo.`);
+  process.exit(0);
+}
+
+/** Manda para aprovação; se a rede cair, tenta de novo o MESMO envio (o Postaí reconhece). */
+async function mandarParaAprovacao(dados: Record<string, unknown>) {
+  writeFileSync(pendente, JSON.stringify(dados));
+  for (let vez = 1; ; vez++) {
+    try {
+      const resposta = await ferramenta("por_para_aprovacao", dados);
+      writeFileSync(marcaDoEnvio, JSON.stringify({ envioId: dados.envioId, em: new Date().toISOString(), resposta }));
+      rmSync(pendente, { force: true });
+      return resposta;
+    } catch (erro) {
+      const motivo = erro instanceof Error ? `${erro.message} ${String((erro as { cause?: unknown }).cause ?? "")}` : String(erro);
+      const daRede = /fetch failed|ECONN|ETIMEDOUT|EAI_AGAIN|socket|network|terminated|respondeu 5\d\d/i.test(motivo);
+      if (!daRede || vez >= 4) throw erro;
+      console.log(`  (a rede caiu ao mandar para aprovação, tentativa ${vez} de 4: ${motivo.trim().slice(0, 120)}; tentando de novo o MESMO envio)`);
+      spawnSync("sleep", [String(10 * vez)]);
+    }
+  }
+}
+
+// Uma tentativa anterior subiu tudo e não terminou: manda de novo o mesmo envio
+if (existsSync(pendente) && !args.includes("--de-novo")) {
+  try {
+    console.log("Reenviando o envio que ficou pela metade (sem subir de novo)");
+    const resposta = await mandarParaAprovacao(JSON.parse(readFileSync(pendente, "utf8")));
+    console.log(`\nPronto: ${resposta}`);
+    process.exit(0);
+  } catch (erro) {
+    console.error(`\n${erro instanceof Error ? erro.message : String(erro)}`);
+    process.exit(1);
+  }
+}
+
 /**
  * O vídeo usa imagem gerada com IA? As fotos do roteiro (fotos/<pasta>/<nome>.jpg)
  * cuja linha no CREDITOS.md da pasta diz a fonte "ia". Com uma só, o vídeo sai no
@@ -132,7 +176,7 @@ if (peca.molde === "Carrossel") {
       }
     }
     console.log("3/3 Mandando para aprovação");
-    const resposta = await ferramenta("por_para_aprovacao", {
+    const resposta = await mandarParaAprovacao({
       envioId: envio.envioId,
       titulo: tituloDoPost.slice(0, 100),
       legenda: legendaDoPost,
@@ -267,7 +311,7 @@ try {
   }
 
   console.log("3/3 Mandando para aprovação");
-  const resposta = await ferramenta("por_para_aprovacao", {
+  const resposta = await mandarParaAprovacao({
     envioId: envio.envioId,
     titulo: titulo.slice(0, 100),
     legenda,
