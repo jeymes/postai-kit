@@ -33,7 +33,7 @@ Você faz os carrosséis do canal: aquele post de 4 a 8 imagens que a pessoa arr
 
 ## 4. Imagens (foto-frase, versiculo e post com foto)
 
-`npm run buscar-fotos -- --pasta carrossel-<nome> item="termo em inglês"` (o `--help` lista as fontes). Para pessoas e lugares modernos, prefira `--fonte pixabay` ou `--fonte unsplash`; para fé e história, `--fonte museus` (pinturas). Use `--fonte ia` só quando nada servir (a cena descrita em inglês, sem pessoa real). Olhe cada imagem antes de usar (abra o arquivo): nada de marca d'água, texto em outra língua, gente estranha ou imagem que não combina. A foto do slide fica atrás do texto: prefira imagens com a parte de baixo calma (foto-frase) ou escuras (versiculo).
+`npm run buscar-fotos -- --pasta carrossel-<nome> item="termo em inglês"` (o `--help` lista as fontes). Para ver opções antes, `--candidatos`; para escolher depois, use o **mesmo** `--pasta` (ex.: `npm run buscar-fotos -- --pasta carrossel-<nome> item#2`). Para pessoas e lugares modernos, prefira `--fonte pixabay` ou `--fonte unsplash`; para fé e história, `--fonte museus` (pinturas). Use `--fonte ia` só quando nada servir (a cena descrita em inglês, sem pessoa real). Olhe cada imagem antes de usar (abra o arquivo): nada de marca d'água, texto em outra língua, gente estranha ou imagem que não combina. A foto do slide fica atrás do texto: prefira imagens com a parte de baixo calma (foto-frase) ou escuras (versiculo).
 
 ## 5. Grave, renderize e confira
 

@@ -99,6 +99,15 @@ const itens = args.map((a) => {
     const arquivo = soEscolha[1].normalize("NFD").replace(/\p{M}/gu, "");
     const guardadas = join("public", pasta, "_candidatos", `${arquivo}.json`);
     if (!existsSync(guardadas)) {
+      // As opções podem ter sido guardadas com outro --pasta (25/11/2026: a redatora
+      // buscou com --pasta e escolheu sem): diz o comando certo em vez de só recusar
+      const outras = existsSync("public")
+        ? readdirSync("public", { withFileTypes: true })
+            .filter((d) => d.isDirectory() && existsSync(join("public", d.name, "_candidatos", `${arquivo}.json`)))
+            .map((d) => d.name)
+        : [];
+      if (outras.length)
+        throw new Error(`Item inválido: ${a}. As opções de "${arquivo}" estão em --pasta ${outras[0]}: rode npm run buscar-fotos -- --pasta ${outras[0]} ${a}`);
       throw new Error(`Item inválido: ${a}. Não há opções guardadas de "${arquivo}": rode antes com --candidatos ${arquivo}="termo em inglês", ou escreva ${arquivo}="termo"#${soEscolha[2]}`);
     }
     const { termo } = JSON.parse(readFileSync(guardadas, "utf8")) as { termo: string };
