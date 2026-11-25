@@ -35,16 +35,19 @@ function diferenca(a: Float32Array, b: Float32Array): number {
 }
 
 /** Os números (a partir de 0) dos quadros que piscam; lista vazia se o vídeo está bom */
-export function acharNosQuadros(quadros: Float32Array[]): number[] {
+type Quadros = Float32Array[] | { length: number; quadro: (i: number) => Float32Array };
+const pegar = (q: Quadros, i: number) => (Array.isArray(q) ? q[i] : q.quadro(i));
+
+export function acharNosQuadros(quadros: Quadros): number[] {
   const quebrados: number[] = [];
   for (let i = 1; i < quadros.length - 1; i++) {
-    const antes = quadros[i - 1];
-    const pulo = diferenca(antes, quadros[i]);
+    const antes = pegar(quadros, i - 1);
+    const pulo = diferenca(antes, pegar(quadros, i));
     if (pulo < PULO) continue;
     // Volta a algo parecido com o anterior em até ATE quadros?
     for (let j = i + 1; j <= Math.min(i + ATE, quadros.length - 1); j++) {
-      const deVolta = diferenca(antes, quadros[j]);
-      if (deVolta < pulo / 3 && diferenca(quadros[j - 1], quadros[j]) >= PULO / 2) {
+      const deVolta = diferenca(antes, pegar(quadros, j));
+      if (deVolta < pulo / 3 && diferenca(pegar(quadros, j - 1), pegar(quadros, j)) >= PULO / 2) {
         for (let k = i; k < j; k++) quebrados.push(k);
         i = j - 1;
         break;
@@ -65,7 +68,19 @@ export function quadrosQuebrados(video: string): number[] {
     );
     if (r.status !== 0) throw new Error(`Não consegui tirar os quadros de ${video}: ${(r.stderr ?? "").trim().slice(-300)}`);
     const arquivos = readdirSync(pasta).filter((f) => f.endsWith(".png")).sort();
-    return acharNosQuadros(arquivos.map((f) => cinzas(join(pasta, f))));
+    // Só uns poucos quadros na memória por vez (um vídeo de 10 min tem 18 mil:
+    // todos juntos passariam de 1 GB na máquina da nuvem)
+    const guardados = new Map<number, Float32Array>();
+    const quadro = (i: number) => {
+      let g = guardados.get(i);
+      if (!g) {
+        g = cinzas(join(pasta, arquivos[i]));
+        guardados.set(i, g);
+        for (const k of guardados.keys()) if (k < i - 2) guardados.delete(k);
+      }
+      return g;
+    };
+    return acharNosQuadros({ length: arquivos.length, quadro });
   } finally {
     rmSync(pasta, { recursive: true, force: true });
   }

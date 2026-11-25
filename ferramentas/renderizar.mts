@@ -127,7 +127,10 @@ const detalhes = args.includes("--detalhes");
  * mesmo swangle sai limpo. Ele não confia no certificado do proxy da nuvem, por
  * isso o --ignore-certificate-errors (só as fontes e imagens da peça passam por ali).
  */
-let navegadorDoRemotion = com3d && Boolean(process.env.KIT_NAVEGADOR) && !args.includes("--navegador-da-maquina");
+// 25/11/2026: o mosaico apareceu também no vídeo longo do Canal dark (6% dos
+// quadros), sem 3D: vale para todo render na nuvem.
+const naNuvem = Boolean(process.env.KIT_NAVEGADOR);
+let navegadorDoRemotion = naNuvem && !args.includes("--navegador-da-maquina");
 function rodarRemotion(comando: string[]) {
   const env = { ...process.env };
   const extra: string[] = [];
@@ -425,9 +428,10 @@ if (molde === "Carrossel") {
   console.log(`Render: ${nucleos} núcleos, ${memoriaGb.toFixed(1)} GB de memória, ${abas} abas ao mesmo tempo.`);
   const inicioDoRender = Date.now();
   let abasUsadas = renderComReserva(abas, "render", molde, video, "--codec=h264", ...qualidade);
-  // 3D: confere se algum quadro saiu quebrado (pisca); se sim, faz de novo com
-  // menos abas (metade, depois 1). Se ainda piscar, para com erro: nada é enviado.
-  if (com3d) {
+  // Na nuvem (todo vídeo) e no 3D: confere se algum quadro saiu quebrado (pisca);
+  // se sim, faz de novo com menos abas (metade, depois 1). Se ainda piscar, para
+  // com erro: nada é enviado (o ponto antes do render deixa continuar dali).
+  if (com3d || naNuvem) {
     for (let volta = 0; ; volta++) {
       const quebrados = quadrosQuebrados(video);
       if (!quebrados.length) {
@@ -436,7 +440,7 @@ if (molde === "Carrossel") {
       }
       const lista = `${quebrados.slice(0, 12).join(", ")}${quebrados.length > 12 ? "…" : ""}`;
       if (abasUsadas <= 1 || volta >= 2) {
-        console.error(`O vídeo 3D saiu com ${quebrados.length} quadros quebrados (piscam), mesmo com ${abasUsadas} aba(s): ${lista}. Não envie este vídeo.`);
+        console.error(`O vídeo saiu com ${quebrados.length} quadros quebrados (piscam), mesmo com ${abasUsadas} aba(s): ${lista}. Não envie este vídeo.`);
         process.exit(1);
       }
       const menos = volta === 0 ? Math.max(1, Math.floor(abasUsadas / 2)) : 1;

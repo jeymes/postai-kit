@@ -505,7 +505,12 @@ export const MapaAnimado: React.FC<{
             <polyline points={linha} fill="none" stroke={destaque} strokeWidth={0.6} strokeLinecap="round" strokeLinejoin="round" pathLength={1} strokeDasharray={1} strokeDashoffset={1 - progresso} />
           </svg>
           {rota.map((p, i) => {
-            const chegou = interpolate(progresso, [ate[i] - 0.001, ate[i] + 0.04], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+            // Acende um pouco antes de a ponta chegar e fica inteiro na chegada. Antes
+            // era um pouco depois: o último ponto (a rota termina nele) ficava com o
+            // nome quase invisível (25/11/2026: Jericó e Jerusalém sumiram do mapa)
+            const chegou = interpolate(progresso, [ate[i] - 0.04, ate[i] - 0.001], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+            // Perto da borda direita do mapa, o nome vai para o lado esquerdo do ponto
+            const aEsquerda = p[0] > 70;
             const nome = lugares[i];
             return (
               <div key={i} style={{ position: "absolute", left: `${p[0]}%`, top: `${p[1]}%`, opacity: chegou }}>
@@ -514,7 +519,7 @@ export const MapaAnimado: React.FC<{
                   <div
                     style={{
                       position: "absolute",
-                      left: 24,
+                      ...(aEsquerda ? { right: 24 } : { left: 24 }),
                       top: -24,
                       whiteSpace: "nowrap",
                       fontFamily: fonte,
