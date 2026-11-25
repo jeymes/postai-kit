@@ -176,7 +176,11 @@ function semNarracao(p: { cenas?: Array<Record<string, unknown>> }) {
 }
 
 // O pedir_envio devolve um comando curl por arquivo; daqui só sai a URL assinada.
-const urlDoComando = (comando: string) => /'(https:\/\/[^']+)'\s*$/.exec(comando)?.[1];
+// Função declarada (não const): o envio do carrossel, que vem antes no arquivo,
+// também usa (25/11/2026: a const ainda não existia ali e o envio travava)
+function urlDoComando(comando: string) {
+  return /'(https:\/\/[^']+)'\s*$/.exec(comando)?.[1];
+}
 
 // Tenta 3 vezes (a rede da nuvem às vezes cai no meio de um vídeo grande) e,
 // se não der, diz o motivo do curl (antes só dizia "não consegui subir")
