@@ -144,7 +144,7 @@ if (peca.molde === "Carrossel") {
       ...(sintetico ? { sintetico: true } : {}),
     });
     console.log(`\nPronto: ${resposta}`);
-    console.log("Abra o Postaí, na tela do canal (Animação ou Canal dark), para aprovar ou recusar.");
+    console.log("Abra o Postaí, em Para aprovar (grupo Carrosséis), para aprovar ou recusar.");
     process.exit(0);
   } catch (erro) {
     console.error(`\n${erro instanceof Error ? erro.message : String(erro)}`);

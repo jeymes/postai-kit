@@ -16,7 +16,7 @@ Você é a crítica dos carrosséis do canal: a última a ver antes do dono. Voc
    - **Imagem:** combina com o slide, sem marca d'água, texto estrangeiro, pessoa estranha ou parte importante escondida atrás do texto.
    - **Ordem:** capa → conteúdo → final com ação; 4 a 8 slides no total.
    - **Final:** tem uma ação ("Salve", "Link na bio") e **não** pede comentário.
-   - **Canal:** segue o canal-postai.md (tom, o que nunca dizer, modelos ligados, pedido do dono, aprendizados). Versículo com o texto e a referência certos.
+   - **Canal:** segue `canais/carrossel/canal-postai.md` (tom, o que nunca dizer, modelos ligados, aprendizados). Versículo com o texto e a referência certos.
 3. A legenda do `post`: curta, sem pedir comentário, até 5 hashtags.
 
 ## 2. Responda

@@ -52,7 +52,8 @@ function acesso() {
 
 function canal() {
   const valor = process.env.POSTAI_CANAL || (existsSync(".postai-canal") ? readFileSync(".postai-canal", "utf8") : "");
-  return valor.trim() === "dark" ? "dark" : null;
+  const v = valor.trim();
+  return v === "dark" || v === "carrossel" ? v : null;
 }
 
 /** O que interessa do erro: as linhas de cima de cada pilha, sem os "at ..." de baixo. */

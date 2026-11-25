@@ -17,9 +17,9 @@ if (existsSync(PASSE)) {
   if (/^pta\.[A-Za-z0-9]+\.[A-Za-z0-9_-]+$/.test(passe)) process.env.POSTAI_CHAVE = passe;
 }
 
-// De qual canal é esta rotina: a Animação (padrão) ou o Canal dark. A rotina do
-// Canal dark grava "dark" no arquivo .postai-canal (ou POSTAI_CANAL=dark), e
-// todas as ferramentas dos canais passam a falar com ele.
+// De qual canal é esta rotina: a Animação (padrão), o Canal dark ou os
+// Carrosséis. A rotina grava "dark" ou "carrossel" no arquivo .postai-canal (ou
+// POSTAI_CANAL), e todas as ferramentas dos canais passam a falar com ele.
 const CANAL = (process.env.POSTAI_CANAL || (existsSync(".postai-canal") ? readFileSync(".postai-canal", "utf8") : "")).trim();
 const FERRAMENTAS_DOS_CANAIS = new Set([
   "ver_canal_animado",
@@ -61,7 +61,7 @@ export async function ferramenta(nome: string, args: Record<string, unknown> = {
       jsonrpc: "2.0",
       id: ++id,
       method: "tools/call",
-      params: { name: nome, arguments: CANAL === "dark" && FERRAMENTAS_DOS_CANAIS.has(nome) ? { ...args, canal: "dark" } : args },
+      params: { name: nome, arguments: (CANAL === "dark" || CANAL === "carrossel") && FERRAMENTAS_DOS_CANAIS.has(nome) ? { ...args, canal: CANAL } : args },
     }),
   });
   if (resposta.status === 401) throw new Error("O Postaí recusou a chave. Crie outra em Criar com o Claude > Conectar.");
