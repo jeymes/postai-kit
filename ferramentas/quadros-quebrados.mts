@@ -7,7 +7,7 @@
 // quadros) para algo parecido com o anterior. Um corte de cena não volta, então
 // não conta.
 //
-// Uso sozinho:  npx tsx ferramentas/quadros-quebrados.mts out/<nome>/video.mp4
+// Uso sozinho:  npm run quadros-quebrados -- out/<nome>/video.mp4
 import { spawnSync } from "node:child_process";
 import { mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -89,7 +89,7 @@ export function quadrosQuebrados(video: string): number[] {
 if (process.argv[1]?.endsWith("quadros-quebrados.mts")) {
   const video = process.argv[2];
   if (!video) {
-    console.error("Uso: npx tsx ferramentas/quadros-quebrados.mts out/<nome>/video.mp4");
+    console.error("Uso: npm run quadros-quebrados -- out/<nome>/video.mp4");
     process.exit(1);
   }
   const lista = quadrosQuebrados(video);

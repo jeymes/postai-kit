@@ -60,6 +60,40 @@ def escutar(whisper, amostras, taxa, idioma="pt"):
     ]
 
 
+# Nível da narração (25/11/2026): o Kokoro sai baixo e variando de voz para voz
+# (a crítica mediu -21,6 dB no vídeo de Salomão). Igualamos cada fala: os
+# trechos com voz ficam perto de -16 dB e o pico nunca passa de -1 dB (não estoura).
+ALVO_DB = -16.0
+PICO_MAX = 10 ** (-1.0 / 20)
+
+
+def igualar_volume(amostras, taxa):
+    a = np.asarray(amostras, dtype=np.float32)
+    if a.size == 0:
+        return a
+    janela = max(1, int(taxa * 0.05))
+    n = a.size // janela
+    if n == 0:
+        return a
+    rms = np.sqrt(np.mean(a[: n * janela].reshape(n, janela) ** 2, axis=1))
+    com_voz = rms[rms > max(rms.max() * 0.1, 1e-4)]
+    if com_voz.size == 0:
+        return a
+    atual = float(np.sqrt(np.mean(com_voz ** 2)))
+    ganho = (10 ** (ALVO_DB / 20)) / atual
+    # As pontas mais altas da fala passam do limite: arredonda só elas (limitador
+    # suave), sem baixar a fala toda. No máximo 6 dB de ponta arredondada.
+    pico = float(np.abs(a).max())
+    if pico * ganho > PICO_MAX * 2:
+        ganho = PICO_MAX * 2 / pico
+    a = a * ganho
+    joelho = 0.7
+    folga = PICO_MAX - joelho
+    alto = np.abs(a) > joelho
+    a[alto] = np.sign(a[alto]) * (joelho + folga * np.tanh((np.abs(a[alto]) - joelho) / folga))
+    return a
+
+
 def main():
     if sys.argv[1:] == ["--testar"]:
         kokoro, whisper = carregar()
@@ -78,6 +112,7 @@ def main():
             speed=fala.get("velocidade") or pedido.get("velocidade", 1.0),
             lang=LINGUA_DO_KOKORO.get(idioma, "pt-br"),
         )
+        amostras = igualar_volume(amostras, taxa)
         os.makedirs(os.path.dirname(fala["saida"]), exist_ok=True)
         sf.write(fala["saida"], amostras, taxa, subtype="PCM_16")
         resultado.append({"duracao": round(len(amostras) / taxa, 3), "palavras": escutar(whisper, amostras, taxa, idioma)})

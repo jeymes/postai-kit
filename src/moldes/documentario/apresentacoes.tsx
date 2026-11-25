@@ -468,6 +468,50 @@ function chegadas(pontos: Ponto[]) {
 }
 
 /**
+ * Onde fica o nome de cada lugar no mapa (25/11/2026: Samaria, Garizim e
+ * Jerusalém ficavam encostados). Tenta à direita do ponto (à esquerda perto da
+ * borda direita), depois do outro lado, acima e abaixo, e fica com o primeiro
+ * lado que não bate nos nomes já postos nem nos outros pontos (sem lado livre,
+ * o que menos encosta). Conta em pixels
+ * num mapa de 1470 x 980 (o tamanho comum na tela; basta para separar).
+ */
+export type LadoDoNome = "direita" | "esquerda" | "acima" | "abaixo";
+export function ladosDosNomes(rota: Ponto[], lugares: string[]): LadoDoNome[] {
+  const L = 1470;
+  const A = 980;
+  type Caixa = { x1: number; y1: number; x2: number; y2: number };
+  const bate = (a: Caixa, b: Caixa) => a.x1 < b.x2 + 8 && b.x1 < a.x2 + 8 && a.y1 < b.y2 + 6 && b.y1 < a.y2 + 6;
+  const pontos: Caixa[] = rota.map((p) => ({ x1: (p[0] / 100) * L - 15, y1: (p[1] / 100) * A - 15, x2: (p[0] / 100) * L + 15, y2: (p[1] / 100) * A + 15 }));
+  const postas: Caixa[] = [];
+  return rota.map((p, i) => {
+    const nome = lugares[i] ?? "";
+    const x = (p[0] / 100) * L;
+    const y = (p[1] / 100) * A;
+    const w = nome.length * 21 + 32;
+    const h = 54;
+    const caixa = (lado: LadoDoNome): Caixa =>
+      lado === "direita"
+        ? { x1: x + 24, y1: y - 24, x2: x + 24 + w, y2: y - 24 + h }
+        : lado === "esquerda"
+          ? { x1: x - 24 - w, y1: y - 24, x2: x - 24, y2: y - 24 + h }
+          : lado === "acima"
+            ? { x1: x - w / 2, y1: y - 28 - h, x2: x + w / 2, y2: y - 28 }
+            : { x1: x - w / 2, y1: y + 28, x2: x + w / 2, y2: y + 28 + h };
+    const ordem: LadoDoNome[] = p[0] > 70 ? ["esquerda", "direita", "acima", "abaixo"] : ["direita", "esquerda", "acima", "abaixo"];
+    // Quanto o nome encosta nos outros (0 = lado livre); sem lado livre, fica com o que menos encosta
+    const encosta = (lado: LadoDoNome) => {
+      const c = caixa(lado);
+      const area = (o: Caixa) => (bate(c, o) ? Math.max(1, (Math.min(c.x2, o.x2) - Math.max(c.x1, o.x1)) * (Math.min(c.y2, o.y2) - Math.max(c.y1, o.y1))) : 0);
+      return postas.reduce((t, o) => t + area(o), 0) + pontos.reduce((t, o, j) => t + (j === i ? 0 : area(o)), 0);
+    };
+    const notas = ordem.map(encosta);
+    const lado = ordem[notas.indexOf(Math.min(...notas))];
+    if (nome) postas.push(caixa(lado));
+    return lado;
+  });
+}
+
+/**
  * Mapa animado: o mapa inteiro (sem cortar), com zoom lento, e a rota na cor de
  * destaque se desenhando de um ponto ao outro; cada lugar ganha um ponto e o
  * nome quando a rota chega nele. Os pontos são em % da imagem (0,0 = canto de
@@ -492,6 +536,7 @@ export const MapaAnimado: React.FC<{
   const ponta = pontaDaRota(rota, progresso);
   const ate = chegadas(rota);
   const linha = rota.map((p) => p.join(",")).join(" ");
+  const lados = ladosDosNomes(rota, lugares);
   return (
     <AbsoluteFill style={{ backgroundColor: "#000", overflow: "hidden" }}>
       <Img src={arquivo(src)} style={{ width: "100%", height: "100%", objectFit: "cover", filter: `blur(40px) brightness(0.4) ${filtro === "none" ? "" : filtro}`, scale: "1.15" }} />
@@ -509,8 +554,8 @@ export const MapaAnimado: React.FC<{
             // era um pouco depois: o último ponto (a rota termina nele) ficava com o
             // nome quase invisível (25/11/2026: Jericó e Jerusalém sumiram do mapa)
             const chegou = interpolate(progresso, [ate[i] - 0.04, ate[i] - 0.001], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
-            // Perto da borda direita do mapa, o nome vai para o lado esquerdo do ponto
-            const aEsquerda = p[0] > 70;
+            // O lado do nome que não bate nos outros (perto da borda direita, à esquerda)
+            const lado = lados[i];
             const nome = lugares[i];
             return (
               <div key={i} style={{ position: "absolute", left: `${p[0]}%`, top: `${p[1]}%`, opacity: chegou }}>
@@ -519,8 +564,11 @@ export const MapaAnimado: React.FC<{
                   <div
                     style={{
                       position: "absolute",
-                      ...(aEsquerda ? { right: 24 } : { left: 24 }),
-                      top: -24,
+                      ...(lado === "direita"
+                        ? { left: 24, top: -24 }
+                        : lado === "esquerda"
+                          ? { right: 24, top: -24 }
+                          : { left: 0, translate: "-50% 0", top: lado === "acima" ? -82 : 28 }),
                       whiteSpace: "nowrap",
                       fontFamily: fonte,
                       fontWeight: 700,

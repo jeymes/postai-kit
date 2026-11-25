@@ -25,8 +25,10 @@ export const Fundo: React.FC<{ escuro?: boolean; children?: React.ReactNode }> =
 );
 
 /** Caminho de public/ ou URL completa */
+// Aceita "public/x.jpg" e "/x.jpg" como "x.jpg" (25/11/2026: "public/carrossel-convite/capa.jpg"
+// virava /public/public/... e dava 404 no render)
 export const arquivo = (caminho: string) =>
-  /^https?:\/\//.test(caminho) ? caminho : staticFile(caminho);
+  /^https?:\/\//.test(caminho) ? caminho : staticFile(caminho.replace(/^\.?\/?(public\/)+/, "").replace(/^\/+/, ""));
 
 /** Foto com cantos arredondados e um zoom lento (ken burns) */
 export const Foto: React.FC<{

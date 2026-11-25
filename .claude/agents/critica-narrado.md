@@ -37,7 +37,7 @@ de cada capítulo e dois no fim.
 source ferramentas/nuvem.sh && for t in <segundos>; do npx remotion ffmpeg -y -loglevel error -ss $t -i out/<arquivo>/video.mp4 -frames:v 1 -vf scale=640:-2 out/<arquivo>/critica-$t.jpg; done
 ```
 
-Meça o volume com `source ferramentas/nuvem.sh && npm run volume -- out/<arquivo>/video.mp4` (diz se a música está alta contra a voz).
+Meça o volume com `source ferramentas/nuvem.sh && npm run volume -- out/<arquivo>/video.mp4` (diz se a música está alta contra a voz). Conte os quadros em mosaico (piscando) com `npm run quadros-quebrados -- out/<arquivo>/video.mp4`: "Nenhum quadro quebrado." ou a lista dos quadros; o render já confere isso sozinho na nuvem.
 
 Abra (Read) todos. Reprove só por: quadro preto, quebrado ou congelado; cartão de capítulo ilegível ou com erro (a
 prévia não mostra o cartão); legenda fora do tempo da fala; duração mais de 20% longe da do canal; voz falhando ou

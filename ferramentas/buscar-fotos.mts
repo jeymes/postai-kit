@@ -584,8 +584,10 @@ async function buscarNoBanco(termo: string): Promise<Foto[]> {
       titulo: `${r.titulo || "sem título"} (banco, de ${r.fonte}${r.usadaPorEstaContaHaDias !== null ? `; esta conta usou há ${r.usadaPorEstaContaHaDias} dias` : ""})`,
       licenca: r.licenca,
     }))
-    // A de IA é quadrada: o vídeo recorta (o filtro de tamanho a tiraria do vídeo deitado)
-    .filter((f) => f.source === "banco-ia" || filtroDeTamanho(f));
+    // A de IA passa sem o filtro de tamanho (o vídeo recorta), mas a gerada EM PÉ
+    // (para um vídeo vertical) não entra no vídeo deitado: virava uma tira estreita
+    // com bordas desfocadas (crítica, 25/11/2026)
+    .filter((f) => (f.source === "banco-ia" ? !(deitadas && f.height > f.width) : filtroDeTamanho(f)));
 }
 
 async function buscar(termo: string): Promise<Foto[]> {
