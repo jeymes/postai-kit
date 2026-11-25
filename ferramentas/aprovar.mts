@@ -109,7 +109,8 @@ if (peca.molde === "Carrossel") {
   try {
     console.log(`1/3 Pedindo o envio ao Postaí (${slides.length} slides)`);
     const envio = JSON.parse(
-      await ferramenta("pedir_envio", { formato: "fotos", fotos: slides.map((s) => ({ tamanho: s.tamanho, tipo: s.tipo })) }),
+      // O pedir_envio de fotos recebe só o tamanho de cada uma, em bytes, na ordem
+      await ferramenta("pedir_envio", { formato: "fotos", fotos: slides.map((s) => s.tamanho) }),
     ) as { envioId: string; arquivos: Array<{ arquivo: string; comando: string }> };
     if (envio.arquivos.length !== slides.length) throw new Error(`O Postaí devolveu ${envio.arquivos.length} lugares para ${slides.length} slides.`);
     console.log("2/3 Subindo os slides");
