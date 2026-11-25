@@ -91,6 +91,67 @@ function usaImagemDeIa(valor: unknown): boolean {
   return false;
 }
 const sintetico = usaImagemDeIa(peca);
+
+// Carrossel de um canal (24/11/2026): os slides (slide-01.jpg...) sobem como um
+// post de fotos e vão para a tela do canal, com o "Pedir ajuste" como os vídeos.
+if (peca.molde === "Carrossel") {
+  const slides = info.arquivos.filter((a) => a.tipo === "image/jpeg" && /slide-\d+\.jpg$/.test(a.arquivo)).sort((x, y) => x.arquivo.localeCompare(y.arquivo));
+  const tituloDoPost = info.post?.titulo?.trim();
+  const legendaDoPost = info.post?.legenda?.trim();
+  if (slides.length < 2 || slides.length > 10) {
+    console.error(`O carrossel precisa de 2 a 10 slides (veio ${slides.length}). Rode antes: npm run renderizar -- ${caminho}`);
+    process.exit(1);
+  }
+  if (!tituloDoPost || !legendaDoPost) {
+    console.error('A peça precisa de "post": { "titulo", "legenda" }.');
+    process.exit(1);
+  }
+  try {
+    console.log(`1/3 Pedindo o envio ao Postaí (${slides.length} slides)`);
+    const envio = JSON.parse(
+      await ferramenta("pedir_envio", { formato: "fotos", fotos: slides.map((s) => ({ tamanho: s.tamanho, tipo: s.tipo })) }),
+    ) as { envioId: string; arquivos: Array<{ arquivo: string; comando: string }> };
+    if (envio.arquivos.length !== slides.length) throw new Error(`O Postaí devolveu ${envio.arquivos.length} lugares para ${slides.length} slides.`);
+    console.log("2/3 Subindo os slides");
+    envio.arquivos.forEach((a, i) => {
+      const url = urlDoComando(a.comando);
+      if (!url) throw new Error(`O Postaí devolveu um comando sem URL para ${a.arquivo}.`);
+      subir(url, slides[i].tipo, slides[i].arquivo);
+    });
+    // O pacote para a refação (o roteiro e as fotos): um ajuste não busca as imagens de novo
+    const pacote = montarPacote();
+    if (pacote) {
+      try {
+        const { url } = JSON.parse(await ferramenta("pedir_envio_do_pacote", { envioId: envio.envioId, tamanho: statSync(pacote).size })) as { url: string };
+        subir(url, "application/gzip", pacote);
+      } catch (erro) {
+        console.log(`  (o pacote da refação não foi guardado: ${erro instanceof Error ? erro.message : String(erro)}; um ajuste começaria do roteiro)`);
+      } finally {
+        rmSync(pacote, { force: true });
+      }
+    }
+    console.log("3/3 Mandando para aprovação");
+    const resposta = await ferramenta("por_para_aprovacao", {
+      envioId: envio.envioId,
+      titulo: tituloDoPost.slice(0, 100),
+      legenda: legendaDoPost,
+      origem: "animacao",
+      carrossel: true,
+      // O roteiro fica guardado para o dono pedir ajuste
+      roteiro: JSON.stringify(peca),
+      ...(substitui ? { substitui } : {}),
+      ...(duvida ? { duvida } : {}),
+      ...(sintetico ? { sintetico: true } : {}),
+    });
+    console.log(`\nPronto: ${resposta}`);
+    console.log("Abra o Postaí, na tela do canal (Animação ou Canal dark), para aprovar ou recusar.");
+    process.exit(0);
+  } catch (erro) {
+    console.error(`\n${erro instanceof Error ? erro.message : String(erro)}`);
+    process.exit(1);
+  }
+}
+
 const video = info.arquivos.find((a) => a.tipo.startsWith("video/"));
 const capa = info.arquivos.find((a) => a.tipo.startsWith("image/"));
 if (!video) {

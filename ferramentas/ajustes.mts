@@ -78,6 +78,12 @@ try {
     writeFileSync(arquivo, `${JSON.stringify(doPacote ?? a.roteiro, null, 2)}\n`);
     if (doPacote) console.log(`  pacote de volta: as fotos e a voz do vídeo já estão aqui (o narrar só refaz as cenas que mudarem)`);
     await ferramenta("mudar_ajuste", { corteId: a.corteId, status: "fazendo" });
+    // Carrossel (24/11/2026): não é vídeo; a equipe segue a parte do ajuste de rotinas/carrossel.md
+    const molde = (doPacote ?? (typeof a.roteiro === "string" ? JSON.parse(a.roteiro) : a.roteiro)) as { molde?: string };
+    if (molde?.molde === "Carrossel") {
+      console.log(`\nAJUSTE DE CARROSSEL ${a.corteId}\n  carrossel: ${a.titulo}\n  o dono pediu: ${a.pedido}\n  roteiro: ${arquivo}\n  É UM CARROSSEL (não é vídeo): siga a parte "Ajuste de um carrossel" de rotinas/carrossel.md (sem narrar nem prévia de vídeo).\n  ao terminar: npm run aprovar -- ${arquivo} --substitui ${a.corteId}`);
+      continue;
+    }
     console.log(`\nAJUSTE ${a.corteId}\n  vídeo: ${a.titulo}\n  o dono pediu: ${a.pedido}\n  roteiro: ${arquivo}\n  ao terminar: npm run aprovar -- ${arquivo} --substitui ${a.corteId}`);
   }
 } catch (erro) {
