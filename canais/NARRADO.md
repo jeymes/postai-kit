@@ -72,6 +72,7 @@ Conte o andamento de cada agente como sempre (`npm run andamento`). Antes de cad
    rotina, mesmo que um aprendizado antigo peça.
 
 Num **ajuste** (pedido pelo dono ou a refação que a crítica pediu), o roteiro vem em `conteudo/ajuste-<corteId>.json`.
+Se o `npm run ajustes` disser **"o dono anexou"**, abra cada anexo (imagem, ou quadros do vídeo) antes de mexer e mostre à pesquisadora, à roteirista e à crítica: é o que ele quer ver no vídeo.
 Se o `npm run ajustes` disser **"pacote de volta"**, as fotos e a voz do vídeo já estão nesta máquina: mude só o que foi
 pedido (texto com a roteirista e a checadora, imagem com a pesquisadora), NÃO busque de novo as fotos que não mudaram
 e rode o `narrar` normal (ele só refaz a voz das cenas que mudaram). Sem o pacote (vídeo antigo), busque as imagens e

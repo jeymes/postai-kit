@@ -7,10 +7,31 @@
 // Uso: npm run ajustes                          (baixa os pedidos)
 //      npm run ajustes -- --erro <corteId> "<o problema em palavras simples>"
 import { spawnSync } from "node:child_process";
-import { existsSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { exigirChave, ferramenta } from "./postai.ts";
+
+/** Baixa os anexos do pedido para conteudo/ajuste-<corteId>-anexos/ e devolve os caminhos. */
+async function baixarAnexos(corteId: string, anexos: Array<{ nome: string; tipo: string; url: string }>): Promise<string[]> {
+  if (!anexos.length) return [];
+  const pasta = join("conteudo", `ajuste-${corteId}-anexos`);
+  mkdirSync(pasta, { recursive: true });
+  const extensoes: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "video/mp4": "mp4", "video/quicktime": "mov" };
+  const caminhos: string[] = [];
+  for (const [i, anexo] of anexos.entries()) {
+    const destino = join(pasta, `anexo-${i + 1}.${extensoes[anexo.tipo] ?? "bin"}`);
+    try {
+      const r = await fetch(anexo.url);
+      if (!r.ok) throw new Error(`não baixou (${r.status})`);
+      writeFileSync(destino, Buffer.from(await r.arrayBuffer()));
+      caminhos.push(`${destino} (${anexo.tipo.startsWith("video/") ? "vídeo" : "imagem"})`);
+    } catch (erro) {
+      console.log(`  (o ${anexo.nome} não baixou: ${erro instanceof Error ? erro.message : String(erro)})`);
+    }
+  }
+  return caminhos;
+}
 
 /**
  * Traz de volta o pacote do vídeo (o roteiro narrado, as fotos e a voz que o
@@ -60,7 +81,14 @@ try {
   }
 
   const { ajustes } = JSON.parse(await ferramenta("ver_ajustes")) as {
-    ajustes: Array<{ corteId: string; titulo: string; pedido: string; roteiro: unknown; pacote?: string | null }>;
+    ajustes: Array<{
+      corteId: string;
+      titulo: string;
+      pedido: string;
+      roteiro: unknown;
+      pacote?: string | null;
+      anexos?: Array<{ nome: string; tipo: string; url: string }>;
+    }>;
   };
   if (ajustes.length === 0) {
     console.log("Nenhum ajuste pedido.");
@@ -78,13 +106,18 @@ try {
     writeFileSync(arquivo, `${JSON.stringify(doPacote ?? a.roteiro, null, 2)}\n`);
     if (doPacote) console.log(`  pacote de volta: as fotos e a voz do vídeo já estão aqui (o narrar só refaz as cenas que mudarem)`);
     await ferramenta("mudar_ajuste", { corteId: a.corteId, status: "fazendo" });
+    // O que o dono anexou para mostrar o que mudar (26/11/2026): imagens e vídeos
+    const anexos = await baixarAnexos(a.corteId, a.anexos ?? []);
+    const textoDosAnexos = anexos.length
+      ? `\n  o dono anexou (OLHE ANTES DE REFAZER; imagem: abra o arquivo; vídeo: tire quadros com npx remotion ffmpeg -ss <segundo> -i <arquivo> -frames:v 1 <quadro>.jpg e abra):\n${anexos.map((c) => `    - ${c}`).join("\n")}`
+      : "";
     // Carrossel (24/11/2026): não é vídeo; a equipe segue a parte do ajuste de rotinas/carrossel.md
     const molde = (doPacote ?? (typeof a.roteiro === "string" ? JSON.parse(a.roteiro) : a.roteiro)) as { molde?: string };
     if (molde?.molde === "Carrossel") {
-      console.log(`\nAJUSTE DE CARROSSEL ${a.corteId}\n  carrossel: ${a.titulo}\n  o dono pediu: ${a.pedido}\n  roteiro: ${arquivo}\n  É UM CARROSSEL (não é vídeo): siga a parte "Ajuste de um carrossel" de rotinas/carrossel.md (sem narrar nem prévia de vídeo).\n  ao terminar: npm run aprovar -- ${arquivo} --substitui ${a.corteId}`);
+      console.log(`\nAJUSTE DE CARROSSEL ${a.corteId}\n  carrossel: ${a.titulo}\n  o dono pediu: ${a.pedido}${textoDosAnexos}\n  roteiro: ${arquivo}\n  É UM CARROSSEL (não é vídeo): siga a parte "Ajuste de um carrossel" de rotinas/carrossel.md (sem narrar nem prévia de vídeo).\n  ao terminar: npm run aprovar -- ${arquivo} --substitui ${a.corteId}`);
       continue;
     }
-    console.log(`\nAJUSTE ${a.corteId}\n  vídeo: ${a.titulo}\n  o dono pediu: ${a.pedido}\n  roteiro: ${arquivo}\n  ao terminar: npm run aprovar -- ${arquivo} --substitui ${a.corteId}`);
+    console.log(`\nAJUSTE ${a.corteId}\n  vídeo: ${a.titulo}\n  o dono pediu: ${a.pedido}${textoDosAnexos}\n  roteiro: ${arquivo}\n  ao terminar: npm run aprovar -- ${arquivo} --substitui ${a.corteId}`);
   }
 } catch (erro) {
   console.error(erro instanceof Error ? erro.message : String(erro));
