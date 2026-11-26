@@ -105,7 +105,8 @@ abra de novo e confira que só a margem saiu.
 No modelo **Colagem** (o `estilo.modelo` do roteiro), em umas 1 a cada 3 cenas, olhe a imagem e marque
 `"detalhe": [x, y]` (em % da imagem, 0,0 = canto de cima à esquerda) no ponto que a fala cita: o rosto de quem fala,
 o objeto, a inscrição. Ele sai ampliado num recorte redondo com um círculo de marca-texto. Marque um ponto que dê
-para reconhecer ampliado 3 vezes (não um borrão).
+para reconhecer ampliado 3 vezes (não um borrão). Na Colagem a imagem aparece num recorte de papel menor que a tela (uns 70%),
+com retícula de impressão e um pouco apagada: prefira imagens com a figura grande e clara, sem detalhe miúdo.
 
 **Cena com `lugares` (mapa animado):** escolha um mapa antigo de domínio público onde **todos** os lugares
 aparecem, abra a imagem (Read) e ponha em `rota` onde fica cada lugar, em % da imagem, na mesma ordem:

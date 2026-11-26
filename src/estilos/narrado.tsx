@@ -9,6 +9,7 @@ import React from "react";
 import { AbsoluteFill, Img, random, staticFile, useCurrentFrame } from "remotion";
 import { z } from "zod";
 import { cores, fontes } from "../nucleo/marca";
+import { FundoDeJornal } from "../moldes/documentario/apresentacoes";
 
 // Os modelos do Canal dark (molde Documentario): cada um muda o tratamento da
 // imagem (filtro e texturas por cima), as letras, as cores e o ritmo. O dono
@@ -69,7 +70,11 @@ function fonteDa(letra: LetraDoNarrado): string | null {
  * filtro de ruído do navegador redesenhava tudo a cada quadro e o Pergaminho
  * renderizava 2,1x mais devagar que o Clássico (medido em 22/11/2026).
  */
-export const TexturaDoNarrado: React.FC<{ tipo: "papel" | "grao"; semente: number }> = ({ tipo, semente }) => (
+export const TexturaDoNarrado: React.FC<{ tipo: "papel" | "grao" | "jornal"; semente: number }> = ({ tipo, semente }) =>
+  // O jornal velho da mesa da Colagem (public/texturas/jornal.jpg)
+  tipo === "jornal" ? (
+    <FundoDeJornal />
+  ) : (
   <svg width="100%" height="100%">
     {tipo === "papel" ? (
       <filter id="papel-velho">
@@ -84,7 +89,7 @@ export const TexturaDoNarrado: React.FC<{ tipo: "papel" | "grao"; semente: numbe
     )}
     <rect width="100%" height="100%" filter={`url(#${tipo === "papel" ? "papel-velho" : "grao"})`} />
   </svg>
-);
+  );
 
 // O granulado: 6 quadros prontos (public/texturas/grao-N.webp) que se revezam.
 // Os 6 ficam montados e só o do quadro aparece: nenhum carrega no meio do vídeo
@@ -268,10 +273,11 @@ export function aparenciaDo(estilo?: EstiloDoNarrado): Aparencia {
           legenda: { tamanho: 36, caixa: false, noite: true },
         };
       case "colagem":
-        // Estilo reportagem de colagem: recortes de papel rasgado, fita e linha vermelha sobre jornal velho
+        // Colagem de explicação: recortes de papel rasgado colados um por cima do outro numa
+        // mesa de jornal, foto impressa (um pouco apagada, com retícula) e o vermelho só nos rabiscos
         return {
           ...BASE,
-          filtro: "contrast(1.08) saturate(0.85) sepia(0.15)",
+          filtro: "contrast(1.12) saturate(0.72) sepia(0.14) brightness(1.03)",
           Camadas: () => <Grao forca={0.1} />,
           fonteTitulo: fonteDa("moderna") ?? fontes.titulo,
           fonteTexto: fonteDa("maquina") ?? fontes.texto,

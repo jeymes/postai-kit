@@ -115,11 +115,18 @@ narre tudo. Depois prévia, crítica na prévia, renderize, crítica no vídeo p
 - **Fim:** a última cena fecha a pergunta do começo e puxa o próximo vídeo. `encerramento` com até 50 caracteres
   (ex.: "Inscreva-se para a parte 2") e `chamadaFinal` com a chamada do canal do `canal-postai.md` (até 90 caracteres,
   ex.: "Está lutando? Comente que a gente ora por você"): ela aparece no cartão final, acima do botão.
-- **Modelo Colagem (Colagem Viva):** quando o `estilo.modelo` é `colagem`, as cenas ganham peças de reportagem.
-  Em umas 1 a cada 3 cenas, a roteirista põe `palavra` (a palavra-chave da fala, até 24 letras, ex.: "FUGA",
-  "TRAIÇÃO"), que entra colada em letras recortadas de jornal; e a pesquisadora, ao escolher a imagem, marca
-  `detalhe` ([x, y] em % da imagem) no ponto que a fala cita (um rosto, um objeto, uma inscrição): ele sai ampliado
-  num recorte redondo, com o círculo de marca-texto e a seta. Não use `detalhe` em retrato `inteira`.
+- **Modelo Colagem (Colagem Viva):** quando o `estilo.modelo` é `colagem`, o vídeo vira uma colagem de papel: cada
+  cena cola a imagem num recorte rasgado (foto um pouco apagada, com retícula de impressão) **por cima** do recorte da
+  cena anterior, numa mesa de jornal velho com retalhos; o novo entra deslizando e assenta (1 a cada 3 cenas, chega em
+  tiras que se juntam), o anterior fica por baixo na sombra e o mais velho é arrancado da mesa. Nada se mistura:
+  só cena de vídeo ou de mapa (`rota`) entra misturando, como nos outros modelos. O capítulo é uma tira de papel preto
+  com o risco vermelho, e o `texto` vira uma etiqueta batida à máquina. O tempo de cada cena continua vindo da
+  narração (a voz é gravada antes). Peças opcionais (sem campo novo):
+  em umas 1 a cada 3 cenas, a roteirista põe `palavra` (a palavra-chave da fala, até 24 letras, ex.: "FUGA",
+  "TRAIÇÃO"), que entra colada em letras recortadas de jornal, sublinhada a caneta, no alto (do lado contrário ao do
+  `texto`); e a pesquisadora, ao escolher a imagem, marca `detalhe` ([x, y] em % da imagem) no ponto que a fala cita
+  (um rosto, um objeto, uma inscrição): ele sai ampliado num recorte redondo, com o círculo de marca-texto e a seta.
+  Não use `detalhe` em retrato `inteira`. As peças saem sozinhas no fim da cena, antes do próximo recorte.
 - **Pronúncia:** nomes estrangeiros e siglas em `pronuncia`. Termos comuns do grego e do hebraico já têm pronúncia no kit (`ferramentas/voz/pronuncias.ts`); o `npm run conferir` e o `npm run narrar` avisam palavra com cara de estrangeira sem pronúncia.
 - **Capa:** `capa.titulo` com **até 4 palavras** (saem grandes, em maiúsculas e com contorno), que dão curiosidade sem
   repetir o título do vídeo e sem mentir (ex.: "SÓ UMA PEDRA"); `destaque` na palavra mais forte (sai na cor de destaque

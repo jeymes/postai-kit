@@ -9,7 +9,7 @@ import { Legendas } from "../componentes/texto/Legendas";
 import { suave } from "../nucleo/animacao";
 import { cores, fontes } from "../nucleo/marca";
 import { duracaoDoMolde, QUADROS_DO_ENCERRAMENTO, quadrosDaFala, TEMPOS } from "./tempos";
-import { Giz, MapaAnimado, Recorte } from "./documentario/apresentacoes";
+import { CapituloDeColagem, EtiquetaDeColagem, Giz, MapaAnimado, Recorte, type RecorteDeBaixo } from "./documentario/apresentacoes";
 import { useConferirTexto } from "../componentes/conferir";
 import { loadFont as carregarBebas } from "@remotion/google-fonts/BebasNeue";
 
@@ -220,13 +220,17 @@ const FotoEmMovimento: React.FC<{
 };
 
 /** A imagem da cena do jeito do modelo: mapa com rota, recorte de papel, giz ou foto em tela cheia */
-const ImagemDaCena: React.FC<{ cena: Cena; indice: number; duracao: number; ap: Aparencia; parada?: boolean }> = ({
-  cena,
-  indice,
-  duracao,
-  ap,
-  parada,
-}) => {
+const ImagemDaCena: React.FC<{
+  cena: Cena;
+  indice: number;
+  duracao: number;
+  ap: Aparencia;
+  parada?: boolean;
+  /** Colagem: os recortes das cenas anteriores, que ficam por baixo do novo */
+  debaixo?: RecorteDeBaixo[];
+  /** Colagem: em que quadro do vídeo a cena começa */
+  inicio?: number;
+}> = ({ cena, indice, duracao, ap, parada, debaixo, inicio }) => {
   const foto = cena.foto as string;
   if (cena.rota)
     return (
@@ -247,6 +251,8 @@ const ImagemDaCena: React.FC<{ cena: Cena; indice: number; duracao: number; ap: 
         palavra={parada ? undefined : cena.palavra}
         fonte={ap.fonteTitulo}
         foco={cena.foco ? pontoDoFoco(cena.foco) : undefined}
+        debaixo={debaixo}
+        inicio={inicio}
       />
     );
   if (ap.apresentacao === "giz")
@@ -375,10 +381,32 @@ function comImagem(cenas: Cena[], indice: number): Cena {
   return cena;
 }
 
-const CenaDoDocumentario: React.FC<{ cena: Cena; indice: number; props: Documentario; ap: Aparencia }> = ({ indice, props, ap }) => {
+/**
+ * Colagem: as imagens das duas cenas anteriores ([duas atrás, a anterior]), que
+ * ficam por baixo do recorte novo (ele é colado por cima, sem misturar as fotos;
+ * também no começo de capítulo). Sem elas (cena de vídeo ou de mapa de um dos
+ * lados), a cena entra do jeito de sempre, misturando.
+ */
+function recortesDeBaixo(cenas: Cena[], indice: number): RecorteDeBaixo[] | undefined {
+  const daCena = (j: number): RecorteDeBaixo | undefined => {
+    if (j < 0) return undefined;
+    const c = comImagem(cenas, j);
+    if (!c.foto || c.video || c.rota) return undefined;
+    return { src: c.foto, indice: j, inteira: c.inteira, foco: c.detalhe || !c.foco ? undefined : pontoDoFoco(c.foco) };
+  };
+  const cena = comImagem(cenas, indice);
+  const anterior = daCena(indice - 1);
+  if (!cena.foto || cena.video || cena.rota || !anterior) return undefined;
+  const duasAtras = daCena(indice - 2);
+  return duasAtras ? [duasAtras, anterior] : [anterior];
+}
+
+const CenaDoDocumentario: React.FC<{ cena: Cena; indice: number; props: Documentario; ap: Aparencia; inicio?: number }> = ({ indice, props, ap, inicio }) => {
   const frame = useCurrentFrame();
   const cena = comImagem(props.cenas, indice);
   const duracao = quadrosDaFala(cena);
+  const colagem = ap.apresentacao === "recorte";
+  const debaixo = colagem ? recortesDeBaixo(props.cenas, indice) : undefined;
   // Dentro do capítulo, a foto nova se mistura com a anterior; no começo de capítulo, entra do preto
   const antes = indice > 0 && !cena.capitulo ? comImagem(props.cenas, indice - 1) : undefined;
   // A mesma imagem (cena sem foto que continua a anterior): troca direto. Misturar
@@ -396,14 +424,15 @@ const CenaDoDocumentario: React.FC<{ cena: Cena; indice: number; props: Document
       : Math.max(ENTRADA_DO_CAPITULO, ap.mistura);
   // A primeira cena já começa com a imagem (23/11/2026: o quadro 0 saía preto e a
   // miniatura tirada do começo ficava escura)
-  const fade = indice === 0 || entrada === 0 ? 1 : interpolate(frame, [0, entrada], [0, 1], { extrapolateRight: "clamp", easing: cinema });
+  // Na Colagem o recorte novo é colado por cima do anterior: nada de misturar
+  const fade = indice === 0 || entrada === 0 || debaixo ? 1 : interpolate(frame, [0, entrada], [0, 1], { extrapolateRight: "clamp", easing: cinema });
   // O cartão do 1º capítulo não abre o vídeo (26/11/2026): os primeiros segundos são
   // a imagem e a pergunta do gancho, e o cartão entra uns 3 s depois. Só o desenho
   // atrasa: o capítulo continua começando no 00:00 da descrição do YouTube
   const inicioDoCartao = indice === 0 ? Math.min(ATRASO_DO_PRIMEIRO_CAPITULO, Math.max(0, duracao - DURACAO_DO_CARTAO)) : 0;
   return (
     <AbsoluteFill style={{ backgroundColor: "#000" }}>
-      {anterior?.foto && frame < entrada && (
+      {anterior?.foto && frame < entrada && !debaixo && (
         <ImagemDaCena cena={anterior} indice={indice - 1} duracao={quadrosDaFala(anterior)} ap={ap} parada />
       )}
       <AbsoluteFill style={{ opacity: fade }}>
@@ -412,7 +441,7 @@ const CenaDoDocumentario: React.FC<{ cena: Cena; indice: number; props: Document
             <Video src={arquivo(cena.video)} muted loop objectFit="cover" style={{ width: "100%", height: "100%", filter: ap.filtro }} />
           </AbsoluteFill>
         ) : cena.foto ? (
-          <ImagemDaCena cena={cena} indice={indice} duracao={duracao} ap={ap} />
+          <ImagemDaCena cena={cena} indice={indice} duracao={duracao} ap={ap} debaixo={debaixo} inicio={inicio} />
         ) : (
           <FundoSemFoto destaque={ap.destaque} fundo={ap.fundo} />
         )}
@@ -421,10 +450,27 @@ const CenaDoDocumentario: React.FC<{ cena: Cena; indice: number; props: Document
         {/* Escurece as bordas e o pé, para a legenda e o texto lerem bem */}
         <AbsoluteFill style={{ background: "linear-gradient(180deg, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0) 30%, rgba(0,0,0,0) 60%, rgba(0,0,0,0.55) 100%)" }} />
       </AbsoluteFill>
-      {cena.texto && <TextoNaTela texto={cena.texto} inicio={cena.capitulo ? inicioDoCartao + 80 : 10} ap={ap} />}
+      {cena.texto &&
+        (colagem ? (
+          // Do lado oposto ao da palavra recortada (a palavra fica no alto, do lado da cena)
+          <EtiquetaDeColagem
+            texto={cena.texto}
+            inicio={cena.capitulo ? inicioDoCartao + 80 : 10}
+            fim={duracao}
+            fonte={ap.fonteTexto}
+            cor={ap.destaque}
+            direita={Boolean(cena.palavra) && indice % 2 === 0}
+          />
+        ) : (
+          <TextoNaTela texto={cena.texto} inicio={cena.capitulo ? inicioDoCartao + 80 : 10} ap={ap} />
+        ))}
       {cena.capitulo && (
         <Sequence from={inicioDoCartao} durationInFrames={DURACAO_DO_CARTAO} layout="none" name="Capítulo">
-          <Capitulo titulo={cena.capitulo} ap={ap} />
+          {colagem ? (
+            <CapituloDeColagem titulo={cena.capitulo} fonte={ap.fonteTitulo} peso={ap.pesoTitulo} cor={ap.destaque} textoClaro={ap.textoClaro} />
+          ) : (
+            <Capitulo titulo={cena.capitulo} ap={ap} />
+          )}
         </Sequence>
       )}
       {cena.narracao && (
@@ -529,12 +575,14 @@ const Encerramento: React.FC<{ texto: string; chamada?: string; ap: Aparencia; f
 export const Documentario: React.FC<Documentario> = (props) => {
   const total = duracaoDoMolde("Documentario", props);
   const ap = aparenciaDo(props.estilo);
+  // Em que quadro cada cena começa (a mesa da Colagem anda com o vídeo inteiro)
+  const inicios = props.cenas.reduce<number[]>((lista, cena, i) => [...lista, i === 0 ? 0 : lista[i - 1] + quadrosDaFala(props.cenas[i - 1])], []);
   return (
     <AbsoluteFill style={{ backgroundColor: "#000" }}>
       <Series>
         {props.cenas.map((cena, i) => (
           <Series.Sequence key={i} durationInFrames={quadrosDaFala(cena)}>
-            <CenaDoDocumentario cena={cena} indice={i} props={props} ap={ap} />
+            <CenaDoDocumentario cena={cena} indice={i} props={props} ap={ap} inicio={inicios[i]} />
           </Series.Sequence>
         ))}
         {props.encerramento && (
