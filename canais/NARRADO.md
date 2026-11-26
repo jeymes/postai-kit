@@ -135,7 +135,11 @@ do modelo ou em amarelo, quando a cor da marca não lê bem no fundo escuro; sem
   (`--rosto direita` → `lado: esquerda`). A descrição diz quem é **sem nome** (idade, rosto, barba, roupa da época),
   a **emoção do título** (lágrimas, medo, espanto, fé) e o que aparece atrás, ligado à história (ex.: "old bearded
   prophet in rough ancient robes, tears in his eyes, looking up in awe, a chariot of fire and horses in a desert
-  storm behind him"). Nada de pessoa real, marca, texto ou símbolo de outro canal. Uma tentativa, no máximo duas. Os que marcam um detalhe pedem `capa.marca` ({ x, y, raio } em % da CAPA): rode
+  storm behind him"). Nada de pessoa real, marca, texto ou símbolo de outro canal. Uma tentativa, no máximo duas.
+  **Ordem de prioridade:** se a seção "Capa dos vídeos" disser EM ORDEM DE PRIORIDADE, use sempre o 1º modelo. Passe
+  para o próximo da lista só se o de cima não der certo neste vídeo (o `--capa` falhou ou acabou a cota de imagens de
+  IA do dia, ou a crítica recusou a capa duas vezes) e conte no fim qual usou e por quê. Nunca pare o vídeo por causa
+  da capa. Os que marcam um detalhe pedem `capa.marca` ({ x, y, raio } em % da CAPA): rode
   `npm run renderizar -- conteudo/<arquivo>.json --capa` (só a capa, em segundos, sem voz), abra
   `out/<arquivo>/capa.jpg` e ajuste a marca até cair no detalhe que dá curiosidade (um rosto, um objeto, uma
   inscrição). Escolha o modelo que mais combina com a história deste vídeo.
