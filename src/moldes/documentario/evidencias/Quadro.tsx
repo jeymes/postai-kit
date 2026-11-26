@@ -138,7 +138,9 @@ export const QuadroDeEvidencias: React.FC<{
       {/* Luz de abajur: o meio mais claro, as bordas no escuro */}
       <AbsoluteFill style={{ background: "radial-gradient(ellipse 70% 65% at 50% 42%, rgba(255,250,240,0.05) 0%, rgba(0,0,0,0) 55%, rgba(0,0,0,0.45) 100%)" }} />
       {/* O pé mais escuro: a legenda lê bem até em cima de uma foto clara */}
-      <AbsoluteFill style={{ background: "linear-gradient(180deg, rgba(0,0,0,0) 72%, rgba(0,0,0,0.6) 100%)" }} />
+      {/* Faixa escura no pé (26/11/2026): a peça vizinha que cai atrás da legenda some
+          no escuro, como nos documentários; antes a ficha e a tese brigavam com a legenda */}
+      <AbsoluteFill style={{ background: "linear-gradient(180deg, rgba(0,0,0,0) 72%, rgba(8,7,6,0.8) 83%, rgba(8,7,6,0.92) 100%)" }} />
       {insert && (
         <Sequence from={insert.de} durationInFrames={insert.ate - insert.de + SOBRA_DO_INSERT} layout="none" name="Cinema mudo">
           <InsertDeCinema tipo={insert.tipo} cena={cenas[insert.cena]} duracao={insert.ate - insert.de} indice={insert.cena} ap={ap} />
@@ -509,15 +511,16 @@ const CartaoDaTese: React.FC<{ peca: Peca; frame: number; ap: Aparencia; base: R
 }) => {
   const texto = peca.titulo ?? "";
   const visivel = peca.digitaEm === undefined ? texto : batido(texto, frame, peca.digitaEm, 2.5);
-  const tamanho = texto.length > 70 ? 44 : 52;
+  // Maior (26/11/2026): na visão geral do quadro a pergunta quase não se lia
+  const tamanho = texto.length > 70 ? 62 : 74;
   return (
     <div style={base}>
       <div style={{ position: "absolute", inset: 0, backgroundColor: "#f0eee9", boxShadow: sombra, backgroundImage: pautado, backgroundPosition: "0 30px" }} />
-      <div style={{ position: "absolute", left: 30, top: 0, bottom: 0, width: 190, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: ap.fonteTitulo, fontSize: 330, color: "#2a2927", lineHeight: 1 }}>?</div>
+      <div style={{ position: "absolute", left: 40, top: 0, bottom: 0, width: 260, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: ap.fonteTitulo, fontSize: 470, color: "#2a2927", lineHeight: 1 }}>?</div>
       <div
         style={{
           position: "absolute",
-          left: 220,
+          left: 310,
           right: 54,
           top: 40,
           bottom: 40,

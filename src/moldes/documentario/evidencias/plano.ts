@@ -123,7 +123,7 @@ export const BORDA_DA_FOTO = 16;
 export const PE_DA_FOTO = 52;
 const FICHA = { w: 760, h: 430 };
 const ANO = { w: 440, h: 300 };
-const TESE = { w: 940, h: 460 };
+const TESE = { w: 1320, h: 640 };
 /** Espaço livre entre duas peças (os barbantes passam por ele) */
 const FOLGA = 80;
 
@@ -372,7 +372,7 @@ export function planejarQuadro(
   const areaDaIlha = Array.from({ length: ilhas }, () => 0);
   for (const r of rascunhos) if (r.ilha >= 0) areaDaIlha[r.ilha] += (r.w + FOLGA) * (r.h + FOLGA);
   const raioDa = areaDaIlha.map((a) => Math.sqrt(a / (Math.PI * 0.5)));
-  const raioDoMeio = teseId !== null ? 620 : 0;
+  const raioDoMeio = teseId !== null ? 820 : 0;
   const ancoras: { x: number; y: number }[] = [];
   if (ilhas === 1) ancoras.push({ x: teseId !== null ? raioDoMeio + raioDa[0] * 0.8 : 0, y: 0 });
   else {
