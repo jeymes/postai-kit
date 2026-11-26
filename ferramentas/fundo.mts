@@ -9,7 +9,7 @@
 // Depois: npm run esperar -- <o mesmo comando e argumentos>
 
 import { spawn } from "node:child_process";
-import { mkdirSync, openSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, openSync, readFileSync, statSync, unlinkSync, writeFileSync } from "node:fs";
 import { caminhoDoRegistro, COMANDOS_DE_FUNDO, rodando } from "./fundo-comum.ts";
 
 const [comando, ...args] = process.argv.slice(2);
@@ -21,6 +21,34 @@ if (!comando || !(COMANDOS_DE_FUNDO as readonly string[]).includes(comando)) {
 const registro = caminhoDoRegistro(comando, args);
 const espera = `npm run esperar -- ${[comando, ...args].join(" ")}`;
 mkdirSync("out", { recursive: true });
+
+// Um processo velho que travou (sem escrever no registro) ou que já terminou ("Pronto:") mas não
+// saiu não pode barrar o pedido novo: o esperar leria o registro antigo e daria PRONTO sem refazer
+// (26/11/2026, prévia velha mostrada à crítica). Nesses casos, encerra o velho e começa de novo.
+function velhoParado() {
+  if (!existsSync(registro)) return false;
+  const parado = (Date.now() - statSync(registro).mtimeMs) / 1000;
+  const terminou = /^Pronto:/m.test(readFileSync(registro, "utf8"));
+  return (terminou && parado > 20) || parado > 8 * 60;
+}
+if (rodando(registro) && velhoParado()) {
+  try {
+    const pid = Number(readFileSync(`${registro}.pid`, "utf8").trim());
+    try {
+      process.kill(-pid, "SIGKILL");
+    } catch {
+      process.kill(pid, "SIGKILL");
+    }
+  } catch {
+    // já saiu
+  }
+  try {
+    unlinkSync(`${registro}.pid`);
+  } catch {
+    // sem arquivo
+  }
+  console.log(`O ${comando} anterior estava parado: encerrado, começando de novo.`);
+}
 
 // Já está rodando: não começa outro (dois renders juntos estragam os arquivos)
 if (rodando(registro)) {
