@@ -2,7 +2,8 @@
 // tempo de cada palavra e a conferência do que a voz disse (Whisper). Com
 // "mascote": true (ou no molde Conversa) e o Rhubarb instalado, também a boca.
 // No Conversa, cada cena é a fala de um personagem ("quem"), com a voz dele em
-// "vozes" (ou a do elenco).
+// "vozes" (ou a do elenco), ou do NARRADOR (sem "quem", ou quem "narrador"), com a
+// voz do topo ("voz"); a fala do narrador não ganha boca (ninguém mexe a boca).
 //
 // O áudio vai para public/narracao/<peça>/ e o resto volta para o próprio
 // conteudo/<peça>.json, em "narracao" de cada cena. Só refaz a cena cujo
@@ -16,7 +17,9 @@ import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "no
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
 import { alinhar, falar, type Ouvida } from "./voz/texto.ts";
+import { palavrasDificeis, pronunciasDoVideo } from "./voz/pronuncias.ts";
 import { PYTHON, RHUBARB } from "./voz/caminhos.ts";
+import { falaDoNarrador } from "../src/moldes/tempos.ts";
 import { IDIOMAS_DA_VOZ, VOZES, VOZES_DO_ELENCO, vozNoIdioma, type IdiomaDaVoz, type Voz } from "../src/componentes/personagens/vozes.ts";
 
 const args = process.argv.slice(2);
@@ -48,7 +51,19 @@ const idioma: IdiomaDaVoz = IDIOMAS_DA_VOZ.includes(peca.idioma) ? peca.idioma :
 const doCatalogo: Voz | undefined = peca.voz ? VOZES[peca.voz as string] : undefined;
 const voz: string = vozNoIdioma(doCatalogo?.voz ?? peca.voz ?? "pf_dora", idioma);
 const velocidade: number = peca.velocidade ?? doCatalogo?.velocidade ?? 1;
-const pronuncia: Record<string, string> = peca.pronuncia ?? {};
+// As pronúncias do kit (grego e hebraico da Bíblia...) com as do roteiro por cima
+const pronuncia: Record<string, string> = pronunciasDoVideo(peca.pronuncia, idioma);
+{
+  const dificeis = palavrasDificeis(
+    cenas.map((c) => c.fala ?? "").filter(Boolean),
+    pronuncia,
+    idioma,
+  );
+  if (dificeis.length)
+    console.log(
+      `Palavras que a voz pode ler errado: ${dificeis.join(", ")}. Se alguma for estrangeira ou difícil, ponha em "pronuncia" como se lê (ex.: "splagchnizomai": "splanknízomai") ou troque por uma palavra em português.`,
+    );
+}
 const comMascote = peca.mascote === true || peca.molde === "Conversa";
 // Voz de cada personagem: a do elenco do roteiro (o nome de uma das VOZES ou
 // uma voz do Kokoro), senão a da Bia e da Lu, e por cima o que vier em "vozes".
@@ -68,6 +83,7 @@ const doRoteiro: Record<string, Voz> = Object.fromEntries(
   }),
 );
 const vozes: Record<string, Voz> = { ...VOZES_DO_ELENCO, ...doElenco, ...doRoteiro };
+// O narrador ("narrador" em "vozes" vale, se o roteiro puser; senão, a "voz" do topo)
 const vozDa = (cena: Cena) => (cena.quem && vozes[cena.quem]?.voz ? vozNoIdioma(vozes[cena.quem].voz, idioma) : voz);
 const velocidadeDa = (cena: Cena) => (cena.quem && vozes[cena.quem]?.velocidade) || velocidade;
 if (comMascote && !existsSync(RHUBARB))
@@ -129,6 +145,7 @@ function boca(audio: string) {
   return mouthCues.map((c) => ({ inicio: c.start, forma: c.value }));
 }
 
+const idsDoElenco = ((peca.elenco ?? []) as Array<{ id: string }>).map((p) => p.id);
 const avisos: string[] = [];
 pendentes.forEach((p, i) => {
   const { duracao, palavras } = resultados[i];
@@ -137,10 +154,12 @@ pendentes.forEach((p, i) => {
     audio: p.audio,
     duracaoSeg: duracao,
     legendas,
-    ...(comMascote && existsSync(RHUBARB) ? { boca: boca(p.audio) } : {}),
+    // Na Conversa, a fala do narrador não mexe a boca de ninguém: sem Rhubarb nela
+    ...(comMascote && existsSync(RHUBARB) && !(peca.molde === "Conversa" && falaDoNarrador(cenas[p.indice].quem, idsDoElenco)) ? { boca: boca(p.audio) } : {}),
     chave: p.chave,
   };
-  console.log(`  cena ${p.indice + 1}: ${duracao.toFixed(1)} s`);
+  const doNarrador = peca.molde === "Conversa" && falaDoNarrador(cenas[p.indice].quem, idsDoElenco);
+  console.log(`  cena ${p.indice + 1}${doNarrador ? " (narrador)" : ""}: ${duracao.toFixed(1)} s`);
   for (const d of diferencas) avisos.push(`  cena ${p.indice + 1}: ${d}`);
 });
 

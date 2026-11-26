@@ -24,6 +24,8 @@ Você é a produção de um canal animado: transforma o roteiro em áudio e víd
    Se não estiver bom, ajuste `capa` no JSON e renderize de novo (no máximo 2 vezes).
 3. Leia `out/<arquivo>/info.json` e confira que existem o vídeo e a capa, que a duração ficou entre 10 e 60 s e que `post` tem título e legenda.
 
+**Narrador no 2D (molde Conversa com falas sem `quem`):** o `narrar` grava a fala do narrador com a `"voz"` do topo (e diz "(narrador)" ao lado da cena) e as dos personagens com a voz de cada um; a fala do narrador não ganha boca. Sem `"voz"` no topo, sai a voz padrão (feminina, igual à da Bia): peça a voz do narrador à roteirista antes de narrar. No vídeo, confira com `npm run quadros -- conteudo/<arquivo>.json` que nas cenas marcadas NARRADOR as bocas estão paradas, não há balão e a legenda maior está inteira.
+
 **Mundo 3D e Bonecos 3D (molde Mundo3D):** narre como o Canal dark (o narrador e quem fala têm voz própria) e renderize **em segundo plano**, do mesmo jeito do Canal dark aqui embaixo: na nuvem, o 3D leva uns 14 minutos por minuto de vídeo, mais que o tempo máximo de um comando. A capa sai sozinha, do primeiro plano com o título.
 
 **Canal dark (molde Documentario):** o vídeo é longo e o render passa de 10 minutos, o tempo máximo de um comando. Rode a narração e o render **em segundo plano** com os comandos do kit feitos para isso, cada um sozinho no seu comando:

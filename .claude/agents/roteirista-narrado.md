@@ -44,7 +44,7 @@ seguindo as regras de forma do `NARRADO.md`:
   domínio público: ...", use essas obras e esses artistas na `busca` das cenas (ex.: `"Gustave Doré Samson"`,
   `"Rembrandt Samson"`), para o vídeo ter o mesmo tipo de imagem, tirado da fonte original.
 - `voz` e a duração vêm do `canal-postai.md`. Conte as palavras: uns 185 por minuto (10 minutos = umas 1.850 palavras). Com menos, a narração sai curta e o roteiro volta para você.
-- `pronuncia` para nomes estrangeiros.
+- `pronuncia` para nomes estrangeiros. O kit já sabe ler os termos mais comuns do grego e do hebraico da Bíblia (splagchnizomai, agape, koinonia, Yahweh, Elohim, shalom, hesed, Torah... em `ferramentas/voz/pronuncias.ts`); para outro termo transliterado, ponha em `pronuncia` como se lê em português (ex.: `"rhema": "rrêma"`) ou explique em português sem a palavra estrangeira. O `npm run conferir` avisa as palavras com cara de estrangeira que ainda estão sem pronúncia.
 - No modelo **Colagem** (o `estilo.modelo` do canal), em umas 1 a cada 3 cenas, `palavra`: a palavra-chave da fala
   (até 24 letras, ex.: "FUGA", "TRAIÇÃO", "1808"), que entra colada em letras recortadas de jornal.
 - `encerramento`, `chamadaFinal` (a chamada do canal, do `canal-postai.md`), `capa` (`titulo`, `destaque`; a `foto` a pesquisadora escolhe) e `post` (`titulo`, `legenda`). Se

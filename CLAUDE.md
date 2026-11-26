@@ -65,6 +65,7 @@ public/narracao/          áudio das narrações (do dono)
 | `Depoimento` | vídeo, 1 a 3 falas | o que clientes disseram, com estrelas (só depoimento real e autorizado) |
 | `Trend` | vídeo, 3 a 14 cortes | cortes na batida da música, zoom e clarão em cada corte |
 | `Narrado` | vídeo, 1 a 12 cenas | uma voz lê a `fala` de cada cena, com legenda animada e mascote opcional; cada cena dura o tempo da fala |
+| `Conversa` | vídeo, 4 a 12 falas | episódio animado 2D (chapado, liso, palito, giz…) com 1 ou 2 personagens do elenco; cada cena é a fala de um personagem (`quem`) ou do **narrador** (sem `quem`): a voz do narrador (`voz` no topo) conta por cima, a legenda sai maior e os personagens fazem a cena pelos `estados`, de boca fechada. Exemplo: `{ "fala": "A Lu nem piscou. Pegou o celular.", "estados": { "organizadora": { "pose": "celular", "expressao": "feliz" } } }` |
 | `Documentario` | vídeo longo deitado (1920×1080), até 150 cenas | canal narrado no YouTube: uma voz conta a história sobre pinturas, mapas e fotos em movimento, com capítulos, legenda e cartão final; capa 1280×720 e os capítulos para a descrição (ver `canais/NARRADO.md`) |
 | `Vitrine3D` | vídeo, 1 a 5 produtos | título em letras 3D e cada produto num cartão 3D girando, com nome e preço |
 | `Carrossel` | fotos 4:5, 2 a 10 | `modelo`: foto-frase, dicas, versiculo, post ou produto (o de antes); capa, itens e final. Exemplos em `conteudo/exemplo-carrossel-*.json`; o carrossel automático do canal segue `rotinas/carrossel.md` (agentes redatora-de-carrossel e critica-de-carrossel) |

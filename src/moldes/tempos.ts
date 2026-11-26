@@ -55,6 +55,14 @@ export function quadrosDaFala(cena: CenaNarrada) {
   return Math.max(60, Math.ceil(palavras * 0.36 * FPS) + TEMPOS.antesDaFala + TEMPOS.depoisDaFala);
 }
 
+/**
+ * Conversa: a fala é do NARRADOR (que não aparece) quando a cena não tem "quem" ou
+ * tem quem "narrador" e ninguém do elenco tem esse id. O mesmo jeito do Mundo3D
+ * (sem "quem" = narrador); o molde, o narrar, o conferir e o quadros usam isto.
+ */
+export const falaDoNarrador = (quem: string | undefined, idsDoElenco: string[]) =>
+  !quem || (quem === "narrador" && !idsDoElenco.includes("narrador"));
+
 /** Conversa: respiro antes da primeira fala, entre as falas e no fim */
 export const CONVERSA = { inicio: 20, entreFalas: 12, fim: 18, ctaFinal: 105, final: 150 } as const;
 /** O trecho do vídeo real do app no fim do Conversa (de 1 a 6 s), antes do cartão final */

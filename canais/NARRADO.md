@@ -119,7 +119,7 @@ narre tudo. Depois prévia, crítica na prévia, renderize, crítica no vídeo p
   "TRAIÇÃO"), que entra colada em letras recortadas de jornal; e a pesquisadora, ao escolher a imagem, marca
   `detalhe` ([x, y] em % da imagem) no ponto que a fala cita (um rosto, um objeto, uma inscrição): ele sai ampliado
   num recorte redondo, com o círculo de marca-texto e a seta. Não use `detalhe` em retrato `inteira`.
-- **Pronúncia:** nomes estrangeiros e siglas em `pronuncia`.
+- **Pronúncia:** nomes estrangeiros e siglas em `pronuncia`. Termos comuns do grego e do hebraico já têm pronúncia no kit (`ferramentas/voz/pronuncias.ts`); o `npm run conferir` e o `npm run narrar` avisam palavra com cara de estrangeira sem pronúncia.
 - **Capa:** `capa.titulo` com **até 4 palavras** (saem grandes, em maiúsculas e com contorno), que dão curiosidade sem
   repetir o título do vídeo e sem mentir (ex.: "SÓ UMA PEDRA"); `destaque` na palavra mais forte (sai na cor de destaque
 do modelo ou em amarelo, quando a cor da marca não lê bem no fundo escuro; sem `destaque`, a palavra mais longa);

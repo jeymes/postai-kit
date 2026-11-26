@@ -10,7 +10,7 @@
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, rmSync } from "node:fs";
 import { basename, join } from "node:path";
-import { cenasDoMolde, FPS, iniciosDasCenas } from "../src/moldes/tempos.ts";
+import { cenasDoMolde, falaDoNarrador, FPS, iniciosDasCenas } from "../src/moldes/tempos.ts";
 
 const caminho = process.argv.slice(2).find((arg) => !arg.startsWith("--"));
 if (!caminho || !existsSync(caminho)) {
@@ -65,7 +65,11 @@ cenas.forEach((cena, i) => {
     ["b", inicio + duracao / 2, "meio"],
     ["c", inicio + duracao - Math.min(8, duracao / 4), "fim"],
   ];
-  console.log(`Cena ${i + 1}${cena.quem ? ` (fala: ${cena.quem})` : " (narrador)"}: "${(cena.fala ?? "").slice(0, 70)}"`);
+  const idsDoElenco = ((peca.elenco ?? []) as Array<{ id: string }>).map((p) => p.id);
+  const doNarrador = molde === "Conversa" ? falaDoNarrador(cena.quem, idsDoElenco.length ? idsDoElenco : ["noiva", "organizadora"]) : !cena.quem;
+  console.log(`Cena ${i + 1}${doNarrador ? " (NARRADOR)" : ` (fala: ${cena.quem})`}: "${(cena.fala ?? "").slice(0, 70)}"`);
+  if (doNarrador && molde === "Conversa")
+    console.log("  NARRADOR: a voz conta por cima; NINGUÉM mexe a boca e não há balão; os personagens fazem o que a fala conta (pose e expressão); a legenda sai MAIOR que a dos personagens, inteira e legível, sem cobrir rosto");
   console.log(`  esperado no começo: ${descrever(estados) || "como na cena anterior"}`);
   if (cena.meio) console.log(`  esperado do meio em diante: ${descrever(cena.meio)}`);
   if (cena.luz) console.log("  LUZ DO AVISO: o celular aceso (dourado) tem que estar NA MÃO de alguém; luz sem celular é defeito");

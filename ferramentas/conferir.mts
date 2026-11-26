@@ -10,8 +10,10 @@
 // Uso: npm run conferir -- conteudo/<arquivo>.json
 import { existsSync, readFileSync } from "node:fs";
 import { cenariosFaltando } from "./cenarios-do-roteiro.ts";
-import { duracaoDoMolde, FPS, quadrosDaFala } from "../src/moldes/tempos.ts";
+import { duracaoDoMolde, falaDoNarrador, FPS, quadrosDaFala } from "../src/moldes/tempos.ts";
+import { VOZES, VOZES_DO_ELENCO } from "../src/componentes/personagens/vozes.ts";
 import { avisoDeDuracao, minutosDoCanal } from "./duracao-do-canal.ts";
+import { palavrasDificeis, pronunciasDoVideo } from "./voz/pronuncias.ts";
 
 const arquivo = process.argv.slice(2).find((arg) => !arg.startsWith("--"));
 if (!arquivo || !existsSync(arquivo)) {
@@ -65,6 +67,16 @@ function conferirVoz(quem: string, onde: string, fala = "") {
 }
 
 function resultado(): never {
+  // Palavra estrangeira ou difícil sem "pronuncia" (26/11/2026: "splagchnizomai" saiu
+  // entrecortado num vídeo postado; a conferência da voz não pega palavra estrangeira)
+  {
+    const doCanal = existsSync(".postai-idioma") ? readFileSync(".postai-idioma", "utf8").trim() : "";
+    const idioma = String((peca as Record<string, unknown>).idioma ?? (doCanal || "pt"));
+    const falas = ((peca.cenas ?? []) as Array<{ fala?: string }>).map((c) => c.fala ?? "").filter(Boolean);
+    const dificeis = palavrasDificeis(falas, pronunciasDoVideo((peca as Record<string, unknown>).pronuncia as Record<string, string> | undefined, idioma), idioma);
+    if (dificeis.length)
+      aviso("roteirista", `a voz pode ler errado: ${dificeis.join(", ")}. Ponha em "pronuncia" como se lê (ex.: "splagchnizomai": "splanknízomai") ou troque por português`);
+  }
   for (const texto of avisos) console.log(`AVISO  ${texto}`);
   for (const texto of erros) console.log(`ERRO   ${texto}`);
   if (erros.length) {
@@ -304,11 +316,41 @@ else if (tamanho(peca.titulo) > 50) erro("roteirista", `título com ${tamanho(pe
 // De 4 a 7 cenas (uns 30 s); até 12 quando o canal pede vídeo mais longo (ex.: 45 a 60 s)
 if (cenas.length < 4 || cenas.length > 12) erro("roteirista", `${cenas.length} cenas (de 4 a 7; até 12 se o canal pedir vídeo mais longo)`);
 else if (cenas.length > 7) aviso("roteirista", `${cenas.length} cenas: só se o canal pedir vídeo mais longo (ex.: 45 a 60 s)`);
+// O narrador (fala sem "quem", ou quem "narrador") conta a história por cima: a fala
+// dele pode ser um pouco maior que a de um personagem (até 20 palavras)
+const idsDoElenco = peca.elenco?.length ? peca.elenco.map((p) => p.id) : ["noiva", "organizadora"];
+const doNarrador = (cena: Cena) => falaDoNarrador(cena.quem, idsDoElenco);
 cenas.forEach((cena, i) => {
   const n = palavras(cena.fala);
-  if (n > 12) erro("roteirista", `cena ${i + 1}: fala com ${n} palavras (até 12)`);
+  const limite = doNarrador(cena) ? 20 : 12;
+  if (!cena.fala?.trim()) erro("roteirista", `cena ${i + 1}: sem fala`);
+  if (n > limite) erro("roteirista", `cena ${i + 1}: fala ${doNarrador(cena) ? "do narrador " : ""}com ${n} palavras (até ${limite}${doNarrador(cena) ? "" : "; o narrador, até 20"})`);
   conferirVoz("roteirista", `cena ${i + 1}`, cena.fala);
 });
+// ---- Narrador: a voz dele ----
+{
+  const doTopo = (peca as Record<string, unknown>).voz as string | undefined;
+  const narradas = cenas.filter(doNarrador).length;
+  if (narradas) {
+    if (!doTopo) aviso("roteirista", `${narradas} fala(s) do narrador sem "voz" no topo do roteiro: sai a voz padrão (feminina); ponha a voz do narrador que o canal diz (um id de src/componentes/personagens/vozes.ts)`);
+    else if (!VOZES[doTopo] && !/^[a-z]{2}_[a-z]+/.test(doTopo))
+      erro("roteirista", `"voz" do narrador "${doTopo}" não existe: use um id de src/componentes/personagens/vozes.ts (ex.: "masculina-12")`);
+    // Narrador com a mesma voz de um personagem: quem assiste não sabe quem está falando
+    const doElenco = new Map(
+      [
+        // Como no narrar: a voz da Bia e da Lu, a do elenco e, por cima, a de "vozes"
+        ...Object.entries(VOZES_DO_ELENCO).map(([id, v]) => [id, v.voz] as const),
+        ...((peca.elenco ?? []) as Array<{ id: string; voz?: string }>).filter((p) => p.voz).map((p) => [p.id, p.voz as string] as const),
+        ...Object.entries(((peca as Record<string, unknown>).vozes ?? {}) as Record<string, { voz?: string } | string>).map(
+          ([id, v]) => [id, typeof v === "string" ? v : (v.voz ?? "")] as const,
+        ),
+      ].filter(([id]) => cenas.some((c) => c.quem === id)),
+    );
+    const vozReal = (v?: string) => (v ? (VOZES[v]?.voz ?? v) : undefined);
+    for (const [id, v] of doElenco)
+      if (doTopo && vozReal(v) === vozReal(doTopo)) aviso("roteirista", `o narrador tem a mesma voz de "${id}": escolha outra voz para o narrador`);
+  }
+}
 
 // ---- CTAs: curtos, frase inteira, nunca @ ----
 const temContato = (texto = "") => /@\w|https?:|www\.|\.com\b|\.app\b|link na bio/i.test(texto);
@@ -355,7 +397,7 @@ for (const id of ids) {
   });
 }
 for (const cena of cenas) {
-  if (cena.quem && !ids.includes(cena.quem)) erro("roteirista", `"${cena.quem}" fala, mas não está no elenco (${ids.join(", ")})`);
+  if (cena.quem && !doNarrador(cena) && !ids.includes(cena.quem)) erro("roteirista", `"${cena.quem}" fala, mas não está no elenco (${ids.join(", ")})`);
   for (const id of Object.keys(cena.meio ?? {})) {
     if (!ids.includes(id)) erro("diretora-de-arte", `"${id}" em meio, mas não está no elenco (${ids.join(", ")})`);
   }
@@ -383,27 +425,14 @@ for (const cena of cenas) {
   });
 }
 
-// ---- Objetos e corpo: o celular, a luz do aviso e o sentado ----
-// Defeitos que a crítica deixava passar: luz acesa sem ninguém com o celular e
-// pessoa sentada sem a cama ou o sofá na frente (as pernas sumiam; o molde
-// agora põe de pé, mas o roteiro tem que pedir certo)
-{
-  const cenariosComFrente = new Set(["quarto", "sala", "carro", ...(((peca as Record<string, unknown>).cenariosProprios as Array<{ id: string; frente?: string }> | undefined) ?? []).filter((c) => c.frente).map((c) => c.id)]);
-  let cenario = (peca as Record<string, unknown>).cenario as string | undefined;
-  const daEsquerda = ids.length === 2 ? ids[0] : null;
-  cenas.forEach((cena, i) => {
-    cenario = (cena.cenario as string | undefined) ?? cenario;
-    const poses = [...Object.entries(cena.estados ?? {}), ...ids.filter((id) => cena[id]).map((id) => [id, cena[id] as Estado] as const)];
-    if (cena.luz && !poses.some(([, e]) => e?.pose === "celular" || e?.pose === "sentado"))
-      erro("diretora-de-arte", `cena ${i + 1}: tem "luz" mas ninguém está com o celular (pose celular ou sentado); a luz acenderia numa mão vazia`);
-    for (const [id, e] of [...poses, ...Object.entries(cena.meio ?? {})]) {
-      if (e?.pose !== "sentado") continue;
-      // No carro os dois bancos da frente servem: os dois podem sentar
-      if (!cenariosComFrente.has(cenario ?? "") || (id !== daEsquerda && cenario !== "carro"))
-        aviso("diretora-de-arte", `cena ${i + 1}: "${id}" sentado sem a cama, o sofá ou o painel na frente dele (só no quarto, na sala, no carro ou num cenário com frente, e só o da esquerda numa conversa de dois; no carro, os dois): o vídeo vai mostrar de pé com o celular`);
-    }
-  });
-}
+// ---- Objetos: o celular e a luz do aviso ----
+// Luz acesa sem ninguém com o celular (defeito que a crítica deixava passar). Quem
+// senta sem a cama, o sofá ou o painel na frente ganha uma poltrona (26/11/2026)
+cenas.forEach((cena, i) => {
+  const poses = [...Object.entries(cena.estados ?? {}), ...ids.filter((id) => cena[id]).map((id) => [id, cena[id] as Estado] as const)];
+  if (cena.luz && !poses.some(([, e]) => e?.pose === "celular" || e?.pose === "sentado"))
+    erro("diretora-de-arte", `cena ${i + 1}: tem "luz" mas ninguém está com o celular (pose celular ou sentado); a luz acenderia numa mão vazia`);
+});
 
 // ---- Narração: ou todas as falas, ou nenhuma ----
 const narradas = cenas.filter((c) => c.narracao).length;

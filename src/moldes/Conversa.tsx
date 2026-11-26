@@ -19,9 +19,9 @@ import { OBJETOS_DA_SOMBRA, Sombra } from "../componentes/personagens/Sombra";
 import { CelularAceso } from "../componentes/personagens/Boneco";
 import { LuzDoAviso } from "../componentes/efeitos/LuzDoAviso";
 import { FraseNaLuz } from "../componentes/cenas/FraseNaLuz";
-import { CONVERSA, estimarPalavras, FPS, quadrosDaFalaConversa, quadrosDoVideoDoApp } from "./tempos";
+import { CONVERSA, estimarPalavras, falaDoNarrador, FPS, quadrosDaFalaConversa, quadrosDoVideoDoApp } from "./tempos";
 import { useConferirTexto } from "../componentes/conferir";
-import { TODOS_ATRAS_DA_FRENTE } from "../componentes/cenarios/Cenarios";
+import { PoltronaNaFrente, TODOS_ATRAS_DA_FRENTE } from "../componentes/cenarios/Cenarios";
 import { TestaContexto } from "../componentes/personagens/MarcaNaTesta";
 import { ObjetoNaMaoContexto } from "../componentes/objetos/ObjetosDeApoio";
 import { textoDoQr } from "../componentes/midia/QrCode";
@@ -149,8 +149,10 @@ export const conversaSchema = z.object({
         quem: z
           .string()
           .optional()
-          .describe('O id de quem fala (do elenco). Sem "quem", fala o NARRADOR, que não aparece: os personagens fazem a cena pelos "estados" (pose e expressão), sem mexer a boca'),
-        fala: z.string().describe("O que o personagem diz: 1 frase curta"),
+          .describe(
+            'O id de quem fala (do elenco). Sem "quem" (ou com "narrador"), fala o NARRADOR, que não aparece: a voz dele ("voz" no topo) toca, a legenda sai maior e os personagens fazem a cena pelos "estados" (pose e expressão), sem mexer a boca',
+          ),
+        fala: z.string().describe("O que o personagem (ou o narrador) diz: 1 frase curta"),
         estados: z
           .record(z.string(), estadoSchema)
           .optional()
@@ -295,41 +297,6 @@ type Linha = ReturnType<typeof linhaDoTempo>;
 // episódios antigos, nos campos "noiva" e "organizadora".
 function estadoNaCena(cena: Cena, id: string): Estado | undefined {
   return cena.estados?.[id] ?? (id === "noiva" || id === "organizadora" ? cena[id] : undefined);
-}
-
-/**
- * A pose "sentado" corta as pernas no quadril e conta com a frente do cenário
- * (a cama do quarto, o sofá da sala ou a frente de um cenário da equipe) para
- * cobri-las, e só no lugar da esquerda numa conversa de dois. Fora disso, as
- * pernas sumiam no vídeo ("sem pernas", "dentro do sofá"): a pessoa fica de pé
- * com o celular na mão (a mesma ação, sem defeito).
- */
-export function cenasSemSentadoSolto(
-  cenas: Cena[],
-  cenarioDoRoteiro: string | undefined,
-  proprios: CenarioProprio[] | undefined,
-  elenco: Array<{ id: string }>,
-): Cena[] {
-  const daEsquerda = elenco.length === 2 ? elenco[0].id : null;
-  let cenario = cenarioDoRoteiro;
-  // No carro (os dois bancos da frente), os dois podem sentar
-  let todosSentam = false;
-  const seguro = (estado: Estado | undefined, id: string, temFrente: boolean) =>
-    estado?.pose === "sentado" && !(temFrente && (id === daEsquerda || todosSentam)) ? { ...estado, pose: "celular" as const } : estado;
-  return cenas.map((cena) => {
-    cenario = cena.cenario ?? cenario;
-    const temFrente = Boolean(resolverCenario(cenario, proprios).Frente);
-    todosSentam = TODOS_ATRAS_DA_FRENTE.includes(resolverCenario(cenario, proprios).nome);
-    const ajustar = (estados: Record<string, Estado> | undefined) =>
-      estados && Object.fromEntries(Object.entries(estados).map(([id, e]) => [id, seguro(e, id, temFrente) as Estado]));
-    return {
-      ...cena,
-      ...(cena.estados ? { estados: ajustar(cena.estados) } : {}),
-      ...(cena.meio ? { meio: ajustar(cena.meio) } : {}),
-      ...(cena.noiva ? { noiva: seguro(cena.noiva, "noiva", temFrente) } : {}),
-      ...(cena.organizadora ? { organizadora: seguro(cena.organizadora, "organizadora", temFrente) } : {}),
-    } as Cena;
-  });
 }
 
 // Expressões de fim ruim: o cartão final não comemora depois delas
@@ -543,12 +510,16 @@ const LUGAR: Lugar[] = [
 const SOZINHO: Lugar[] = [{ left: 270, espelhar: false, origem: "540px 1150px", semente: 0 }];
 const lugaresDo = (elenco: PersonagemDaCena[]) => (elenco.length === 1 ? SOZINHO : LUGAR);
 
+/** O móvel do cenário cobre as pernas de quem senta? (a cama/o sofá: o da esquerda numa conversa de dois; o carro: todos) */
+export function cobertoPeloMovel(temFrente: boolean, cenario: string, pessoas: number, indice: number) {
+  return temFrente && ((pessoas === 2 && indice === 0) || TODOS_ATRAS_DA_FRENTE.includes(cenario));
+}
+
 export const Conversa: React.FC<ConversaProps> = (props) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
-  const linha = linhaDoTempo(
-    cenasSemSentadoSolto(props.cenas, props.cenario, props.cenariosProprios as CenarioProprio[] | undefined, elencoDa(props)),
-  );
+  // Quem senta sem móvel não vira mais de pé (26/11/2026): ganha a poltrona (ver cobertoPeloMovel)
+  const linha = linhaDoTempo(props.cenas);
   const elenco = elencoDa(props);
   const lugares = lugaresDo(elenco);
   const naCena = (i: number) => linha[Math.min(Math.max(i, 0), linha.length - 1)].inicio;
@@ -573,7 +544,6 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
     origem = lugares[indice].origem;
   }
 
-  const legendas = linha.flatMap((l) => l.legendas);
   // Onde termina a conversa (e começa o cartão do CTA final)
   const ultima = linha[linha.length - 1];
   const fimDasFalas = ultima.inicio + quadrosDaFalaConversa(ultima.cena) + CONVERSA.entreFalas + CONVERSA.fim;
@@ -590,6 +560,17 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
   linha.forEach((l, i) => {
     if (l.inicio <= frame) falaAgora = i;
   });
+  // A legenda do NARRADOR (fala sem "quem") sai maior e um pouco mais alta (26/11/2026: o dono
+  // pediu o narrador no chapado, "com legenda grande"). A legenda só emenda entre falas do
+  // mesmo tipo: a página de uma fala de personagem nunca aparece no tamanho do narrador (e o
+  // contrário). Sem narrador no roteiro é um trecho só, com todas as falas: igual a antes.
+  const doNarrador = linha.map((l) => falaDoNarrador(l.cena.quem, elenco.map((p) => p.id)));
+  const narradorAgora = doNarrador[falaAgora];
+  let trechoDe = falaAgora;
+  let trechoAte = falaAgora;
+  while (trechoDe > 0 && doNarrador[trechoDe - 1] === narradorAgora) trechoDe--;
+  while (trechoAte < linha.length - 1 && doNarrador[trechoAte + 1] === narradorAgora) trechoAte++;
+  const legendas = linha.slice(trechoDe, trechoAte + 1).flatMap((l) => l.legendas);
   const lugarAgora = resolverCenario(cenarioNaFala(falaAgora), props.cenariosProprios as CenarioProprio[] | undefined);
   const { Cenario, Frente } = lugarAgora;
   // Dia ou noite agora: o da última fala que mudou (campo "noite"), senão o do estilo do canal
@@ -716,6 +697,19 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
               </CamadaDaFrente>
             </AbsoluteFill>
           )}
+          {/* Poltrona de quem está sentado sem a cama, o sofá ou o painel cobrindo as pernas */}
+          {elenco.map(({ id: quem, tipo }, indice) => {
+            if (tipo === "criatura") return null;
+            if (momentosDe(quem, linha).filter((m) => m.em <= frame).pop()?.pose !== "sentado") return null;
+            if (cobertoPeloMovel(Boolean(Frente), lugarAgora.nome, elenco.length, indice)) return null;
+            return (
+              <AbsoluteFill key={`poltrona-${quem}`} style={{ zIndex: 1 }}>
+                <CamadaDaFrente fundo={fundo}>
+                  <PoltronaNaFrente centro={lugares[indice].left + 270} subir={subirNoCartao} />
+                </CamadaDaFrente>
+              </AbsoluteFill>
+            );
+          })}
           {/* Os objetos de apoio de pé ao lado das pessoas (some quando entra o cartão do fim) */}
           {(!props.ctaFinal || frame < inicioDoCta) &&
             elenco.map(({ id: quem, tipo }, indice) => {
@@ -736,12 +730,13 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
                 />
               );
             })}
-          {/* No sofá não há cobertor: o colo e as pernas de quem está sentado ficam na frente do assento */}
-          {lugarAgora.nome === "sala" &&
-            elenco.map(({ id: quem, visual, tipo }, indice) => {
+          {/* No sofá e na poltrona não há cobertor: o colo e as pernas de quem está sentado ficam na frente do assento */}
+          {elenco.map(({ id: quem, visual, tipo }, indice) => {
               if (tipo === "criatura") return null;
               const agora = momentosDe(quem, linha).filter((m) => m.em <= frame).pop();
               if (agora?.pose !== "sentado") return null;
+              const naPoltrona = !cobertoPeloMovel(Boolean(Frente), lugarAgora.nome, elenco.length, indice);
+              if (lugarAgora.nome !== "sala" && !naPoltrona) return null;
               return (
                 <PernasNoSofa
                   key={`pernas-${quem}`}
@@ -833,7 +828,21 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
                 do Reels e do Shorts cobrem a legenda; ela sobe para a altura das pernas, numa caixa
                 clara para ler em cima dos personagens */}
             {/* emendarMs: entre uma fala e a outra a legenda não some (sumia ~0,5 s na troca: crítica, 26/11/2026) */}
-            <Legendas legendas={legendas} noite={escuro} caixa={!escuro} tamanho={estilo.legenda} largura={940} emendarMs={1500} style={{ top: 1420, padding: "0 70px" }} />
+            {/* A do narrador: 20% maior, numa faixa mais larga e um pouco mais alta (a caixa
+                maior termina no mesmo lugar, acima dos botões do app) */}
+            {narradorAgora ? (
+              <Legendas
+                legendas={legendas}
+                noite={escuro}
+                caixa={!escuro}
+                tamanho={Math.round(estilo.legenda * 1.2)}
+                largura={980}
+                emendarMs={1500}
+                style={{ top: 1385 - Math.round(estilo.legenda * 0.35), padding: "0 50px" }}
+              />
+            ) : (
+              <Legendas legendas={legendas} noite={escuro} caixa={!escuro} tamanho={estilo.legenda} largura={940} emendarMs={1500} style={{ top: 1420, padding: "0 70px" }} />
+            )}
           </Sequence>
         )}
         {linha.map(({ cena, inicio }, i) => (

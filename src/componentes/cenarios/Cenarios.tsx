@@ -207,6 +207,22 @@ export const SofaNaFrente: React.FC = () => (
   </svg>
 );
 
+/**
+ * Uma poltrona na frente de quem senta onde o cenário não tem móvel (26/11/2026: "sentou
+ * no sofá" na casa da sogra virava a pessoa em pé). O assento e os braços cobrem as pernas,
+ * na mesma altura do sofá da sala; centro = o meio do personagem na tela.
+ */
+export const PoltronaNaFrente: React.FC<{ centro: number; subir?: number }> = ({ centro, subir = 0 }) => (
+  <svg viewBox="0 0 1080 1920" width={1080} height={1920} style={{ position: "absolute", inset: 0, pointerEvents: "none", transform: `translateY(${-subir}px)` }}>
+    {/* Estreita o bastante para duas poltronas lado a lado (centros a 440 px) não se encostarem */}
+    <rect x={centro - 180} y={1410} width={360} height={160} rx={28} fill="#D98C5F" stroke={TRACO} strokeWidth={6} />
+    <rect x={centro - 210} y={1300} width={70} height={280} rx={32} fill="#C27A4F" stroke={TRACO} strokeWidth={6} />
+    <rect x={centro + 140} y={1300} width={70} height={280} rx={32} fill="#C27A4F" stroke={TRACO} strokeWidth={6} />
+    <rect x={centro - 170} y={1570} width={24} height={40} fill={TRACO} />
+    <rect x={centro + 146} y={1570} width={24} height={40} fill={TRACO} />
+  </svg>
+);
+
 /** Cozinha: azulejos, bancada com a pia e a geladeira à direita (de onde a criatura pode sair) */
 export const Cozinha: React.FC = () => (
   <svg viewBox="0 0 1080 1920" width={1080} height={1920} style={{ position: "absolute", inset: 0 }}>
