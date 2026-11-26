@@ -854,7 +854,8 @@ const CapaDeCinema: React.FC<CapaDocumentario> = ({ titulo, destaque, foto, lado
           alignItems: "center",
           textAlign: "center",
           fontFamily: letraDeCinema,
-          lineHeight: 0.92,
+          // 1.04 (era 0.92): o acento da linha grande (LÓ, É) encostava na linha de cima
+          lineHeight: 1.04,
           filter: "drop-shadow(0 8px 14px rgba(0,0,0,0.85)) drop-shadow(0 0 22px rgba(255,186,73,0.35))",
         }}
       >
@@ -866,7 +867,9 @@ const CapaDeCinema: React.FC<CapaDocumentario> = ({ titulo, destaque, foto, lado
           return (
             <div key={i} style={{ display: "flex", alignItems: "baseline", gap: "0.22em", fontSize: tamanho }}>
               {linha.map((p, j) => (
-                <span key={j} style={{ ...dourado, fontSize: forte && !ehForte(p) ? "0.5em" : "1em", letterSpacing: "0.01em" }}>
+                // A folga em cima (padding) leva o dourado até o acento: com a linha justa (0.92), o
+                // fundo recortado na letra parava na altura da maiúscula e o "É" saía sem acento
+                <span key={j} style={{ ...dourado, fontSize: forte && !ehForte(p) ? "0.5em" : "1em", letterSpacing: "0.01em", paddingTop: "0.22em", marginTop: "-0.22em" }}>
                   {p}
                 </span>
               ))}

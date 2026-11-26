@@ -127,8 +127,15 @@ do modelo ou em amarelo, quando a cor da marca não lê bem no fundo escuro; sem
   `foto` a imagem mais marcante. **Modelo da capa** (`capa.modelo`), um dos que a seção "Capa dos vídeos" do
   `canal-postai.md` permite (sem a seção, qualquer um): `classico` (só o título), `circulo` (círculo vermelho no
   detalhe), `seta` (seta do título até o detalhe), `zoom` (lupa com o detalhe ampliado), `dois-lados` (`foto` e
-  `foto2` lado a lado com VS e `rotulos`, ex.: antes e depois) ou `selo` (carimbo inclinado com `selo`, ex.:
-  "PROIBIDO"). Os que marcam um detalhe pedem `capa.marca` ({ x, y, raio } em % da CAPA): rode
+  `foto2` lado a lado com VS e `rotulos`, ex.: antes e depois), `selo` (carimbo inclinado com `selo`, ex.:
+  "PROIBIDO") ou `cinema` (só se a seção "Capa dos vídeos" permitir: ele gasta 1 imagem de IA). **Cinema:** o
+  personagem principal em close, feito com IA para a capa, e o título dourado de filme (2 a 4 palavras, o `destaque`
+  sai maior). Gere o retrato com `npm run buscar-fotos -- --pasta <a pasta do vídeo> --capa --rosto direita
+  capa="<descrição em inglês>"` e use `capa.foto` = essa imagem e `capa.lado` = o lado oposto ao rosto
+  (`--rosto direita` → `lado: esquerda`). A descrição diz quem é **sem nome** (idade, rosto, barba, roupa da época),
+  a **emoção do título** (lágrimas, medo, espanto, fé) e o que aparece atrás, ligado à história (ex.: "old bearded
+  prophet in rough ancient robes, tears in his eyes, looking up in awe, a chariot of fire and horses in a desert
+  storm behind him"). Nada de pessoa real, marca, texto ou símbolo de outro canal. Uma tentativa, no máximo duas. Os que marcam um detalhe pedem `capa.marca` ({ x, y, raio } em % da CAPA): rode
   `npm run renderizar -- conteudo/<arquivo>.json --capa` (só a capa, em segundos, sem voz), abra
   `out/<arquivo>/capa.jpg` e ajuste a marca até cair no detalhe que dá curiosidade (um rosto, um objeto, uma
   inscrição). Escolha o modelo que mais combina com a história deste vídeo.

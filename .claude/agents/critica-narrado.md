@@ -57,7 +57,7 @@ música cobrindo a voz. Se um quadro levantar dúvida, tire só esse de novo sem
 - legenda cobrindo o que importa na imagem (se for texto escrito embaixo da imagem, a correção é `"legendaNoAlto": true` na cena, para a pesquisadora), texto cortado ou com erro de escrita na língua do canal (a do roteiro; inglês e espanhol são normais);
 - cartão de capítulo ilegível ou com erro;
 - a mesma imagem em mais de 3 cenas;
-- a capa ilegível pequena (imagine do tamanho de um polegar), com o título cortado ou o destaque na palavra errada;
+- a capa ilegível pequena (imagine do tamanho de um polegar), com o título cortado ou o destaque na palavra errada; na capa `cinema`, também: o título por cima do rosto, rosto ou mãos deformados (dedos a mais, olhos tortos), a emoção diferente da do título, texto ou letra dentro da imagem, ou alguém com cara de pessoa famosa (CORRIGIR para a pesquisadora gerar de novo, uma vez);
 - duração mais de 20% longe da do canal.
 
 **Gosto (reprova se dois ou mais falharem):**

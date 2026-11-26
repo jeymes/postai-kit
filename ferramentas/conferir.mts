@@ -212,8 +212,11 @@ if (peca.molde === "Documentario") {
   else if (!existsSync(`public/${doc.capa.foto}`)) erro("pesquisadora-de-imagens", `a capa.foto ${doc.capa.foto} não existe em public/`);
   // Os modelos de capa: o que cada um precisa (antes, o erro só aparecia no fim do render, depois do vídeo inteiro)
   const modelo = doc.capa?.modelo;
-  if (modelo && !["classico", "circulo", "seta", "zoom", "dois-lados", "selo"].includes(modelo))
-    erro("pesquisadora-de-imagens", `capa.modelo "${modelo}" não existe (classico, circulo, seta, zoom, dois-lados ou selo)`);
+  if (modelo && !["classico", "circulo", "seta", "zoom", "dois-lados", "selo", "cinema"].includes(modelo))
+    erro("pesquisadora-de-imagens", `capa.modelo "${modelo}" não existe (classico, circulo, seta, zoom, dois-lados, selo ou cinema)`);
+  // Cinema: a foto é o retrato de IA feito para a capa (npm run buscar-fotos -- --capa), não uma pintura
+  if (modelo === "cinema" && doc.capa?.foto && !/capa/i.test(doc.capa.foto))
+    aviso("pesquisadora-de-imagens", 'capa.modelo cinema pede o retrato feito para a capa: npm run buscar-fotos -- --pasta <pasta> --capa --rosto <lado> capa="<descrição em inglês>" (ver "Capa" no canais/NARRADO.md)');
   if (modelo === "dois-lados") {
     if (!doc.capa?.foto2) erro("pesquisadora-de-imagens", "capa.modelo dois-lados precisa da capa.foto2");
     else if (!existsSync(`public/${doc.capa.foto2}`)) erro("pesquisadora-de-imagens", `a capa.foto2 ${doc.capa.foto2} não existe em public/`);

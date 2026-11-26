@@ -22,6 +22,8 @@
 //   final e o CRÉDITO vai obrigatório na legenda do post, anotado no CREDITOS.md),
 //   --fonte ia (gera a imagem com IA pelo Postaí: só cena de clima, sem nome de modelo, marca ou pessoa real;
 //   é também o último recurso sozinho quando nenhum acervo tem a cena; até 40 por dia; marca o vídeo como sintético),
+//   --capa [--rosto esquerda|direita] (capa "cinema" do Canal dark: gera 1 retrato de cinema do personagem
+//   principal com IA, deitado, o rosto no lado pedido; o termo é a descrição em inglês, sem nome; fora do banco),
 //   --fonte pixabay (fotos e ilustrações modernas do Pixabay, uso comercial sem crédito; passa pelo
 //   Postaí, que tem a chave: precisa do passe da rotina ou da POSTAI_CHAVE)
 // As opções de cada item ficam em _candidatos/<item>.json: a escolha (#n) pega exatamente a que
@@ -82,9 +84,15 @@ const flag = (nome: string) => {
 };
 
 const pasta = opcao("pasta") ?? "fotos";
-const fonte = opcao("fonte");
+// --capa (26/11/2026, capa "cinema" do Canal dark): 1 retrato de cinema do personagem
+// principal, gerado com IA, deitado, com o rosto no lado de --rosto (o título vai no
+// outro). Não vai para o banco geral: o rosto é desta capa, não de uma cena qualquer
+const paraCapa = flag("capa");
+const rostoDaCapa = opcao("rosto") === "esquerda" ? "esquerda" : "direita";
+const fontePedida = opcao("fonte");
+const fonte = paraCapa ? "ia" : fontePedida;
 const candidatos = flag("candidatos");
-const deitadas = flag("deitadas");
+const deitadas = flag("deitadas") || paraCapa;
 // Estas opções saem de args antes de os itens serem lidos (senão "--sem-banco" vira "item inválido")
 const semBanco = flag("sem-banco");
 const nichoPedido = opcao("nicho");
@@ -545,7 +553,7 @@ async function buscarNoOpenverse(termo: string, soFotos = true): Promise<Foto[]>
 // Antes da internet, procura no banco: o que outra equipe já escolheu (mesma
 // pintura, mesmo mapa) vem de lá, sem pedir de novo ao Commons. A imagem nova
 // que a equipe escolher (menos as do Unsplash) é guardada para as próximas.
-const usarBanco = Boolean(process.env.POSTAI_CHAVE) && !semBanco;
+const usarBanco = Boolean(process.env.POSTAI_CHAVE) && !semBanco && !paraCapa;
 const nicho = nichoPedido ?? nichoDoCanal();
 
 /** O nicho do canal (o tema ou o que divulga), do canal-postai.md, para o banco organizar */
@@ -669,7 +677,10 @@ async function gerarComIa(termo: string, pedidaDeProposito = fonte === "ia"): Pr
     throw new Error(`a imagem de IA precisa de uma cena descrita em inglês (o lugar, a luz, a época, o que aparece), com pelo menos 4 palavras. Veio só "${termo}". Ex.: "old stone altar on a desert hill at dawn, warm light"`);
   }
   const descricao = (pedidaDeProposito && !curto) || !nicho ? termo : `${termo}. A scene for a narrated documentary video about: ${nicho}`;
-  const resposta = JSON.parse(await ferramenta("gerar_imagem_com_ia", { descricao: descricao.slice(0, 500), formato: deitadas ? "deitada" : "em-pe" })) as {
+  const pedido = paraCapa
+    ? { descricao: termo.slice(0, 500), uso: "capa", rosto: rostoDaCapa }
+    : { descricao: descricao.slice(0, 500), formato: deitadas ? "deitada" : "em-pe" };
+  const resposta = JSON.parse(await ferramenta("gerar_imagem_com_ia", pedido)) as {
     id: string;
     url: string;
     largura: number;
