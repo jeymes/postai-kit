@@ -127,6 +127,32 @@ narre tudo. Depois prévia, crítica na prévia, renderize, crítica no vídeo p
   `texto`); e a pesquisadora, ao escolher a imagem, marca `detalhe` ([x, y] em % da imagem) no ponto que a fala cita
   (um rosto, um objeto, uma inscrição): ele sai ampliado num recorte redondo, com o círculo de marca-texto e a seta.
   Não use `detalhe` em retrato `inteira`. As peças saem sozinhas no fim da cena, antes do próximo recorte.
+- **Modelo Quadro de evidências (`evidencias`):** o vídeo inteiro acontece sobre UM quadro de cortiça escura, como
+  nas séries investigativas: cada cena prende uma peça (a foto em preto e branco com alfinete e o número da
+  evidência; o `texto` vira uma etiqueta batida à máquina) e a câmera viaja de peça em peça, sem corte. Cada capítulo
+  é uma ficha com o número romano, e as peças dele crescem em volta dela; no fim de cada capítulo (se a cena tiver
+  tempo) a câmera se afasta e mostra a rede, e no fim do vídeo mostra o quadro inteiro com o encerramento em glitch.
+  A mesma imagem no mesmo capítulo não é presa de novo: a câmera volta a ela e chega mais perto de outro pedaço.
+  O vermelho é só para o que importa. Campos opcionais (os outros modelos ignoram):
+  - `tese` (no topo do roteiro, até 90 caracteres): a pergunta central do vídeo, num cartão no meio do quadro; a
+    ficha de cada capítulo se liga a ela com barbante. Ponha sempre.
+  - `ligar` (na cena): o número da cena anterior (ou uma lista de até 4) cuja peça se liga a esta com barbante
+    vermelho, ex.: `"ligar": 5`. Só quando há ligação de verdade (a mesma pessoa, causa e efeito, o mesmo lugar),
+    umas 1 a cada 6 cenas. A mesma imagem em dois capítulos já se liga sozinha.
+  - `carimbo` (até 16 letras): carimbo vermelho batido na foto, com a tela tremendo: "ULTRASSECRETO", "INVESTIGADO",
+    "CONDENADO", "ARQUIVADO", "CONFISCADO"... Só quando a fala diz isso e é verdade; 1 a cada 8 ou 10 cenas.
+  - `ano` (até 12 caracteres, ex.: "1807", "30 d.C."): um cartão grande com o ano ao lado da foto. Cena que abre
+    capítulo com um ano no `texto` já ganha o cartão.
+  - `palavra` (até 24 letras): batida à máquina numa tira de papel na foto e sublinhada em vermelho (1 a cada 4 cenas).
+  - `detalhe` ([x, y] em % da imagem): um círculo vermelho tremido se desenha nele e a câmera chega bem perto.
+  - `insert`: a cena vira um trecho de cinema mudo (a tela fecha em íris, entra um filme sépia com grão, riscos e
+    o projetor tremendo, e a íris abre de volta no quadro): `"mapa"` (com a `rota`; com a foto de um mapa, a rota
+    se desenha nele; sem foto, num mapa desenhado), `"intertitulo"` (o `texto` da cena, curto, numa moldura dupla de
+    filme mudo) ou `"acao"` com `silhuetas` (até 4 de: pessoa, soldado, cavalo, navio, carro, canhao), figuras
+    chapadas em preto atravessando a tela, desenhadas a 12 quadros por segundo; o canhão dá um tiro (clarão e
+    fumaça, nada de violência). Cena com `rota` já vira o mapa sozinha. No máximo 1 insert a cada 8 cenas.
+  Sons baixinhos acompanham (máquina de escrever, carimbo, caneta, câmera, projetor). Imagens: fotos de arquivo,
+  pinturas, gravuras, documentos e mapas; nada de rosto gerado por IA nas peças.
 - **Pronúncia:** nomes estrangeiros e siglas em `pronuncia`. Termos comuns do grego e do hebraico já têm pronúncia no kit (`ferramentas/voz/pronuncias.ts`); o `npm run conferir` e o `npm run narrar` avisam palavra com cara de estrangeira sem pronúncia.
 - **Capa:** `capa.titulo` com **até 4 palavras** (saem grandes, em maiúsculas e com contorno), que dão curiosidade sem
   repetir o título do vídeo e sem mentir (ex.: "SÓ UMA PEDRA"); `destaque` na palavra mais forte (sai na cor de destaque

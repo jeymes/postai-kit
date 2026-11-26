@@ -14,3 +14,9 @@ JPEG 1920x1080, para as fibras não borrarem:
 
     npx remotion still TexturaDoNarrado out/jornal.png --props='{"tipo":"jornal","semente":0}' --image-format=png
     npx remotion ffmpeg -i out/jornal.png -q:v 3 public/texturas/jornal.jpg
+
+A cortiça escura do Quadro de evidências (26/11/2026) é um ladrilho de 1024x1024
+que emenda sem costura (o quadro repete ele em volta da câmera):
+
+    npx remotion still TexturaDoNarrado out/cortica.png --props='{"tipo":"cortica","semente":0}' --image-format=png --width=1024 --height=1024
+    npx remotion ffmpeg -i out/cortica.png -q:v 3 public/texturas/cortica.jpg

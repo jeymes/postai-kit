@@ -47,6 +47,14 @@ seguindo as regras de forma do `NARRADO.md`:
 - `pronuncia` para nomes estrangeiros. O kit já sabe ler os termos mais comuns do grego e do hebraico da Bíblia (splagchnizomai, agape, koinonia, Yahweh, Elohim, shalom, hesed, Torah... em `ferramentas/voz/pronuncias.ts`); para outro termo transliterado, ponha em `pronuncia` como se lê em português (ex.: `"rhema": "rrêma"`) ou explique em português sem a palavra estrangeira. O `npm run conferir` avisa as palavras com cara de estrangeira que ainda estão sem pronúncia.
 - No modelo **Colagem** (o `estilo.modelo` do canal), em umas 1 a cada 3 cenas, `palavra`: a palavra-chave da fala
   (até 24 letras, ex.: "FUGA", "TRAIÇÃO", "1808"), que entra colada em letras recortadas de jornal.
+- No modelo **Quadro de evidências** (`evidencias`): ponha a `tese` no topo (a pergunta central do vídeo, até 90
+  caracteres) e, nas cenas, com moderação: `ligar` (o número da cena anterior que se liga a esta, ou uma lista; só
+  ligação de verdade, 1 a cada 6 cenas), `carimbo` (ULTRASSECRETO, INVESTIGADO, CONDENADO, ARQUIVADO..., só se for
+  verdade e a fala disser; 1 a cada 8 a 10 cenas), `ano` (o ano que vira cartão, quando a data importa),
+  `palavra` (1 a cada 4 cenas) e no máximo 1 `insert` de cinema mudo a cada 8 cenas: `"intertitulo"` com um
+  `texto` curto (uma frase de filme mudo), `"acao"` com `silhuetas` (pessoa, soldado, cavalo, navio, carro, canhao)
+  para uma cena de movimento (viagem, marcha, fuga, batalha sem violência) ou `"mapa"` com a `rota`. Detalhes em
+  "Modelo Quadro de evidências" no `canais/NARRADO.md`.
 - `encerramento`, `chamadaFinal` (a chamada do canal, do `canal-postai.md`), `capa` (`titulo`, `destaque`; a `foto` a pesquisadora escolhe) e `post` (`titulo`, `legenda`). Se
   alguma foto veio do Unsplash, o fim da legenda leva o crédito de cada uma (ex.: `Fotos: Ana Souza e Lee Park no
   Unsplash.`); o `npm run conferir` confere.

@@ -26,13 +26,15 @@ export const Legendas: React.FC<{
   peso?: number;
   destaque?: string;
   textoNoDestaque?: string;
+  /** Noite: a cor das palavras que não estão sendo faladas (padrão: branco) */
+  corDoTexto?: string;
   /**
    * Silêncio (ms) entre uma página e a próxima em que a legenda continua na tela: entre as
    * falas de uma conversa ela não pisca. Sem isso (0), some 0,7 s depois da última palavra.
    */
   emendarMs?: number;
   style?: React.CSSProperties;
-}> = ({ legendas, atraso = 0, tamanho = 76, caixa = false, largura = 940, noite = false, fonte, peso, destaque, textoNoDestaque, emendarMs = 0, style }) => {
+}> = ({ legendas, atraso = 0, tamanho = 76, caixa = false, largura = 940, noite = false, fonte, peso, destaque, textoNoDestaque, corDoTexto = "#FFFFFF", emendarMs = 0, style }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const medida = useConferirTexto<HTMLDivElement>("legenda");
@@ -84,7 +86,7 @@ export const Legendas: React.FC<{
                 color: noite
                   ? falando
                     ? (destaque ?? "#F5C94A")
-                    : "#FFFFFF"
+                    : corDoTexto
                   : falando
                     ? (textoNoDestaque ?? cores.textoNoDestaque)
                     : cores.texto,

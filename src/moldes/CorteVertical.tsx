@@ -40,7 +40,8 @@ export const CorteVertical: React.FC<CorteVertical> = (props) => {
     ...props,
     legendas: false,
     encerramento: undefined,
-    cenas: props.cenas.map((cena) => ({ ...cena, capitulo: undefined })),
+    // Sem capítulo e sem barbante para cena de fora do trecho (o número de "ligar" é do vídeo longo)
+    cenas: props.cenas.map((cena) => ({ ...cena, capitulo: undefined, ligar: undefined })),
   };
   const entrada = interpolate(frame, [0, 12], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
   const medida = useConferirTexto<HTMLDivElement>("titulo");

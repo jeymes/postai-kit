@@ -29,6 +29,12 @@ export const SONS = {
   passos: { volume: 0.5, quadros: 60 },
   rangido: { volume: 0.45, quadros: 42 },
   estalo: { volume: 0.75, quadros: 36 },
+  // Os do Quadro de evidências (npm run sons:evidencias): baixinhos, por baixo da voz
+  datilografia: { volume: 0.2, quadros: 42 },
+  carimbo: { volume: 0.42, quadros: 21 },
+  risco: { volume: 0.2, quadros: 18 },
+  whoosh: { volume: 0.16, quadros: 27 },
+  projetor: { volume: 0.13, quadros: 120 },
 } as const;
 
 export type TipoSom = keyof typeof SONS;

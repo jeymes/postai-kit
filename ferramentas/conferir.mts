@@ -87,6 +87,56 @@ function resultado(): never {
   process.exit(0);
 }
 
+/**
+ * Os campos do modelo Quadro de evidências (todos opcionais: nos outros modelos o
+ * molde não os usa). Confere o formato, para o render não parar no meio.
+ */
+function conferirQuadroDeEvidencias(doc: Record<string, unknown>, cenas: Record<string, unknown>[]) {
+  const modelo = (doc.estilo as { modelo?: string } | undefined)?.modelo;
+  const quadro = modelo === "evidencias";
+  const INSERTS = ["mapa", "intertitulo", "acao"];
+  const SILHUETAS = ["pessoa", "soldado", "cavalo", "navio", "carro", "canhao"];
+  if (doc.tese !== undefined && (typeof doc.tese !== "string" || !doc.tese.trim() || tamanho(doc.tese) > 90))
+    erro("roteirista-narrado", "tese: a pergunta central do vídeo, em texto de até 90 caracteres");
+  let inserts = 0;
+  let carimbos = 0;
+  cenas.forEach((c, i) => {
+    const n = i + 1;
+    if (c.ligar !== undefined) {
+      const lista = Array.isArray(c.ligar) ? c.ligar : [c.ligar];
+      const ok = lista.length >= 1 && lista.length <= 4 && lista.every((x) => Number.isInteger(x) && (x as number) >= 1 && (x as number) < n);
+      if (!ok) erro("roteirista-narrado", `cena ${n}: ligar precisa ser o número de uma cena ANTERIOR (1 a ${n - 1}) ou uma lista de até 4, ex.: 3 ou [3, 7]`);
+    }
+    if (c.carimbo !== undefined) {
+      carimbos++;
+      if (typeof c.carimbo !== "string" || !c.carimbo.trim() || tamanho(c.carimbo) > 16) erro("roteirista-narrado", `cena ${n}: carimbo é uma palavra curta, até 16 letras (ex.: "ULTRASSECRETO")`);
+    }
+    if (c.ano !== undefined && (typeof c.ano !== "string" || !c.ano.trim() || tamanho(c.ano) > 12))
+      erro("roteirista-narrado", `cena ${n}: ano é texto curto, até 12 caracteres (ex.: "1807" ou "30 d.C.")`);
+    if (c.insert !== undefined) {
+      inserts++;
+      if (typeof c.insert !== "string" || !INSERTS.includes(c.insert)) erro("roteirista-narrado", `cena ${n}: insert "${String(c.insert)}" não existe (mapa, intertitulo ou acao)`);
+      else if (c.insert === "mapa" && !Array.isArray(c.rota)) erro("roteirista-narrado", `cena ${n}: insert mapa precisa da rota (os pontos do caminho)`);
+      else if (c.insert === "intertitulo" && !c.texto) aviso("roteirista-narrado", `cena ${n}: intertitulo sem texto: sai a 1ª frase da fala (melhor pôr um texto curto)`);
+    } else if (Array.isArray(c.rota)) inserts++;
+    if (c.silhuetas !== undefined) {
+      const lista = c.silhuetas;
+      if (!Array.isArray(lista) || !lista.length || lista.length > 4 || !lista.every((x) => typeof x === "string" && SILHUETAS.includes(x)))
+        erro("roteirista-narrado", `cena ${n}: silhuetas é uma lista de 1 a 4 entre ${SILHUETAS.join(", ")}`);
+      else if (c.insert !== "acao") aviso("roteirista-narrado", `cena ${n}: silhuetas só aparecem com "insert": "acao"`);
+    }
+    if (c.detalhe !== undefined) {
+      const d = c.detalhe;
+      if (!(Array.isArray(d) && d.length === 2 && d.every((x) => typeof x === "number" && x >= 0 && x <= 100))) erro("pesquisadora-de-imagens", `cena ${n}: detalhe é [x, y] em % da imagem (0 a 100)`);
+    }
+    if (c.palavra !== undefined && (typeof c.palavra !== "string" || tamanho(c.palavra) > 24)) erro("roteirista-narrado", `cena ${n}: palavra com até 24 letras`);
+  });
+  if (!quadro) return;
+  if (!doc.tese) aviso("roteirista-narrado", "Quadro de evidências sem tese: o cartão da pergunta central não aparece no meio do quadro");
+  if (inserts > Math.ceil(cenas.length / 8)) aviso("roteirista-narrado", `${inserts} trechos de cinema mudo (insert ou rota): o ideal é no máximo 1 a cada 8 cenas`);
+  if (carimbos > Math.ceil(cenas.length / 8)) aviso("roteirista-narrado", `${carimbos} carimbos: o ideal é 1 a cada 8 ou 10 cenas (o vermelho só no que importa)`);
+}
+
 // ---- Documentario (Canal dark): a forma, por código. Os fatos ficam com a checadora ----
 if (peca.molde === "Documentario") {
   type CenaLonga = { fala?: string; foto?: string; video?: string; busca?: string; capitulo?: string; texto?: string; narracao?: { duracaoSeg?: number } };
@@ -246,6 +296,7 @@ if (peca.molde === "Documentario") {
         erro("roteirista-narrado", `falta o crédito do Unsplash na legenda do post: "${colunas[5]}" (foto ${colunas[1]})`);
     }
   }
+  conferirQuadroDeEvidencias(peca as Record<string, unknown>, longas as unknown as Record<string, unknown>[]);
   const textoTodo = JSON.stringify({ ...doc, cenas: longas.map(({ narracao: _n, ...resto }) => resto) });
   if (/sua ?marca|@suamarca|lorem ipsum/i.test(textoTodo)) erro("roteirista-narrado", 'texto de exemplo ("Sua Marca") no roteiro');
   console.log(`Documentario: ${longas.length} cenas, ${total} palavras (alvo ~${alvo}), ${capitulos.length} capítulos, ${usos.size} imagens.`);

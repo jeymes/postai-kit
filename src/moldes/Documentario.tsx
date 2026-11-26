@@ -11,6 +11,8 @@ import { cores, fontes } from "../nucleo/marca";
 import { duracaoDoMolde, QUADROS_DO_ENCERRAMENTO, quadrosDaFala, TEMPOS } from "./tempos";
 import { CapituloDeColagem, EtiquetaDeColagem, Giz, MapaAnimado, Recorte, type RecorteDeBaixo } from "./documentario/apresentacoes";
 import { useConferirTexto } from "../componentes/conferir";
+import { QuadroDeEvidencias } from "./documentario/evidencias/Quadro";
+import { SILHUETAS } from "./documentario/evidencias/cinemaMudo";
 import { loadFont as carregarBebas } from "@remotion/google-fonts/BebasNeue";
 
 // Vídeo longo e deitado (1920×1080) para canal narrado no YouTube: uma voz lê a
@@ -76,12 +78,16 @@ export const documentarioSchema = z.object({
         detalhe: z
           .tuple([z.number().min(0).max(100), z.number().min(0).max(100)])
           .optional()
-          .describe("Só no modelo Colagem: onde está o detalhe que importa na imagem ([x, y] em %, 0,0 = canto de cima à esquerda). Ele sai ampliado num recorte redondo, com o círculo de marca-texto e a seta"),
+          .describe(
+            "Nos modelos Colagem e Quadro de evidências: onde está o detalhe que importa na imagem ([x, y] em %, 0,0 = canto de cima à esquerda). Na Colagem ele sai ampliado num recorte redondo, com o círculo de marca-texto e a seta; no Quadro, ganha um círculo vermelho e a câmera chega perto",
+          ),
         palavra: z
           .string()
           .max(24)
           .optional()
-          .describe("Só no modelo Colagem: a palavra-chave da cena (até 24 letras), colada em letras recortadas de jornal"),
+          .describe(
+            "Nos modelos Colagem e Quadro de evidências: a palavra-chave da cena (até 24 letras). Na Colagem, colada em letras recortadas de jornal; no Quadro, batida à máquina numa tira de papel e sublinhada em vermelho",
+          ),
         legendaNoAlto: z
           .boolean()
           .optional()
@@ -98,11 +104,39 @@ export const documentarioSchema = z.object({
           .array(z.string().max(30))
           .optional()
           .describe('O nome de cada ponto da rota, na mesma ordem ("" para não mostrar), ex.: ["Lisboa", "", "Rio de Janeiro"]'),
+        // ---- Só no modelo Quadro de evidências (nos outros, não muda nada) ----
+        ligar: z
+          .union([z.number().int().min(1), z.array(z.number().int().min(1)).min(1).max(4)])
+          .optional()
+          .describe("Quadro de evidências: o número da cena anterior (ou até 4) cuja peça se liga a esta com barbante vermelho, ex.: 5 ou [3, 9]. Só quando há uma ligação de verdade (a mesma pessoa, causa e efeito)"),
+        carimbo: z
+          .string()
+          .max(16)
+          .optional()
+          .describe('Quadro de evidências: carimbo vermelho batido na foto, ex.: "ULTRASSECRETO", "INVESTIGADO", "CONDENADO", "ARQUIVADO". Raro: 1 a cada 8 ou 10 cenas, só quando a fala diz isso'),
+        ano: z.string().max(12).optional().describe('Quadro de evidências: o ano que vira um cartão grande ao lado da foto, ex.: "1807" ou "30 d.C."'),
+        insert: z
+          .enum(["mapa", "intertitulo", "acao"])
+          .optional()
+          .describe(
+            "Quadro de evidências: a cena vira um trecho de cinema mudo (a tela fecha em íris e abre num filme sépia): mapa (com a rota da cena), intertitulo (o texto da cena numa moldura dupla) ou acao (silhuetas). Cena com rota já vira mapa sozinha. No máximo 1 a cada 8 cenas",
+          ),
+        silhuetas: z
+          .array(z.enum(SILHUETAS))
+          .min(1)
+          .max(4)
+          .optional()
+          .describe('Quadro de evidências, insert "acao": quem atravessa a tela em silhueta: pessoa, soldado, cavalo, navio, carro ou canhao (o canhão dá um tiro: clarão e fumaça)'),
         narracao: narracaoSchema.optional(),
       }),
     )
     .min(1)
     .max(150),
+  tese: z
+    .string()
+    .max(90)
+    .optional()
+    .describe("Quadro de evidências: a pergunta central do vídeo, batida à máquina num cartão no meio do quadro (os capítulos se ligam a ela)"),
   voz: z
     .string()
     .default("pm_alex")
@@ -401,8 +435,37 @@ function recortesDeBaixo(cenas: Cena[], indice: number): RecorteDeBaixo[] | unde
   return duasAtras ? [duasAtras, anterior] : [anterior];
 }
 
+/** A voz da cena e a legenda por cima (no Quadro de evidências, é tudo que a cena desenha: o resto é o quadro) */
+const FalaDoQuadro: React.FC<{ cena: Cena; props: Documentario; ap: Aparencia }> = ({ cena, props, ap }) =>
+  cena.narracao ? (
+    <>
+      <Sequence from={TEMPOS.antesDaFala} layout="none" name="Narração">
+        <Audio src={staticFile(cena.narracao.audio)} />
+      </Sequence>
+      {props.legendas && (
+        <AbsoluteFill>
+          <Legendas
+            legendas={cena.narracao.legendas}
+            atraso={TEMPOS.antesDaFala}
+            tamanho={ap.legenda.tamanho}
+            caixa={false}
+            noite
+            largura={1400}
+            fonte={ap.fonteTexto}
+            peso={400}
+            // Preto e branco: a palavra falada em branco, as outras em cinza claro
+            destaque="#ffffff"
+            corDoTexto="#b8b2a7"
+            style={{ top: cena.legendaNoAlto ? 110 : 920, padding: "0 260px" }}
+          />
+        </AbsoluteFill>
+      )}
+    </>
+  ) : null;
+
 const CenaDoDocumentario: React.FC<{ cena: Cena; indice: number; props: Documentario; ap: Aparencia; inicio?: number }> = ({ indice, props, ap, inicio }) => {
   const frame = useCurrentFrame();
+  if (ap.apresentacao === "quadro") return <FalaDoQuadro cena={props.cenas[indice]} props={props} ap={ap} />;
   const cena = comImagem(props.cenas, indice);
   const duracao = quadrosDaFala(cena);
   const colagem = ap.apresentacao === "recorte";
@@ -577,8 +640,11 @@ export const Documentario: React.FC<Documentario> = (props) => {
   const ap = aparenciaDo(props.estilo);
   // Em que quadro cada cena começa (a mesa da Colagem anda com o vídeo inteiro)
   const inicios = props.cenas.reduce<number[]>((lista, cena, i) => [...lista, i === 0 ? 0 : lista[i - 1] + quadrosDaFala(props.cenas[i - 1])], []);
+  const quadro = ap.apresentacao === "quadro";
   return (
     <AbsoluteFill style={{ backgroundColor: "#000" }}>
+      {/* Quadro de evidências: um quadro só, com a câmera andando o vídeo inteiro (o fim também) */}
+      {quadro && <QuadroDeEvidencias cenas={props.cenas} tese={props.tese} encerramento={props.encerramento} chamada={props.chamadaFinal} idioma={props.idioma} ap={ap} />}
       <Series>
         {props.cenas.map((cena, i) => (
           <Series.Sequence key={i} durationInFrames={quadrosDaFala(cena)}>
@@ -587,7 +653,7 @@ export const Documentario: React.FC<Documentario> = (props) => {
         ))}
         {props.encerramento && (
           <Series.Sequence durationInFrames={QUADROS_DO_ENCERRAMENTO}>
-            <Encerramento texto={props.encerramento} chamada={props.chamadaFinal} ap={ap} idioma={props.idioma} foto={[...props.cenas].reverse().find((c) => c.foto)?.foto} />
+            {quadro ? null : <Encerramento texto={props.encerramento} chamada={props.chamadaFinal} ap={ap} idioma={props.idioma} foto={[...props.cenas].reverse().find((c) => c.foto)?.foto} />}
           </Series.Sequence>
         )}
       </Series>

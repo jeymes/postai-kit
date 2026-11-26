@@ -108,6 +108,14 @@ o objeto, a inscrição. Ele sai ampliado num recorte redondo com um círculo de
 para reconhecer ampliado 3 vezes (não um borrão). Na Colagem a imagem aparece num recorte de papel menor que a tela (uns 70%),
 com retícula de impressão e um pouco apagada: prefira imagens com a figura grande e clara, sem detalhe miúdo.
 
+No modelo **Quadro de evidências** (`evidencias`), cada imagem vira uma foto em preto e branco presa num quadro,
+como prova de uma investigação: use **fotos reais de arquivo, pinturas, gravuras, documentos e mapas** de domínio
+público. **Nada de rosto gerado por IA** nas peças (no último caso, IA só para lugar ou objeto, sem gente de perto),
+e nada de violência gráfica (corpo ferido, sangue). Prefira imagens com contraste, que leiam bem em preto e branco
+num cartão menor que a tela. Marque `"detalhe": [x, y]` (1 a cada 4 cenas) no ponto que a fala cita: ali se desenha
+um círculo vermelho e a câmera chega perto (um rosto, um objeto, uma assinatura). Para cena de `rota`, um mapa
+antigo de verdade (a rota se desenha nele); sem mapa bom, deixe a cena sem `foto` (sai um mapa desenhado).
+
 **Cena com `lugares` (mapa animado):** escolha um mapa antigo de domínio público onde **todos** os lugares
 aparecem, abra a imagem (Read) e ponha em `rota` onde fica cada lugar, em % da imagem, na mesma ordem:
 `"rota": [[67, 50], [55, 75], [45, 96]]` (`[x, y]`, 0,0 = canto de cima à esquerda). Não precisa de `inteira`.

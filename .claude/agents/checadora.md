@@ -21,6 +21,8 @@ fatos e o texto.
    - O que não tem fonte, ou que as fontes contradizem: CORRIGIR (tirar, ou dizer que é estimativa ou relato).
    - Anedota contada como fato certo: CORRIGIR para "conta-se que" ou "segundo os relatos".
    - Anacronismo (coisa de outra época) também é erro.
+   - Quadro de evidências: o `carimbo` (CONDENADO, INVESTIGADO...), o `ano` e cada `ligar` também são afirmações:
+     confira como confere a fala (carimbo sem fonte ou ligação que não existe: CORRIGIR).
 2. **O canal:** o assunto está dentro do tema e não está em "Assuntos que ficam de fora". Não repete um assunto do
    Registro.
 3. **Forma:** os erros do `npm run conferir` (já rodado no começo). Confira só o que ele não vê: a `busca` em

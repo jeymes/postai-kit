@@ -57,6 +57,10 @@ música cobrindo a voz. Se um quadro levantar dúvida, tire só esse de novo sem
 - legenda cobrindo o que importa na imagem (se for texto escrito embaixo da imagem, a correção é `"legendaNoAlto": true` na cena, para a pesquisadora), texto cortado ou com erro de escrita na língua do canal (a do roteiro; inglês e espanhol são normais);
 - cartão de capítulo ilegível ou com erro;
 - a mesma imagem em mais de 3 cenas;
+- no modelo Quadro de evidências (`evidencias`): rosto gerado por IA numa peça, violência gráfica, carimbo que a
+  fala não sustenta (CONDENADO para quem não foi condenado), barbante (`ligar`) entre peças sem ligação de verdade,
+  vermelho demais (carimbo ou insert em quase toda cena) ou trecho de cinema mudo que não combina com a fala
+  (CORRIGIR para a roteirista ou a pesquisadora); a falta da `tese` é sugestão;
 - a capa ilegível pequena (imagine do tamanho de um polegar), com o título cortado ou o destaque na palavra errada; na capa `cinema`, também: o título por cima do rosto, rosto ou mãos deformados (dedos a mais, olhos tortos), a emoção diferente da do título, texto ou letra dentro da imagem, ou alguém com cara de pessoa famosa (CORRIGIR para a pesquisadora gerar de novo, uma vez);
 - duração mais de 20% longe da do canal.
 

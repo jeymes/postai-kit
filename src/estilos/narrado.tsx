@@ -18,7 +18,7 @@ import { FundoDeJornal } from "../moldes/documentario/apresentacoes";
 // podem mudar à parte. O que o dono pedir e o kit não fizer, a equipe anota com
 // npm run limite (o kit aprende depois). Espelha functions/src/animacaoCore.ts.
 
-export const MODELOS_DO_NARRADO = ["classico", "pergaminho", "misterio", "pb", "dormir", "colagem", "lousa"] as const;
+export const MODELOS_DO_NARRADO = ["classico", "pergaminho", "misterio", "pb", "dormir", "colagem", "lousa", "evidencias"] as const;
 export type ModeloDoNarrado = (typeof MODELOS_DO_NARRADO)[number];
 
 const latino = { subsets: ["latin" as const] };
@@ -51,6 +51,8 @@ export const estiloDoNarradoSchema = z
 export type EstiloDoNarrado = z.infer<typeof estiloDoNarradoSchema>;
 
 const fontesCarregadas = new Map<LetraDoNarrado, string>();
+/** A família de uma letra do kit (carrega na primeira vez); null na "marca" */
+export const fonteDoKit = (letra: LetraDoNarrado) => fonteDa(letra);
 function fonteDa(letra: LetraDoNarrado): string | null {
   const carregar = LETRAS[letra];
   if (!carregar) return null;
@@ -70,10 +72,12 @@ function fonteDa(letra: LetraDoNarrado): string | null {
  * filtro de ruído do navegador redesenhava tudo a cada quadro e o Pergaminho
  * renderizava 2,1x mais devagar que o Clássico (medido em 22/11/2026).
  */
-export const TexturaDoNarrado: React.FC<{ tipo: "papel" | "grao" | "jornal"; semente: number }> = ({ tipo, semente }) =>
+export const TexturaDoNarrado: React.FC<{ tipo: "papel" | "grao" | "jornal" | "cortica"; semente: number }> = ({ tipo, semente }) =>
   // O jornal velho da mesa da Colagem (public/texturas/jornal.jpg)
   tipo === "jornal" ? (
     <FundoDeJornal />
+  ) : tipo === "cortica" ? (
+    <Cortica />
   ) : (
   <svg width="100%" height="100%">
     {tipo === "papel" ? (
@@ -90,6 +94,23 @@ export const TexturaDoNarrado: React.FC<{ tipo: "papel" | "grao" | "jornal"; sem
     <rect width="100%" height="100%" filter={`url(#${tipo === "papel" ? "papel-velho" : "grao"})`} />
   </svg>
   );
+
+/**
+ * A cortiça escura do Quadro de evidências (public/texturas/cortica.jpg, um
+ * ladrilho de 1024x1024 que emenda sem costura): grânulos de cortiça em cinza,
+ * sem cor (no quadro, só o vermelho tem cor).
+ */
+const Cortica: React.FC = () => (
+  <svg width="100%" height="100%">
+    <filter id="cortica-graos" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.008" numOctaves="3" seed="11" stitchTiles="stitch" result="manchas" />
+      <feTurbulence type="fractalNoise" baseFrequency="0.38" numOctaves="3" seed="4" stitchTiles="stitch" result="graos" />
+      <feComposite in="graos" in2="manchas" operator="arithmetic" k1="0" k2="0.7" k3="0.45" k4="-0.15" />
+      <feColorMatrix type="matrix" values="0.15 0 0 0 0.02  0.147 0 0 0 0.019  0.144 0 0 0 0.018  0 0 0 0 1" />
+    </filter>
+    <rect width="100%" height="100%" filter="url(#cortica-graos)" />
+  </svg>
+);
 
 // O granulado: 6 quadros prontos (public/texturas/grao-N.webp) que se revezam.
 // Os 6 ficam montados e só o do quadro aparece: nenhum carrega no meio do vídeo
@@ -179,8 +200,8 @@ export interface Aparencia {
   tremor: boolean;
   /** Legenda: tamanho e se a palavra falada ganha a etiqueta colorida */
   legenda: { tamanho: number; caixa: boolean; noite: boolean };
-  /** Como a imagem aparece: em tela cheia, recortada em papel sobre jornal (Colagem) ou desenhada a giz (Lousa) */
-  apresentacao: "tela" | "recorte" | "giz";
+  /** Como a imagem aparece: em tela cheia, recortada em papel sobre jornal (Colagem), desenhada a giz (Lousa) ou presa num quadro de evidências */
+  apresentacao: "tela" | "recorte" | "giz" | "quadro";
 }
 
 const BASE = {
@@ -304,6 +325,28 @@ export function aparenciaDo(estilo?: EstiloDoNarrado): Aparencia {
           fundo: "#1f2b25",
           legenda: { tamanho: 52, caixa: false, noite: true },
           apresentacao: "giz",
+        };
+      case "evidencias":
+        // Quadro de evidências (série investigativa): um quadro de cortiça só, com fotos em preto
+        // e branco presas com alfinete; o vermelho só no que importa (barbante, círculo, carimbo)
+        return {
+          ...BASE,
+          filtro: "grayscale(1) contrast(1.16) brightness(0.97)",
+          Camadas: () => (
+            <>
+              <Vinheta cor="rgba(0,0,0,0.9)" forca={0.8} />
+              <Grao forca={0.26} />
+            </>
+          ),
+          fonteTitulo: fonteDa("moderna") ?? fontes.titulo,
+          fonteTexto: fonteDa("maquina") ?? fontes.texto,
+          pesoTitulo: 400,
+          destaque: "#d0312d",
+          textoNoDestaque: "#ffffff",
+          textoClaro: "#f1eee8",
+          fundo: "#141312",
+          legenda: { tamanho: 44, caixa: false, noite: true },
+          apresentacao: "quadro",
         };
       default:
         return {
