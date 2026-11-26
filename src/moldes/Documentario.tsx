@@ -13,6 +13,8 @@ import { CapituloDeColagem, EtiquetaDeColagem, Giz, MapaAnimado, Recorte, type R
 import { useConferirTexto } from "../componentes/conferir";
 import { QuadroDeEvidencias } from "./documentario/evidencias/Quadro";
 import { SILHUETAS } from "./documentario/evidencias/cinemaMudo";
+import { CenaDeInfografico, EncerramentoDoInfografico, type CenaDoInfografico } from "./documentario/infografico/Infografico";
+import { graficoSchema, ICONES } from "./documentario/infografico/schema";
 import { loadFont as carregarBebas } from "@remotion/google-fonts/BebasNeue";
 
 // Vídeo longo e deitado (1920×1080) para canal narrado no YouTube: uma voz lê a
@@ -127,6 +129,13 @@ export const documentarioSchema = z.object({
           .max(4)
           .optional()
           .describe('Quadro de evidências, insert "acao": quem atravessa a tela em silhueta: pessoa, soldado, cavalo, navio, carro ou canhao (o canhão dá um tiro: clarão e fumaça)'),
+        // ---- Só no modelo Infográfico animado (nos outros, não muda nada) ----
+        grafico: graficoSchema
+          .optional()
+          .describe(
+            'Infográfico animado: o gráfico da cena, que se monta no tempo da fala. "tipo": numero, linha, barras, pizza, unidades, comparacao, linhaDoTempo, escala ou conta (ver canais/NARRADO.md). Sem ele, a cena mostra a foto num cartão ou o ícone com a palavra',
+          ),
+        icone: z.enum(ICONES).optional().describe("Infográfico animado: o ícone do cartão da cena sem gráfico e sem foto (com a palavra embaixo)"),
         narracao: narracaoSchema.optional(),
       }),
     )
@@ -466,6 +475,8 @@ const FalaDoQuadro: React.FC<{ cena: Cena; props: Documentario; ap: Aparencia }>
 const CenaDoDocumentario: React.FC<{ cena: Cena; indice: number; props: Documentario; ap: Aparencia; inicio?: number }> = ({ indice, props, ap, inicio }) => {
   const frame = useCurrentFrame();
   if (ap.apresentacao === "quadro") return <FalaDoQuadro cena={props.cenas[indice]} props={props} ap={ap} />;
+  if (ap.apresentacao === "infografico")
+    return <CenaDeInfografico cenas={props.cenas as CenaDoInfografico[]} indice={indice} ap={ap} estilo={props.estilo} idioma={props.idioma} legendas={props.legendas} />;
   const cena = comImagem(props.cenas, indice);
   const duracao = quadrosDaFala(cena);
   const colagem = ap.apresentacao === "recorte";
@@ -653,7 +664,9 @@ export const Documentario: React.FC<Documentario> = (props) => {
         ))}
         {props.encerramento && (
           <Series.Sequence durationInFrames={QUADROS_DO_ENCERRAMENTO}>
-            {quadro ? null : <Encerramento texto={props.encerramento} chamada={props.chamadaFinal} ap={ap} idioma={props.idioma} foto={[...props.cenas].reverse().find((c) => c.foto)?.foto} />}
+            {quadro ? null : ap.apresentacao === "infografico" ? (
+              <EncerramentoDoInfografico texto={props.encerramento} chamada={props.chamadaFinal} ap={ap} estilo={props.estilo} idioma={props.idioma} />
+            ) : <Encerramento texto={props.encerramento} chamada={props.chamadaFinal} ap={ap} idioma={props.idioma} foto={[...props.cenas].reverse().find((c) => c.foto)?.foto} />}
           </Series.Sequence>
         )}
       </Series>

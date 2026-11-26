@@ -14,6 +14,8 @@ import { duracaoDoMolde, falaDoNarrador, FPS, quadrosDaFala } from "../src/molde
 import { VOZES, VOZES_DO_ELENCO } from "../src/componentes/personagens/vozes.ts";
 import { avisoDeDuracao, minutosDoCanal } from "./duracao-do-canal.ts";
 import { palavrasDificeis, pronunciasDoVideo } from "./voz/pronuncias.ts";
+import { graficoSchema, ICONES, TIPOS_DE_GRAFICO } from "../src/moldes/documentario/infografico/schema.ts";
+import { normalizarPalavra } from "../src/moldes/documentario/infografico/numeros.ts";
 
 const arquivo = process.argv.slice(2).find((arg) => !arg.startsWith("--"));
 if (!arquivo || !existsSync(arquivo)) {
@@ -137,6 +139,88 @@ function conferirQuadroDeEvidencias(doc: Record<string, unknown>, cenas: Record<
   if (carimbos > Math.ceil(cenas.length / 8)) aviso("roteirista-narrado", `${carimbos} carimbos: o ideal é 1 a cada 8 ou 10 cenas (o vermelho só no que importa)`);
 }
 
+/**
+ * O campo `grafico` do modelo Infográfico animado: o formato (o mesmo schema do
+ * molde), a fonte de todo dado real, números de verdade (não texto), o `em` que
+ * existe na fala e o que cada tipo precisa. Os números e as contas em si a
+ * checadora confere (refazendo a conta).
+ */
+function conferirInfografico(doc: Record<string, unknown>, cenas: Record<string, unknown>[]) {
+  const modelo = (doc.estilo as { modelo?: string; fundo?: unknown } | undefined)?.modelo;
+  const info = modelo === "infografico";
+  const fundo = (doc.estilo as { fundo?: unknown } | undefined)?.fundo;
+  if (fundo !== undefined && fundo !== "escuro" && fundo !== "claro") erro("roteirista-narrado", 'estilo.fundo é "escuro" ou "claro"');
+  let comGrafico = 0;
+  cenas.forEach((c, i) => {
+    const n = i + 1;
+    if (c.icone !== undefined && typeof c.icone === "string" && !(ICONES as readonly string[]).includes(c.icone))
+      erro("roteirista-narrado", `cena ${n}: icone "${c.icone}" não existe (veja a lista em canais/NARRADO.md)`);
+    if (c.grafico === undefined) {
+      if (info && !c.foto && !c.video && !c.palavra && !c.icone) aviso("roteirista-narrado", `cena ${n}: sem gráfico, foto, palavra nem ícone: a tela fica só com um ícone genérico`);
+      return;
+    }
+    comGrafico++;
+    if (!info) aviso("roteirista-narrado", `cena ${n}: "grafico" só aparece no modelo infografico (este vídeo é ${modelo ?? "classico"})`);
+    const g = c.grafico as Record<string, unknown>;
+    const tipo = g && typeof g === "object" ? g.tipo : undefined;
+    if (typeof tipo !== "string" || !(TIPOS_DE_GRAFICO as readonly string[]).includes(tipo)) {
+      erro("roteirista-narrado", `cena ${n}: grafico.tipo "${String(tipo)}" não existe (${TIPOS_DE_GRAFICO.join(", ")})`);
+      return;
+    }
+    const lido = graficoSchema.safeParse(g);
+    if (!lido.success) {
+      for (const problema of lido.error.issues.slice(0, 6)) {
+        const campo = ["grafico", ...problema.path.map(String)].join(".");
+        const recebido = problema.path.reduce<unknown>((o, k) => (o && typeof o === "object" ? (o as Record<string, unknown>)[k as string] : undefined), g);
+        const dica =
+          problema.code === "invalid_type" && typeof recebido === "string" && /valor|^y$|total|marcados|^de$/.test(String(problema.path[problema.path.length - 1]))
+            ? ` (número sem aspas e com ponto decimal: 35949.64, não "${recebido}")`
+            : problema.code === "invalid_type" && recebido === undefined
+              ? " (falta o campo)"
+              : problema.code === "unrecognized_keys"
+                ? ` (campo que o ${tipo} não tem)`
+                : "";
+        erro("roteirista-narrado", `cena ${n}: ${campo}: ${problema.message}${dica}`);
+      }
+      return;
+    }
+    const gr = lido.data;
+    // Todo dado real tem fonte; a conta (cálculo) só recebe aviso
+    if (!gr.fonte?.trim()) {
+      if (gr.tipo === "conta") aviso("roteirista-narrado", `cena ${n}: conta sem fonte: ponha "Exemplo de cálculo" ou de onde vem a taxa`);
+      else erro("roteirista-narrado", `cena ${n}: gráfico ${gr.tipo} sem fonte (ex.: "IBGE, 2025", "Banco Central"; numa simulação, "Exemplo de cálculo")`);
+    }
+    // A palavra que dispara a animação precisa estar na fala
+    if (gr.em) {
+      const alvo = gr.em.split(/\s+/).map(normalizarPalavra).filter(Boolean);
+      const fala = String(c.fala ?? "").split(/\s+/).map(normalizarPalavra).filter(Boolean);
+      const achou = alvo.length > 0 && fala.some((_, k) => alvo.every((a, j) => fala[k + j] === a || (j === alvo.length - 1 && (fala[k + j] ?? "").startsWith(a))));
+      if (!achou) aviso("roteirista-narrado", `cena ${n}: grafico.em "${gr.em}" não está na fala: a animação começa no início da cena`);
+    }
+    if (gr.tipo === "unidades" && gr.marcados > gr.total) erro("roteirista-narrado", `cena ${n}: unidades com marcados (${gr.marcados}) maior que o total (${gr.total})`);
+    if (gr.tipo === "unidades" && ![10, 20, 50, 100].includes(gr.total)) aviso("roteirista-narrado", `cena ${n}: unidades com total ${gr.total}: 10, 20, 50 ou 100 formam a grade mais bonita`);
+    if (gr.tipo === "linha" && gr.destaque && !gr.pontos.some((p) => String(p.x) === String(gr.destaque?.x)))
+      erro("roteirista-narrado", `cena ${n}: linha.destaque.x "${gr.destaque.x}" não é o x de nenhum ponto`);
+    if (gr.tipo === "linha") {
+      const xs = gr.pontos.map((p) => p.x);
+      if (xs.some((x) => typeof x === "number") && xs.some((x) => typeof x === "string"))
+        aviso("roteirista-narrado", `cena ${n}: linha com x em número e em texto misturados: use todos iguais (2015 ou "jan")`);
+      if (xs.every((x) => typeof x === "number") && xs.some((x, k) => k > 0 && (x as number) <= (xs[k - 1] as number)))
+        erro("roteirista-narrado", `cena ${n}: os pontos da linha precisam estar em ordem crescente de x`);
+    }
+    if (gr.tipo === "pizza" && gr.partes.reduce((a, p) => a + p.valor, 0) <= 0) erro("roteirista-narrado", `cena ${n}: pizza com as partes somando zero`);
+    if (gr.tipo === "pizza" && (gr.unidade ?? "%").trim() === "%") {
+      const soma = gr.partes.reduce((a, p) => a + p.valor, 0);
+      if (Math.abs(soma - 100) > 1.5) aviso("roteirista-narrado", `cena ${n}: pizza em % somando ${soma}: o gráfico mostra cada parte como fatia do total (confira se falta uma parte, "Outros")`);
+    }
+    if (gr.tipo === "comparacao" && gr.a.valor === gr.b.valor) aviso("roteirista-narrado", `cena ${n}: comparação com os dois valores iguais`);
+    if ((gr.tipo === "barras" || gr.tipo === "escala") && gr.itens.filter((x) => x.destaque).length > 1)
+      aviso("roteirista-narrado", `cena ${n}: ${gr.tipo} com mais de um destaque: só o dado que importa sai na cor de destaque`);
+  });
+  if (info && cenas.length && comGrafico < cenas.length / 2)
+    aviso("roteirista-narrado", `infográfico com gráfico em só ${comGrafico} de ${cenas.length} cenas: o ideal é em pelo menos metade (cena sem gráfico vira foto num cartão ou ícone com palavra)`);
+}
+
 // ---- Documentario (Canal dark): a forma, por código. Os fatos ficam com a checadora ----
 if (peca.molde === "Documentario") {
   type CenaLonga = { fala?: string; foto?: string; video?: string; busca?: string; capitulo?: string; texto?: string; narracao?: { duracaoSeg?: number } };
@@ -156,6 +240,7 @@ if (peca.molde === "Documentario") {
     post?: { titulo?: string; legenda?: string };
   };
   const longas = doc.cenas ?? [];
+  const infografico = (peca as { estilo?: { modelo?: string } }).estilo?.modelo === "infografico";
   // A duração do canal vem do canal-postai.md ("Uns N minutos de fala")
   const minutos = minutosDoCanal(process.argv.slice(2)) ?? 10;
   const total = longas.reduce((soma, c) => soma + palavras(c.fala), 0);
@@ -208,16 +293,19 @@ if (peca.molde === "Documentario") {
     if (c.capitulo && tamanho(c.capitulo) > 40) erro("roteirista-narrado", `cena ${n}: capítulo com ${tamanho(c.capitulo)} caracteres (até 40)`);
     if (c.texto) {
       if (tamanho(c.texto) > 40) erro("roteirista-narrado", `cena ${n}: texto na tela com ${tamanho(c.texto)} caracteres (até 40)`);
-      if (desdeOTexto < 5) aviso("roteirista-narrado", `cena ${n}: texto na tela a menos de 5 cenas do anterior`);
+      if (desdeOTexto < 5 && !infografico) aviso("roteirista-narrado", `cena ${n}: texto na tela a menos de 5 cenas do anterior`);
       desdeOTexto = 0;
     } else desdeOTexto++;
-    if (!c.foto && !c.video && !c.busca) erro("roteirista-narrado", `cena ${n}: sem busca de imagem`);
+    // No Infográfico a cena pode ser só o gráfico (ou o ícone com a palavra): não precisa de imagem
+    const doInfo = infografico && Boolean((c as Record<string, unknown>).grafico || (c as Record<string, unknown>).icone || (c as Record<string, unknown>).palavra);
+    if (!c.foto && !c.video && !c.busca && !doInfo) erro("roteirista-narrado", `cena ${n}: sem busca de imagem${infografico ? " nem gráfico" : ""}`);
     if (c.foto && !existsSync(`public/${c.foto}`)) erro("pesquisadora-de-imagens", `cena ${n}: a imagem ${c.foto} não existe em public/`);
     if (c.video && !existsSync(`public/${c.video}`)) erro("pesquisadora-de-imagens", `cena ${n}: o vídeo ${c.video} não existe em public/`);
   });
   // Cena sem imagem continua a imagem da anterior (o molde faz): o vídeo não para por
   // falta de foto. Só barra sem imagem na 1ª cena ou com mais de 2/3 das cenas sem imagem.
-  const temImagem = (c: (typeof longas)[number]) => Boolean(c.foto || c.video);
+  const temImagem = (c: (typeof longas)[number]) =>
+    Boolean(c.foto || c.video || (infografico && ((c as Record<string, unknown>).grafico || (c as Record<string, unknown>).icone || (c as Record<string, unknown>).palavra)));
   const semFoto = longas.filter((c) => !temImagem(c)).length;
   if (longas[0] && !temImagem(longas[0])) erro("pesquisadora-de-imagens", "a cena 1 precisa de foto ou vídeo (as cenas sem imagem continuam a anterior)");
   else if (semFoto > (longas.length * 2) / 3)
@@ -245,6 +333,8 @@ if (peca.molde === "Documentario") {
   let ultima: string | undefined;
   for (const c of longas) {
     if (c.foto) ultima = c.foto;
+    // No Infográfico, a cena com gráfico (ou ícone) não continua a foto anterior
+    else if (infografico && temImagem(c)) ultima = undefined;
     if (ultima) naTela.set(ultima, (naTela.get(ultima) ?? 0) + 1);
   }
   for (const [foto, vezes] of naTela)
@@ -297,6 +387,7 @@ if (peca.molde === "Documentario") {
     }
   }
   conferirQuadroDeEvidencias(peca as Record<string, unknown>, longas as unknown as Record<string, unknown>[]);
+  conferirInfografico(peca as Record<string, unknown>, longas as unknown as Record<string, unknown>[]);
   const textoTodo = JSON.stringify({ ...doc, cenas: longas.map(({ narracao: _n, ...resto }) => resto) });
   if (/sua ?marca|@suamarca|lorem ipsum/i.test(textoTodo)) erro("roteirista-narrado", 'texto de exemplo ("Sua Marca") no roteiro');
   console.log(`Documentario: ${longas.length} cenas, ${total} palavras (alvo ~${alvo}), ${capitulos.length} capítulos, ${usos.size} imagens.`);

@@ -23,6 +23,12 @@ fatos e o texto.
    - Anacronismo (coisa de outra época) também é erro.
    - Quadro de evidências: o `carimbo` (CONDENADO, INVESTIGADO...), o `ano` e cada `ligar` também são afirmações:
      confira como confere a fala (carimbo sem fonte ou ligação que não existe: CORRIGIR).
+   - Infográfico animado (`grafico` nas cenas): **cada número de cada gráfico** é um fato. Confira na fonte citada
+     em `fonte` (e nas `fontes` do roteiro) o valor, o ano, a unidade (% ou p.p., R$ ou US$, mês ou ano) e o rótulo.
+     Número sem fonte, fonte que não diz aquilo ou fonte que não é oficial nem confiável: CORRIGIR. **Refaça cada
+     conta** (a `conta` linha a linha, os juros compostos, as porcentagens da `pizza`, o "quantas vezes" da
+     `comparacao`, o `marcados` de `unidades`) e confira que o gráfico diz o mesmo que a fala. Simulação precisa
+     dizer que é exemplo (na fala e no `"fonte": "Exemplo de cálculo"`).
 2. **O canal:** o assunto está dentro do tema e não está em "Assuntos que ficam de fora". Não repete um assunto do
    Registro.
 3. **Forma:** os erros do `npm run conferir` (já rodado no começo). Confira só o que ele não vê: a `busca` em

@@ -153,6 +153,60 @@ narre tudo. Depois prévia, crítica na prévia, renderize, crítica no vídeo p
     fumaça, nada de violência). Cena com `rota` já vira o mapa sozinha. No máximo 1 insert a cada 8 cenas.
   Sons baixinhos acompanham (máquina de escrever, carimbo, caneta, câmera, projetor). Imagens: fotos de arquivo,
   pinturas, gravuras, documentos e mapas; nada de rosto gerado por IA nas peças.
+- **Modelo Infográfico animado (`infografico`):** para nichos que vivem de dados (finanças, economia,
+  investimentos, ciência explicada, "quanto custa/quanto ganha", saúde em números, países comparados, esporte,
+  curiosidades com números). Cada cena mostra um **gráfico que se monta no tempo da fala**, num fundo limpo
+  (azul-petróleo escuro; `"estilo": { "modelo": "infografico", "fundo": "claro" }` deixa creme) com grade discreta;
+  o dado que importa sai na cor de destaque (`estilo.cor`, ou âmbar), o resto em tons neutros. A câmera chega perto
+  devagar, o gráfico anterior sai para a esquerda e o novo entra deslizando. A legenda fica numa faixa própria no pé,
+  sem cobrir nada; o título do gráfico fica no alto e a `fonte` embaixo à esquerda. O capítulo é um cartão com o
+  número grande. O `texto` da cena vira um "chapéu" pequeno acima do título (ex.: "Brasil, IPCA ao ano").
+  A cena ganha o campo **`grafico`** (o resto continua igual: `fala`, `capitulo`, `texto`). Em todo gráfico:
+  - `tipo` (um dos 9 abaixo); `titulo` (até 70 letras, o que o gráfico mostra);
+  - **`fonte` (obrigatória quando o número é real):** a instituição e o ano, ex.: `"IBGE, 2025"`, `"Banco Central"`,
+    `"Tesouro Nacional"`, `"B3"`, `"OMS, 2024"`, `"NASA"`. Numa simulação, `"Exemplo de cálculo"` (sai como está;
+    o resto ganha "Fonte:" na frente). Todo número vem de fonte oficial ou confiável, a que a roteirista leu;
+  - `em` (opcional): a palavra da fala em que a animação começa (antes dela, só o "esqueleto": eixo e rótulos). Sem
+    `em`, começa junto com a cena. Use quando o número é dito no meio da fala;
+  - **números sem aspas e com ponto decimal** (`35949.64`, nunca `"35.949,64"`): o kit escreve no formato da língua
+    (pt: 35.949,64; en: 35,949.64; es: 35.949,64), com "mil", "mi", "bi" nos eixos;
+  - `unidade` (nos que têm): `"R$"`, `"US$"`, `"%"`, `"R$ bi"`, `"anos"`, `"kg"`. A moeda vai antes do número
+    (R$ 1.000), o resto depois (12%, 3 anos, R$ 4,2 bi). `casas`: as casas depois da vírgula (padrão: as dos valores).
+  Os tipos, quando usar cada um e um exemplo (os números dos exemplos mostram só o formato: nunca copie um número
+  sem ler a fonte):
+  - `numero`: UM número que importa, grande, contando até o valor (o gancho, o resultado). `de` = onde a conta começa.
+    `{ "tipo": "numero", "valor": 35949.64, "prefixo": "R$", "casas": 2, "rotulo": "é quanto R$ 1.000 vira em 30 anos", "icone": "moeda", "fonte": "Exemplo de cálculo" }`
+  - `linha`: algo que muda com o tempo (inflação ano a ano, preço, população); de 2 a 40 pontos em ordem, x em número
+    (ano) ou texto curto ("jan"). `destaque` põe um balão num ponto; o último ponto sempre ganha o valor.
+    `{ "tipo": "linha", "unidade": "%", "pontos": [{ "x": 2020, "y": 4.52 }, { "x": 2021, "y": 10.06 }, { "x": 2022, "y": 5.79 }], "destaque": { "x": 2021, "rotulo": "maior alta" }, "fonte": "IBGE (IPCA)" }`
+  - `barras`: comparar poucos valores (até 10). Em pé para períodos ("10 anos", "20 anos"); `"horizontal": true`
+    para ranking (sai do maior para o menor). `"destaque": true` no item que importa (sem nenhum, o maior).
+    `{ "tipo": "barras", "horizontal": true, "unidade": "R$", "itens": [{ "rotulo": "Poupança", "valor": 18193 }, { "rotulo": "1% ao mês", "valor": 33003, "destaque": true }], "fonte": "Exemplo de cálculo" }`
+  - `pizza`: partes de um todo (2 a 6). Sai como rosca, com a % de cada parte calculada e a legenda ao lado.
+    `{ "tipo": "pizza", "unidade": "%", "partes": [{ "rotulo": "Impostos", "valor": 33, "destaque": true }, { "rotulo": "O resto", "valor": 67 }], "fonte": "IBPT, 2024" }`
+  - `unidades`: "1 em cada 4" (grade de ícones que acendem). `total` 10, 20, 50 ou 100; `marcados` inteiro.
+    `{ "tipo": "unidades", "total": 10, "marcados": 4, "icone": "pessoa", "rotulo": "brasileiros com dívida atrasada", "fonte": "Serasa, 2025" }`
+  - `comparacao`: dois valores lado a lado, com VS (poupança x inflação, Brasil x Chile, antes x depois). O maior
+    sai na cor de destaque e aparece quantas vezes ele é maior.
+    `{ "tipo": "comparacao", "unidade": "%", "a": { "rotulo": "Poupança", "valor": 2.99, "icone": "cofre" }, "b": { "rotulo": "Inflação", "valor": 10.06, "icone": "carrinho" }, "fonte": "Banco Central e IBGE" }`
+  - `linhaDoTempo`: datas que contam uma história (2 a 7 marcos); a linha anda e cada marco acende quando ela chega.
+    `{ "tipo": "linhaDoTempo", "marcos": [{ "quando": "1994", "rotulo": "Plano Real", "icone": "nota" }, { "quando": "2020", "rotulo": "Pix" }], "fonte": "Banco Central" }`
+  - `escala`: tamanhos muito diferentes (2 a 5), em círculos com a área do tamanho do valor (o dobro do valor, o
+    dobro da área). Bom para "do tamanho de" e para mostrar o efeito do tempo.
+    `{ "tipo": "escala", "unidade": "R$", "casas": 0, "itens": [{ "rotulo": "No colchão", "valor": 1000 }, { "rotulo": "1% ao mês", "valor": 35949.64, "icone": "sobe" }], "fonte": "Exemplo de cálculo" }`
+  - `conta`: a conta aparecendo passo a passo (até 5 linhas, até 48 letras cada); a última é o resultado, em destaque.
+    `^` vira expoente; `=` e `≈` no começo da linha saem mais claros.
+    `{ "tipo": "conta", "passos": ["R$ 1.000 × (1 + 0,01)^360", "≈ R$ 1.000 × 35,9496", "= R$ 35.949,64"], "fonte": "Exemplo de cálculo" }`
+  **Ícones** (`icone` no `numero`, `unidades`, `comparacao`, `linhaDoTempo`, `escala` e na cena sem gráfico): moeda,
+  nota, saco-de-dinheiro, cofre, casa, carro, pessoa, familia, carrinho, cartao, grafico, sobe, desce, porcentagem,
+  relogio, ampulheta, calendario, planeta, globo, atomo, coracao, saude, raio, combustivel, comida, celular, banco,
+  imposto, alvo, maleta, livro, fabrica, gota, arvore, lampada, trofeu, bola, cadeado, escudo.
+  **Cena sem gráfico:** com `foto`, a foto num cartão limpo; sem foto, um ícone grande (`"icone": "ampulheta"`) com a
+  `palavra` embaixo (ex.: "TEMPO"). Ponha gráfico em pelo menos metade das cenas (o `conferir` avisa) e varie os
+  tipos; não repita o mesmo tipo em mais de 2 cenas seguidas. Na `fala`, diga o número como se lê ("dez por cento",
+  "trinta e seis mil"): o gráfico mostra o número exato. Um número por gráfico: o gráfico mostra o que a fala diz,
+  nada a mais. O `npm run conferir` confere o formato, a fonte, o `em` e o que cada tipo precisa; os números em si a
+  checadora confere (refazendo cada conta).
 - **Pronúncia:** nomes estrangeiros e siglas em `pronuncia`. Termos comuns do grego e do hebraico já têm pronúncia no kit (`ferramentas/voz/pronuncias.ts`); o `npm run conferir` e o `npm run narrar` avisam palavra com cara de estrangeira sem pronúncia.
 - **Capa:** `capa.titulo` com **até 4 palavras** (saem grandes, em maiúsculas e com contorno), que dão curiosidade sem
   repetir o título do vídeo e sem mentir (ex.: "SÓ UMA PEDRA"); `destaque` na palavra mais forte (sai na cor de destaque

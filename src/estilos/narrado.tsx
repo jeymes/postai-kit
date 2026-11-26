@@ -3,6 +3,7 @@ import { loadFont as caveat } from "@remotion/google-fonts/Caveat";
 import { loadFont as cinzel } from "@remotion/google-fonts/Cinzel";
 import { loadFont as cormorant } from "@remotion/google-fonts/CormorantGaramond";
 import { loadFont as garamond } from "@remotion/google-fonts/EBGaramond";
+import { loadFont as inter } from "@remotion/google-fonts/Inter";
 import { loadFont as lora } from "@remotion/google-fonts/Lora";
 import { loadFont as specialElite } from "@remotion/google-fonts/SpecialElite";
 import React from "react";
@@ -18,10 +19,13 @@ import { FundoDeJornal } from "../moldes/documentario/apresentacoes";
 // podem mudar à parte. O que o dono pedir e o kit não fizer, a equipe anota com
 // npm run limite (o kit aprende depois). Espelha functions/src/animacaoCore.ts.
 
-export const MODELOS_DO_NARRADO = ["classico", "pergaminho", "misterio", "pb", "dormir", "colagem", "lousa", "evidencias"] as const;
+export const MODELOS_DO_NARRADO = ["classico", "pergaminho", "misterio", "pb", "dormir", "colagem", "lousa", "evidencias", "infografico"] as const;
 export type ModeloDoNarrado = (typeof MODELOS_DO_NARRADO)[number];
 
 const latino = { subsets: ["latin" as const] };
+// A letra do Infográfico (algarismos de mesma largura): só ele carrega
+let interCarregada: string | null = null;
+const interDoInfografico = () => (interCarregada ??= inter("normal", { ...latino, weights: ["400", "500", "600", "700", "800"] }).fontFamily);
 // As letras que o dono pode escolher (sem escolha: a do modelo)
 const LETRAS = {
   marca: null,
@@ -45,6 +49,10 @@ export const estiloDoNarradoSchema = z
       .optional()
       .describe("Cor de destaque (#RRGGBB): a linha do capítulo, a palavra falada, o destaque da capa"),
     letra: z.enum(LETRAS_DO_NARRADO as [LetraDoNarrado, ...LetraDoNarrado[]]).optional(),
+    fundo: z
+      .enum(["escuro", "claro"])
+      .optional()
+      .describe("Só no Infográfico animado: fundo escuro (azul-petróleo, o padrão) ou claro (creme)"),
   })
   .optional()
   .describe("O modelo visual do Canal dark (o npm run renderizar põe o do canal)");
@@ -200,8 +208,8 @@ export interface Aparencia {
   tremor: boolean;
   /** Legenda: tamanho e se a palavra falada ganha a etiqueta colorida */
   legenda: { tamanho: number; caixa: boolean; noite: boolean };
-  /** Como a imagem aparece: em tela cheia, recortada em papel sobre jornal (Colagem), desenhada a giz (Lousa) ou presa num quadro de evidências */
-  apresentacao: "tela" | "recorte" | "giz" | "quadro";
+  /** Como a imagem aparece: em tela cheia, recortada em papel sobre jornal (Colagem), desenhada a giz (Lousa), presa num quadro de evidências ou num infográfico (os gráficos da cena) */
+  apresentacao: "tela" | "recorte" | "giz" | "quadro" | "infografico";
 }
 
 const BASE = {
@@ -347,6 +355,24 @@ export function aparenciaDo(estilo?: EstiloDoNarrado): Aparencia {
           fundo: "#141312",
           legenda: { tamanho: 44, caixa: false, noite: true },
           apresentacao: "quadro",
+        };
+      case "infografico":
+        // Infográfico animado: gráficos, números e contas que se montam no tempo da fala,
+        // num fundo limpo com grade; a cor de destaque só no dado que importa
+        return {
+          ...BASE,
+          filtro: "none",
+          Camadas: () => null,
+          fonteTitulo: interDoInfografico(),
+          fonteTexto: interDoInfografico(),
+          pesoTitulo: 800,
+          destaque: "#f5b841",
+          textoNoDestaque: "#111111",
+          textoClaro: "#eef3f4",
+          fundo: "#0d1b21",
+          mistura: 22,
+          legenda: { tamanho: 44, caixa: false, noite: true },
+          apresentacao: "infografico",
         };
       default:
         return {

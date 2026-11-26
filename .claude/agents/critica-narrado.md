@@ -61,6 +61,13 @@ música cobrindo a voz. Se um quadro levantar dúvida, tire só esse de novo sem
   fala não sustenta (CONDENADO para quem não foi condenado), barbante (`ligar`) entre peças sem ligação de verdade,
   vermelho demais (carimbo ou insert em quase toda cena) ou trecho de cinema mudo que não combina com a fala
   (CORRIGIR para a roteirista ou a pesquisadora); a falta da `tese` é sugestão;
+- no modelo Infográfico animado (`infografico`): número ilegível (pequeno demais, cortado, saindo da tela ou por
+  baixo da legenda), número no formato errado da língua (em português, 1.234,56 e "R$ 1.000"), eixo errado (barra
+  que não começa no zero, escala que engana, rótulo trocado), rótulo ou valor encavalado em outro, gráfico que não
+  bate com a fala (outro número, outro ano, a fala diz "dez por cento" e o gráfico mostra outro valor), gráfico que
+  se monta muito antes ou muito depois do número ser dito (ajustar o `em`), falta da `fonte` num dado real, ou a
+  mesma cor de destaque em tudo (o destaque é só para o dado que importa): CORRIGIR para a roteirista. Abra pelo
+  menos um quadro do fim de cada tipo de gráfico (já montado) e confira número por número com o roteiro;
 - a capa ilegível pequena (imagine do tamanho de um polegar), com o título cortado ou o destaque na palavra errada; na capa `cinema`, também: o título por cima do rosto, rosto ou mãos deformados (dedos a mais, olhos tortos), a emoção diferente da do título, texto ou letra dentro da imagem, ou alguém com cara de pessoa famosa (CORRIGIR para a pesquisadora gerar de novo, uma vez);
 - duração mais de 20% longe da do canal.
 

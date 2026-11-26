@@ -55,6 +55,17 @@ seguindo as regras de forma do `NARRADO.md`:
   `texto` curto (uma frase de filme mudo), `"acao"` com `silhuetas` (pessoa, soldado, cavalo, navio, carro, canhao)
   para uma cena de movimento (viagem, marcha, fuga, batalha sem violência) ou `"mapa"` com a `rota`. Detalhes em
   "Modelo Quadro de evidências" no `canais/NARRADO.md`.
+- No modelo **Infográfico animado** (`infografico`): a cena ganha `grafico` (o formato e um exemplo de cada tipo em
+  "Modelo Infográfico animado" no `canais/NARRADO.md`): `numero` para o número que importa, `linha` para o que
+  muda com o tempo, `barras` para comparar poucos valores (deitadas para ranking), `pizza` para partes de um todo,
+  `unidades` para "1 em cada N", `comparacao` para dois lados com VS, `linhaDoTempo` para datas, `escala` para
+  tamanhos muito diferentes e `conta` para a conta passo a passo. Gráfico em pelo menos metade das cenas, variando os
+  tipos. **Todo número vem de fonte oficial ou confiável que você leu** (Banco Central, IBGE, Tesouro Nacional, B3,
+  CVM, Receita Federal, OMS, NASA, ONU, Banco Mundial...) e vai no `fonte` do gráfico ("IBGE, 2025") e nas `fontes`
+  do roteiro; simulação leva `"fonte": "Exemplo de cálculo"` e a fala diz que é um exemplo. Refaça cada conta antes de
+  escrever (juros, porcentagem, soma das partes). Números no JSON sem aspas e com ponto (`35949.64`); na `fala`,
+  como se lê ("trinta e cinco mil"). Use `em` com a palavra da fala em que o número é dito, quando ele vem no meio.
+  Nada de gráfico que a fala não explica, nem de número que só aparece no gráfico.
 - `encerramento`, `chamadaFinal` (a chamada do canal, do `canal-postai.md`), `capa` (`titulo`, `destaque`; a `foto` a pesquisadora escolhe) e `post` (`titulo`, `legenda`). Se
   alguma foto veio do Unsplash, o fim da legenda leva o crédito de cada uma (ex.: `Fotos: Ana Souza e Lee Park no
   Unsplash.`); o `npm run conferir` confere.

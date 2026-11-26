@@ -116,6 +116,13 @@ num cartão menor que a tela. Marque `"detalhe": [x, y]` (1 a cada 4 cenas) no p
 um círculo vermelho e a câmera chega perto (um rosto, um objeto, uma assinatura). Para cena de `rota`, um mapa
 antigo de verdade (a rota se desenha nele); sem mapa bom, deixe a cena sem `foto` (sai um mapa desenhado).
 
+No modelo **Infográfico animado** (`infografico`), a maioria das cenas é um gráfico desenhado pelo kit (campo
+`grafico`): essas cenas **não levam foto** (não busque imagem para elas e não mexa no `grafico`). Só as cenas sem
+`grafico` que têm `busca` precisam de imagem: ela aparece num cartão limpo, menor que a tela (uns 1280x680), então
+prefira fotos atuais, nítidas e claras (pessoas no dia a dia, dinheiro, mercado, cidade, laboratório), sem texto
+escrito e sem marca. Cena sem gráfico e sem imagem boa: deixe sem `foto` e ponha `icone` (ex.: `"ampulheta"`; a
+lista está no `canais/NARRADO.md`) com a `palavra` da roteirista. A capa continua precisando de `capa.foto`.
+
 **Cena com `lugares` (mapa animado):** escolha um mapa antigo de domínio público onde **todos** os lugares
 aparecem, abra a imagem (Read) e ponha em `rota` onde fica cada lugar, em % da imagem, na mesma ordem:
 `"rota": [[67, 50], [55, 75], [45, 96]]` (`[x, y]`, 0,0 = canto de cima à esquerda). Não precisa de `inteira`.
