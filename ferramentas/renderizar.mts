@@ -190,6 +190,9 @@ function remotion(...comando: string[]) {
     // Se a validação do Zod falhou, o motivo vem antes de avisos de memória do Docker: mostra mais linhas
     const comZod = saida.some((linha) => /ZodError|Zod/.test(linha));
     console.error(saida.slice(comZod ? -40 : -15).join("\n"));
+    // O campo errado do JSON (src/Root.tsx) fica perto do fim: a Saúde do kit guarda só o fim
+    const campo = saida.find((linha) => linha.includes("Conteúdo inválido no molde"));
+    if (campo) console.error(`\n${campo.trim().replace(/^Error\s+Error:\s*/, "")}`);
     console.error(`\nFalhou: npx remotion ${comando.join(" ")}`);
     process.exit(resultado.status ?? 1);
   }

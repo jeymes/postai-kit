@@ -30,9 +30,22 @@ const video = { width: 1080, height: 1920, fps: FPS } as const;
 
 // O conteúdo do JSON passa pelo schema: completa os valores padrão (efeitos,
 // fundo, bpm...) e calcula a duração com o conteúdo de verdade.
-const duracao = <T extends Record<string, unknown>>(id: string, schema: { parse: (dados: unknown) => T }) => ({
+// O Remotion mostra só "ZodError" sem dizer o campo (26/11/2026: a prévia do
+// Documentário quebrou e ninguém soube por quê). Aqui o erro diz qual campo do
+// JSON está errado e o que era esperado, numa linha que chega à Saúde do kit.
+type Problema = { path: PropertyKey[]; message: string };
+type Resultado<T> = { success: true; data: T } | { success: false; error: { issues: Problema[] } };
+const duracao = <T extends Record<string, unknown>>(id: string, schema: { safeParse: (dados: unknown) => Resultado<T> }) => ({
   calculateMetadata: ({ props }: { props: T }) => {
-    const completo = schema.parse(props);
+    const resultado = schema.safeParse(props);
+    if (!resultado.success) {
+      const campos = resultado.error.issues
+        .slice(0, 6)
+        .map((p) => `${p.path.map(String).join(".") || "(raiz)"}: ${p.message}`)
+        .join("; ");
+      throw new Error(`Conteúdo inválido no molde ${id}: ${campos}`);
+    }
+    const completo = resultado.data;
     return { durationInFrames: duracaoDoMolde(id, completo), props: completo };
   },
 });
