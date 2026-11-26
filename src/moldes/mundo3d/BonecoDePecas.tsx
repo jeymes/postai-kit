@@ -2,6 +2,7 @@ import React, { useMemo } from "react";
 import { spring, useCurrentFrame, useVideoConfig } from "remotion";
 import * as THREE from "three";
 import type { Traje } from "./ambientes";
+import type { TestaAgora } from "../../componentes/personagens/MarcaNaTesta";
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
 import {
   FALANDO,
@@ -288,6 +289,60 @@ function desenharRosto(ctx: CanvasRenderingContext2D, r: Rosto) {
   } else linha(12, 30);
 }
 
+// ---------- Marca na testa (26/11/2026) ----------
+/** A luz macia do brilho (um degradê redondo, feito uma vez) */
+let texturaDoBrilho: THREE.CanvasTexture | null = null;
+function brilhoMacio() {
+  if (texturaDoBrilho) return texturaDoBrilho;
+  const c = document.createElement("canvas");
+  c.width = 128;
+  c.height = 128;
+  const ctx = c.getContext("2d");
+  if (ctx) {
+    const g = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+    g.addColorStop(0, "rgba(255,246,200,1)");
+    g.addColorStop(0.35, "rgba(255,213,74,0.6)");
+    g.addColorStop(1, "rgba(255,213,74,0)");
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, 128, 128);
+  }
+  texturaDoBrilho = new THREE.CanvasTexture(c);
+  texturaDoBrilho.colorSpace = THREE.SRGBColorSpace;
+  return texturaDoBrilho;
+}
+
+/** O sinal em losango na testa (escuro, ou dourado brilhando) e a luz macia em volta */
+const MarcaNaTesta3D: React.FC<{ testa: TestaAgora; y: number; z: number }> = ({ testa, y, z }) => {
+  const frame = useCurrentFrame();
+  const desde = frame - testa.desde;
+  if (desde < 0) return null;
+  const entra = Math.min(1, desde / 12);
+  const pulso = 0.8 + 0.2 * Math.sin(desde / 7);
+  const comMarca = testa.tipo !== "brilho";
+  const comBrilho = testa.tipo !== "marca";
+  return (
+    <group position={[0, y, z]} scale={0.4 + 0.6 * entra}>
+      {comBrilho && (
+        <>
+          <mesh position={[0, 0, -0.002]}>
+            <planeGeometry args={[0.26 * pulso, 0.26 * pulso]} />
+            <meshBasicMaterial map={brilhoMacio()} transparent opacity={entra} depthWrite={false} blending={THREE.AdditiveBlending} />
+          </mesh>
+          <pointLight position={[0, 0, 0.25]} color="#FFD54A" intensity={0.8 * pulso * entra} distance={1.2} />
+        </>
+      )}
+      {comMarca && (
+        <group scale={[0.65, 1, 1]}>
+          <mesh rotation={[0, 0, Math.PI / 4]}>
+            <planeGeometry args={[0.06, 0.06]} />
+            <meshBasicMaterial color={testa.cor ?? (comBrilho ? "#FFB800" : "#8E1F2A")} transparent opacity={entra} />
+          </mesh>
+        </group>
+      )}
+    </group>
+  );
+};
+
 // ---------- O boneco ----------
 export type DetalhesDePecas = {
   /** Barba (cor do cabelo) */
@@ -315,7 +370,11 @@ export const BonecoDePecas: React.FC<{
   traje: Traje;
   /** Marchando ou andando: pernas e braços balançam */
   andando?: boolean;
-}> = ({ visual, detalhes = {}, momentos, palavras, boca, posicao, virar = 0, espelhar = false, semente = 0, traje, andando = false }) => {
+  /** Marca ou brilho na testa (26/11/2026) */
+  testa?: TestaAgora | null;
+  /** O que vai na mão direita (um objeto 3D, já de pé; o boneco desvira pelo braço) */
+  naMao?: React.ReactNode;
+}> = ({ visual, detalhes = {}, momentos, palavras, boca, posicao, virar = 0, espelhar = false, semente = 0, traje, andando = false, testa, naMao }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
@@ -470,6 +529,12 @@ export const BonecoDePecas: React.FC<{
             <Peca geo={geo.braco} cor={visual.mangaLonga ? visual.roupa : visual.pele} position={[0, -M.braco.c / 2 + 0.04, 0]} />
             <Peca geo={geo.manga} cor={visual.roupa} position={[0, -M.braco.c * 0.21 + 0.04, 0]} />
             <Peca geo={geo.mao} cor={visual.pele} position={[0, -M.braco.c + 0.02, 0]} />
+            {/* O objeto na mão: de pé, qualquer que seja a pose (desfaz o giro do braço) */}
+            {lado === 1 && naMao && (
+              <group position={[0, -M.braco.c + 0.02, 0.06]} quaternion={giro.clone().invert()}>
+                {naMao}
+              </group>
+            )}
           </group>
         ))}
         {/* Cabeça (gira no pescoço) */}
@@ -530,6 +595,7 @@ export const BonecoDePecas: React.FC<{
             </>
           )}
           {visual.tiara && acessorio === "nenhum" && <Peca geo={geo.tiara} cor="#E3C28F" position={[0, c.a - 0.07, 0]} />}
+          {testa && <MarcaNaTesta3D testa={testa} y={c.a * 0.81} z={c.p / 2 + 0.012} />}
         </group>
       </group>
       </group>

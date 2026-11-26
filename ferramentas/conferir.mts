@@ -10,7 +10,8 @@
 // Uso: npm run conferir -- conteudo/<arquivo>.json
 import { existsSync, readFileSync } from "node:fs";
 import { cenariosFaltando } from "./cenarios-do-roteiro.ts";
-import { FPS, quadrosDaFala } from "../src/moldes/tempos.ts";
+import { duracaoDoMolde, FPS, quadrosDaFala } from "../src/moldes/tempos.ts";
+import { avisoDeDuracao, minutosDoCanal } from "./duracao-do-canal.ts";
 
 const arquivo = process.argv.slice(2).find((arg) => !arg.startsWith("--"));
 if (!arquivo || !existsSync(arquivo)) {
@@ -24,7 +25,7 @@ type Peca = {
   molde?: string;
   titulo?: string;
   cenas?: Cena[];
-  elenco?: Array<{ id: string }>;
+  elenco?: Array<{ id: string; tipo?: string }>;
   ctaInicial?: string;
   ctaFinal?: string;
   botaoFinal?: string;
@@ -94,8 +95,7 @@ if (peca.molde === "Documentario") {
   };
   const longas = doc.cenas ?? [];
   // A duração do canal vem do canal-postai.md ("Uns N minutos de fala")
-  const canalMd = ["canais/dark/canal-postai.md", ...process.argv.slice(2).filter((a) => a.endsWith(".md"))].find(existsSync);
-  const minutos = Number(/Uns (\d+) minutos/.exec(canalMd ? readFileSync(canalMd, "utf8") : "")?.[1] ?? 10);
+  const minutos = minutosDoCanal(process.argv.slice(2)) ?? 10;
   const total = longas.reduce((soma, c) => soma + palavras(c.fala), 0);
   // A voz fala uns 185 palavras por minuto, contando as pausas entre as cenas
   // (medido em 22/11/2026; com 140, o roteiro saía 30% curto e voltava depois da narração)
@@ -124,6 +124,14 @@ if (peca.molde === "Documentario") {
       erro("roteirista-narrado", `${(seg / 60).toFixed(1)} min de fala; o canal pede uns ${minutos} (corte ou acrescente cenas)`);
   } else if (Math.abs(total - alvo) > alvo * 0.2) {
     erro("roteirista-narrado", `${total} palavras; o canal pede uns ${minutos} min (cerca de ${alvo} palavras, com até 20% de diferença)`);
+  }
+  // A duração do VÍDEO (cada cena ganha uns 0,7 s de respiro, e há o cartão final),
+  // não só a das falas: passa de 120% do alvo, avisa antes do render
+  {
+    const falas = longas.reduce((soma, c) => soma + (c.narracao?.duracaoSeg ? Number(c.narracao.duracaoSeg) : quadrosDaFala({ fala: c.fala }) / FPS), 0);
+    const video = duracaoDoMolde("Documentario", doc as unknown as Record<string, unknown>) / FPS;
+    const longo = avisoDeDuracao(video, falas, minutos);
+    if (longo) aviso("roteirista-narrado", longo);
   }
   const capitulos = longas.filter((c) => c.capitulo);
   if (!longas[0]?.capitulo) erro("roteirista-narrado", "a cena 1 precisa abrir um capítulo (vira o 00:00 da descrição)");
@@ -244,7 +252,7 @@ if (peca.molde === "Mundo3D") {
   };
   const cenas = m.cenas ?? [];
   const ids = new Set((m.personagens ?? []).map((p) => p.id));
-  const PLANOS = ["aberto", "medio", "close", "de-baixo", "por-cima"];
+  const PLANOS = ["aberto", "medio-aberto", "medio", "close", "de-baixo", "por-cima"];
   const AMBIENTES = ["campo", "deserto", "cidade", "aldeia", "moderno"];
   const ambiente = m.cenario?.ambiente ?? "campo";
   const temPonte = m.cenario?.ponte ?? ambiente === "campo";
@@ -322,10 +330,21 @@ else {
 const ids = peca.elenco?.length ? peca.elenco.map((p) => p.id) : ["noiva", "organizadora"];
 const estadoNa = (cena: Cena, id: string): Estado | undefined =>
   cena.estados?.[id] ?? (cena[id] as Estado | undefined);
+// A criatura só está na tela da primeira cena em que fala ou tem pose até a luz do aviso
+// (que a empurra e some com ela): antes disso e depois, não se cobra pose dela. 26/11/2026:
+// a Dúvida só sai do celular na cena 3, e as cenas 1 e 2 davam erro falso
+const naTela = (id: string, i: number) => {
+  if (!peca.elenco?.some((p) => p.id === id && p.tipo === "criatura")) return true;
+  const primeira = cenas.findIndex((c) => c.quem === id || estadoNa(c, id));
+  if (primeira < 0 || i < primeira) return false;
+  const luz = cenas.findIndex((c) => c.luz);
+  return luz < 0 || i <= luz;
+};
 for (const id of ids) {
   let anterior: Estado | undefined;
   cenas.forEach((cena, i) => {
     const atual = estadoNa(cena, id);
+    if (!naTela(id, i)) return;
     if (!atual) {
       erro("diretora-de-arte", `cena ${i + 1}: falta a pose e a expressão de "${id}" em estados`);
     } else if (anterior && atual.pose === anterior.pose && atual.expressao === anterior.expressao) {
@@ -342,12 +361,34 @@ for (const cena of cenas) {
   }
 }
 
+// ---- Objetos de apoio, marca na testa e QR (26/11/2026) ----
+{
+  const qrDoRoteiro = (peca as Record<string, unknown>).qr as { texto?: string } | undefined;
+  const site = existsSync("marca/marca.json") ? String((JSON.parse(readFileSync("marca/marca.json", "utf8")) as { site?: string }).site ?? "").trim() : "";
+  if (qrDoRoteiro && !qrDoRoteiro.texto && !site) erro("roteirista", "qr sem texto e a marca sem site: ponha o endereço em qr.texto (o QR não aparece)");
+  cenas.forEach((cena, i) => {
+    const extra = cena as Record<string, unknown> & {
+      objetos?: Array<{ quem?: string }>;
+      testa?: Record<string, string>;
+      qr?: { texto?: string };
+    };
+    for (const o of extra.objetos ?? [])
+      if (o.quem && !ids.includes(o.quem)) erro("diretora-de-arte", `cena ${i + 1}: objeto com "${o.quem}", que não está no elenco (${ids.join(", ")})`);
+    for (const id of Object.keys(extra.testa ?? {}))
+      if (!ids.includes(id)) erro("diretora-de-arte", `cena ${i + 1}: testa de "${id}", que não está no elenco (${ids.join(", ")})`);
+    if (extra.qr && !extra.qr.texto && !qrDoRoteiro?.texto && !site) erro("roteirista", `cena ${i + 1}: qr sem endereço (nem qr.texto nem o site da marca)`);
+    const cartao = (peca as Record<string, unknown>).cartao as { entra?: number; sai?: number } | undefined;
+    if (extra.qr && (extra.notificacao || (cartao && i >= (cartao.entra ?? 0) && i <= (cartao.sai ?? -1))))
+      aviso("diretora-de-arte", `cena ${i + 1}: o QR divide o alto da tela com a notificação ou o cartão; confira na prévia se nada se cobre`);
+  });
+}
+
 // ---- Objetos e corpo: o celular, a luz do aviso e o sentado ----
 // Defeitos que a crítica deixava passar: luz acesa sem ninguém com o celular e
 // pessoa sentada sem a cama ou o sofá na frente (as pernas sumiam; o molde
 // agora põe de pé, mas o roteiro tem que pedir certo)
 {
-  const cenariosComFrente = new Set(["quarto", "sala", ...(((peca as Record<string, unknown>).cenariosProprios as Array<{ id: string; frente?: string }> | undefined) ?? []).filter((c) => c.frente).map((c) => c.id)]);
+  const cenariosComFrente = new Set(["quarto", "sala", "carro", ...(((peca as Record<string, unknown>).cenariosProprios as Array<{ id: string; frente?: string }> | undefined) ?? []).filter((c) => c.frente).map((c) => c.id)]);
   let cenario = (peca as Record<string, unknown>).cenario as string | undefined;
   const daEsquerda = ids.length === 2 ? ids[0] : null;
   cenas.forEach((cena, i) => {
@@ -357,8 +398,9 @@ for (const cena of cenas) {
       erro("diretora-de-arte", `cena ${i + 1}: tem "luz" mas ninguém está com o celular (pose celular ou sentado); a luz acenderia numa mão vazia`);
     for (const [id, e] of [...poses, ...Object.entries(cena.meio ?? {})]) {
       if (e?.pose !== "sentado") continue;
-      if (!cenariosComFrente.has(cenario ?? "") || id !== daEsquerda)
-        aviso("diretora-de-arte", `cena ${i + 1}: "${id}" sentado sem a cama ou o sofá na frente dele (só no quarto, na sala ou num cenário com frente, e só o da esquerda numa conversa de dois): o vídeo vai mostrar de pé com o celular`);
+      // No carro os dois bancos da frente servem: os dois podem sentar
+      if (!cenariosComFrente.has(cenario ?? "") || (id !== daEsquerda && cenario !== "carro"))
+        aviso("diretora-de-arte", `cena ${i + 1}: "${id}" sentado sem a cama, o sofá ou o painel na frente dele (só no quarto, na sala, no carro ou num cenário com frente, e só o da esquerda numa conversa de dois; no carro, os dois): o vídeo vai mostrar de pé com o celular`);
     }
   });
 }

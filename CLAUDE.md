@@ -34,12 +34,14 @@ src/componentes/
   texto/Legendas          legenda da narração, com a palavra falada em destaque
   personagens/Mascote     mascote na cor da marca que fala junto com a narração
   personagens/Apresentador a pessoa falando (vídeo do npm run avatar)
-  cenarios/Cenarios        os 7 lugares do kit e os criados pela equipe (SVG; npm run cenario faz a ficha e grava no canal, npm run cenarios põe no roteiro)
+  cenarios/Cenarios        os 9 lugares do kit (com a garagem e o carro, em Garagem.tsx) e os criados pela equipe (SVG; npm run cenario faz a ficha e grava no canal, npm run cenarios põe no roteiro)
+  objetos/ObjetosDeApoio  aliança, caixinha, terno, vestido, buquê, bolo, presente, convite e taças, na mão ou ao lado (Conversa)
+  personagens/MarcaNaTesta marca ou brilho na testa (campo testa do Conversa e do Mundo3D)
   3d/                     Palco3D (câmera e luzes), Titulo3D (letras com volume na fonte da
                           marca), Cartao3D (foto num cartão girando), Formas3D (formas ao fundo)
   base                    Fundo, Foto, Assinatura (logo), Selo (preço), arquivo()
   cenas/ChamadaFinal      última cena: logo, chamada e @ ou site
-  midia/                  Celular, Navegador, Rolagem (print de site rolando), QrAnimado
+  midia/                  Celular, Navegador, Rolagem (print de site rolando), QrAnimado, QrCode (QR que dá para escanear, num cartão, celular ou convite)
   efeitos/                Toque (dedo com som), Flash
   audio/Som               Som (efeitos de public/sfx) e Musica (trilha que baixa no fim)
   lottie/Animacao         sucesso, confete, estrelas, curtida, seta (nas cores da marca)
@@ -76,6 +78,8 @@ fundo) entram sozinhos. Exemplos prontos em `conteudo/exemplo-*.json`.
 ```bash
 npm run previa -- conteudo/<nome>.json        # um quadro de cada cena, em out/<nome>/
 npm run renderizar -- conteudo/<nome>.json    # vídeo + capa (ou slides) e info.json
+#   vídeo longo (Documentario ou mais de 3 min) sai em blocos de 90 s, cada um num navegador novo;
+#   se parar no meio, rodar o mesmo comando continua do bloco que faltava (--inteiro: de uma vez)
 npm run capturar-site -- https://site nome    # print da página inteira em public/sites/ (+ --computador)
 npm run buscar-fotos -- --candidatos x="termo em inglês"   # fotos CC0 em public/fotos/
 npm run voz:instalar [-- --mascote]           # instala a narração neste computador (uma vez, ~1,2 GB)

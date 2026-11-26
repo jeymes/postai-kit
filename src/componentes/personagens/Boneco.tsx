@@ -1,6 +1,8 @@
 import React from "react";
 import { spring, useCurrentFrame, useVideoConfig } from "remotion";
 import { cores } from "../../nucleo/marca";
+import { ObjetoNaMao } from "../objetos/ObjetosDeApoio";
+import { MarcaNaTesta } from "./MarcaNaTesta";
 
 // Personagem de corpo inteiro, desenhado em vetor e montado em peças (cabeça,
 // olhos, sobrancelhas, boca, braços com cotovelo), no estilo 2D chapado com
@@ -204,7 +206,9 @@ const Braco: React.FC<{
   visual: Visual;
   camada: "contorno" | "cor";
   celular?: ModoDoCelular;
-}> = ({ angulos: [ombro, cotovelo], visual, camada, celular }) => {
+  /** Esta mão segura o objeto de apoio da cena (se houver) */
+  segura?: boolean;
+}> = ({ angulos: [ombro, cotovelo], visual, camada, celular, segura }) => {
   const contorno = camada === "contorno";
   const largura = contorno ? 46 : 34;
   const corBraco = contorno ? TRACO : visual.roupa;
@@ -221,6 +225,7 @@ const Braco: React.FC<{
             {celular === "costas" ? <CostasDoCelular largura={46} altura={78} /> : <Celular />}
           </g>
         )}
+        {segura && !contorno && <ObjetoNaMao angulo={-(ombro + cotovelo)} y={BRACO + 2} />}
       </g>
     </g>
   );
@@ -231,9 +236,10 @@ const Bracos: React.FC<{ esq: Angulos; dir: Angulos; visual: Visual; celular: Mo
   <>
     {(["contorno", "cor"] as const).map((camada) => (
       <g key={camada}>
-        <Braco angulos={esq} visual={visual} camada={camada} />
+        {/* O objeto de apoio vai na mão livre: a direita, ou a esquerda se a direita tem o celular */}
+        <Braco angulos={esq} visual={visual} camada={camada} segura={Boolean(celular)} />
         <g transform="translate(400 0) scale(-1 1)">
-          <Braco angulos={dir} visual={visual} camada={camada} celular={celular} />
+          <Braco angulos={dir} visual={visual} camada={camada} celular={celular} segura={!celular} />
         </g>
       </g>
     ))}
@@ -476,6 +482,7 @@ export const Boneco: React.FC<{
                 <Svg html={rosto.olhos} />
                 {desenho.sobrancelhas !== false && <Sobrancelhas expressao={estado.expressao} />}
                 <Svg html={rosto.boca} />
+                <MarcaNaTesta x={200} y={170} />
               </g>
               <Bracos esq={estado.esq} dir={estado.dir} visual={visual} celular={modoDoCelular(estado.pose)} />
             </g>
@@ -533,6 +540,7 @@ export const Boneco: React.FC<{
                   strokeLinejoin="round"
                 />
               )}
+              <MarcaNaTesta x={200} y={170} />
             </g>
             <Bracos esq={estado.esq} dir={estado.dir} visual={visual} celular={modoDoCelular(estado.pose)} />
           </g>

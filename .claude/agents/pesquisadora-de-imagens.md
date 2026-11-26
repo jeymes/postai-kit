@@ -90,6 +90,18 @@ Ponha `"foto": "fotos/<peça>/<nome>.jpg"` em cada cena (e `"inteira": true` nos
 tem texto escrito na parte de baixo (legenda de gravura, letreiro, inscrição), ponha `"legendaNoAlto": true` na cena: a
 legenda do vídeo sobe e não fica em cima do texto.
 
+**Foco:** a foto deitada enche a tela cortando as sobras (uma pintura mais alta que a tela perde em cima e embaixo) e
+a câmera aproxima e afasta em volta do meio. Quando o que importa não está no meio (os rostos no alto de uma pintura
+deitada, a figura num canto), olhe a imagem e ponha `"foco": [x, y]` (em % da imagem, 0,0 = canto de cima à esquerda,
+ex.: `[50, 20]` para rostos no alto) ou `"foco": "topo"` (também `"base"`, `"esquerda"`, `"direita"`): o corte e o
+zoom ficam em volta dele. Confira na prévia que o rosto ficou inteiro.
+
+**Bordas:** o `buscar-fotos` corta sozinho a borda lisa (cinza, branca ou preta) e a faixa com a legenda do arquivo
+que vêm nas gravuras de museu, e diz quanto cortou. Margem de papel velho, manchado ou rasgado ele não corta (não dá
+para ter certeza): abra a imagem e corte à mão, em % de cada lado:
+`npm run recortar-bordas -- public/fotos/<peça>/<nome>.jpg --corte esquerda,cima,direita,baixo` (ex.: `--corte 10,20,10,15`);
+abra de novo e confira que só a margem saiu.
+
 No modelo **Colagem** (o `estilo.modelo` do roteiro), em umas 1 a cada 3 cenas, olhe a imagem e marque
 `"detalhe": [x, y]` (em % da imagem, 0,0 = canto de cima à esquerda) no ponto que a fala cita: o rosto de quem fala,
 o objeto, a inscrição. Ele sai ampliado num recorte redondo com um círculo de marca-texto. Marque um ponto que dê

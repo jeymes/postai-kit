@@ -80,16 +80,22 @@ narre tudo. Depois prévia, crítica na prévia, renderize, crítica no vídeo p
 ## Regras de forma
 
 - **Duração:** a do canal (8, 10 ou 15 minutos), com uns 185 palavras por minuto de fala (a voz fala rápido: medido em 22/11/2026). Um vídeo de 10
-  minutos tem umas 1.850 palavras em 80 a 110 cenas. Com 140 por minuto, o roteiro saía 30% curto e voltava.
+  minutos tem umas 1.850 palavras em 80 a 110 cenas. Com 140 por minuto, o roteiro saía 30% curto e voltava. O vídeo
+  sai mais longo que a soma das falas (cada cena ganha uns 0,7 s de respiro, e há o cartão final): o `conferir` e a
+  prévia avisam quando o vídeo passa de 120% da duração do canal; aí corte ou junte cenas antes do render.
 - **Cenas:** cada `fala` com 1 a 3 frases (uns 8 a 20 segundos). Frases faladas, curtas, do jeito que se conta uma
   história em voz alta. Números e datas como se fala ("mil oitocentos e oito" pode ficar "1808": a voz lê certo).
 - **Capítulos:** de 4 a 8, o primeiro na cena 1 (vira o "00:00" da descrição do YouTube). Título de capítulo com até
-  40 caracteres.
+  40 caracteres. O cartão do 1º capítulo entra uns 3 s depois do começo (o vídeo abre com a imagem e o gancho); os
+  outros entram no começo da cena. A legenda fica por cima do cartão, sempre legível.
 - **Gancho:** os primeiros 30 segundos dizem do que é o vídeo e por que ficar até o fim, com uma pergunta ou uma
   promessa que só se resolve no final. Nada de "Olá, pessoal" nem "Neste vídeo".
 - **Texto na tela** (`texto`): só data, lugar ou número, até 40 caracteres, e no máximo 1 a cada 5 cenas.
 - **Imagens:** o ideal é toda cena ter `foto`. Uma imagem pode voltar em cenas seguidas com `movimento` diferente, mas não mais
-  que 3 vezes no vídeo. Retrato em pé ou mapa: `"inteira": true`.
+  que 3 vezes no vídeo. Retrato em pé ou mapa: `"inteira": true`. Quando o rosto ou a figura não está no meio da
+  imagem (pintura deitada com os rostos no alto), `"foco": [x, y]` (em % da imagem) ou `"foco": "topo"`: o corte e o
+  zoom ficam em volta dele. A borda lisa e a faixa de legenda de museu o `buscar-fotos` corta sozinho; margem de papel
+  velho, com `npm run recortar-bordas -- <imagem> --corte e,c,d,b`.
 - **Imagem errada não entra:** se os acervos só trazem imagens que não mostram o que a fala diz (outra pessoa, outra época, outro modelo), gere a cena com IA (`--fonte ia` com a descrição em inglês) em vez de usar a errada.
 - **Faltou imagem (o acervo bloqueou, não achou):** o `buscar-fotos` gera com IA sozinho (ou `--fonte ia` com a cena descrita em inglês; até 40 por dia; o vídeo sai marcado como sintético no YouTube). NUNCA pare o vídeo por isso. Deixe a cena sem `foto`: ela continua a
   imagem da cena anterior, que fica mais tempo na tela com outro movimento. Só a cena 1 precisa de imagem, e o `conferir`
@@ -115,7 +121,8 @@ narre tudo. Depois prévia, crítica na prévia, renderize, crítica no vídeo p
   num recorte redondo, com o círculo de marca-texto e a seta. Não use `detalhe` em retrato `inteira`.
 - **Pronúncia:** nomes estrangeiros e siglas em `pronuncia`.
 - **Capa:** `capa.titulo` com **até 4 palavras** (saem grandes, em maiúsculas e com contorno), que dão curiosidade sem
-  repetir o título do vídeo e sem mentir (ex.: "SÓ UMA PEDRA"); `destaque` na palavra mais forte (sai em amarelo);
+  repetir o título do vídeo e sem mentir (ex.: "SÓ UMA PEDRA"); `destaque` na palavra mais forte (sai na cor de destaque
+do modelo ou em amarelo, quando a cor da marca não lê bem no fundo escuro; sem `destaque`, a palavra mais longa);
   `lado`: `esquerda` ou `direita`, o oposto ao rosto ou à figura principal da foto (o texto fica no alto desse lado);
   `foto` a imagem mais marcante. **Modelo da capa** (`capa.modelo`), um dos que a seção "Capa dos vídeos" do
   `canal-postai.md` permite (sem a seção, qualquer um): `classico` (só o título), `circulo` (círculo vermelho no

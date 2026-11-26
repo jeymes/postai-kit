@@ -1,4 +1,6 @@
 import React from "react";
+import { ObjetoNaMao } from "../objetos/ObjetosDeApoio";
+import { MarcaNaTesta } from "./MarcaNaTesta";
 import { useCurrentFrame, useVideoConfig } from "remotion";
 import {
   BRACO,
@@ -79,7 +81,7 @@ const Rosto: React.FC<{ expressao: Expressao; forma: string | null; piscando: bo
   );
 };
 
-const Braco: React.FC<{ angulos: Angulos; visual: Visual; celular?: ModoDoCelular }> = ({ angulos: [ombro, cotovelo], visual, celular }) => (
+const Braco: React.FC<{ angulos: Angulos; visual: Visual; celular?: ModoDoCelular; segura?: boolean }> = ({ angulos: [ombro, cotovelo], visual, celular, segura }) => (
   <g transform={`translate(${OMBRO.x + 12} ${OMBRO.y - 26}) rotate(${ombro})`}>
     <line x1={0} y1={0} x2={0} y2={BRACO} stroke={visual.roupa} strokeWidth={46} strokeLinecap="round" />
     <g transform={`translate(0 ${BRACO}) rotate(${cotovelo})`}>
@@ -97,6 +99,7 @@ const Braco: React.FC<{ angulos: Angulos; visual: Visual; celular?: ModoDoCelula
           )}
         </g>
       )}
+      {segura && <ObjetoNaMao angulo={-(ombro + cotovelo)} y={BRACO} />}
     </g>
   </g>
 );
@@ -149,9 +152,11 @@ export const Liso: React.FC<{
                 <circle cx={222} cy={234} r={17} />
               </g>
             )}
-            <Braco angulos={estado.esq} visual={visual} />
+            <MarcaNaTesta x={200} y={200} escala={0.7} />
+            {/* O objeto de apoio na mão livre (a direita, ou a esquerda se a direita tem o celular) */}
+            <Braco angulos={estado.esq} visual={visual} segura={Boolean(celular)} />
             <g transform="translate(400 0) scale(-1 1)">
-              <Braco angulos={estado.dir} visual={visual} celular={celular} />
+              <Braco angulos={estado.dir} visual={visual} celular={celular} segura={!celular} />
             </g>
           </g>
         </g>

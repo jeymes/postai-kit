@@ -40,7 +40,70 @@
           "em": 0,
           "repetir": 3
         }
-      ]
+      ],
+      "narracao": {
+        "audio": "narracao/exemplo-mundo3d/cena-01-80cefb5c.wav",
+        "duracaoSeg": 5.419,
+        "legendas": [
+          {
+            "texto": "Em",
+            "inicioMs": 0,
+            "fimMs": 180
+          },
+          {
+            "texto": "1831,",
+            "inicioMs": 180,
+            "fimMs": 1500
+          },
+          {
+            "texto": "na",
+            "inicioMs": 1500,
+            "fimMs": 1900
+          },
+          {
+            "texto": "Inglaterra,",
+            "inicioMs": 1900,
+            "fimMs": 2540
+          },
+          {
+            "texto": "uma",
+            "inicioMs": 2760,
+            "fimMs": 2860
+          },
+          {
+            "texto": "tropa",
+            "inicioMs": 2860,
+            "fimMs": 3260
+          },
+          {
+            "texto": "inteira",
+            "inicioMs": 3260,
+            "fimMs": 3600
+          },
+          {
+            "texto": "atravessou",
+            "inicioMs": 3600,
+            "fimMs": 4160
+          },
+          {
+            "texto": "esta",
+            "inicioMs": 4160,
+            "fimMs": 4360
+          },
+          {
+            "texto": "ponte",
+            "inicioMs": 4360,
+            "fimMs": 4720
+          },
+          {
+            "texto": "marchando",
+            "inicioMs": 4720,
+            "fimMs": 5280,
+            "fimDeFrase": true
+          }
+        ],
+        "chave": "[\"Em 1831, na Inglaterra, uma tropa inteira atravessou esta ponte marchando.\",\"pm_alex\",1,false]"
+      }
     },
     {
       "fala": "Todos pisavam juntos, no mesmo ritmo.",
@@ -61,7 +124,45 @@
           "em": 0,
           "repetir": 2
         }
-      ]
+      ],
+      "narracao": {
+        "audio": "narracao/exemplo-mundo3d/cena-02-b00ffac9.wav",
+        "duracaoSeg": 2.453,
+        "legendas": [
+          {
+            "texto": "Todos",
+            "inicioMs": 0,
+            "fimMs": 240
+          },
+          {
+            "texto": "pisavam",
+            "inicioMs": 240,
+            "fimMs": 760
+          },
+          {
+            "texto": "juntos,",
+            "inicioMs": 760,
+            "fimMs": 1160
+          },
+          {
+            "texto": "no",
+            "inicioMs": 1160,
+            "fimMs": 1460
+          },
+          {
+            "texto": "mesmo",
+            "inicioMs": 1460,
+            "fimMs": 1700
+          },
+          {
+            "texto": "ritmo",
+            "inicioMs": 1700,
+            "fimMs": 2320,
+            "fimDeFrase": true
+          }
+        ],
+        "chave": "[\"Todos pisavam juntos, no mesmo ritmo.\",\"pm_alex\",1,false]"
+      }
     },
     {
       "fala": "A ponte começou a balançar cada vez mais... e desabou.",
@@ -83,7 +184,66 @@
           "em": 0.2,
           "repetir": 2
         }
-      ]
+      ],
+      "narracao": {
+        "audio": "narracao/exemplo-mundo3d/cena-03-30cd0612.wav",
+        "duracaoSeg": 3.413,
+        "legendas": [
+          {
+            "texto": "A",
+            "inicioMs": 0,
+            "fimMs": 120
+          },
+          {
+            "texto": "ponte",
+            "inicioMs": 120,
+            "fimMs": 400
+          },
+          {
+            "texto": "começou",
+            "inicioMs": 400,
+            "fimMs": 860
+          },
+          {
+            "texto": "a",
+            "inicioMs": 860,
+            "fimMs": 960
+          },
+          {
+            "texto": "balançar",
+            "inicioMs": 960,
+            "fimMs": 1500
+          },
+          {
+            "texto": "cada",
+            "inicioMs": 1500,
+            "fimMs": 1680
+          },
+          {
+            "texto": "vez",
+            "inicioMs": 1680,
+            "fimMs": 1960
+          },
+          {
+            "texto": "mais...",
+            "inicioMs": 1960,
+            "fimMs": 2320,
+            "fimDeFrase": true
+          },
+          {
+            "texto": "e",
+            "inicioMs": 2320,
+            "fimMs": 2740
+          },
+          {
+            "texto": "desabou",
+            "inicioMs": 2740,
+            "fimMs": 3260,
+            "fimDeFrase": true
+          }
+        ],
+        "chave": "[\"A ponte começou a balançar cada vez mais... e desabou.\",\"pm_alex\",1,false]"
+      }
     },
     {
       "fala": "Desde então a ordem é: na ponte, cada um no seu passo!",
@@ -100,7 +260,75 @@
         }
       },
       "balanco": 0,
-      "sons": []
+      "sons": [],
+      "narracao": {
+        "audio": "narracao/exemplo-mundo3d/cena-04-7e4cc21c.wav",
+        "duracaoSeg": 3.136,
+        "legendas": [
+          {
+            "texto": "Desde",
+            "inicioMs": 0,
+            "fimMs": 200
+          },
+          {
+            "texto": "então",
+            "inicioMs": 200,
+            "fimMs": 640
+          },
+          {
+            "texto": "a",
+            "inicioMs": 640,
+            "fimMs": 800
+          },
+          {
+            "texto": "ordem",
+            "inicioMs": 800,
+            "fimMs": 1200
+          },
+          {
+            "texto": "é:",
+            "inicioMs": 1200,
+            "fimMs": 1320
+          },
+          {
+            "texto": "na",
+            "inicioMs": 1320,
+            "fimMs": 1420
+          },
+          {
+            "texto": "ponte,",
+            "inicioMs": 1420,
+            "fimMs": 1800
+          },
+          {
+            "texto": "cada",
+            "inicioMs": 1980,
+            "fimMs": 2100
+          },
+          {
+            "texto": "um",
+            "inicioMs": 2100,
+            "fimMs": 2260
+          },
+          {
+            "texto": "no",
+            "inicioMs": 2260,
+            "fimMs": 2360
+          },
+          {
+            "texto": "seu",
+            "inicioMs": 2360,
+            "fimMs": 2520
+          },
+          {
+            "texto": "passo!",
+            "inicioMs": 2520,
+            "fimMs": 2920,
+            "fimDeFrase": true
+          }
+        ],
+        "chave": "[\"Desde então a ordem é: na ponte, cada um no seu passo!\",\"pm_santa\",1,false]"
+      }
     }
   ],
   "voz": "pm_alex",
@@ -121,5 +349,6 @@
   "post": {
     "titulo": "Por que soldados param de marchar na ponte? 🌉",
     "legenda": "Em 1831 uma ponte caiu na Inglaterra por causa de uma marcha no mesmo ritmo. #historia #curiosidades #shorts"
-  }
+  },
+  "idioma": "pt"
 }

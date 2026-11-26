@@ -16,12 +16,13 @@
 //                                                só refaz as cenas que mudaram, --tudo refaz todas)
 //   npm run renderizar -- conteudo/<nome>.json   o vídeo ou as imagens finais
 //   (--detalhes mostra o progresso do Remotion; sem ele, só o resumo ou o erro)
-import { spawnSync } from "node:child_process";
+import { spawnSync, type SpawnSyncReturns } from "node:child_process";
 import { createHash } from "node:crypto";
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { cpus, totalmem } from "node:os";
 import { basename, join } from "node:path";
 import { duracaoDoMolde, FPS, iniciosDasCenas, MOLDES_3D, MOLDES_DE_VIDEO, QUADROS_DA_IMAGEM, quadrosDaPrevia } from "../src/moldes/tempos.ts";
+import { avisoDeDuracao, minutosDoCanal } from "./duracao-do-canal.ts";
 import { fonte3dDesatualizada, prepararFonte3d } from "./fonte-3d.mts";
 import { quadrosQuebrados } from "./quadros-quebrados.mts";
 import { tirarImagens, type Imagem } from "./varias-imagens.mts";
@@ -131,7 +132,14 @@ const detalhes = args.includes("--detalhes");
 // quadros), sem 3D: vale para todo render na nuvem.
 const naNuvem = Boolean(process.env.KIT_NAVEGADOR);
 let navegadorDoRemotion = naNuvem && !args.includes("--navegador-da-maquina");
-function rodarRemotion(comando: string[]) {
+// Só para teste do render em blocos: a próxima chamada finge que o navegador fechou
+let fingirNavegadorFechado = false;
+function rodarRemotion(comando: string[]): SpawnSyncReturns<string> {
+  if (fingirNavegadorFechado) {
+    fingirNavegadorFechado = false;
+    const erro = "ProtocolError: Protocol error (Target.closeTarget): Target closed (falha de teste, KIT_TESTE_FALHA_BLOCO)";
+    return { pid: 0, output: [null, "", erro], stdout: "", stderr: erro, status: 1, signal: null };
+  }
   const env = { ...process.env };
   const extra: string[] = [];
   if (navegadorDoRemotion) {
@@ -157,8 +165,16 @@ function renderComReserva(abas: number, ...comando: string[]) {
   // Se o navegador fechar de novo, continua baixando as abas (metade a cada vez,
   // até 1) antes de desistir: com metade só, a memória ainda podia não bastar.
   let atual = abas;
+  // Conteúdo inválido (Root.tsx) não melhora com outro navegador nem com menos abas:
+  // antes tentava 8→4→2→1 e trocava para o navegador da máquina (o do mosaico) à toa
+  const conteudoInvalido = (r: { stdout?: string | null; stderr?: string | null }) =>
+    `${r.stdout ?? ""}\n${r.stderr ?? ""}`.includes("Conteúdo inválido no molde");
   for (;;) {
     let r = rodarRemotion([...comando, `--concurrency=${atual}`]);
+    if (r.status !== 0 && conteudoInvalido(r)) {
+      remotion(...comando, `--concurrency=${atual}`);
+      return atual;
+    }
     // O navegador do Remotion não abriu na nuvem (não baixou, por exemplo): volta ao da máquina
     if (r.status !== 0 && navegadorDoRemotion && !navegadorFechou(`${r.stdout ?? ""}\n${r.stderr ?? ""}`)) {
       console.log("O navegador do Remotion falhou; tentando com o navegador da máquina.");
@@ -218,6 +234,23 @@ async function variasImagens(composicao: string, lista: Imagem[]) {
   for (const { destino } of lista) arquivos.push({ arquivo: destino, tipo: "image/jpeg", tamanho: tamanho(destino) });
 }
 
+/** Os arquivos de public/ que a peça usa, com a data e o tamanho (mudou o arquivo, muda a marca) */
+function arquivosUsados(valor: unknown): string[] {
+  const achados: string[] = [];
+  const andar = (v: unknown) => {
+    if (typeof v === "string") {
+      const arquivo = join("public", v);
+      if (v.length < 300 && existsSync(arquivo) && statSync(arquivo).isFile()) {
+        const { mtimeMs, size } = statSync(arquivo);
+        achados.push(`${v}:${mtimeMs}:${size}`);
+      }
+    } else if (Array.isArray(v)) v.forEach(andar);
+    else if (v && typeof v === "object") Object.values(v).forEach(andar);
+  };
+  andar(valor);
+  return achados;
+}
+
 /**
  * Prévia que só refaz o que mudou (23/11/2026): cada volta da crítica refazia a
  * prévia inteira (uns 5 min na nuvem) mesmo quando ela pedia para trocar 3
@@ -231,21 +264,6 @@ async function previaSoDoQueMudou() {
   const cenas: unknown[] | null = Array.isArray(props.cenas) ? props.cenas : null;
   const inicios = cenas ? iniciosDasCenas(molde, props) : [];
   const resto = { ...props, cenas: undefined };
-  const arquivosUsados = (valor: unknown): string[] => {
-    const achados: string[] = [];
-    const andar = (v: unknown) => {
-      if (typeof v === "string") {
-        const arquivo = join("public", v);
-        if (v.length < 300 && existsSync(arquivo) && statSync(arquivo).isFile()) {
-          const { mtimeMs, size } = statSync(arquivo);
-          achados.push(`${v}:${mtimeMs}:${size}`);
-        }
-      } else if (Array.isArray(v)) v.forEach(andar);
-      else if (v && typeof v === "object") Object.values(v).forEach(andar);
-    };
-    andar(valor);
-    return achados;
-  };
   const marcaDoResto = JSON.stringify([molde, resto, arquivosUsados(resto)]);
   const guardadas = join(saida, ".previa");
   if (args.includes("--tudo")) rmSync(guardadas, { recursive: true, force: true });
@@ -284,6 +302,17 @@ async function previaSoDoQueMudou() {
     console.log(
       `Prévia: ${faltam.length} de ${itens.length} quadros refeitos (os outros não mudaram)${faltam.length ? `: previa-${previaMudou.join(", previa-")}` : ""}.`,
     );
+}
+
+/** Vídeo longo: avisa na prévia (antes do render) se o vídeo passa de 120% do alvo do canal */
+function avisarDuracao() {
+  if (molde !== "Documentario") return;
+  const minutos = minutosDoCanal(args);
+  if (!minutos) return;
+  const cenas = (props.cenas ?? []) as Array<{ fala?: string; narracao?: { duracaoSeg?: number } }>;
+  const falas = cenas.reduce((soma, c) => soma + Number(c.narracao?.duracaoSeg ?? 0), 0);
+  const aviso = avisoDeDuracao(duracaoDoMolde(molde, props) / FPS, falas, minutos);
+  if (aviso) console.log(`AVISO  ${aviso}`);
 }
 
 /** Capa padrão do vídeo, quando a peça não traz a sua: a primeira frase e a primeira foto */
@@ -386,6 +415,142 @@ function colarVinheta(video: string, { largura, altura }: { largura: number; alt
   return quadros / FPS;
 }
 
+/**
+ * Vídeo longo em blocos (26/11/2026): o render do Documentario de 10 a 15 min
+ * falhava na nuvem com "Target closed" (10 vezes em 3 contas), mesmo com 1 aba:
+ * o navegador cansa num render longo. Agora o vídeo sai em pedaços de
+ * BLOCO_SEG segundos (--frames=a-b), cada um num Remotion (e num navegador)
+ * novo, com a mesma qualidade, e o som de cada pedaço em WAV
+ * (--separate-audio-to). No fim o ffmpeg emenda as imagens sem recodificar
+ * (cada bloco começa num quadro-chave) e o som, e codifica o AAC uma vez só, do
+ * jeito que o Remotion Lambda junta os pedaços dele.
+ *
+ * Bloco pronto fica em out/<nome>/.blocos/: se o comando parar no meio, rodar
+ * de novo continua do bloco que faltava (mudou a peça ou um arquivo dela,
+ * começa do zero). Navegador fechado num bloco: tenta só esse bloco de novo
+ * com menos abas (renderComReserva).
+ *
+ * Vale para o Documentario e para todo vídeo de mais de 3 min; --inteiro faz
+ * do jeito antigo, de uma vez. --bloco=N (ou KIT_BLOCO_SEG) muda o tamanho do
+ * bloco em segundos. Teste: KIT_TESTE_FALHA_BLOCO=2,5 finge que o navegador
+ * fechou na primeira tentativa desses blocos.
+ */
+const BLOCO_SEG = Math.max(1, Number(args.find((arg) => arg.startsWith("--bloco="))?.split("=")[1] ?? process.env.KIT_BLOCO_SEG) || 90);
+const AMOSTRAS_POR_SEG = 48000;
+const blocosDeTeste = new Set((process.env.KIT_TESTE_FALHA_BLOCO ?? "").split(",").map(Number).filter(Boolean));
+
+function ff(programa: "ffmpeg" | "ffprobe", ...argumentos: string[]) {
+  return spawnSync("npx", ["remotion", programa, "-v", "error", ...argumentos], {
+    encoding: "utf8",
+    maxBuffer: 64 * 1024 * 1024,
+    shell: process.platform === "win32",
+  });
+}
+
+/** Quantos quadros (vídeo) ou amostras (som) o arquivo tem de verdade; null se não abriu */
+function contar(arquivo: string, tipo: "v" | "a"): number | null {
+  const r =
+    tipo === "v"
+      ? ff("ffprobe", "-select_streams", "v:0", "-count_packets", "-show_entries", "stream=nb_read_packets", "-of", "csv=p=0", arquivo)
+      : ff("ffprobe", "-select_streams", "a:0", "-show_entries", "stream=duration_ts", "-of", "csv=p=0", arquivo);
+  // O ffprobe pode deixar uma vírgula no fim ("150,"): parseInt ignora
+  const n = Number.parseInt((r.stdout ?? "").trim().split("\n")[0], 10);
+  return r.status === 0 && Number.isFinite(n) && n > 0 ? n : null;
+}
+
+function falhaDoFfmpeg(r: SpawnSyncReturns<string>, oQue: string, comando: string[]): never {
+  console.error(`${oQue}: ${(r.stderr ?? "").trim().split("\n").slice(-8).join("\n")}`);
+  console.error(`\nFalhou: npx remotion ffmpeg ${comando.join(" ")}`);
+  process.exit(r.status || 1);
+}
+
+type Bloco = { numero: number; de: number; ate: number; video: string; som: string };
+
+function blocosDoVideo(totalDeQuadros: number, pasta: string): Bloco[] {
+  const porBloco = Math.round(BLOCO_SEG * FPS);
+  const lista: Bloco[] = [];
+  for (let de = 0, numero = 1; de < totalDeQuadros; de += porBloco, numero++) {
+    const nome = `bloco-${String(numero).padStart(3, "0")}`;
+    lista.push({ numero, de, ate: Math.min(totalDeQuadros, de + porBloco) - 1, video: join(pasta, `${nome}.mp4`), som: join(pasta, `${nome}.wav`) });
+  }
+  return lista;
+}
+
+/** O bloco está inteiro: o número certo de quadros e de amostras de som */
+function blocoPronto(bloco: Bloco) {
+  if (!existsSync(bloco.video) || !existsSync(bloco.som)) return false;
+  const quadros = bloco.ate - bloco.de + 1;
+  return contar(bloco.video, "v") === quadros && contar(bloco.som, "a") === Math.round((quadros / FPS) * AMOSTRAS_POR_SEG);
+}
+
+/** Renderiza os blocos que faltam; devolve as abas que funcionaram */
+function renderizarBlocos(blocos: Bloco[], abas: number, qualidade: string[]): number {
+  const deVideo = qualidade.filter((q) => !q.startsWith("--audio-bitrate"));
+  const faltam = blocos.filter((bloco) => !blocoPronto(bloco));
+  if (faltam.length < blocos.length) console.log(`Blocos já prontos: ${blocos.length - faltam.length} de ${blocos.length} (faz só os que faltam).`);
+  let atual = abas;
+  for (const bloco of faltam) {
+    const inicio = Date.now();
+    const parcialV = bloco.video.replace(/\.mp4$/, ".parcial.mp4");
+    const parcialA = bloco.som.replace(/\.wav$/, ".parcial.wav");
+    rmSync(parcialV, { force: true });
+    rmSync(parcialA, { force: true });
+    if (blocosDeTeste.delete(bloco.numero)) fingirNavegadorFechado = true;
+    // Se um bloco precisou de menos abas, os seguintes já começam com menos
+    atual = renderComReserva(
+      atual,
+      "render", molde, parcialV, "--codec=h264", ...deVideo,
+      `--frames=${bloco.de}-${bloco.ate}`, `--separate-audio-to=${parcialA}`, "--enforce-audio-track",
+    );
+    renameSync(parcialV, bloco.video);
+    renameSync(parcialA, bloco.som);
+    if (!blocoPronto(bloco)) {
+      const quadros = bloco.ate - bloco.de + 1;
+      console.error(
+        `O bloco ${bloco.numero} saiu incompleto: ${contar(bloco.video, "v")} quadros (esperava ${quadros}) e ${contar(bloco.som, "a")} amostras de som (esperava ${Math.round((quadros / FPS) * AMOSTRAS_POR_SEG)}).`,
+      );
+      rmSync(bloco.video, { force: true });
+      rmSync(bloco.som, { force: true });
+      console.error(`\nFalhou: bloco ${bloco.numero} do render (quadros ${bloco.de}-${bloco.ate})`);
+      process.exit(1);
+    }
+    const seg = Math.round((Date.now() - inicio) / 1000);
+    console.log(`Bloco ${bloco.numero} de ${blocos.length} pronto: quadros ${bloco.de} a ${bloco.ate} em ${Math.floor(seg / 60)} min ${seg % 60} s (${atual} abas).`);
+  }
+  return atual;
+}
+
+/** Emenda as imagens dos blocos sem recodificar e o som (AAC uma vez só) em video.mp4 */
+function juntarBlocos(blocos: Bloco[], pasta: string, video: string, qualidade: string[], totalDeQuadros: number) {
+  const listaV = join(pasta, "imagens.txt");
+  const listaA = join(pasta, "sons.txt");
+  // O caminho no arquivo da lista vale a partir da pasta da lista
+  writeFileSync(listaV, blocos.map((b) => `file '${basename(b.video)}'`).join("\n") + "\n");
+  writeFileSync(listaA, blocos.map((b) => `file '${basename(b.som)}'`).join("\n") + "\n");
+  const bitrate = qualidade.find((q) => q.startsWith("--audio-bitrate="))?.split("=")[1] ?? "320k";
+  const juntos = join(pasta, "juntos.mp4");
+  const comando = [
+    "-y",
+    "-f", "concat", "-safe", "0", "-i", listaV,
+    "-f", "concat", "-safe", "0", "-i", listaA,
+    "-map", "0:v:0", "-map", "1:a:0",
+    "-c:v", "copy",
+    "-c:a", "aac", "-b:a", bitrate,
+    "-movflags", "+faststart",
+    juntos,
+  ];
+  const r = ff("ffmpeg", ...comando);
+  if (r.status !== 0) falhaDoFfmpeg(r, "Não consegui juntar os blocos do vídeo", comando);
+  const quadros = contar(juntos, "v");
+  if (quadros !== totalDeQuadros) {
+    console.error(`O vídeo juntado ficou com ${quadros} quadros em vez de ${totalDeQuadros}.`);
+    console.error(`\nFalhou: juntar os blocos do render`);
+    process.exit(1);
+  }
+  renameSync(juntos, video);
+  console.log(`Blocos juntados: ${blocos.length} blocos, ${quadros} quadros.`);
+}
+
 const tamanho = (arquivo: string) => statSync(arquivo).size;
 const arquivos: Array<{ arquivo: string; tipo: string; tamanho: number }> = [];
 let duracaoSeg: number | null = null;
@@ -413,6 +578,7 @@ if (molde === "Carrossel") {
   await variasImagens("Carrossel", slides);
 } else if (previa) {
   await previaSoDoQueMudou();
+  avisarDuracao();
 } else {
   duracaoSeg = Math.round((duracaoDoMolde(molde, props) / FPS) * 10) / 10;
   const video = join(saida, "video.mp4");
@@ -430,10 +596,33 @@ if (molde === "Carrossel") {
   const abas = Math.max(1, Math.min(nucleos, Math.floor((memoriaGb - 1.5) / (com3d ? 0.8 : 0.45))));
   console.log(`Render: ${nucleos} núcleos, ${memoriaGb.toFixed(1)} GB de memória, ${abas} abas ao mesmo tempo.`);
   const inicioDoRender = Date.now();
-  let abasUsadas = renderComReserva(abas, "render", molde, video, "--codec=h264", ...qualidade);
+  const totalDeQuadros = duracaoDoMolde(molde, props);
+  // Vídeo longo: em blocos, cada um num navegador novo (veja renderizarBlocos)
+  const emBlocos = !args.includes("--inteiro") && (molde === "Documentario" || totalDeQuadros > 3 * 60 * FPS);
+  const pastaDosBlocos = join(saida, ".blocos");
+  let blocos: Bloco[] = [];
+  let abasUsadas: number;
+  if (emBlocos) {
+    // A marca da peça: mudou o roteiro, um arquivo dela, a qualidade ou o tamanho do bloco,
+    // os blocos guardados não servem mais
+    const marca = createHash("sha1")
+      .update(JSON.stringify([molde, props, arquivosUsados(props), qualidade, gl, BLOCO_SEG, totalDeQuadros]))
+      .digest("hex");
+    const arquivoDaMarca = join(pastaDosBlocos, "marca.txt");
+    if (!existsSync(arquivoDaMarca) || readFileSync(arquivoDaMarca, "utf8") !== marca) {
+      rmSync(pastaDosBlocos, { recursive: true, force: true });
+      mkdirSync(pastaDosBlocos, { recursive: true });
+      writeFileSync(arquivoDaMarca, marca);
+    }
+    blocos = blocosDoVideo(totalDeQuadros, pastaDosBlocos);
+    console.log(`Vídeo longo: ${blocos.length} blocos de até ${BLOCO_SEG} s, cada um num navegador novo.`);
+    abasUsadas = renderizarBlocos(blocos, abas, qualidade);
+    juntarBlocos(blocos, pastaDosBlocos, video, qualidade, totalDeQuadros);
+  } else abasUsadas = renderComReserva(abas, "render", molde, video, "--codec=h264", ...qualidade);
   // Na nuvem (todo vídeo) e no 3D: confere se algum quadro saiu quebrado (pisca);
   // se sim, faz de novo com menos abas (metade, depois 1). Se ainda piscar, para
   // com erro: nada é enviado (o ponto antes do render deixa continuar dali).
+  // Em blocos, só os blocos com quadro quebrado são feitos de novo.
   if (com3d || naNuvem) {
     for (let volta = 0; ; volta++) {
       const quebrados = quadrosQuebrados(video);
@@ -442,15 +631,29 @@ if (molde === "Carrossel") {
         break;
       }
       const lista = `${quebrados.slice(0, 12).join(", ")}${quebrados.length > 12 ? "…" : ""}`;
+      const ruins = blocos.filter((b) => quebrados.some((q) => q >= b.de && q <= b.ate));
+      // Os blocos quebrados saem da pasta: rodar de novo refaz só eles
+      for (const b of ruins) {
+        rmSync(b.video, { force: true });
+        rmSync(b.som, { force: true });
+      }
       if (abasUsadas <= 1 || volta >= 2) {
         console.error(`O vídeo saiu com ${quebrados.length} quadros quebrados (piscam), mesmo com ${abasUsadas} aba(s): ${lista}. Não envie este vídeo.`);
         process.exit(1);
       }
       const menos = volta === 0 ? Math.max(1, Math.floor(abasUsadas / 2)) : 1;
-      console.log(`${quebrados.length} quadros quebrados (piscam): ${lista}. Fazendo de novo com ${menos} aba(s) em vez de ${abasUsadas}.`);
-      abasUsadas = renderComReserva(menos, "render", molde, video, "--codec=h264", ...qualidade);
+      if (emBlocos) {
+        console.log(`${quebrados.length} quadros quebrados (piscam): ${lista}. Fazendo de novo o(s) bloco(s) ${ruins.map((b) => b.numero).join(", ")} com ${menos} aba(s) em vez de ${abasUsadas}.`);
+        abasUsadas = renderizarBlocos(blocos, menos, qualidade);
+        juntarBlocos(blocos, pastaDosBlocos, video, qualidade, totalDeQuadros);
+      } else {
+        console.log(`${quebrados.length} quadros quebrados (piscam): ${lista}. Fazendo de novo com ${menos} aba(s) em vez de ${abasUsadas}.`);
+        abasUsadas = renderComReserva(menos, "render", molde, video, "--codec=h264", ...qualidade);
+      }
     }
   }
+  // Vídeo pronto e conferido: os blocos não servem mais (uns 600 MB num vídeo de 10 min)
+  if (emBlocos) rmSync(pastaDosBlocos, { recursive: true, force: true });
   const segundosDoRender = Math.round((Date.now() - inicioDoRender) / 1000);
   console.log(`Render levou ${Math.floor(segundosDoRender / 60)} min ${segundosDoRender % 60} s.`);
   desempenho = { nucleos, memoriaGb: Math.round(memoriaGb * 10) / 10, abas: abasUsadas, segundos: segundosDoRender };

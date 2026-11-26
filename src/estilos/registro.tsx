@@ -73,7 +73,7 @@ type Estilo = {
 // Os cenários em que a história acontece (com móveis): nos estilos de traço eles
 // aparecem desenhados no traço do estilo; nos outros cenários (ateliê,
 // escritório, café), os estilos de traço usam só o fundo deles
-export const CENARIOS_DA_HISTORIA = ["quarto", "sala", "cozinha", "banheiro"];
+export const CENARIOS_DA_HISTORIA = ["quarto", "sala", "cozinha", "banheiro", "garagem", "carro"];
 /** O cenário tem os móveis da história? (os do kit acima e todos os criados pela equipe) */
 const temMoveis = (cenario?: string) => Boolean(cenario) && !CENARIOS_SEM_HISTORIA.includes(cenario ?? "");
 

@@ -114,6 +114,77 @@ export function quebrarSussurro(texto: string) {
   return { linhas, fonte: ultimo.fonte };
 }
 
+/**
+ * O alto do desenho próprio (o menor y das peças, no espaço de 1000 de altura): o balão
+ * do sussurro fica acima dele. 26/11/2026: o balão ficava na altura da cabeça da Sombra do
+ * kit, e numa criatura de cabeça maior (o novelo da Dúvida) cobria os olhos e a boca.
+ * Conta círculos, elipses, retângulos, linhas, polígonos e caminhos (com os pontos de
+ * controle, o que só deixa a conta mais folgada).
+ */
+export function topoDoDesenho(pecas: Array<string | undefined>): number | null {
+  let topo = Infinity;
+  const num = (texto: string | undefined) => (texto === undefined ? NaN : parseFloat(texto));
+  const atributo = (tag: string, nome: string) => num(new RegExp(`\\s${nome}\\s*=\\s*["']([-\\d.eE+]+)`).exec(tag)?.[1]);
+  const anotar = (y: number) => {
+    if (Number.isFinite(y)) topo = Math.min(topo, y);
+  };
+  for (const svg of pecas) {
+    if (!svg) continue;
+    for (const tag of svg.match(/<(circle|ellipse|rect|line|polygon|polyline|path)\b[^>]*>/g) ?? []) {
+      const tipo = /^<(\w+)/.exec(tag)?.[1];
+      if (tipo === "circle") anotar(atributo(tag, "cy") - atributo(tag, "r"));
+      else if (tipo === "ellipse") anotar(atributo(tag, "cy") - atributo(tag, "ry"));
+      else if (tipo === "rect") anotar(atributo(tag, "y") || 0);
+      else if (tipo === "line") anotar(Math.min(atributo(tag, "y1"), atributo(tag, "y2")));
+      else if (tipo === "polygon" || tipo === "polyline") {
+        const nums = (/\spoints\s*=\s*["']([^"']*)/.exec(tag)?.[1] ?? "").match(/-?[\d.]+(?:e[-+]?\d+)?/gi)?.map(Number) ?? [];
+        for (let i = 1; i < nums.length; i += 2) anotar(nums[i]);
+      } else if (tipo === "path") {
+        const d = /\sd\s*=\s*["']([^"']*)/.exec(tag)?.[1] ?? "";
+        let x = 0;
+        let y = 0;
+        let comecoX = 0;
+        let comecoY = 0;
+        for (const [, letra, resto] of d.matchAll(/([MLHVCSQTAZmlhvcsqtaz])([^MLHVCSQTAZmlhvcsqtaz]*)/g)) {
+          const n = resto.match(/-?(?:\d+\.?\d*|\.\d+)(?:e[-+]?\d+)?/gi)?.map(Number) ?? [];
+          const relativo = letra === letra.toLowerCase();
+          const L = letra.toUpperCase();
+          const passo = { M: 2, L: 2, T: 2, H: 1, V: 1, C: 6, S: 4, Q: 4, A: 7, Z: 0 }[L] ?? 2;
+          if (L === "Z") {
+            x = comecoX;
+            y = comecoY;
+            continue;
+          }
+          for (let i = 0; i + passo <= n.length; i += passo) {
+            const g = n.slice(i, i + passo);
+            const bx = x;
+            const by = y;
+            if (L === "H") x = relativo ? x + g[0] : g[0];
+            else if (L === "V") {
+              y = relativo ? y + g[0] : g[0];
+              anotar(y);
+            } else if (L === "A") {
+              x = relativo ? bx + g[5] : g[5];
+              y = relativo ? by + g[6] : g[6];
+              // O arco pode subir até o raio acima do ponto
+              anotar(Math.min(by, y) - Math.abs(g[1]));
+            } else {
+              for (let k = 0; k < passo; k += 2) anotar(relativo ? by + g[k + 1] : g[k + 1]);
+              x = relativo ? bx + g[passo - 2] : g[passo - 2];
+              y = relativo ? by + g[passo - 1] : g[passo - 1];
+            }
+            if (L === "M" && i === 0) {
+              comecoX = x;
+              comecoY = y;
+            }
+          }
+        }
+      }
+    }
+  }
+  return Number.isFinite(topo) ? topo : null;
+}
+
 export const Sombra: React.FC<{
   momentos: Momento[];
   palavras: Palavra[];
@@ -160,6 +231,13 @@ export const Sombra: React.FC<{
   const folga = 30;
   const alturaDoBalao = folga * 2 + linhas.length * alturaDaLinha;
   const largura = altura * 0.6;
+  // O balão termina acima da cabeça de quem fala, no tamanho de agora (cresce quando a
+  // pessoa cede). A Sombra do kit vai até ~310; o desenho próprio, até o alto dele
+  const topo = desenho ? (topoDoDesenho([desenho.atras, desenho.corpo, desenho.cabeca]) ?? 310) : 310;
+  const folgaDoBalao = desenho ? 36 : 70;
+  const altoDaCabeca = 930 - (930 - topo) * escala + vindo.y + flutua * cresce;
+  // Não sobe além de -400 (na tela, embaixo do título); lá em cima, cobre no máximo o alto da cabeça
+  const yDoBalao = Math.max(-400, altoDaCabeca - folgaDoBalao - alturaDoBalao + 70);
   return (
     <svg viewBox="-100 0 600 1000" width={largura} height={altura} style={{ overflow: "visible", ...style }}>
       <g transform={espelhar ? "translate(400 0) scale(-1 1)" : undefined}>
@@ -188,7 +266,7 @@ export const Sombra: React.FC<{
       {/* O balão do sussurro fica sempre de pé (fora do espelho), em cima dela */}
       {/* O Conversa só manda o sussurro enquanto é a fala dela (o balão não pisca entre as palavras) */}
       {sussurro && escala > 0.5 && (
-        <g transform={`translate(${espelhar ? 230 : 170} ${Math.max(70, 930 - 620 * escala - 110 - Math.max(0, alturaDoBalao - 110))})`}>
+        <g transform={`translate(${espelhar ? 230 : 170} ${yDoBalao})`}>
           <rect x={-230} y={-70} width={460} height={alturaDoBalao} rx={34} fill="#FFFFFF" stroke="#1E1A24" strokeWidth={4} />
           <text x={0} y={-70 + folga + alturaDaLinha / 2} textAnchor="middle" dominantBaseline="middle" fill="#1E1A24" fontSize={fonte} fontFamily="Arial, sans-serif">
             {linhas.map((linha, i) => (

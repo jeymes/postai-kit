@@ -26,8 +26,13 @@ export const Legendas: React.FC<{
   peso?: number;
   destaque?: string;
   textoNoDestaque?: string;
+  /**
+   * Silêncio (ms) entre uma página e a próxima em que a legenda continua na tela: entre as
+   * falas de uma conversa ela não pisca. Sem isso (0), some 0,7 s depois da última palavra.
+   */
+  emendarMs?: number;
   style?: React.CSSProperties;
-}> = ({ legendas, atraso = 0, tamanho = 76, caixa = false, largura = 940, noite = false, fonte, peso, destaque, textoNoDestaque, style }) => {
+}> = ({ legendas, atraso = 0, tamanho = 76, caixa = false, largura = 940, noite = false, fonte, peso, destaque, textoNoDestaque, emendarMs = 0, style }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const medida = useConferirTexto<HTMLDivElement>("legenda");
@@ -36,11 +41,15 @@ export const Legendas: React.FC<{
   const maxLetras = Math.max(8, Math.floor((largura - (caixa ? tamanho * 0.7 : 0)) / (tamanho * 0.62)));
   const pages = useMemo(() => paginar(legendas, maxLetras), [legendas, maxLetras]);
   // A página fica até a próxima começar (sem piscar entre uma e outra)
-  const pagina = pages.filter((p) => p.startMs <= agora).pop();
+  const indice = pages.filter((p) => p.startMs <= agora).length - 1;
+  const pagina = pages[indice];
   if (!pagina) return null;
-  // Depois da última palavra da página, a legenda some (antes ficava congelada até o fim)
+  // Depois da última palavra da página, a legenda some (antes ficava congelada até o fim),
+  // a não ser que a próxima venha logo (emendarMs)
   const fimDaPagina = pagina.tokens[pagina.tokens.length - 1].toMs;
-  if (agora > fimDaPagina + 700) return null;
+  const proxima = pages[indice + 1];
+  const emenda = emendarMs > 0 && proxima !== undefined && proxima.startMs - fimDaPagina <= emendarMs;
+  if (agora > fimDaPagina + 700 && !emenda) return null;
   const desdeOInicio = agora - pagina.startMs;
   const entrada = interpolate(desdeOInicio, [0, 120], [0.85, 1], { extrapolateRight: "clamp" });
   return (

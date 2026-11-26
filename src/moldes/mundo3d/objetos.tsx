@@ -20,6 +20,12 @@ export const OBJETOS = [
   "jarro",
   "arvore-com-frutos",
   "pedra-grande",
+  // 26/11/2026 (pedido da crítica: objetos de casamento e festa)
+  "caixinha-de-alianca",
+  "buque",
+  "bolo",
+  "presente",
+  "terno-no-cabide",
 ] as const;
 export type TipoDeObjeto = (typeof OBJETOS)[number];
 
@@ -262,6 +268,184 @@ const PedraGrande: React.FC = () => (
   </mesh>
 );
 
+// ---- Casamento e festa (26/11/2026) ----
+// Maiores que na vida real (uns 2x): de verdade, a caixinha some no plano aberto.
+
+const Material: React.FC<{ cor: string; brilho?: boolean }> = ({ cor, brilho }) => (
+  <meshStandardMaterial color={cor} flatShading roughness={brilho ? 0.3 : 0.9} metalness={brilho ? 0.6 : 0} />
+);
+
+/** Mesinha redonda (o bolo e a caixinha ficam em cima quando estão no chão) */
+const Mesinha: React.FC = () => (
+  <group>
+    <mesh position={[0, 0.72, 0]}>
+      <cylinderGeometry args={[0.42, 0.42, 0.05, 20]} />
+      <Material cor="#C9A37A" />
+    </mesh>
+    <mesh position={[0, 0.36, 0]}>
+      <cylinderGeometry args={[0.05, 0.06, 0.7, 8]} />
+      <Material cor="#A27B54" />
+    </mesh>
+    <mesh position={[0, 0.02, 0]}>
+      <cylinderGeometry args={[0.25, 0.28, 0.04, 16]} />
+      <Material cor="#A27B54" />
+    </mesh>
+  </group>
+);
+
+const CaixinhaDeAlianca: React.FC = () => (
+  <group>
+    <mesh position={[0, 0.06, 0]}>
+      <boxGeometry args={[0.24, 0.12, 0.2]} />
+      <Material cor="#C9486A" />
+    </mesh>
+    {/* A tampa aberta para trás e a aliança brilhando */}
+    <mesh position={[0, 0.2, -0.1]} rotation={[-0.35, 0, 0]}>
+      <boxGeometry args={[0.24, 0.2, 0.04]} />
+      <Material cor="#B23A57" />
+    </mesh>
+    <mesh position={[0, 0.16, 0.02]} rotation={[0, 0, 0]}>
+      <torusGeometry args={[0.05, 0.016, 8, 20]} />
+      <meshStandardMaterial color="#F2C14E" emissive="#B08A00" emissiveIntensity={0.5} metalness={0.8} roughness={0.25} />
+    </mesh>
+  </group>
+);
+
+const Buque: React.FC = () => (
+  <group>
+    <mesh position={[0, 0.14, 0]}>
+      <cylinderGeometry args={[0.05, 0.03, 0.28, 8]} />
+      <Material cor="#5E9E4A" />
+    </mesh>
+    {(
+      [
+        [0, 0.36, 0, "#FFFFFF"],
+        [0.1, 0.32, 0.05, "#F7C6D0"],
+        [-0.1, 0.32, 0.05, "#E86A8A"],
+        [0.05, 0.33, -0.09, "#E86A8A"],
+        [-0.06, 0.34, -0.08, "#FFFFFF"],
+        [0, 0.3, 0.11, "#F7C6D0"],
+      ] as const
+    ).map(([x, y, z, cor], i) => (
+      <mesh key={i} position={[x, y, z]}>
+        <icosahedronGeometry args={[0.075, 1]} />
+        <Material cor={cor} />
+      </mesh>
+    ))}
+  </group>
+);
+
+const BoloDeFesta: React.FC = () => (
+  <group>
+    {(
+      [
+        [0.3, 0.2, 0.1],
+        [0.22, 0.17, 0.3],
+        [0.14, 0.15, 0.47],
+      ] as const
+    ).map(([r, a, y], i) => (
+      <group key={i}>
+        <mesh position={[0, y + a / 2, 0]}>
+          <cylinderGeometry args={[r, r, a, 20]} />
+          <Material cor="#FFFFFF" />
+        </mesh>
+        <mesh position={[0, y + a - 0.01, 0]}>
+          <torusGeometry args={[r, 0.022, 6, 24]} />
+          <Material cor="#E86A8A" />
+        </mesh>
+      </group>
+    ))}
+    <mesh position={[0, 0.66, 0]}>
+      <sphereGeometry args={[0.05, 10, 8]} />
+      <Material cor="#E86A8A" />
+    </mesh>
+    <mesh position={[0, 0.05, 0]}>
+      <cylinderGeometry args={[0.36, 0.36, 0.04, 20]} />
+      <Material cor="#E7ECEF" brilho />
+    </mesh>
+  </group>
+);
+
+const Presente: React.FC = () => (
+  <group>
+    <mesh position={[0, 0.2, 0]}>
+      <boxGeometry args={[0.4, 0.4, 0.4]} />
+      <Material cor="#5B8DEF" />
+    </mesh>
+    <mesh position={[0, 0.2, 0]}>
+      <boxGeometry args={[0.08, 0.42, 0.42]} />
+      <Material cor="#F2C14E" />
+    </mesh>
+    <mesh position={[0, 0.2, 0]}>
+      <boxGeometry args={[0.42, 0.42, 0.08]} />
+      <Material cor="#F2C14E" />
+    </mesh>
+    {[-1, 1].map((lado) => (
+      <mesh key={lado} position={[lado * 0.07, 0.45, 0]} rotation={[0, 0, lado * 0.6]}>
+        <torusGeometry args={[0.06, 0.02, 6, 12]} />
+        <Material cor="#F2C14E" />
+      </mesh>
+    ))}
+  </group>
+);
+
+/** O paletó escuro (com camisa e gravata) no cabide; no chão, num cabideiro */
+const Terno: React.FC = () => (
+  <group>
+    <mesh position={[0, -0.04, 0]} rotation={[0, 0, Math.PI / 2]}>
+      <cylinderGeometry args={[0.015, 0.015, 0.44, 6]} />
+      <Material cor="#7A5230" />
+    </mesh>
+    <mesh position={[0, -0.36, 0]}>
+      <boxGeometry args={[0.46, 0.6, 0.12]} />
+      <Material cor="#2E3550" />
+    </mesh>
+    <mesh position={[0, -0.18, 0.062]}>
+      <boxGeometry args={[0.12, 0.22, 0.01]} />
+      <Material cor="#FFFFFF" />
+    </mesh>
+    <mesh position={[0, -0.2, 0.07]}>
+      <boxGeometry args={[0.035, 0.2, 0.01]} />
+      <Material cor="#B23A3A" />
+    </mesh>
+  </group>
+);
+
+const Cabideiro: React.FC = () => (
+  <group>
+    <mesh position={[0, 0.9, 0]}>
+      <cylinderGeometry args={[0.025, 0.03, 1.8, 8]} />
+      <Material cor="#8A6040" />
+    </mesh>
+    <mesh position={[0, 0.03, 0]}>
+      <cylinderGeometry args={[0.22, 0.25, 0.05, 12]} />
+      <Material cor="#8A6040" />
+    </mesh>
+  </group>
+);
+
+/**
+ * Os objetos que dá para segurar na mão (bonecos de peças: `naMao`), com o
+ * ponto (0, 0, 0) onde a mão pega. No chão, os pequenos ficam numa mesinha.
+ */
+export const OBJETOS_DE_MAO = ["caixinha-de-alianca", "buque", "bolo", "presente", "terno-no-cabide", "cajado", "jarro", "cesto-de-frutos", "feixe-de-trigo"] as const;
+export const ehObjetoDeMao = (tipo: string): tipo is (typeof OBJETOS_DE_MAO)[number] => (OBJETOS_DE_MAO as readonly string[]).includes(tipo);
+
+/** O objeto na mão: menor e de pé (o boneco desvira pelo braço) */
+export const ObjetoNaMao3D: React.FC<{ tipo: TipoDeObjeto }> = ({ tipo }) => (
+  <group scale={tipo === "cajado" ? 0.95 : tipo === "terno-no-cabide" ? 0.8 : 0.55}>
+    {tipo === "caixinha-de-alianca" && <CaixinhaDeAlianca />}
+    {tipo === "buque" && <group position={[0, -0.1, 0]}><Buque /></group>}
+    {tipo === "bolo" && <BoloDeFesta />}
+    {tipo === "presente" && <Presente />}
+    {tipo === "terno-no-cabide" && <Terno />}
+    {tipo === "cajado" && <group position={[0, -0.9, 0]}><Cajado /></group>}
+    {tipo === "jarro" && <Jarro />}
+    {tipo === "cesto-de-frutos" && <CestoDeFrutos />}
+    {tipo === "feixe-de-trigo" && <group position={[0, -0.4, 0]}><FeixeDeTrigo /></group>}
+  </group>
+);
+
 export const ObjetoDeCena: React.FC<{ tipo: TipoDeObjeto; posicao: [number, number, number]; giro?: number; escala?: number }> = ({
   tipo,
   posicao,
@@ -281,5 +465,38 @@ export const ObjetoDeCena: React.FC<{ tipo: TipoDeObjeto; posicao: [number, numb
     {tipo === "jarro" && <Jarro />}
     {tipo === "arvore-com-frutos" && <ArvoreComFrutos />}
     {tipo === "pedra-grande" && <PedraGrande />}
+    {tipo === "caixinha-de-alianca" && (
+      <>
+        <Mesinha />
+        <group position={[0, 0.745, 0]} scale={1.3}>
+          <CaixinhaDeAlianca />
+        </group>
+      </>
+    )}
+    {tipo === "buque" && (
+      <>
+        <Mesinha />
+        <group position={[0, 0.745, 0]} rotation={[0, 0, Math.PI / 2.3]}>
+          <Buque />
+        </group>
+      </>
+    )}
+    {tipo === "bolo" && (
+      <>
+        <Mesinha />
+        <group position={[0, 0.745, 0]}>
+          <BoloDeFesta />
+        </group>
+      </>
+    )}
+    {tipo === "presente" && <Presente />}
+    {tipo === "terno-no-cabide" && (
+      <>
+        <Cabideiro />
+        <group position={[0, 1.75, 0.04]}>
+          <Terno />
+        </group>
+      </>
+    )}
   </group>
 );

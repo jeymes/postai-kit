@@ -145,6 +145,7 @@ internet. A voz continua sendo a do kit, não a sua.
 ```console
 npm run previa -- conteudo/<peça>.json          # um quadro de cada cena, para conferir
 npm run renderizar -- conteudo/<peça>.json      # vídeo + capa (ou slides) e info.json em out/
+                                                # (vídeo longo: em blocos; parou, rode de novo e continua)
 npm run capturar-site -- https://site nome      # print do seu site (+ --computador)
 npm run buscar-fotos -- --candidatos x="termo"  # fotos livres para uso comercial
 npm run lottie                                  # refaz as animações com as cores da marca

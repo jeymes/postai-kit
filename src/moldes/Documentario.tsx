@@ -30,6 +30,25 @@ const narracaoSchema = z
   .describe("Preenchido pelo npm run narrar (não editar à mão)");
 
 export const MOVIMENTOS = ["aproximar", "esquerda", "afastar", "direita", "subir", "diagonal", "descer"] as const;
+export const FOCOS = ["topo", "base", "esquerda", "direita", "centro"] as const;
+type Foco = [number, number] | (typeof FOCOS)[number];
+
+/** O foco da cena em % da imagem ([x, y]); sem foco, o meio */
+export function pontoDoFoco(foco?: Foco): [number, number] {
+  if (Array.isArray(foco)) return foco;
+  switch (foco) {
+    case "topo":
+      return [50, 25];
+    case "base":
+      return [50, 75];
+    case "esquerda":
+      return [25, 50];
+    case "direita":
+      return [75, 50];
+    default:
+      return [50, 50];
+  }
+}
 
 export const documentarioSchema = z.object({
   cenas: z
@@ -48,6 +67,12 @@ export const documentarioSchema = z.object({
           .optional()
           .describe("Como a foto se move: aproximar, afastar, esquerda, direita, subir, descer ou diagonal (padrão: alterna sozinho)"),
         inteira: z.boolean().optional().describe("Mostra a imagem inteira, sem cortar (retrato em pé, mapa), sobre ela mesma desfocada"),
+        foco: z
+          .union([z.tuple([z.number().min(0).max(100), z.number().min(0).max(100)]), z.enum(FOCOS)])
+          .optional()
+          .describe(
+            'Onde está o que importa na imagem (o rosto, a figura): [x, y] em % da imagem (0,0 = canto de cima à esquerda) ou "topo", "base", "esquerda", "direita", "centro". O corte e o zoom ficam em volta dele (padrão: o meio)',
+          ),
         detalhe: z
           .tuple([z.number().min(0).max(100), z.number().min(0).max(100)])
           .optional()
@@ -124,6 +149,9 @@ export const documentarioExemplo: Documentario = {
 /** Mistura de uma cena com a anterior, em quadros (no começo de capítulo: entrada do preto, mais longa) */
 const MISTURA = 18;
 const ENTRADA_DO_CAPITULO = 24;
+/** O cartão do capítulo, em quadros, e quanto o do 1º espera depois do começo do vídeo */
+const DURACAO_DO_CARTAO = 90;
+const ATRASO_DO_PRIMEIRO_CAPITULO = 90;
 
 // Movimento de câmera de cinema: começa e termina devagar
 const cinema = Easing.bezier(0.45, 0, 0.55, 1);
@@ -140,13 +168,21 @@ const FotoEmMovimento: React.FC<{
   /** O tratamento do modelo (filtro CSS) e quanto a câmera anda (1 = o de sempre) */
   filtro?: string;
   ritmo?: number;
-}> = ({ src, duracao, movimento, inteira, parada, filtro = "none", ritmo = 1 }) => {
+  /** Onde está o que importa, em % da imagem: o corte e o zoom ficam em volta dele */
+  foco?: [number, number];
+}> = ({ src, duracao, movimento, inteira, parada, filtro = "none", ritmo = 1, foco = [50, 50] }) => {
   const frame = useCurrentFrame();
   const t = (parada ? 1 : interpolate(frame, [0, duracao], [0, 1], { extrapolateRight: "clamp", easing: cinema })) * ritmo;
   const escala =
     movimento === "afastar" ? 1.18 - 0.12 * t : movimento === "aproximar" ? 1.06 + 0.12 * t : movimento === "diagonal" ? 1.08 + 0.1 * t : 1.14;
-  const x = movimento === "esquerda" ? 3 - 6 * t : movimento === "direita" ? -3 + 6 * t : movimento === "diagonal" ? -2 + 4 * t : 0;
-  const y = movimento === "subir" ? 3 - 6 * t : movimento === "descer" ? -3 + 6 * t : movimento === "diagonal" ? 2 - 4 * t : 0;
+  // O foco (26/11/2026: o zoom cortava os rostos de pinturas deitadas): o corte da
+  // imagem (object-position) e o centro do zoom (transform-origin) ficam nele
+  const [fx, fy] = [foco[0] / 100, foco[1] / 100];
+  // O deslize nunca mostra a borda da imagem: com o zoom em volta de um foco perto
+  // da borda, sobra menos imagem desse lado (no meio, sem foco, não muda nada)
+  const folga = (f: number, d: number) => Math.min(Math.max(d, (-(1 - f) * (escala - 1) * 100) / escala), (f * (escala - 1) * 100) / escala);
+  const x = folga(fx, movimento === "esquerda" ? 3 - 6 * t : movimento === "direita" ? -3 + 6 * t : movimento === "diagonal" ? -2 + 4 * t : 0);
+  const y = folga(fy, movimento === "subir" ? 3 - 6 * t : movimento === "descer" ? -3 + 6 * t : movimento === "diagonal" ? 2 - 4 * t : 0);
   if (inteira) {
     // Retrato ou mapa: a imagem inteira no meio, com zoom bem leve, e ela mesma desfocada no fundo
     const leve = 1 + (escala - 1) * 0.4;
@@ -169,7 +205,15 @@ const FotoEmMovimento: React.FC<{
     <AbsoluteFill style={{ overflow: "hidden", backgroundColor: "#000" }}>
       <Img
         src={arquivo(src)}
-        style={{ width: "100%", height: "100%", objectFit: "cover", transform: `scale(${escala}) translate(${x}%, ${y}%)`, filter: filtro }}
+        style={{
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          objectPosition: `${foco[0]}% ${foco[1]}%`,
+          transformOrigin: `${foco[0]}% ${foco[1]}%`,
+          transform: `scale(${escala}) translate(${x}%, ${y}%)`,
+          filter: filtro,
+        }}
       />
     </AbsoluteFill>
   );
@@ -202,11 +246,22 @@ const ImagemDaCena: React.FC<{ cena: Cena; indice: number; duracao: number; ap: 
         detalhe={parada ? undefined : (cena.detalhe as [number, number] | undefined)}
         palavra={parada ? undefined : cena.palavra}
         fonte={ap.fonteTitulo}
+        foco={cena.foco ? pontoDoFoco(cena.foco) : undefined}
       />
     );
-  if (ap.apresentacao === "giz") return <Giz src={foto} duracao={duracao} indice={indice} ritmo={ap.ritmo} inteira={cena.inteira} parada={parada} />;
+  if (ap.apresentacao === "giz")
+    return <Giz src={foto} duracao={duracao} indice={indice} ritmo={ap.ritmo} inteira={cena.inteira} parada={parada} foco={cena.foco ? pontoDoFoco(cena.foco) : undefined} />;
   return (
-    <FotoEmMovimento src={foto} duracao={duracao} movimento={movimentoDa(cena, indice)} inteira={cena.inteira} parada={parada} filtro={ap.filtro} ritmo={ap.ritmo} />
+    <FotoEmMovimento
+      src={foto}
+      duracao={duracao}
+      movimento={movimentoDa(cena, indice)}
+      inteira={cena.inteira}
+      parada={parada}
+      filtro={ap.filtro}
+      ritmo={ap.ritmo}
+      foco={pontoDoFoco(cena.foco)}
+    />
   );
 };
 
@@ -315,7 +370,7 @@ function comImagem(cenas: Cena[], indice: number): Cena {
   if (cena.foto || cena.video) return cena;
   for (let j = indice - 1; j >= 0; j--) {
     const antes = cenas[j];
-    if (antes.foto || antes.video) return { ...cena, foto: antes.foto, video: antes.video, inteira: antes.inteira };
+    if (antes.foto || antes.video) return { ...cena, foto: antes.foto, video: antes.video, inteira: antes.inteira, foco: cena.foco ?? antes.foco };
   }
   return cena;
 }
@@ -342,6 +397,10 @@ const CenaDoDocumentario: React.FC<{ cena: Cena; indice: number; props: Document
   // A primeira cena já começa com a imagem (23/11/2026: o quadro 0 saía preto e a
   // miniatura tirada do começo ficava escura)
   const fade = indice === 0 || entrada === 0 ? 1 : interpolate(frame, [0, entrada], [0, 1], { extrapolateRight: "clamp", easing: cinema });
+  // O cartão do 1º capítulo não abre o vídeo (26/11/2026): os primeiros segundos são
+  // a imagem e a pergunta do gancho, e o cartão entra uns 3 s depois. Só o desenho
+  // atrasa: o capítulo continua começando no 00:00 da descrição do YouTube
+  const inicioDoCartao = indice === 0 ? Math.min(ATRASO_DO_PRIMEIRO_CAPITULO, Math.max(0, duracao - DURACAO_DO_CARTAO)) : 0;
   return (
     <AbsoluteFill style={{ backgroundColor: "#000" }}>
       {anterior?.foto && frame < entrada && (
@@ -362,15 +421,22 @@ const CenaDoDocumentario: React.FC<{ cena: Cena; indice: number; props: Document
         {/* Escurece as bordas e o pé, para a legenda e o texto lerem bem */}
         <AbsoluteFill style={{ background: "linear-gradient(180deg, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0) 30%, rgba(0,0,0,0) 60%, rgba(0,0,0,0.55) 100%)" }} />
       </AbsoluteFill>
-      {cena.texto && <TextoNaTela texto={cena.texto} inicio={cena.capitulo ? 80 : 10} ap={ap} />}
+      {cena.texto && <TextoNaTela texto={cena.texto} inicio={cena.capitulo ? inicioDoCartao + 80 : 10} ap={ap} />}
+      {cena.capitulo && (
+        <Sequence from={inicioDoCartao} durationInFrames={DURACAO_DO_CARTAO} layout="none" name="Capítulo">
+          <Capitulo titulo={cena.capitulo} ap={ap} />
+        </Sequence>
+      )}
       {cena.narracao && (
         <>
           <Sequence from={TEMPOS.antesDaFala} layout="none" name="Narração">
             <Audio src={staticFile(cena.narracao.audio)} />
           </Sequence>
           {props.legendas && (
-            // No começo do capítulo a legenda espera o cartão sair (aparecia junto, por cima dele)
-            <AbsoluteFill style={{ opacity: cena.capitulo ? interpolate(frame, [70, 86], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }) : 1 }}>
+            // A legenda fica por cima do cartão do capítulo, inteira (26/11/2026: ela
+            // esperava o cartão sair e ficava escurecida por baixo dele de 1 a 3 s). O
+            // cartão fica no meio da tela e a legenda embaixo (ou no alto): não se cruzam
+            <AbsoluteFill>
             <Legendas
               legendas={cena.narracao.legendas}
               atraso={TEMPOS.antesDaFala}
@@ -389,11 +455,6 @@ const CenaDoDocumentario: React.FC<{ cena: Cena; indice: number; props: Document
             </AbsoluteFill>
           )}
         </>
-      )}
-      {cena.capitulo && (
-        <Sequence durationInFrames={90} layout="none" name="Capítulo">
-          <Capitulo titulo={cena.capitulo} ap={ap} />
-        </Sequence>
       )}
     </AbsoluteFill>
   );
@@ -817,6 +878,68 @@ const CapaDeCinema: React.FC<CapaDocumentario> = ({ titulo, destaque, foto, lado
   );
 };
 
+/** Luminância relativa (WCAG) de uma cor #RRGGBB */
+function luminancia(cor: string) {
+  const [r, g, b] = [1, 3, 5].map((i) => {
+    const c = parseInt(cor.slice(i, i + 2), 16) / 255;
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+/** Contraste entre duas cores (1 a 21, WCAG) */
+function contraste(a: string, b: string) {
+  const [claro, escuro] = [luminancia(a), luminancia(b)].sort((x, y) => y - x);
+  return (claro + 0.05) / (escuro + 0.05);
+}
+
+const AMARELO_DA_CAPA = "#FFD60A";
+
+/**
+ * A cor da palavra de destaque da capa: a do modelo ou da marca, se ela lê bem
+ * sobre o lado escuro da capa e o contorno preto; senão, amarelo forte (26/11/2026:
+ * o vermelho da marca, #B3001B, sumia no fundo escuro). 4,5 é o mínimo de leitura do WCAG.
+ */
+export function destaqueDaCapa(cor: string) {
+  return /^#[0-9a-f]{6}$/i.test(cor) && contraste(cor, "#0d0b10") >= 4.5 ? cor : AMARELO_DA_CAPA;
+}
+
+/**
+ * A letra do título da capa (1280x720) que cabe: simula a quebra em linhas (letra
+ * grossa em caixa alta ≈ 0,72 da altura por letra, medido no render; a caixa tem
+ * 640 px e a palavra mais larga que isso fica sozinha na linha) e encolhe até as
+ * linhas caberem entre o topo (70) e a margem de baixo.
+ */
+function letraQueCabe(palavras: string[], inicial: number) {
+  const ALTURA_LIVRE = 720 - 70 - 50;
+  const linhas = (tamanho: number) => {
+    const larguraDe = (p: string) => p.length * tamanho * 0.72;
+    const caixa = 640;
+    let total = 1;
+    let atual = 0;
+    for (const p of palavras) {
+      const largura = larguraDe(p);
+      if (atual > 0 && atual + tamanho * 0.25 + largura > caixa) {
+        total += 1;
+        atual = largura;
+      } else atual += (atual > 0 ? tamanho * 0.25 : 0) + largura;
+    }
+    return total;
+  };
+  let tamanho = inicial;
+  while (tamanho > 60 && linhas(tamanho) * tamanho > ALTURA_LIVRE) tamanho = Math.floor(tamanho * 0.94);
+  return tamanho;
+}
+
+/** A palavra que sai em destaque: a pedida ou, sem ela, a mais longa do título (a capa toda branca não chamava o olho) */
+function palavrasEmDestaque(palavras: string[], destaque: string | undefined, limpa: (p: string) => string) {
+  const pedidas = destaque?.toUpperCase().split(/\s+/).map(limpa).filter(Boolean) ?? [];
+  if (pedidas.some((p) => palavras.some((q) => limpa(q) === p))) return pedidas;
+  if (palavras.length < 2) return [];
+  const maior = palavras.reduce((a, b) => (limpa(b).length > limpa(a).length ? b : a));
+  return [limpa(maior)];
+}
+
 export const CapaDoDocumentario: React.FC<CapaDocumentario> = (capa) => {
   if (capa.modelo === "cinema") return <CapaDeCinema {...capa} />;
   const { titulo, destaque, foto, lado = "esquerda", estilo } = capa;
@@ -825,11 +948,14 @@ export const CapaDoDocumentario: React.FC<CapaDocumentario> = (capa) => {
   const ap = aparenciaDo(estilo);
   const classico = ap.modelo === "classico" && !estilo?.letra && !estilo?.cor;
   const palavras = titulo.toUpperCase().split(/\s+/).filter(Boolean);
-  const alvo = destaque?.toUpperCase().split(/\s+/) ?? [];
   const limpa = (palavra: string) => palavra.replace(/[^\p{L}\p{N}]/gu, "");
+  const alvo = palavrasEmDestaque(palavras, destaque, limpa);
+  const corDoDestaque = classico ? AMARELO_DA_CAPA : destaqueDaCapa(ap.destaque);
   const maior = Math.max(...palavras.map((p) => p.length), 1);
   // Letra o maior possível: 2 palavras por linha, encolhendo se uma palavra for longa
-  const tamanho = Math.min(150, Math.round(1500 / Math.max(maior, 6)));
+  // e de novo se o título não couber na altura (26/11/2026: "A FUGA QUE TRANSFORMOU
+  // O RIO EM CAPITAL" deu 5 linhas e a última saía cortada embaixo)
+  const tamanho = letraQueCabe(palavras, Math.min(150, Math.round(1500 / Math.max(maior, 6))));
   const naDireita = lado === "direita";
   return (
     <AbsoluteFill style={{ backgroundColor: "#0d0b10" }}>
@@ -891,7 +1017,7 @@ export const CapaDoDocumentario: React.FC<CapaDocumentario> = (capa) => {
           <span
             key={i}
             style={{
-              color: alvo.includes(limpa(palavra)) ? (classico ? "#FFD60A" : ap.destaque) : "#FFFFFF",
+              color: alvo.includes(limpa(palavra)) ? corDoDestaque : "#FFFFFF",
               WebkitTextStroke: `${Math.max(6, Math.round(tamanho * 0.07))}px #000`,
               paintOrder: "stroke fill",
               textShadow: "0 8px 24px rgba(0,0,0,0.7)",

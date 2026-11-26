@@ -2,7 +2,7 @@
 // quais a equipe criou. Sem import de React: as ferramentas usam direto.
 
 /** Os cenários que o kit desenha (src/componentes/cenarios/Cenarios.tsx > CENARIOS) */
-export const CENARIOS_DO_KIT = ["atelie", "escritorio", "cafe", "quarto", "sala", "cozinha", "banheiro"];
+export const CENARIOS_DO_KIT = ["atelie", "escritorio", "cafe", "quarto", "sala", "cozinha", "banheiro", "garagem", "carro"];
 
 export type CenarioProprio = { id: string; nome: string; fundo: string; frente?: string; origem?: { objeto: string; x: number; y: number } };
 type Roteiro = { cenario?: string; cenas?: Array<{ cenario?: string }>; cenariosProprios?: CenarioProprio[] };

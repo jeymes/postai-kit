@@ -4,7 +4,7 @@ import * as THREE from "three";
 // tela: o fundo 3D e os bonecos (desenhados em 2D por cima) usam a mesma
 // câmera, então o boneco fica no lugar certo e do tamanho certo.
 
-export const PLANOS = ["aberto", "medio", "close", "de-baixo", "por-cima"] as const;
+export const PLANOS = ["aberto", "medio-aberto", "medio", "close", "de-baixo", "por-cima"] as const;
 export type Plano = (typeof PLANOS)[number];
 export type Ponto = [number, number, number];
 export interface PoseDaCamera {
@@ -16,8 +16,10 @@ export interface PoseDaCamera {
 /**
  * Onde a câmera fica em cada plano, olhando para o foco (os pés de quem está
  * em cena). `escala` afasta a câmera: um grupo (a tropa) pede o plano mais aberto.
+ * `sozinho`: só um personagem na história (sem multidão) e o foco é ele; o plano
+ * aberto chega mais perto, senão ele ficava pequeno demais no celular (26/11/2026).
  */
-export function poseDoPlano(plano: Plano, foco: Ponto, escala = 1): PoseDaCamera {
+export function poseDoPlano(plano: Plano, foco: Ponto, escala = 1, sozinho = false): PoseDaCamera {
   const [x, y, z] = foco;
   const longe = (dx: number, dy: number, dz: number, alvoY: number, fov: number): PoseDaCamera => ({
     posicao: [x + dx * escala, Math.max(0.35, y + dy * escala), z + dz * escala],
@@ -26,7 +28,12 @@ export function poseDoPlano(plano: Plano, foco: Ponto, escala = 1): PoseDaCamera
   });
   switch (plano) {
     case "aberto":
+      // Sozinho: uns 10 m em vez de 18 (o lugar ainda aparece, a pessoa com uns 15% da altura)
+      if (sozinho) return { posicao: [x + 4.2, y + 3.7, z + 9.4], alvo: [x, y + 0.9, z - 1.2], fov: 44 };
       return { posicao: [x + 7, y + 6.2, z + 16], alvo: [x, y + 0.8, z - 2], fov: 44 };
+    case "medio-aberto":
+      // Entre o aberto e o médio: a pessoa de corpo inteiro, com o lugar em volta
+      return longe(3.4, 2.4, 8.6, 1.0, 40);
     case "medio":
       return longe(2.6, 1.9, 6.2, 1.2, 36);
     case "close":

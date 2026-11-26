@@ -69,6 +69,12 @@ cenas.forEach((cena, i) => {
   console.log(`  esperado no começo: ${descrever(estados) || "como na cena anterior"}`);
   if (cena.meio) console.log(`  esperado do meio em diante: ${descrever(cena.meio)}`);
   if (cena.luz) console.log("  LUZ DO AVISO: o celular aceso (dourado) tem que estar NA MÃO de alguém; luz sem celular é defeito");
+  // Objetos de apoio, marca na testa e QR (26/11/2026)
+  const extra = cena as { objetos?: Array<{ quem?: string; tipo?: string; onde?: string }>; testa?: Record<string, string>; qr?: { como?: string } };
+  for (const o of extra.objetos ?? [])
+    console.log(`  OBJETO: ${o.tipo === "nenhum" ? `${o.quem} larga o objeto ${o.onde === "ao-lado" ? "do lado" : "da mão"}` : `${o.tipo} ${o.onde === "ao-lado" ? "de pé ao lado de" : "na mão de"} ${o.quem}`} (fica nas cenas seguintes)`);
+  for (const [id, t] of Object.entries(extra.testa ?? {})) console.log(`  TESTA: ${id} com ${t} (fica nas cenas seguintes)`);
+  if (extra.qr) console.log(`  QR CODE (${extra.qr.como ?? "celular"}) no alto da tela, inteiro e sem nada por cima`);
   for (const [letra, quadro, quando] of momentos) {
     const destino = join(pasta, `cena-${String(i + 1).padStart(2, "0")}-${letra}.jpg`);
     const r = spawnSync("npx", ["remotion", "ffmpeg", "-y", "-loglevel", "error", "-ss", segundo(quadro).toFixed(2), "-i", video, "-frames:v", "1", "-vf", "scale=720:-2", destino], { stdio: "inherit" });

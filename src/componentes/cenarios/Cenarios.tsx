@@ -2,6 +2,7 @@ import React from "react";
 import { useCurrentFrame } from "remotion";
 import { TRACO } from "../personagens/Boneco";
 import { Atelie } from "./Atelie";
+import { Carro, Garagem, PainelDoCarro } from "./Garagem";
 
 // Cenários 9:16 em vetor para o molde Conversa. Todos deixam o chão em
 // y ≈ 1490 e o meio da tela livre, onde ficam os personagens.
@@ -243,15 +244,29 @@ export const Banheiro: React.FC = () => (
   </svg>
 );
 
-export const CENARIOS = { atelie: Atelie, escritorio: Escritorio, cafe: Cafe, quarto: Quarto, sala: Sala, cozinha: Cozinha, banheiro: Banheiro } as const;
+export const CENARIOS = {
+  atelie: Atelie,
+  escritorio: Escritorio,
+  cafe: Cafe,
+  quarto: Quarto,
+  sala: Sala,
+  cozinha: Cozinha,
+  banheiro: Banheiro,
+  // 26/11/2026: garagem (o carro estacionado ao fundo) e dentro do carro (painel e volante na frente)
+  garagem: Garagem,
+  carro: Carro,
+} as const;
 
 /** Objetos do cenário de onde uma criatura pode sair (ponto na tela, 1080x1920) */
 export const ORIGEM_NO_CENARIO: Partial<Record<keyof typeof CENARIOS, { objeto: string; x: number; y: number }>> = {
   cozinha: { objeto: "geladeira", x: 880, y: 1120 },
   banheiro: { objeto: "espelho", x: 830, y: 790 },
+  carro: { objeto: "retrovisor", x: 540, y: 456 },
 };
 /** O que fica na frente dos personagens em alguns cenários (a cama do quarto) */
-export const FRENTE_DO_CENARIO: Partial<Record<keyof typeof CENARIOS, React.FC>> = { quarto: CamaNaFrente, sala: SofaNaFrente };
+export const FRENTE_DO_CENARIO: Partial<Record<keyof typeof CENARIOS, React.FC>> = { quarto: CamaNaFrente, sala: SofaNaFrente, carro: PainelDoCarro };
+/** Cenários em que todos ficam atrás da frente e os dois podem sentar (no carro, os dois bancos da frente) */
+export const TODOS_ATRAS_DA_FRENTE: readonly string[] = ["carro"];
 export type NomeDoCenario = keyof typeof CENARIOS;
 
 // ---- Cenários criados pela equipe ----

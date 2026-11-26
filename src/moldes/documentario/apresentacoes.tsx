@@ -86,7 +86,9 @@ export const Recorte: React.FC<{
   /** Colagem Viva: a palavra-chave da cena, colada em letras recortadas de jornal */
   palavra?: string;
   fonte?: string;
-}> = ({ src, duracao, indice, filtro, destaque, ritmo, inteira, parada, detalhe, palavra, fonte }) => {
+  /** Onde está o que importa na imagem ([x, y] em %): o corte e o zoom ficam em volta dele (sem `detalhe`, que conta com o corte no meio) */
+  foco?: [number, number];
+}> = ({ src, duracao, indice, filtro, destaque, ritmo, inteira, parada, detalhe, palavra, fonte, foco }) => {
   const frameReal = useCurrentFrame();
   // Colagem Viva (23/11/2026): o papel "respira" como animação quadro a quadro (stop-motion):
   // o movimento anda de 3 em 3 quadros e cada passo tem um tremido leve
@@ -152,6 +154,7 @@ export const Recorte: React.FC<{
                 width: "100%",
                 height: "100%",
                 objectFit: inteira ? "contain" : "cover",
+                ...(foco && !inteira && !detalhe ? { objectPosition: `${foco[0]}% ${foco[1]}%`, transformOrigin: `${foco[0]}% ${foco[1]}%` } : {}),
                 scale: String(1.04 + 0.08 * t),
                 filter: filtro,
               }}
@@ -365,7 +368,10 @@ export const Giz: React.FC<{
   ritmo: number;
   inteira?: boolean;
   parada?: boolean;
-}> = ({ src, duracao, indice, ritmo, inteira, parada }) => {
+  /** Onde está o que importa na imagem ([x, y] em %): o corte fica em volta dele */
+  foco?: [number, number];
+}> = ({ src, duracao, indice, ritmo, inteira, parada, foco }) => {
+  const posicao = foco && !inteira ? `${foco[0]}% ${foco[1]}%` : undefined;
   const frame = useCurrentFrame();
   const t = (parada ? 1 : interpolate(frame, [0, duracao], [0, 1], { extrapolateRight: "clamp", easing: cinema })) * ritmo;
   // O desenho aparece em 1,5 s, da esquerda para a direita
@@ -414,6 +420,7 @@ export const Giz: React.FC<{
               width: "100%",
               height: "100%",
               objectFit: inteira ? "contain" : "cover",
+              objectPosition: posicao,
               filter: "grayscale(1) contrast(1.2) brightness(1.2)",
               opacity: 0.1,
               mixBlendMode: "screen",
@@ -428,6 +435,7 @@ export const Giz: React.FC<{
               width: "100%",
               height: "100%",
               objectFit: inteira ? "contain" : "cover",
+              objectPosition: posicao,
               filter: `url(#${id})`,
               mixBlendMode: "screen",
               opacity: 0.92,

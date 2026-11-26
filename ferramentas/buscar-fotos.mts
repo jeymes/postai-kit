@@ -30,7 +30,8 @@ import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { basename, join } from "node:path";
+import { acharBordasNosPixels, AMOSTRA_NO_STDOUT, descreverRecorte, filtroDoRecorte } from "./bordas.mts";
 import { ferramenta } from "./postai.ts";
 
 type Foto = {
@@ -795,12 +796,32 @@ async function baixar(foto: Foto, saida: string, pequena = false) {
       : foto.width > foto.height
         ? "scale=-2:1080"
         : "scale=1080:-2";
-  const r = spawnSync("npx", ["remotion", "ffmpeg", "-y", "-loglevel", "error", "-i", bruto, "-vf", escala, "-q:v", "3", saida], {
-    stdio: "inherit",
+  // No mesmo comando sai uma amostra pequena (no stdout) para achar borda lisa de
+  // acervo (margem cinza, branca ou preta e a faixa da legenda do museu, 26/11/2026)
+  const r = spawnSync("npx", ["remotion", "ffmpeg", "-y", "-loglevel", "error", "-i", bruto, "-vf", escala, "-q:v", "3", saida, ...AMOSTRA_NO_STDOUT], {
+    stdio: ["ignore", "pipe", "inherit"],
+    maxBuffer: 64 * 1024 * 1024,
     shell: process.platform === "win32",
   });
+  if (r.status !== 0) {
+    rmSync(bruto, { force: true });
+    throw new Error(`Não converteu ${foto.url}`);
+  }
+  // Com borda: converte de novo do original, cortando antes de escalar (a imagem fica nítida)
+  const recorte = r.stdout?.length ? acharBordasNosPixels(new Uint8Array(r.stdout)) : null;
+  if (recorte) {
+    const cortada = spawnSync("npx", ["remotion", "ffmpeg", "-y", "-loglevel", "error", "-i", bruto, "-vf", filtroDoRecorte(recorte) + escala, "-q:v", "3", saida], {
+      stdio: "inherit",
+      shell: process.platform === "win32",
+    });
+    if (cortada.status === 0) console.log(`  (${basename(saida)}: ${descreverRecorte(recorte)})`);
+    else
+      spawnSync("npx", ["remotion", "ffmpeg", "-y", "-loglevel", "error", "-i", bruto, "-vf", escala, "-q:v", "3", saida], {
+        stdio: "inherit",
+        shell: process.platform === "win32",
+      });
+  }
   rmSync(bruto, { force: true });
-  if (r.status !== 0) throw new Error(`Não converteu ${foto.url}`);
 }
 
 const creditos: { arquivo: string; foto: Foto }[] = [];

@@ -1,4 +1,6 @@
 import React from "react";
+import { ObjetoNaMao } from "../objetos/ObjetosDeApoio";
+import { MarcaNaTesta } from "./MarcaNaTesta";
 import { useCurrentFrame, useVideoConfig } from "remotion";
 import {
   BRACO,
@@ -130,7 +132,7 @@ const Celular: React.FC<{ noite: boolean }> = ({ noite }) => (
 
 // Um braço de traço: ombro e cotovelo nos ângulos da pose (como no Boneco)
 // No palito os braços saem do meio do corpo: abre um pouco para não colarem nele
-const Braco: React.FC<{ angulos: Angulos; cor: string; celular?: ModoDoCelular; noite: boolean }> = ({ angulos: [ombroDaPose, cotovelo], cor, celular, noite }) => {
+const Braco: React.FC<{ angulos: Angulos; cor: string; celular?: ModoDoCelular; noite: boolean; segura?: boolean }> = ({ angulos: [ombroDaPose, cotovelo], cor, celular, noite, segura }) => {
   const ombro = ombroDaPose + 16;
   return (
   <g transform={`translate(200 ${OMBRO.y - 14}) rotate(${ombro})`}>
@@ -143,6 +145,7 @@ const Braco: React.FC<{ angulos: Angulos; cor: string; celular?: ModoDoCelular; 
           {celular === "costas" ? <CostasDoCelular largura={48} altura={80} cor="#1E1A24" /> : <Celular noite={noite} />}
         </g>
       )}
+      {segura && <ObjetoNaMao angulo={-(ombro + cotovelo)} y={BRACO + 2} />}
     </g>
   </g>
   );
@@ -216,11 +219,12 @@ export const Palito: React.FC<{
                   <path d="M193 236 L207 236" />
                 </g>
               )}
+              <MarcaNaTesta x={200} y={176} />
             </g>
-            {/* Braços: o direito é o esquerdo espelhado no meio do corpo */}
-            <Braco angulos={estado.esq} cor={cor} noite={noite} />
+            {/* Braços: o direito é o esquerdo espelhado no meio do corpo; o objeto de apoio na mão livre */}
+            <Braco angulos={estado.esq} cor={cor} noite={noite} segura={Boolean(modoDoCelular(estado.pose))} />
             <g transform="translate(400 0) scale(-1 1)">
-              <Braco angulos={estado.dir} cor={cor} celular={modoDoCelular(estado.pose)} noite={noite} />
+              <Braco angulos={estado.dir} cor={cor} celular={modoDoCelular(estado.pose)} noite={noite} segura={!modoDoCelular(estado.pose)} />
             </g>
           </g>
         </g>

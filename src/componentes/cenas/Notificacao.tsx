@@ -3,13 +3,35 @@ import { Img, spring, useCurrentFrame, useVideoConfig } from "remotion";
 import { fontes, marca } from "../../nucleo/marca";
 
 // Cartão de notificação do app (o "aviso" que acende no celular): entra de
-// cima, com o logo e o nome da marca e uma frase curta. Serve para qualquer
+// cima, com o logo e o nome da marca e uma frase curta. Com o nome de uma
+// pessoa no título (uma mensagem dela), o ícone é um balão neutro, sem o logo. Serve para qualquer
 // estilo. No Conversa, o campo "notificacao" da cena.
+const normalizar = (texto: string) =>
+  texto
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase();
+
+/** O ícone de mensagem de uma pessoa: um balão branco num quadrado azul (desenhado, sem emoji) */
+const IconeDeMensagem: React.FC = () => (
+  <svg width={76} height={76} viewBox="0 0 76 76" aria-hidden style={{ flexShrink: 0 }}>
+    <rect width={76} height={76} rx={18} fill="#4C8DF6" />
+    <path d="M38 17 C25 17 16 25.5 16 36 C16 42 19 47 24 50.5 L22 60 L32 54.5 C34 55 36 55.2 38 55.2 C51 55.2 60 46.6 60 36 C60 25.5 51 17 38 17 Z" fill="#FFFFFF" />
+    <circle cx={29} cy={36} r={3.4} fill="#4C8DF6" />
+    <circle cx={38} cy={36} r={3.4} fill="#4C8DF6" />
+    <circle cx={47} cy={36} r={3.4} fill="#4C8DF6" />
+  </svg>
+);
+
 /** `noFluxo`: entra na coluna do título (embaixo dele), sem posição própria: assim nunca cobre o título nem o cenário */
 export const Notificacao: React.FC<{ em: number; texto: string; app?: string; noite?: boolean; noFluxo?: boolean }> = ({ em, texto, app, noite = false, noFluxo = false }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const entra = spring({ frame: frame - em, fps, config: { damping: 14, stiffness: 120 } });
+  // Mensagem de uma pessoa (o título é o nome dela, ex.: "Dona Graça"): ícone neutro de
+  // mensagem. Com o logo da marca parecia notificação do app (anotação da crítica, 25/11/2026)
+  const daMarca = !app || normalizar(app) === normalizar(marca.nome);
   if (frame < em) return null;
   return (
     <div
@@ -28,10 +50,12 @@ export const Notificacao: React.FC<{ em: number; texto: string; app?: string; no
         color: "#3A2A05",
       }}
     >
-      {marca.logo ? (
+      {daMarca && marca.logo ? (
         <Img src={marca.logo} style={{ width: 76, height: 76, borderRadius: 18, objectFit: "cover" }} />
-      ) : (
+      ) : daMarca ? (
         <div style={{ width: 76, height: 76, borderRadius: 18, background: "#F5C94A" }} />
+      ) : (
+        <IconeDeMensagem />
       )}
       <div style={{ minWidth: 0 }}>
         <div style={{ fontSize: 34, fontWeight: 800 }}>{app ?? marca.nome}</div>

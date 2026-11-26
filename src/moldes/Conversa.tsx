@@ -21,6 +21,21 @@ import { LuzDoAviso } from "../componentes/efeitos/LuzDoAviso";
 import { FraseNaLuz } from "../componentes/cenas/FraseNaLuz";
 import { CONVERSA, estimarPalavras, FPS, quadrosDaFalaConversa, quadrosDoVideoDoApp } from "./tempos";
 import { useConferirTexto } from "../componentes/conferir";
+import { TODOS_ATRAS_DA_FRENTE } from "../componentes/cenarios/Cenarios";
+import { TestaContexto } from "../componentes/personagens/MarcaNaTesta";
+import { ObjetoNaMaoContexto } from "../componentes/objetos/ObjetosDeApoio";
+import { textoDoQr } from "../componentes/midia/QrCode";
+import {
+  afastarParaOQr,
+  baixoDoTitulo,
+  camposExtrasDaCena,
+  objetoAgora,
+  ObjetoAoLado,
+  QrNaCena,
+  QrNoFim,
+  qrDoRoteiroSchema,
+  testaAgora,
+} from "./conversa/extras";
 
 // Cena de conversa entre personagens fixos do elenco, em desenho 2D: cada
 // cena é a fala de um personagem, com a pose e a expressão de cada um naquele
@@ -114,7 +129,7 @@ export const conversaSchema = z.object({
     .string()
     .default("atelie")
     .describe(
-      "Onde começa: atelie, escritorio, cafe, quarto, sala, cozinha, banheiro (no quarto e na sala, pose sentado à esquerda) ou o id de um cenário criado pela equipe (cenariosProprios)",
+      "Onde começa: atelie, escritorio, cafe, quarto, sala, cozinha, banheiro, garagem, carro (no quarto e na sala, pose sentado à esquerda; no carro, os dois) ou o id de um cenário criado pela equipe (cenariosProprios)",
     ),
   cenariosProprios: z
     .array(
@@ -156,10 +171,15 @@ export const conversaSchema = z.object({
           .optional()
           .describe("Vira noite (true) ou volta ao dia (false) a partir desta fala, no mesmo vídeo (ex.: a cena da madrugada no quarto); vale até outra fala mudar"),
         notificacao: z
-          .object({ titulo: z.string().max(30).optional().describe("Sem ele: o nome da marca"), texto: z.string().max(60) })
+          .object({
+            titulo: z.string().max(30).optional().describe("Sem ele: o nome da marca (com o logo). Com o nome de uma pessoa (mensagem dela): ícone neutro de mensagem"),
+            texto: z.string().max(60),
+          })
           .optional()
           .describe("Cartão de notificação (título e texto que o roteiro define), junto com a luz ou sozinho"),
         narracao: narracaoSchema.optional(),
+        // Objetos de apoio, marca na testa e QR (26/11/2026): ver conversa/extras.tsx
+        ...camposExtrasDaCena,
       }),
     )
     .min(1)
@@ -223,6 +243,7 @@ export const conversaSchema = z.object({
     })
     .optional()
     .describe("O trecho do vídeo real do app no fim (dentro de um celular), antes do cartão final: mostra o que a história falou"),
+  qr: qrDoRoteiroSchema,
   legendas: z.boolean().default(true),
   efeitos: z.boolean().default(true),
   vozes: z.record(z.string(), z.object({ voz: z.string(), velocidade: z.number().optional() })).optional(),
@@ -291,11 +312,14 @@ export function cenasSemSentadoSolto(
 ): Cena[] {
   const daEsquerda = elenco.length === 2 ? elenco[0].id : null;
   let cenario = cenarioDoRoteiro;
+  // No carro (os dois bancos da frente), os dois podem sentar
+  let todosSentam = false;
   const seguro = (estado: Estado | undefined, id: string, temFrente: boolean) =>
-    estado?.pose === "sentado" && !(temFrente && id === daEsquerda) ? { ...estado, pose: "celular" as const } : estado;
+    estado?.pose === "sentado" && !(temFrente && (id === daEsquerda || todosSentam)) ? { ...estado, pose: "celular" as const } : estado;
   return cenas.map((cena) => {
     cenario = cena.cenario ?? cenario;
     const temFrente = Boolean(resolverCenario(cenario, proprios).Frente);
+    todosSentam = TODOS_ATRAS_DA_FRENTE.includes(resolverCenario(cenario, proprios).nome);
     const ajustar = (estados: Record<string, Estado> | undefined) =>
       estados && Object.fromEntries(Object.entries(estados).map(([id, e]) => [id, seguro(e, id, temFrente) as Estado]));
     return {
@@ -349,8 +373,9 @@ function momentosDe(
   return momentos;
 }
 
-// `abaixo`: o que entra embaixo do título, na mesma coluna (a notificação): nada se sobrepõe
-const TituloPov: React.FC<{ titulo: string; parte?: string; abaixo?: React.ReactNode }> = ({ titulo, parte, abaixo }) => {
+// `abaixo`: o que entra embaixo do título, na mesma coluna (a hora, a notificação e o balão
+// do CTA inicial): nada se sobrepõe, com o título em 1, 2 ou 3 linhas
+const TituloPov: React.FC<{ titulo: string; parte?: string; abaixo?: React.ReactNode; balao?: React.ReactNode }> = ({ titulo, parte, abaixo, balao }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   // Já na tela no quadro 0: é o que aparece na prévia do feed. Só cresce um pouco.
@@ -381,6 +406,7 @@ const TituloPov: React.FC<{ titulo: string; parte?: string; abaixo?: React.React
         </div>
       )}
       {abaixo}
+      {balao}
     </div>
   );
 };
@@ -389,12 +415,11 @@ const Cartao: React.FC<{ cartao: NonNullable<ConversaProps["cartao"]>; entra: nu
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const dentro = spring({ frame: frame - entra, fps, config: { damping: 12, stiffness: 150 } });
-  const fora = spring({ frame: frame - sai, fps, config: { damping: 20 } });
-  const escala = dentro * (1 - fora);
-  // Na saída, some de vez antes de virar um toquinho (sobrava um retângulo branco
-  // minúsculo no meio da cena por alguns quadros: 3 anotações da crítica)
-  if (escala <= 0.01 || fora > 0.85) return null;
-  const sumindo = 1 - Math.min(1, Math.max(0, (fora - 0.5) / 0.35));
+  // A saída é só um fade de 8 quadros, no tamanho cheio: encolhendo, sobrava um retângulo
+  // branco minúsculo perto do topo por alguns quadros (anotações da crítica de 23 e 25/11/2026)
+  const sumindo = interpolate(frame, [sai, sai + 8], [1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  const escala = dentro;
+  if (escala <= 0.01 || sumindo <= 0.02) return null;
   const numero = cartao.numero ?? 0;
   const contado = Math.round(interpolate(frame, [contaDe, contaDe + 40], [0, numero], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }));
   const itens = cartao.itens;
@@ -603,6 +628,9 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
   const subirNoCartao = props.ctaFinal
     ? (290 + (1020 - medidaDoCartao(props.ctaFinal).topo)) * spring({ frame: frame - inicioDoCta, fps, config: { damping: 16, stiffness: 110 } })
     : 0;
+  // QR no cartão do fim (26/11/2026): as pessoas abrem espaço para ele no meio
+  const qrDoFim = props.ctaFinal && props.qr && props.qr.noFim !== false ? textoDoQr(props.qr.texto) : "";
+  const afastarNoQr = qrDoFim ? spring({ frame: frame - inicioDoCta - 6, fps, config: { damping: 16, stiffness: 110 } }) : 0;
   return (
     <AbsoluteFill style={{ background: noite ? "#0A0F26" : "#FBE7DA" }}>
       <EfeitosContexto.Provider value={props.efeitos}>
@@ -654,6 +682,8 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
                 : 0;
             return (
               <CelularAceso.Provider key={quem} value={luzEm !== undefined && frame >= luzEm && indice === quemAcende}>
+              <TestaContexto.Provider value={testaAgora(linha, quem, frame)}>
+              <ObjetoNaMaoContexto.Provider value={objetoAgora(linha, quem, "mao", frame)?.tipo ?? null}>
               <estilo.Personagem
                 noite={noite}
                 visual={visual}
@@ -666,8 +696,16 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
                 semente={lugar.semente}
                 // De pé, na frente do móvel (cama, sofá): atrás dele os pés apareciam por baixo,
                 // como se flutuasse; sentado, fica atrás (o móvel cobre as pernas)
-                style={{ position: "absolute", left: lugar.left + chegarPerto, top: 790 - subirNoCartao, zIndex: meuAbraco?.pose === "sentado" ? 0 : 2 }}
+                style={{
+                  position: "absolute",
+                  left: lugar.left + chegarPerto + afastarNoQr * afastarParaOQr(elenco.length, indice),
+                  top: 790 - subirNoCartao,
+                  // No carro, todos ficam atrás do painel (ele cobre o colo)
+                  zIndex: meuAbraco?.pose === "sentado" || TODOS_ATRAS_DA_FRENTE.includes(lugarAgora.nome) ? 0 : 2,
+                }}
               />
+              </ObjetoNaMaoContexto.Provider>
+              </TestaContexto.Provider>
               </CelularAceso.Provider>
             );
           })}
@@ -678,6 +716,26 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
               </CamadaDaFrente>
             </AbsoluteFill>
           )}
+          {/* Os objetos de apoio de pé ao lado das pessoas (some quando entra o cartão do fim) */}
+          {(!props.ctaFinal || frame < inicioDoCta) &&
+            elenco.map(({ id: quem, tipo }, indice) => {
+              if (tipo === "criatura") return null;
+              const objeto = objetoAgora(linha, quem, "ao-lado", frame);
+              if (!objeto) return null;
+              const centro = lugares[indice].left + 270;
+              const fora = elenco.length === 2 && indice === 0 ? "esquerda" : "direita";
+              return (
+                <ObjetoAoLado
+                  key={`apoio-${quem}`}
+                  tipo={objeto.tipo}
+                  desde={objeto.desde}
+                  centro={centro}
+                  lado={objeto.lado ?? fora}
+                  chao={1652}
+                  Camada={({ children }) => <estilo.Camada fundo={fundo}>{children}</estilo.Camada>}
+                />
+              );
+            })}
           {/* No sofá não há cobertor: o colo e as pernas de quem está sentado ficam na frente do assento */}
           {lugarAgora.nome === "sala" &&
             elenco.map(({ id: quem, visual, tipo }, indice) => {
@@ -755,9 +813,10 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
               </>
             );
           })()}
+          // O balão do começo na coluna do título, embaixo da hora e da notificação: antes tinha
+          // altura fixa (395) e a 2ª ou 3ª linha de um título comprido caía embaixo dele (26/11/2026)
+          balao={props.ctaInicial ? <BalaoDeChamada texto={props.ctaInicial} jaNaTela noFluxo /> : undefined}
         />
-        {/* O balão do começo desce se a primeira fala tem hora (o selo fica embaixo do título) */}
-        {props.ctaInicial && <BalaoDeChamada texto={props.ctaInicial} topo={(props.parte ? 450 : 395) + (linha[0]?.cena.hora ? 95 : 0)} jaNaTela />}
         {props.cartao && (
           <Cartao
             cartao={props.cartao}
@@ -766,12 +825,15 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
             contaDe={naCena(props.cartao.contaNa ?? props.cartao.entra)}
           />
         )}
+        {/* O QR Code de uma fala (na tela de um celular, num convite ou num cartão), embaixo do título */}
+        <QrNaCena linha={linha} fim={fimDasFalas} qrDoRoteiro={props.qr} topo={baixoDoTitulo(props.titulo, props.parte) + 40} />
         {props.legendas && (
           <Sequence durationInFrames={props.ctaFinal ? fimDasFalas : undefined} layout="none" name="Legendas">
             {/* Na área segura (23/11/2026): abaixo de ~1530 px a descrição e os botões do TikTok,
                 do Reels e do Shorts cobrem a legenda; ela sobe para a altura das pernas, numa caixa
                 clara para ler em cima dos personagens */}
-            <Legendas legendas={legendas} noite={escuro} caixa={!escuro} tamanho={estilo.legenda} largura={940} style={{ top: 1420, padding: "0 70px" }} />
+            {/* emendarMs: entre uma fala e a outra a legenda não some (sumia ~0,5 s na troca: crítica, 26/11/2026) */}
+            <Legendas legendas={legendas} noite={escuro} caixa={!escuro} tamanho={estilo.legenda} largura={940} emendarMs={1500} style={{ top: 1420, padding: "0 70px" }} />
           </Sequence>
         )}
         {linha.map(({ cena, inicio }, i) => (
@@ -825,6 +887,15 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
         {props.ctaFinal && (
           <Sequence from={inicioDoCta} layout="none" name="CTA final">
             <CartaoDeChamada chamada={props.ctaFinal} botao={props.botaoFinal ?? textosDoIdioma(props.idioma).linkNaBio} />
+            {qrDoFim && (
+              <QrNoFim
+                texto={qrDoFim}
+                legenda={props.qr?.legenda}
+                topo={baixoDoTitulo(props.titulo, props.parte) + 30}
+                limite={medidaDoCartao(props.ctaFinal).topo}
+                sozinho={elenco.length === 1}
+              />
+            )}
             <Som tipo="sucesso" em={2} />
           </Sequence>
         )}
@@ -922,7 +993,7 @@ export const CapaConversa: React.FC<CapaDaConversa> = (props) => {
             espelhar={lugares[indice].espelhar}
             semente={lugares[indice].semente}
             objeto={objeto}
-            style={{ position: "absolute", left: lugares[indice].left - 20, top: 700 }}
+            style={{ position: "absolute", left: lugares[indice].left - 20, top: 700, zIndex: 2 }}
           />
         ) : (
         <estilo.Personagem
@@ -935,17 +1006,21 @@ export const CapaConversa: React.FC<CapaDaConversa> = (props) => {
           altura={960}
           espelhar={lugares[indice].espelhar}
           semente={lugares[indice].semente}
-          style={{ position: "absolute", left: lugares[indice].left - 20, top: 700 }}
+          // Como nas cenas: de pé, na frente do móvel (atrás do sofá a pessoa ficava sem
+          // pernas na capa, só os pés aparecendo: anotação de 25/11/2026); sentado, atrás dele
+          style={{ position: "absolute", left: lugares[indice].left - 20, top: 700, zIndex: estadoDe(id).pose === "sentado" ? 0 : 2 }}
         />
         ),
       )}
       {Frente && (
-            <CamadaDaFrente fundo={fundo}>
-              <Frente />
-            </CamadaDaFrente>
-          )}
+        <AbsoluteFill style={{ zIndex: 1 }}>
+          <CamadaDaFrente fundo={fundo}>
+            <Frente />
+          </CamadaDaFrente>
+        </AbsoluteFill>
+      )}
       {/* A etiqueta da parte fica em cima do título: embaixo, cobria a cena */}
-      <div style={{ position: "absolute", top: props.parte ? 180 : 270, left: 60, right: 60, display: "flex", flexDirection: "column", alignItems: "center", gap: 18 }}>
+      <div style={{ position: "absolute", top: props.parte ? 180 : 270, left: 60, right: 60, display: "flex", flexDirection: "column", alignItems: "center", gap: 18, zIndex: 3 }}>
         {props.parte && (
           <div style={{ background: cores.destaque, color: cores.textoNoDestaque, fontFamily: fontes.titulo, fontWeight: 800, fontSize: 44, padding: "8px 32px", borderRadius: 50, border: `6px solid ${TRACO}` }}>
             {props.parte}

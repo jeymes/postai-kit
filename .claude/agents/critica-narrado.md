@@ -18,6 +18,9 @@ Leia o roteiro inteiro, o `canais/<canal>/canal-postai.md` e abra (Read) **todos
 em ordem (um por cena: o `previa-1` é a cena 1), e a `out/<arquivo>/capa.jpg`. Para cada quadro, compare com a fala
 da cena. Aqui vale tudo da seção 2 (erros, gosto, capa) e da seção 3 (o público), menos a duração e a voz.
 
+Se a prévia avisou (`AVISO`) que o vídeo passa de 120% da duração do canal, é `CORRIGIR` para a roteirista
+(cortar ou juntar cenas): cada cena ganha uns 0,7 s de respiro além da fala, e em 100 cenas isso dá mais de 1 minuto.
+
 Rode também `source ferramentas/nuvem.sh && npm run conferir-tela -- conteudo/<arquivo>.json` (uns 30 s): ele mede
 cada texto na tela e avisa letra difícil de ler (pouco contraste com a imagem em volta) e, nos shorts em pé, texto
 embaixo dos botões do app. Cada AVISO de contraste é `CORRIGIR`: a pesquisadora troca a imagem ou põe
@@ -30,8 +33,8 @@ feito; os outros você já aprovou na volta anterior.
 ## 1b. No vídeo pronto (depois do render)
 
 A prévia já foi aprovada: **não reprove por gosto nem por imagem que já estava na prévia**. Leia
-`out/<arquivo>/info.json` (duração e `capitulos`) e tire quadros: um a cada 2 minutos, um 3 segundos depois do começo
-de cada capítulo e dois no fim.
+`out/<arquivo>/info.json` (duração e `capitulos`) e tire quadros: um a cada 2 minutos, um 1,5 segundo depois do começo
+de cada capítulo (no 1º, aos 4,5 s: o cartão dele entra uns 3 s depois do começo do vídeo) e dois no fim.
 
 ```sh
 source ferramentas/nuvem.sh && for t in <segundos>; do npx remotion ffmpeg -y -loglevel error -ss $t -i out/<arquivo>/video.mp4 -frames:v 1 -vf scale=640:-2 out/<arquivo>/critica-$t.jpg; done
@@ -46,7 +49,11 @@ música cobrindo a voz. Se um quadro levantar dúvida, tire só esse de novo sem
 ## 2. Confira
 
 **Erros (qualquer um reprova):**
-- imagem errada para o que a fala diz (pessoa, lugar ou época errada), anacrônica, com marca d'água ou borda;
+- imagem errada para o que a fala diz (pessoa, lugar ou época errada), anacrônica, com marca d'água ou borda (o
+  `buscar-fotos` já corta a borda lisa e a faixa de legenda de museu; margem de papel velho ou rasgado não sai sozinha:
+  peça à pesquisadora `npm run recortar-bordas -- <imagem> --corte esquerda,cima,direita,baixo` em %);
+- rosto ou figura principal cortado pelo quadro ou pelo zoom (pintura deitada mostra só o meio): a correção é o `foco`
+  na cena (`[x, y]` em % da imagem, ou `"topo"`), para a pesquisadora;
 - legenda cobrindo o que importa na imagem (se for texto escrito embaixo da imagem, a correção é `"legendaNoAlto": true` na cena, para a pesquisadora), texto cortado ou com erro de escrita na língua do canal (a do roteiro; inglês e espanhol são normais);
 - cartão de capítulo ilegível ou com erro;
 - a mesma imagem em mais de 3 cenas;

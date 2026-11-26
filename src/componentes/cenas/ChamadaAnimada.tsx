@@ -41,8 +41,18 @@ export const SeloDaMarca: React.FC<{ tamanho: number; contorno?: number }> = ({ 
   </div>
 );
 
-/** CTA do começo: balão de fala com o logo; entra com um pulo e sai antes da primeira virada */
-export const BalaoDeChamada: React.FC<{ texto: string; topo: number; sai?: number; jaNaTela?: boolean }> = ({ texto, topo, sai = 110, jaNaTela = false }) => {
+/**
+ * CTA do começo: balão de fala com o logo; entra com um pulo e sai antes da primeira virada.
+ * `noFluxo`: entra na coluna do título, logo embaixo dele (sem `topo`). 26/11/2026: com o
+ * `topo` estimado pelo tamanho do título, um título de 2 ou 3 linhas caía embaixo do balão.
+ */
+export const BalaoDeChamada: React.FC<{ texto: string; topo?: number; sai?: number; jaNaTela?: boolean; noFluxo?: boolean }> = ({
+  texto,
+  topo = 0,
+  sai = 110,
+  jaNaTela = false,
+  noFluxo = false,
+}) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   // jaNaTela: aparece desde o quadro 0 (a prévia do feed), em vez de entrar depois
@@ -53,7 +63,7 @@ export const BalaoDeChamada: React.FC<{ texto: string; topo: number; sai?: numbe
   // Balança de leve enquanto está na tela
   const balanco = Math.sin(frame / 7) * 1.6;
   return (
-    <div style={{ position: "absolute", top: topo, left: 0, right: 0, display: "flex", justifyContent: "center" }}>
+    <div style={{ ...(noFluxo ? { position: "relative" as const, marginTop: 6 } : { position: "absolute" as const, top: topo, left: 0, right: 0 }), display: "flex", justifyContent: "center" }}>
       <div style={{ position: "relative", scale: String(p), rotate: `${balanco - 2}deg`, transformOrigin: "50% 100%" }}>
         <div
           style={{
