@@ -21,7 +21,8 @@ Os **braços são do kit** (para as 7 poses funcionarem), com as cores do `visua
 ## As peças
 
 - **`atras`** (opcional): o que fica atrás do corpo, como cabelo comprido, capa ou rabo.
-- **`corpo`**: pernas, sapatos, pescoço, tronco e roupa, **sem braços**.
+- **`corpo`**: pernas, sapatos, pescoço, tronco e roupa, **sem braços e sem mangas** (nem manga curta, punho ou ombro bufante: ficam parados enquanto o braço do kit mexe, e o personagem parece ter quatro braços; o kit tira o que fica fora do tronco na altura dos braços e o `conferir` avisa).
+- **`figurinos`** (opcional): até 4 corpos alternativos, com as mesmas regras do `corpo` (o mesmo tronco e a mesma cor principal; muda o detalhe: estampa, jaqueta aberta, colete, cachecol). O roteiro escolhe um por episódio (`figurino` ou `episodio`).
 - **`cabeca`**: o rosto **sem olhos e sem boca**, com orelhas, bochechas, nariz, cabelo da frente, chapéu, óculos, bigode e barba.
 - **`olhos.abertos`** e **`olhos.fechados`**: o fechado é usado para piscar e na expressão radiante.
 - **Bocas**:

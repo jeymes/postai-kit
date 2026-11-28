@@ -10,12 +10,16 @@
 // Uso: npm run conferir -- conteudo/<arquivo>.json
 import { existsSync, readFileSync } from "node:fs";
 import { cenariosFaltando } from "./cenarios-do-roteiro.ts";
-import { duracaoDoMolde, falaDoNarrador, FPS, quadrosDaFala } from "../src/moldes/tempos.ts";
+import { CONVERSA, duracaoDoMolde, estimarPalavras, falaDoNarrador, FPS, quadrosDaFala, quadrosDaFalaConversa } from "../src/moldes/tempos.ts";
 import { VOZES, VOZES_DO_ELENCO } from "../src/componentes/personagens/vozes.ts";
 import { avisoDeDuracao, minutosDoCanal } from "./duracao-do-canal.ts";
 import { palavrasDificeis, pronunciasDoVideo } from "./voz/pronuncias.ts";
 import { graficoSchema, ICONES, TIPOS_DE_GRAFICO } from "../src/moldes/documentario/infografico/schema.ts";
 import { normalizarPalavra } from "../src/moldes/documentario/infografico/numeros.ts";
+import { ACOES, MAOS_OCUPADAS, MINIMO_NO_CENARIO, normalizar, POSES_DO_ROTEIRO, trocasDeCenario } from "../src/moldes/conversa/regras2d.ts";
+import { corpoSemBracos } from "../src/componentes/personagens/semMangas.ts";
+import { conferirIlustra } from "../src/componentes/ilustracao/tempo.ts";
+import { ilustraSchema } from "../src/componentes/ilustracao/schema.ts";
 
 const arquivo = process.argv.slice(2).find((arg) => !arg.startsWith("--"));
 if (!arquivo || !existsSync(arquivo)) {
@@ -42,6 +46,16 @@ const erros: string[] = [];
 const avisos: string[] = [];
 const erro = (quem: string, texto: string) => erros.push(`${quem}: ${texto}`);
 const aviso = (quem: string, texto: string) => avisos.push(`${quem}: ${texto}`);
+// Ilustração da fala (27/11/2026): a palavra de cada item tem de estar na fala
+const conferirIlustracoes = (lista: ReadonlyArray<{ fala?: string; ilustra?: unknown }>) =>
+  lista.forEach((c, i) => {
+    const formato = ilustraSchema.safeParse(c.ilustra);
+    if (!formato.success) {
+      for (const q of formato.error.issues.slice(0, 3)) erro("roteirista", `cena ${i + 1}: ilustra.${q.path.join(".")}: ${q.message.slice(0, 160)}`);
+      return;
+    }
+    for (const problema of conferirIlustra(c.ilustra as Parameters<typeof conferirIlustra>[0], c.fala ?? "")) aviso("roteirista", `cena ${i + 1}: ${problema}`);
+  });
 
 // Letras como a pessoa vê (um emoji simples conta como um)
 const tamanho = (texto = "") => Array.from(texto).length;
@@ -395,30 +409,85 @@ if (peca.molde === "Documentario") {
 }
 
 // ---- Mundo3D (bonecos de peças num mundo 3D): a forma, por código ----
+// 27/11/2026: as ações na palavra (acoes), o lugar por cena (lugar), quem está em
+// cada cena (personagens[].cenas), o ritmo (nada parado mais de ~4 s) e as
+// combinações que davam defeito na tela (objeto na mão com as duas mãos ocupadas,
+// plano "ombro" sem ninguém, troca de lugar rápida demais).
 if (peca.molde === "Mundo3D") {
-  type Cena3D = { fala?: string; quem?: string; plano?: string; foco?: string; estados?: Record<string, unknown>; narracao?: { duracaoSeg?: number }; queda?: string };
+  type Acao3D = { quem?: string; em?: string | number; acao?: string; ate?: [number, number]; para?: string; objeto?: string };
+  type Cena3D = {
+    fala?: string;
+    quem?: string;
+    plano?: string;
+    foco?: string;
+    lugar?: string;
+    estados?: Record<string, { pose?: string; ate?: [number, number] }>;
+    mudancas?: Array<{ em?: number; quem?: string; pose?: string }>;
+    acoes?: Acao3D[];
+    camera?: { cortar?: boolean };
+    narracao?: { duracaoSeg?: number; legendas?: Array<{ texto: string }> };
+    queda?: string;
+  };
   const m = peca as unknown as {
     titulo?: string;
-    personagens?: Array<{ id: string; visual?: unknown }>;
+    bonecos?: string;
+    personagens?: Array<{ id: string; visual?: unknown; onde?: [number, number]; cenas?: number[]; figurino?: number }>;
     multidao?: unknown;
     cenas?: Cena3D[];
+    objetos?: Array<{ tipo: string; perto?: string; naMao?: boolean; cenas?: number[] }>;
     ctaFinal?: string;
     botaoFinal?: string;
-    cenario?: { ponte?: boolean; ambiente?: string };
+    cenario?: { ponte?: boolean; ambiente?: string; rio?: boolean };
     post?: { titulo?: string; legenda?: string };
   };
   const cenas = m.cenas ?? [];
+  const pecas = m.bonecos === "pecas";
   const ids = new Set((m.personagens ?? []).map((p) => p.id));
-  const PLANOS = ["aberto", "medio-aberto", "medio", "close", "de-baixo", "por-cima"];
-  const AMBIENTES = ["campo", "deserto", "cidade", "aldeia", "moderno"];
+  const PLANOS = ["aberto", "medio-aberto", "medio", "close", "de-baixo", "por-cima", "ombro", "detalhe"];
+  const AMBIENTES = ["campo", "deserto", "cidade", "aldeia", "moderno", "reino", "mar", "salao"];
+  const ACOES = [
+    "normal", "cintura", "celular", "celular-baixo", "cabeca", "explicando", "comemorando", "pensando", "sentado", "apontando", "caido", "abraco",
+    "andar", "correr", "virar", "olhar", "olhar-cima", "olhar-baixo", "ajoelhar", "orar", "ajoelhar-orando", "levantar-bracos", "chorar", "acenar",
+    "entregar", "abracar", "sentar", "levantar", "cair", "assustar", "cruzar-bracos", "mostrar", "apontar", "comemorar", "pensar", "explicar",
+  ];
+  // Poses que usam as duas mãos: o objeto da mão é guardado enquanto durar (some da tela)
+  const DUAS_MAOS = new Set(["cabeca", "chorar", "orar", "ajoelhar-orando", "abraco", "abracar", "cruzar-bracos", "comemorando", "comemorar", "levantar-bracos"]);
   const ambiente = m.cenario?.ambiente ?? "campo";
   const temPonte = m.cenario?.ponte ?? ambiente === "campo";
   if (!AMBIENTES.includes(ambiente)) erro("roteirista", `cenario.ambiente "${ambiente}" não existe (use ${AMBIENTES.join(", ")})`);
-  const semCores = (peca as { bonecos?: string }).bonecos === "pecas" ? (m.personagens ?? []).filter((p) => !p.visual).map((p) => p.id) : [];
+  const semCores = pecas ? (m.personagens ?? []).filter((p) => !p.visual).map((p) => p.id) : [];
   if (semCores.length) aviso("roteirista", `sem as cores do elenco: ${semCores.join(", ")} (rode npm run elenco -- <arquivo> --canal canais/<canal>; fora do elenco, tudo bem)`);
   if (cenas.length < 3) erro("roteirista", `só ${cenas.length} cena(s): um vídeo pede de 5 a 12`);
   if (cenas.length > 14) erro("roteirista", `${cenas.length} cenas: no máximo 14 (o vídeo passa de 1 minuto)`);
   if (tamanho(m.titulo) > 60) erro("roteirista", `título com ${tamanho(m.titulo)} letras (até 60, cabe em 4 linhas)`);
+  const presente = (id: string, n: number) => {
+    const p = (m.personagens ?? []).find((x) => x.id === id);
+    return !!p && (!p.cenas?.length || p.cenas.includes(n));
+  };
+  for (const p of m.personagens ?? []) {
+    if (p.figurino !== undefined && !(Number.isInteger(p.figurino) && p.figurino >= 1 && p.figurino <= 5)) erro("roteirista", `${p.id}: figurino ${p.figurino} (use de 1 a 5)`);
+    for (const q of m.personagens ?? [])
+      if (p.id < q.id && p.onde && q.onde && Math.hypot(p.onde[0] - q.onde[0], p.onde[1] - q.onde[1]) < 1.2)
+        aviso("diretora-de-arte", `${p.id} e ${q.id} começam a menos de 1,2 m um do outro: os braços se cruzam (afaste o "onde")`);
+  }
+  const limpa = (t: string) => t.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]/g, "");
+  const segundosDe = (c: Cena3D) => c.narracao?.duracaoSeg ?? palavras(c.fala) / 2.6;
+  let lugar = ambiente;
+  let desdeATroca = 0;
+  let trocas = 0;
+  // Quem está com objeto na mão em cada cena (pelo "perto" e pelas cenas do objeto)
+  // (segue o "entregar": depois da cena da entrega, o objeto é de quem recebeu)
+  const donoNaCena = (o: { tipo: string; perto?: string }, n: number) => {
+    let dono = o.perto;
+    cenas.forEach((c, i) => {
+      if (i + 1 >= n) return;
+      for (const a of c.acoes ?? []) if (a.acao === "entregar" && a.quem === dono && a.para && (!a.objeto || a.objeto === o.tipo)) dono = a.para;
+    });
+    return dono;
+  };
+  const objetoNaMao = (id: string, n: number) =>
+    (m.objetos ?? []).some((o) => o.naMao && donoNaCena(o, n) === id && (!o.cenas?.length || (n >= Math.min(...o.cenas) && n <= Math.max(...o.cenas))));
+  conferirIlustracoes(cenas);
   cenas.forEach((cena, i) => {
     const n = i + 1;
     if (!cena.fala?.trim()) erro("roteirista", `cena ${n} sem fala`);
@@ -428,20 +497,74 @@ if (peca.molde === "Mundo3D") {
     const foco = cena.foco ?? "";
     if (!(ids.has(foco) || (foco === "multidao" && m.multidao) || (foco === "ponte" && temPonte)))
       erro("roteirista", `cena ${n}: foco "${foco}" não existe (um id de personagens, "multidao" ou "ponte")`);
+    else if (ids.has(foco) && !presente(foco, n)) erro("roteirista", `cena ${n}: o foco "${foco}" não está nesta cena (veja "cenas" dele em personagens)`);
     if (cena.quem && !ids.has(cena.quem)) erro("roteirista", `cena ${n}: quem "${cena.quem}" não está em personagens`);
     for (const id of Object.keys(cena.estados ?? {})) if (!ids.has(id)) erro("roteirista", `cena ${n}: estado de "${id}", que não está em personagens`);
     if (cena.queda && !temPonte) erro("roteirista", `cena ${n}: queda sem ponte no cenário`);
     if (process.argv.includes("--com-voz") && !cena.narracao) erro("producao", `cena ${n} sem voz: rode o narrar de novo`);
+    if (cena.plano === "ombro" && ![...ids].some((o) => o !== foco && presente(o, n)))
+      aviso("diretora-de-arte", `cena ${n}: plano "ombro" sem mais ninguém na cena (sai um close)`);
+
+    // O lugar: cada um fica pelo menos 6 s na tela (a troca rápida parecia defeito: "o cenário muda do nada")
+    if (cena.lugar && !AMBIENTES.includes(cena.lugar)) erro("roteirista", `cena ${n}: lugar "${cena.lugar}" não existe (use ${AMBIENTES.join(", ")})`);
+    if (cena.lugar && cena.lugar !== lugar) {
+      if (i > 0 && desdeATroca < 6) erro("roteirista", `cena ${n}: troca de lugar ${desdeATroca.toFixed(1)} s depois da anterior (cada lugar fica pelo menos 6 s; junte as cenas do mesmo lugar)`);
+      lugar = cena.lugar;
+      desdeATroca = 0;
+      trocas++;
+    }
+    desdeATroca += segundosDe(cena);
+
+    // As ações: quem, a palavra, o que pede "para" ou "ate"
+    const ditas = (cena.narracao?.legendas?.map((l) => l.texto) ?? (cena.fala ?? "").split(/\s+/)).map(limpa).filter(Boolean);
+    for (const a of cena.acoes ?? []) {
+      const onde = `cena ${n}, ação "${a.acao}" de ${a.quem}`;
+      if (!a.acao || !ACOES.includes(a.acao)) erro("roteirista", `${onde}: essa ação não existe (use ${ACOES.join(", ")})`);
+      if (!a.quem || (!ids.has(a.quem) && a.quem !== "multidao")) erro("roteirista", `${onde}: "${a.quem}" não está em personagens`);
+      else if (a.quem !== "multidao" && !presente(a.quem, n)) erro("roteirista", `${onde}: ${a.quem} não está nesta cena`);
+      if (typeof a.em === "string") {
+        const alvo = limpa(a.em);
+        if (!ditas.some((w) => w === alvo || w.startsWith(alvo) || (alvo.length >= 4 && alvo.startsWith(w) && w.length >= 3)))
+          erro("roteirista", `${onde}: a palavra "${a.em}" não está na fala desta cena (a ação acontece na palavra dita)`);
+      } else if (typeof a.em !== "number") erro("roteirista", `${onde}: falta "em" (a palavra da fala ou os segundos)`);
+      if ((a.acao === "entregar" || a.acao === "abracar") && (!a.para || !ids.has(a.para))) erro("roteirista", `${onde}: falta "para" (o id de quem recebe ou é abraçado)`);
+      if (a.para && ids.has(a.para) && !presente(a.para, n)) erro("roteirista", `${onde}: ${a.para} não está nesta cena`);
+      if ((a.acao === "andar" || a.acao === "correr") && !a.ate && !a.para) erro("roteirista", `${onde}: falta "ate" [x, z] ou "para" (de quem chegar perto)`);
+      if (a.ate && (Math.abs(a.ate[0]) > 6 || a.ate[1] > 7 || a.ate[1] < -3)) aviso("diretora-de-arte", `${onde}: "ate" [${a.ate.join(", ")}] fora do palco (x de -6 a 6, z de -3 a 7): pode sair do plano`);
+      if (a.acao === "entregar" && a.quem && !a.objeto && !objetoNaMao(a.quem, n))
+        erro("diretora-de-arte", `${onde}: ${a.quem} não tem objeto na mão nesta cena (ponha um objeto com "naMao": true e "perto": "${a.quem}", ou "objeto")`);
+      if (a.quem && DUAS_MAOS.has(a.acao ?? "") && objetoNaMao(a.quem, n))
+        aviso("diretora-de-arte", `${onde}: usa as duas mãos e ${a.quem} está com um objeto na mão (o objeto é guardado e some enquanto isso): troque a ação ou tire o objeto destas cenas`);
+    }
+    for (const [id, est] of Object.entries(cena.estados ?? {}))
+      if (est?.pose && DUAS_MAOS.has(est.pose) && objetoNaMao(id, n))
+        aviso("diretora-de-arte", `cena ${n}: ${id} na pose "${est.pose}" (as duas mãos) com objeto na mão: o objeto é guardado e some; troque a pose`);
+
+    // O ritmo: cena comprida sem nada mudando (o boneco "trava")
+    const seg = segundosDe(cena);
+    const mexe = (cena.acoes?.length ?? 0) + (cena.mudancas?.length ?? 0) + Object.values(cena.estados ?? {}).filter((e) => e?.ate).length;
+    if (pecas && seg > 4.2 && !mexe)
+      aviso("diretora-de-arte", `cena ${n}: ${seg.toFixed(1)} s sem nenhuma ação (o boneco só respira e gesticula): ponha "acoes" na palavra forte (ex.: { "quem": "${cena.foco}", "em": "<palavra>", "acao": "apontar" })`);
   });
+  if (trocas > 3) aviso("roteirista", `${trocas} trocas de lugar: o vídeo fica picado (use no máximo 2 ou 3)`);
+  // Objetos com buraco nas cenas: o kit mostra em todas do meio (não some e volta)
+  for (const o of m.objetos ?? []) {
+    if (!o.cenas?.length) continue;
+    const de = Math.min(...o.cenas);
+    const ate = Math.max(...o.cenas);
+    if (o.cenas.length !== ate - de + 1) aviso("diretora-de-arte", `objeto ${o.tipo}: cenas ${o.cenas.join(", ")} têm buraco; o kit mostra de ${de} a ${ate} sem sumir (ponha todas, ou só as que quer)`);
+    if (o.perto && ids.has(o.perto) && [...Array(ate - de + 1)].some((_, k) => !presente(o.perto as string, de + k)))
+      erro("diretora-de-arte", `objeto ${o.tipo}: ${o.perto} não está em todas as cenas de ${de} a ${ate}`);
+  }
   // Os planos variam (o que prende é a câmera mudando)
   const repetidos = cenas.filter((c, i) => i > 0 && c.plano === cenas[i - 1].plano).length;
   if (cenas.length >= 4 && repetidos > cenas.length / 2) aviso("roteirista", "muitos planos iguais seguidos: varie (aberto, médio, de baixo, close)");
-  const segundos = cenas.reduce((soma, c) => soma + (c.narracao?.duracaoSeg ?? palavras(c.fala) / 2.6), 0);
+  const segundos = cenas.reduce((soma, c) => soma + segundosDe(c), 0);
   if (segundos > 75) erro("roteirista", `uns ${Math.round(segundos)} s de fala: o Short vai até uns 60 s`);
   if (!m.ctaFinal) aviso("roteirista", "sem ctaFinal: o vídeo termina sem o cartão da marca");
   if (m.ctaFinal && (/@/.test(m.ctaFinal) || /link na bio/i.test(m.ctaFinal))) erro("roteirista", "ctaFinal sem @ e sem link na bio (isso vai no botão)");
   if (!m.post?.titulo || !m.post?.legenda) erro("roteirista", 'falta "post": { "titulo", "legenda" }');
-  console.log(`Mundo3D: ${cenas.length} cenas, uns ${Math.round(segundos)} s de fala.`);
+  console.log(`Mundo3D: ${cenas.length} cenas, uns ${Math.round(segundos)} s de fala, ${cenas.reduce((s2, c) => s2 + (c.acoes?.length ?? 0), 0)} ações.`);
   resultado();
 }
 
@@ -465,11 +588,23 @@ else if (cenas.length > 7) aviso("roteirista", `${cenas.length} cenas: só se o 
 // dele pode ser um pouco maior que a de um personagem (até 20 palavras)
 const idsDoElenco = peca.elenco?.length ? peca.elenco.map((p) => p.id) : ["noiva", "organizadora"];
 const doNarrador = (cena: Cena) => falaDoNarrador(cena.quem, idsDoElenco);
+conferirIlustracoes(cenas);
+// A coluna do título já cheia (hora + notificação, ou uma delas com o balão do começo): a ilustração no alto fica espremida
+cenas.forEach((cena, i) => {
+  const c = cena as Cena & { hora?: string; notificacao?: unknown; ilustra?: Array<{ lugar?: string }> };
+  const ocupados = (c.hora ? 1 : 0) + (c.notificacao ? 1 : 0) + (i === 0 && peca.ctaInicial ? 1 : 0);
+  if (ocupados >= 2 && c.ilustra?.some((x) => !x.lugar || ["alto", "esquerda", "direita"].includes(x.lugar)))
+    aviso("roteirista", `cena ${i + 1}: hora, notificação e balão do começo já enchem o alto; ponha a ilustração em outra fala ou no "meio"`);
+});
 cenas.forEach((cena, i) => {
   const n = palavras(cena.fala);
-  const limite = doNarrador(cena) ? 20 : 12;
+  // Personagem sozinho (aula, monólogo para quem assiste): fala como o narrador, até 20
+  // (decisão do dono, 28/11/2026: o Já Caiu? é uma aula da Bia, sem diálogo)
+  const sozinho = (peca as { elenco?: unknown[] }).elenco?.length === 1;
+  const longa = doNarrador(cena) || sozinho;
+  const limite = longa ? 20 : 12;
   if (!cena.fala?.trim()) erro("roteirista", `cena ${i + 1}: sem fala`);
-  if (n > limite) erro("roteirista", `cena ${i + 1}: fala ${doNarrador(cena) ? "do narrador " : ""}com ${n} palavras (até ${limite}${doNarrador(cena) ? "" : "; o narrador, até 20"})`);
+  if (n > limite) erro("roteirista", `cena ${i + 1}: fala ${doNarrador(cena) ? "do narrador " : sozinho ? "de quem está sozinho " : ""}com ${n} palavras (até ${limite}${longa ? "" : "; o narrador ou quem está sozinho, até 20"})`);
   conferirVoz("roteirista", `cena ${i + 1}`, cena.fala);
 });
 // ---- Narrador: a voz dele ----
@@ -537,8 +672,9 @@ for (const id of ids) {
     } else if (anterior && atual.pose === anterior.pose && atual.expressao === anterior.expressao) {
       erro("diretora-de-arte", `cena ${i + 1}: "${id}" repete ${atual.pose}/${atual.expressao} da cena ${i}; mude a pose ou a expressão`);
     }
-    // Com a virada no meio da fala, a cena termina na pose do meio
-    anterior = cena.meio?.[id] ?? atual ?? anterior;
+    // Com a virada no meio da fala (ou uma ação na palavra), a cena termina na pose dela
+    const ultimaAcao = ((cena.acoes ?? []) as Array<Estado & { quem?: string }>).filter((x) => x.quem === id && (x.pose || x.expressao)).pop();
+    anterior = ultimaAcao ? { pose: ultimaAcao.pose ?? (cena.meio?.[id] ?? atual ?? anterior)?.pose, expressao: ultimaAcao.expressao ?? (cena.meio?.[id] ?? atual ?? anterior)?.expressao } : (cena.meio?.[id] ?? atual ?? anterior);
   });
 }
 for (const cena of cenas) {
@@ -579,6 +715,165 @@ cenas.forEach((cena, i) => {
     erro("diretora-de-arte", `cena ${i + 1}: tem "luz" mas ninguém está com o celular (pose celular ou sentado); a luz acenderia numa mão vazia`);
 });
 
+// ---- Animação 2D: ações, cenário, combinações que quebram e ritmo (27/11/2026) ----
+// O dono reclamou de cenário que troca rápido demais, celular e objeto que somem, boneco
+// parado falando e "quatro braços". O molde agora evita os saltos; aqui o roteiro que
+// pede o impossível volta para quem escreveu.
+{
+  type Acao2D = { quem?: string; em?: string; vez?: number; pose?: string; expressao?: string; acao?: string };
+  type CenaComDirecao = Cena & { acoes?: Acao2D[]; cenario?: string; noite?: boolean; objetos?: Array<{ quem?: string; tipo?: string; onde?: string }>; camera?: string; foco?: string };
+  const cenas2d = cenas as CenaComDirecao[];
+  // A linha do tempo como no molde: onde começa cada fala e o tempo de cada palavra
+  type Narr = { duracaoSeg: number; legendas: Array<{ texto: string; inicioMs: number; fimMs: number }> };
+  let quadro = CONVERSA.inicio;
+  const linha2d = cenas2d.map((cena) => {
+    const inicio = quadro;
+    const narr = cena.narracao as Narr | undefined;
+    const palavrasDaFala = narr
+      ? narr.legendas.map((l) => ({ texto: l.texto, inicio: inicio + Math.round((l.inicioMs / 1000) * FPS) }))
+      : estimarPalavras(cena.fala ?? "").map((p) => ({ texto: p.texto, inicio: inicio + p.inicio }));
+    const duracao = quadrosDaFalaConversa(cena as Parameters<typeof quadrosDaFalaConversa>[0]);
+    quadro += duracao + CONVERSA.entreFalas;
+    return { cena, inicio, duracao, palavras: palavrasDaFala };
+  });
+  const seg = (q: number) => (q / FPS).toFixed(1).replace(".", ",");
+  const elencoDoRoteiro = (peca.elenco ?? []) as Array<{ id: string; tipo?: string; desenho?: { corpo?: string; figurinos?: string[] } }>;
+  const temDesenho = (id: string) => Boolean(elencoDoRoteiro.find((p) => p.id === id)?.desenho);
+
+  // Desenho próprio com mangas ou braços no corpo: o kit tira (senão sai com quatro braços), mas a designer corrige
+  for (const p of elencoDoRoteiro) {
+    for (const corpo of [p.desenho?.corpo, ...(p.desenho?.figurinos ?? [])].filter(Boolean) as string[]) {
+      const { tirados } = corpoSemBracos(corpo);
+      if (tirados) aviso("designer-de-personagens", `"${p.id}": o corpo do desenho tem ${tirados} pedaço(s) de manga/braço fora do tronco; o kit tira na hora (os braços são do kit), mas redesenhe o corpo sem mangas (src/componentes/personagens/desenho/GUIA.md)`);
+    }
+  }
+
+  // As ações na palavra
+  const posesPorPessoa = new Map<string, string>();
+  cenas2d.forEach((cena, i) => {
+    for (const id of ids) {
+      const e = estadoNa(cena, id);
+      if (e?.pose) posesPorPessoa.set(id, e.pose);
+    }
+    const legendas = linha2d[i].palavras.map((w) => normalizar(w.texto));
+    for (const a of cena.acoes ?? []) {
+      if (!a.quem || !ids.includes(a.quem)) erro("diretora-de-arte", `cena ${i + 1}: ação de "${a.quem}", que não está no elenco (${ids.join(", ")})`);
+      if (!a.pose && !a.acao && !a.expressao) erro("diretora-de-arte", `cena ${i + 1}: ação sem pose, acao nem expressao (em "${a.em}")`);
+      if (a.pose && !(POSES_DO_ROTEIRO as readonly string[]).includes(a.pose)) erro("diretora-de-arte", `cena ${i + 1}: pose "${a.pose}" não existe (${POSES_DO_ROTEIRO.join(", ")})`);
+      if (a.acao && !(ACOES as readonly string[]).includes(a.acao)) erro("diretora-de-arte", `cena ${i + 1}: acao "${a.acao}" não existe (${ACOES.join(", ")})`);
+      const alvo = normalizar(a.em ?? "");
+      const achou =
+        alvo === "inicio" || alvo === "fim" || legendas.filter((w) => w === alvo || (alvo.length >= 4 && w.startsWith(alvo))).length >= (a.vez ?? 1);
+      if (!alvo || !achou)
+        erro("diretora-de-arte", `cena ${i + 1}: a ação de "${a.quem}" está na palavra "${a.em}", que não está na fala ("${cena.fala}"); use uma palavra da fala, "inicio" ou "fim"`);
+      const antes = posesPorPessoa.get(a.quem ?? "") ?? "normal";
+      if (a.acao === "guardar-celular" && antes !== "celular" && antes !== "sentado")
+        aviso("diretora-de-arte", `cena ${i + 1}: "${a.quem}" guarda o celular, mas não está com ele (pose ${antes})`);
+      if (a.acao === "levantar" && antes !== "sentado" && antes !== "sentado-livre")
+        aviso("diretora-de-arte", `cena ${i + 1}: "${a.quem}" levanta, mas não está sentado`);
+      if (ids.length === 2 && (a.acao === "andar-meio" || (a.acao === "andar-direita" && a.quem === ids[0]) || (a.acao === "andar-esquerda" && a.quem === ids[1])))
+        aviso("diretora-de-arte", `cena ${i + 1}: "${a.quem}" anda (${a.acao}) para o lado de quem está na cena e passa por cima dele; com dois na cena, use "andar-perto" ou "andar-longe"`);
+      if (a.acao === "costas" && a.quem && temDesenho(a.quem))
+        aviso("diretora-de-arte", `cena ${i + 1}: "${a.quem}" tem desenho próprio, que não tem as costas desenhadas: ele só vira de lado (use "virar")`);
+      if (cena.luz && (a.acao === "guardar-celular" || a.acao === "baixar-celular"))
+        erro("diretora-de-arte", `cena ${i + 1}: a luz do aviso acende no celular, e "${a.quem}" guarda o celular na mesma fala; tire a ação ou a luz`);
+      if (a.pose) posesPorPessoa.set(a.quem ?? "", a.pose);
+    }
+    for (const id of ids) {
+      const m = cena.meio?.[id];
+      if (m?.pose) posesPorPessoa.set(id, m.pose);
+    }
+  });
+
+  // Abraço só com duas pessoas
+  if (ids.length < 2 && cenas2d.some((c) => ids.some((id) => estadoNa(c, id)?.pose === "abraco")))
+    erro("diretora-de-arte", 'pose "abraco" com uma pessoa só na cena (não tem quem abraçar)');
+
+  // Objeto na mão e mãos ocupadas: o objeto encolhe e some enquanto as duas mãos estão ocupadas
+  {
+    const comObjeto = new Set<string>();
+    cenas2d.forEach((cena, i) => {
+      for (const o of cena.objetos ?? []) {
+        if ((o.onde ?? "mao") !== "mao" || !o.quem) continue;
+        if (o.tipo === "nenhum") comObjeto.delete(o.quem);
+        else comObjeto.add(o.quem);
+      }
+      for (const id of comObjeto) {
+        const poses = [estadoNa(cena, id)?.pose, cena.meio?.[id]?.pose, ...(cena.acoes ?? []).filter((a) => a.quem === id).map((a) => a.pose)].filter(Boolean) as string[];
+        const ambas = poses.find((p) => (MAOS_OCUPADAS[p]?.length ?? 0) >= 2);
+        if (ambas)
+          aviso("diretora-de-arte", `cena ${i + 1}: "${id}" segura um objeto e faz a pose "${ambas}" (as duas mãos ocupadas): o objeto some enquanto ela dura; use uma pose com uma mão livre ou ponha o objeto "ao-lado"`);
+      }
+    });
+  }
+
+  // Cenário: no máximo 3 trocas, cada lugar com tempo para ser visto
+  {
+    const MAXIMO_DE_TROCAS = 3;
+    const trocas = trocasDeCenario(linha2d.map((l) => ({ cena: l.cena, inicio: l.inicio })), (peca as Record<string, unknown>).cenario as string ?? "atelie");
+    const pedidas: Array<{ i: number; em: number; cenario: string }> = [];
+    let atual = ((peca as Record<string, unknown>).cenario as string) ?? "atelie";
+    linha2d.forEach((l, i) => {
+      if (l.cena.cenario && l.cena.cenario !== atual) {
+        if (i > 0) pedidas.push({ i, em: l.inicio, cenario: l.cena.cenario });
+        atual = l.cena.cenario;
+      }
+    });
+    if (pedidas.length > MAXIMO_DE_TROCAS)
+      erro("diretora-de-arte", `${pedidas.length} trocas de cenário (até ${MAXIMO_DE_TROCAS} num vídeo curto): troca demais confunde; junte as falas no mesmo lugar`);
+    const fimDasFalas = linha2d.length ? linha2d[linha2d.length - 1].inicio + linha2d[linha2d.length - 1].duracao : 0;
+    const marcos = [{ i: 0, em: 0, cenario: "(início)" }, ...pedidas, { i: cenas2d.length, em: fimDasFalas, cenario: "(fim)" }];
+    for (let k = 1; k < marcos.length - 1; k++) {
+      const quanto = marcos[k + 1].em - marcos[k].em;
+      const falas = marcos[k + 1].i - marcos[k].i;
+      if (quanto < MINIMO_NO_CENARIO)
+        erro("diretora-de-arte", `cena ${marcos[k].i + 1}: o cenário "${marcos[k].cenario}" fica só ${seg(quanto)} s na tela (mínimo ${seg(MINIMO_NO_CENARIO)} s; menos que isso pisca e o molde adia a troca): tire a troca ou mantenha o lugar por mais falas`);
+      else if (quanto < 5 * FPS && falas < 3)
+        aviso("diretora-de-arte", `cena ${marcos[k].i + 1}: o cenário "${marcos[k].cenario}" fica ${seg(quanto)} s (${falas} fala(s)); o ideal é 3 falas ou 5 s em cada lugar`);
+    }
+    const adiadas = pedidas.length - trocas.filter((t) => t.mudouLugar).length;
+    if (adiadas > 0) aviso("diretora-de-arte", `${adiadas} troca(s) de cenário rápida(s) demais: o molde adia para a fala seguinte`);
+  }
+
+  // Ritmo: mais de ~4 s sem nada mudando na tela (pose, expressão, ação, câmera ou lugar)
+  {
+    const fixa = (peca as Record<string, unknown>).camera === "fixa";
+    const mudancas: number[] = [0];
+    let antes: Record<string, string> = {};
+    linha2d.forEach(({ cena, inicio, palavras }, i) => {
+      const agora: Record<string, string> = {};
+      for (const id of ids) {
+        const e = estadoNa(cena, id);
+        agora[id] = e ? `${e.pose}/${e.expressao}` : (antes[id] ?? "");
+      }
+      if (i === 0 || !fixa || ids.some((id) => agora[id] !== antes[id]) || cena.cenario || cena.camera) mudancas.push(inicio);
+      antes = agora;
+      if (cena.meio && Object.keys(cena.meio).length) mudancas.push(palavras[Math.floor(palavras.length / 2)]?.inicio ?? inicio);
+      for (const a of cena.acoes ?? []) {
+        const alvo = normalizar(a.em ?? "");
+        const w = palavras.find((p) => normalizar(p.texto) === alvo || (alvo.length >= 4 && normalizar(p.texto).startsWith(alvo)));
+        mudancas.push(alvo === "fim" ? inicio + linha2d[i].duracao : (w?.inicio ?? inicio));
+      }
+      // Fala longa no mesmo plano: a câmera só respira
+      if (!cena.acoes?.length && !cena.meio && linha2d[i].duracao > 4 * FPS)
+        aviso("diretora-de-arte", `cena ${i + 1}: fala de ${seg(linha2d[i].duracao)} s sem nenhuma ação: ponha 1 ou 2 "acoes" na palavra certa (ex.: { "quem": "${cena.quem ?? ids[0]}", "em": "<palavra>", "pose": "explicando" })`);
+    });
+    const fim = linha2d.length ? linha2d[linha2d.length - 1].inicio + linha2d[linha2d.length - 1].duracao : 0;
+    mudancas.push(fim);
+    mudancas.sort((a, b) => a - b);
+    let maior = 0;
+    let onde = 0;
+    for (let k = 1; k < mudancas.length; k++)
+      if (mudancas[k] - mudancas[k - 1] > maior) {
+        maior = mudancas[k] - mudancas[k - 1];
+        onde = mudancas[k - 1];
+      }
+    const cenaDoBuraco = linha2d.filter((l) => l.inicio <= onde).length;
+    if (maior > 7 * FPS) erro("diretora-de-arte", `${seg(maior)} s sem nenhuma mudança na tela (a partir da cena ${cenaDoBuraco}): ponha "acoes", "meio" ou mude a pose/expressão`);
+    else if (maior > 4 * FPS) aviso("diretora-de-arte", `${seg(maior)} s sem nenhuma mudança na tela (a partir da cena ${cenaDoBuraco}): ponha uma ação na palavra forte`);
+  }
+}
+
 // ---- Narração: ou todas as falas, ou nenhuma ----
 const narradas = cenas.filter((c) => c.narracao).length;
 if (narradas > 0 && narradas < cenas.length) erro("producao", `só ${narradas} de ${cenas.length} falas narradas: rode o narrar de novo`);
@@ -599,6 +894,15 @@ else {
 // ---- Texto de exemplo e marca ----
 const tudo = JSON.stringify({ ...peca, cenas: cenas.map(({ narracao: _n, ...resto }) => resto), elenco: undefined });
 if (/sua ?marca|@suamarca|lorem ipsum/i.test(tudo)) erro("roteirista", 'texto de exemplo ("Sua Marca", "@suamarca") no roteiro');
+// Como o vídeo termina: a frase na luz só quando o dono escolheu (public/marca/fim.json)
+if (peca.molde === "Conversa" || peca.molde === "Mundo3D") {
+  const fimEscolhido = existsSync("public/marca/fim.json") ? (JSON.parse(readFileSync("public/marca/fim.json", "utf8")) as { fim?: string }).fim : undefined;
+  const temFinal = Boolean((peca as { final?: unknown }).final);
+  if (fimEscolhido === "luz" && !temFinal)
+    erro("roteirista", 'o dono escolheu terminar na frase na luz: ponha "final" { frase, linha, botao (pedindo para seguir) }');
+  if (fimEscolhido !== "luz" && temFinal)
+    aviso("roteirista", 'o "final" (frase na luz) não sai: o dono não escolheu terminar na luz (o vídeo acaba no cartão do fim)');
+}
 if (existsSync("marca/marca.json")) {
   const marca = JSON.parse(readFileSync("marca/marca.json", "utf8")) as { nome?: string; logo?: string | null };
   if (!marca.nome || /^sua marca$/i.test(marca.nome)) erro("producao", "a marca do canal não foi baixada: rode npm run canal -- canais/<canal>");

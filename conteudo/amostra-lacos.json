@@ -1,0 +1,1107 @@
+{
+ "molde": "Conversa",
+ "titulo": "Convite com 15 dias de antecedência é erro",
+ "cenario": "atelie",
+ "voz": "feminina-1",
+ "cenas": [
+  {
+   "fala": "Convite com quinze dias de antecedência é erro, e quase toda noiva comete.",
+   "estados": {
+    "noiva": {
+     "pose": "celular",
+     "expressao": "preocupada"
+    },
+    "cerimonialista": {
+     "pose": "normal",
+     "expressao": "neutra"
+    }
+   },
+   "acoes": [
+    {
+     "quem": "noiva",
+     "em": "erro",
+     "expressao": "medo"
+    },
+    {
+     "quem": "cerimonialista",
+     "em": "noiva",
+     "pose": "cintura",
+     "expressao": "preocupada"
+    }
+   ],
+   "ilustra": [
+    {
+     "tipo": "numero",
+     "valor": 15,
+     "sufixo": " dias",
+     "rotulo": "antes da festa",
+     "icone": "calendario",
+     "em": "quinze",
+     "lugar": "esquerda"
+    },
+    {
+     "tipo": "texto",
+     "texto": "ERRO!",
+     "forma": "carimbo",
+     "em": "erro",
+     "lugar": "direita"
+    }
+   ],
+   "narracao": {
+    "audio": "narracao/amostra-lacos/cena-01-08246908.wav",
+    "duracaoSeg": 4.48,
+    "legendas": [
+     {
+      "texto": "Convite",
+      "inicioMs": 0,
+      "fimMs": 420
+     },
+     {
+      "texto": "com",
+      "inicioMs": 420,
+      "fimMs": 620
+     },
+     {
+      "texto": "quinze",
+      "inicioMs": 620,
+      "fimMs": 920
+     },
+     {
+      "texto": "dias",
+      "inicioMs": 920,
+      "fimMs": 1320
+     },
+     {
+      "texto": "de",
+      "inicioMs": 1320,
+      "fimMs": 1520
+     },
+     {
+      "texto": "antecedência",
+      "inicioMs": 1520,
+      "fimMs": 2220
+     },
+     {
+      "texto": "é",
+      "inicioMs": 2220,
+      "fimMs": 2360
+     },
+     {
+      "texto": "erro,",
+      "inicioMs": 2360,
+      "fimMs": 2600
+     },
+     {
+      "texto": "e",
+      "inicioMs": 2600,
+      "fimMs": 2940
+     },
+     {
+      "texto": "quase",
+      "inicioMs": 2940,
+      "fimMs": 3160
+     },
+     {
+      "texto": "toda",
+      "inicioMs": 3160,
+      "fimMs": 3440
+     },
+     {
+      "texto": "noiva",
+      "inicioMs": 3440,
+      "fimMs": 3800
+     },
+     {
+      "texto": "comete",
+      "inicioMs": 3800,
+      "fimMs": 4280,
+      "fimDeFrase": true
+     }
+    ],
+    "chave": "[\"Convite com quinze dias de antecedência é erro, e quase toda noiva comete.\",\"pf_dora\",1.05,true]"
+   }
+  },
+  {
+   "fala": "A Júlia mandou tudo duas semanas antes. Metade dos convidados já tinha compromisso.",
+   "estados": {
+    "noiva": {
+     "pose": "celular",
+     "expressao": "feliz"
+    },
+    "cerimonialista": {
+     "pose": "cintura",
+     "expressao": "neutra"
+    }
+   },
+   "acoes": [
+    {
+     "quem": "noiva",
+     "em": "Metade",
+     "acao": "baixar-celular",
+     "expressao": "preocupada"
+    },
+    {
+     "quem": "cerimonialista",
+     "em": "compromisso",
+     "pose": "bracos-cruzados",
+     "expressao": "preocupada"
+    }
+   ],
+   "ilustra": [
+    {
+     "tipo": "icone",
+     "icone": "envelope",
+     "rotulo": "Enviado em cima",
+     "em": "mandou"
+    },
+    {
+     "tipo": "numero",
+     "valor": 50,
+     "sufixo": "%",
+     "rotulo": "com outro compromisso",
+     "icone": "pessoa",
+     "em": "Metade"
+    }
+   ],
+   "narracao": {
+    "audio": "narracao/amostra-lacos/cena-02-56ef611c.wav",
+    "duracaoSeg": 4.779,
+    "legendas": [
+     {
+      "texto": "A",
+      "inicioMs": 0,
+      "fimMs": 100
+     },
+     {
+      "texto": "Júlia",
+      "inicioMs": 100,
+      "fimMs": 380
+     },
+     {
+      "texto": "mandou",
+      "inicioMs": 380,
+      "fimMs": 700
+     },
+     {
+      "texto": "tudo",
+      "inicioMs": 700,
+      "fimMs": 960
+     },
+     {
+      "texto": "duas",
+      "inicioMs": 960,
+      "fimMs": 1280
+     },
+     {
+      "texto": "semanas",
+      "inicioMs": 1280,
+      "fimMs": 1600
+     },
+     {
+      "texto": "antes",
+      "inicioMs": 1600,
+      "fimMs": 1980,
+      "fimDeFrase": true
+     },
+     {
+      "texto": "Metade",
+      "inicioMs": 2420,
+      "fimMs": 2860
+     },
+     {
+      "texto": "dos",
+      "inicioMs": 2860,
+      "fimMs": 3020
+     },
+     {
+      "texto": "convidados",
+      "inicioMs": 3020,
+      "fimMs": 3600
+     },
+     {
+      "texto": "já",
+      "inicioMs": 3600,
+      "fimMs": 3780
+     },
+     {
+      "texto": "tinha",
+      "inicioMs": 3780,
+      "fimMs": 3980
+     },
+     {
+      "texto": "compromisso",
+      "inicioMs": 3980,
+      "fimMs": 4620,
+      "fimDeFrase": true
+     }
+    ],
+    "chave": "[\"A Júlia mandou tudo duas semanas antes. Metade dos convidados já tinha compromisso.\",\"pf_dora\",1.05,true]"
+   }
+  },
+  {
+   "quem": "noiva",
+   "fala": "E agora? Ninguém vai vir!",
+   "estados": {
+    "noiva": {
+     "pose": "celular",
+     "expressao": "medo"
+    },
+    "cerimonialista": {
+     "pose": "normal",
+     "expressao": "preocupada"
+    }
+   },
+   "acoes": [
+    {
+     "quem": "noiva",
+     "em": "agora",
+     "acao": "guardar-celular"
+    },
+    {
+     "quem": "noiva",
+     "em": "Ninguém",
+     "pose": "cabeca",
+     "expressao": "medo"
+    },
+    {
+     "quem": "cerimonialista",
+     "em": "vir",
+     "acao": "andar-perto",
+     "pose": "normal"
+    }
+   ],
+   "ilustra": [
+    {
+     "tipo": "pensamento",
+     "quem": "noiva",
+     "texto": "Festa vazia?",
+     "em": "Ninguém"
+    }
+   ],
+   "narracao": {
+    "audio": "narracao/amostra-lacos/cena-03-5d992420.wav",
+    "duracaoSeg": 1.685,
+    "legendas": [
+     {
+      "texto": "E",
+      "inicioMs": 0,
+      "fimMs": 120
+     },
+     {
+      "texto": "agora?",
+      "inicioMs": 120,
+      "fimMs": 380,
+      "fimDeFrase": true
+     },
+     {
+      "texto": "Ninguém",
+      "inicioMs": 620,
+      "fimMs": 860
+     },
+     {
+      "texto": "vai",
+      "inicioMs": 860,
+      "fimMs": 1200
+     },
+     {
+      "texto": "vir!",
+      "inicioMs": 1200,
+      "fimMs": 1460,
+      "fimDeFrase": true
+     }
+    ],
+    "boca": [
+     {
+      "inicio": 0,
+      "forma": "C"
+     },
+     {
+      "inicio": 0.13,
+      "forma": "D"
+     },
+     {
+      "inicio": 0.27,
+      "forma": "B"
+     },
+     {
+      "inicio": 0.34,
+      "forma": "E"
+     },
+     {
+      "inicio": 0.61,
+      "forma": "B"
+     },
+     {
+      "inicio": 0.82,
+      "forma": "C"
+     },
+     {
+      "inicio": 0.89,
+      "forma": "B"
+     },
+     {
+      "inicio": 1.03,
+      "forma": "G"
+     },
+     {
+      "inicio": 1.1,
+      "forma": "C"
+     },
+     {
+      "inicio": 1.17,
+      "forma": "B"
+     },
+     {
+      "inicio": 1.24,
+      "forma": "G"
+     },
+     {
+      "inicio": 1.38,
+      "forma": "B"
+     },
+     {
+      "inicio": 1.66,
+      "forma": "X"
+     }
+    ],
+    "chave": "[\"E agora? Ninguém vai vir!\",\"pf_dora*0.5+af_bella*0.5\",1.05,true]"
+   }
+  },
+  {
+   "fala": "A Marta ensinou o jeito certo. Primeiro: o aviso de reserve a data sai seis meses antes.",
+   "estados": {
+    "noiva": {
+     "pose": "normal",
+     "expressao": "preocupada"
+    },
+    "cerimonialista": {
+     "pose": "explicando",
+     "expressao": "feliz"
+    }
+   },
+   "acoes": [
+    {
+     "quem": "cerimonialista",
+     "em": "Marta",
+     "acao": "voltar"
+    },
+    {
+     "quem": "cerimonialista",
+     "em": "Primeiro",
+     "pose": "apontando"
+    },
+    {
+     "quem": "noiva",
+     "em": "seis",
+     "expressao": "surpresa"
+    }
+   ],
+   "ilustra": [
+    {
+     "tipo": "texto",
+     "texto": "O jeito certo",
+     "forma": "sticker",
+     "destaque": "certo",
+     "em": "certo"
+    },
+    {
+     "tipo": "icone",
+     "em": "aviso",
+     "icones": [
+      {
+       "icone": "envelope",
+       "rotulo": "Aviso",
+       "em": "aviso"
+      },
+      {
+       "icone": "calendario",
+       "rotulo": "6 meses",
+       "em": "seis"
+      }
+     ]
+    }
+   ],
+   "narracao": {
+    "audio": "narracao/amostra-lacos/cena-04-319ea2e8.wav",
+    "duracaoSeg": 5.205,
+    "legendas": [
+     {
+      "texto": "A",
+      "inicioMs": 0,
+      "fimMs": 100
+     },
+     {
+      "texto": "Marta",
+      "inicioMs": 100,
+      "fimMs": 420
+     },
+     {
+      "texto": "ensinou",
+      "inicioMs": 420,
+      "fimMs": 800
+     },
+     {
+      "texto": "o",
+      "inicioMs": 800,
+      "fimMs": 880
+     },
+     {
+      "texto": "jeito",
+      "inicioMs": 880,
+      "fimMs": 1060
+     },
+     {
+      "texto": "certo",
+      "inicioMs": 1060,
+      "fimMs": 1460,
+      "fimDeFrase": true
+     },
+     {
+      "texto": "Primeiro:",
+      "inicioMs": 1780,
+      "fimMs": 2300
+     },
+     {
+      "texto": "o",
+      "inicioMs": 2540,
+      "fimMs": 2620
+     },
+     {
+      "texto": "aviso",
+      "inicioMs": 2620,
+      "fimMs": 2900
+     },
+     {
+      "texto": "de",
+      "inicioMs": 2900,
+      "fimMs": 3000
+     },
+     {
+      "texto": "reserve",
+      "inicioMs": 3000,
+      "fimMs": 3380
+     },
+     {
+      "texto": "a",
+      "inicioMs": 3380,
+      "fimMs": 3540
+     },
+     {
+      "texto": "data",
+      "inicioMs": 3540,
+      "fimMs": 3680
+     },
+     {
+      "texto": "sai",
+      "inicioMs": 3680,
+      "fimMs": 3960
+     },
+     {
+      "texto": "seis",
+      "inicioMs": 3960,
+      "fimMs": 4220
+     },
+     {
+      "texto": "meses",
+      "inicioMs": 4220,
+      "fimMs": 4480
+     },
+     {
+      "texto": "antes",
+      "inicioMs": 4480,
+      "fimMs": 4880,
+      "fimDeFrase": true
+     }
+    ],
+    "chave": "[\"A Marta ensinou o jeito certo. Primeiro: o aviso de reserve a data sai seis meses antes.\",\"pf_dora\",1.05,true]"
+   }
+  },
+  {
+   "fala": "Depois, o mais comum é o convite chegar de dois a três meses antes.",
+   "estados": {
+    "noiva": {
+     "pose": "explicando",
+     "expressao": "surpresa"
+    },
+    "cerimonialista": {
+     "pose": "cintura",
+     "expressao": "feliz"
+    }
+   },
+   "acoes": [
+    {
+     "quem": "cerimonialista",
+     "em": "convite",
+     "pose": "explicando"
+    },
+    {
+     "quem": "noiva",
+     "em": "três",
+     "acao": "pegar-celular",
+     "expressao": "feliz"
+    }
+   ],
+   "ilustra": [
+    {
+     "tipo": "numero",
+     "valor": 3,
+     "sufixo": " meses",
+     "rotulo": "o convite: 2 a 3 meses antes",
+     "icone": "envelope",
+     "em": "dois"
+    }
+   ],
+   "narracao": {
+    "audio": "narracao/amostra-lacos/cena-05-2a6e63b8.wav",
+    "duracaoSeg": 3.947,
+    "legendas": [
+     {
+      "texto": "Depois,",
+      "inicioMs": 0,
+      "fimMs": 260
+     },
+     {
+      "texto": "o",
+      "inicioMs": 540,
+      "fimMs": 620
+     },
+     {
+      "texto": "mais",
+      "inicioMs": 620,
+      "fimMs": 800
+     },
+     {
+      "texto": "comum",
+      "inicioMs": 800,
+      "fimMs": 1180
+     },
+     {
+      "texto": "é",
+      "inicioMs": 1180,
+      "fimMs": 1440
+     },
+     {
+      "texto": "o",
+      "inicioMs": 1440,
+      "fimMs": 1520
+     },
+     {
+      "texto": "convite",
+      "inicioMs": 1520,
+      "fimMs": 1920
+     },
+     {
+      "texto": "chegar",
+      "inicioMs": 1920,
+      "fimMs": 2160
+     },
+     {
+      "texto": "de",
+      "inicioMs": 2160,
+      "fimMs": 2380
+     },
+     {
+      "texto": "dois",
+      "inicioMs": 2380,
+      "fimMs": 2600
+     },
+     {
+      "texto": "a",
+      "inicioMs": 2600,
+      "fimMs": 2760
+     },
+     {
+      "texto": "três",
+      "inicioMs": 2760,
+      "fimMs": 3020
+     },
+     {
+      "texto": "meses",
+      "inicioMs": 3020,
+      "fimMs": 3220
+     },
+     {
+      "texto": "antes",
+      "inicioMs": 3220,
+      "fimMs": 3640,
+      "fimDeFrase": true
+     }
+    ],
+    "chave": "[\"Depois, o mais comum é o convite chegar de dois a três meses antes.\",\"pf_dora\",1.05,true]"
+   }
+  },
+  {
+   "fala": "E a confirmação fecha trinta dias antes. Quem não respondeu, ganha uma ligação.",
+   "estados": {
+    "noiva": {
+     "pose": "celular",
+     "expressao": "feliz"
+    },
+    "cerimonialista": {
+     "pose": "explicando",
+     "expressao": "neutra"
+    }
+   },
+   "acoes": [
+    {
+     "quem": "cerimonialista",
+     "em": "trinta",
+     "pose": "cintura",
+     "expressao": "feliz"
+    },
+    {
+     "quem": "noiva",
+     "em": "ligação",
+     "expressao": "radiante"
+    }
+   ],
+   "ilustra": [
+    {
+     "tipo": "icone",
+     "em": "confirmação",
+     "icones": [
+      {
+       "icone": "relogio",
+       "rotulo": "30 dias",
+       "em": "trinta"
+      },
+      {
+       "icone": "celular",
+       "rotulo": "Ligar",
+       "em": "ligação"
+      }
+     ]
+    }
+   ],
+   "narracao": {
+    "audio": "narracao/amostra-lacos/cena-06-38e940d8.wav",
+    "duracaoSeg": 4.672,
+    "legendas": [
+     {
+      "texto": "E",
+      "inicioMs": 0,
+      "fimMs": 100
+     },
+     {
+      "texto": "a",
+      "inicioMs": 100,
+      "fimMs": 150
+     },
+     {
+      "texto": "confirmação",
+      "inicioMs": 140,
+      "fimMs": 760
+     },
+     {
+      "texto": "fecha",
+      "inicioMs": 760,
+      "fimMs": 1160
+     },
+     {
+      "texto": "trinta",
+      "inicioMs": 1160,
+      "fimMs": 1460
+     },
+     {
+      "texto": "dias",
+      "inicioMs": 1460,
+      "fimMs": 1840
+     },
+     {
+      "texto": "antes",
+      "inicioMs": 1840,
+      "fimMs": 2200,
+      "fimDeFrase": true
+     },
+     {
+      "texto": "Quem",
+      "inicioMs": 2660,
+      "fimMs": 2840
+     },
+     {
+      "texto": "não",
+      "inicioMs": 2840,
+      "fimMs": 3060
+     },
+     {
+      "texto": "respondeu,",
+      "inicioMs": 3060,
+      "fimMs": 3700
+     },
+     {
+      "texto": "ganha",
+      "inicioMs": 3700,
+      "fimMs": 3980
+     },
+     {
+      "texto": "uma",
+      "inicioMs": 3980,
+      "fimMs": 4040
+     },
+     {
+      "texto": "ligação",
+      "inicioMs": 4040,
+      "fimMs": 4500,
+      "fimDeFrase": true
+     }
+    ],
+    "chave": "[\"E a confirmação fecha trinta dias antes. Quem não respondeu, ganha uma ligação.\",\"pf_dora\",1.05,true]"
+   }
+  },
+  {
+   "fala": "No casamento de verdade, foi assim. Na mesma semana, o celular da Júlia não parou.",
+   "cenario": "sala",
+   "luz": true,
+   "notificacao": {
+    "titulo": "Tia Lúcia",
+    "texto": "Confirmado! Eu e o Zé vamos 💕"
+   },
+   "estados": {
+    "noiva": {
+     "pose": "celular",
+     "expressao": "feliz"
+    },
+    "cerimonialista": {
+     "pose": "normal",
+     "expressao": "feliz"
+    }
+   },
+   "acoes": [
+    {
+     "quem": "cerimonialista",
+     "em": "parou",
+     "pose": "comemorando",
+     "expressao": "radiante"
+    },
+    {
+     "quem": "noiva",
+     "em": "semana",
+     "expressao": "radiante"
+    }
+   ],
+   "narracao": {
+    "audio": "narracao/amostra-lacos/cena-07-535d72bc.wav",
+    "duracaoSeg": 4.8,
+    "legendas": [
+     {
+      "texto": "No",
+      "inicioMs": 0,
+      "fimMs": 100
+     },
+     {
+      "texto": "casamento",
+      "inicioMs": 100,
+      "fimMs": 600
+     },
+     {
+      "texto": "de",
+      "inicioMs": 600,
+      "fimMs": 780
+     },
+     {
+      "texto": "verdade,",
+      "inicioMs": 780,
+      "fimMs": 1140
+     },
+     {
+      "texto": "foi",
+      "inicioMs": 1440,
+      "fimMs": 1560
+     },
+     {
+      "texto": "assim",
+      "inicioMs": 1560,
+      "fimMs": 1880,
+      "fimDeFrase": true
+     },
+     {
+      "texto": "Na",
+      "inicioMs": 2320,
+      "fimMs": 2500
+     },
+     {
+      "texto": "mesma",
+      "inicioMs": 2500,
+      "fimMs": 2720
+     },
+     {
+      "texto": "semana,",
+      "inicioMs": 2720,
+      "fimMs": 3200
+     },
+     {
+      "texto": "o",
+      "inicioMs": 3360,
+      "fimMs": 3410
+     },
+     {
+      "texto": "celular",
+      "inicioMs": 3380,
+      "fimMs": 3720
+     },
+     {
+      "texto": "da",
+      "inicioMs": 3720,
+      "fimMs": 3860
+     },
+     {
+      "texto": "Júlia",
+      "inicioMs": 3860,
+      "fimMs": 4200
+     },
+     {
+      "texto": "não",
+      "inicioMs": 4200,
+      "fimMs": 4300
+     },
+     {
+      "texto": "parou",
+      "inicioMs": 4300,
+      "fimMs": 4660,
+      "fimDeFrase": true
+     }
+    ],
+    "chave": "[\"No casamento de verdade, foi assim. Na mesma semana, o celular da Júlia não parou.\",\"pf_dora\",1.05,true]"
+   }
+  },
+  {
+   "quem": "noiva",
+   "fala": "Gente, a família inteira confirmou!",
+   "estados": {
+    "noiva": {
+     "pose": "comemorando",
+     "expressao": "radiante"
+    },
+    "cerimonialista": {
+     "pose": "acenando",
+     "expressao": "radiante"
+    }
+   },
+   "acoes": [
+    {
+     "quem": "noiva",
+     "em": "família",
+     "acao": "pular"
+    },
+    {
+     "quem": "cerimonialista",
+     "em": "confirmou",
+     "pose": "abraco",
+     "expressao": "aliviada"
+    },
+    {
+     "quem": "noiva",
+     "em": "confirmou",
+     "pose": "abraco",
+     "expressao": "aliviada"
+    }
+   ],
+   "ilustra": [
+    {
+     "tipo": "icone",
+     "icone": "familia",
+     "rotulo": "Todo mundo vem!",
+     "em": "família"
+    }
+   ],
+   "narracao": {
+    "audio": "narracao/amostra-lacos/cena-08-796e7492.wav",
+    "duracaoSeg": 2.261,
+    "legendas": [
+     {
+      "texto": "Gente,",
+      "inicioMs": 0,
+      "fimMs": 300
+     },
+     {
+      "texto": "a",
+      "inicioMs": 700,
+      "fimMs": 750
+     },
+     {
+      "texto": "família",
+      "inicioMs": 740,
+      "fimMs": 1020
+     },
+     {
+      "texto": "inteira",
+      "inicioMs": 1020,
+      "fimMs": 1520
+     },
+     {
+      "texto": "confirmou!",
+      "inicioMs": 1520,
+      "fimMs": 2080,
+      "fimDeFrase": true
+     }
+    ],
+    "boca": [
+     {
+      "inicio": 0,
+      "forma": "X"
+     },
+     {
+      "inicio": 0.01,
+      "forma": "B"
+     },
+     {
+      "inicio": 0.17,
+      "forma": "C"
+     },
+     {
+      "inicio": 0.31,
+      "forma": "B"
+     },
+     {
+      "inicio": 0.71,
+      "forma": "G"
+     },
+     {
+      "inicio": 0.77,
+      "forma": "B"
+     },
+     {
+      "inicio": 0.84,
+      "forma": "A"
+     },
+     {
+      "inicio": 0.92,
+      "forma": "B"
+     },
+     {
+      "inicio": 1.23,
+      "forma": "C"
+     },
+     {
+      "inicio": 1.37,
+      "forma": "B"
+     },
+     {
+      "inicio": 1.44,
+      "forma": "C"
+     },
+     {
+      "inicio": 1.51,
+      "forma": "E"
+     },
+     {
+      "inicio": 1.72,
+      "forma": "G"
+     },
+     {
+      "inicio": 1.79,
+      "forma": "B"
+     },
+     {
+      "inicio": 1.86,
+      "forma": "A"
+     },
+     {
+      "inicio": 1.97,
+      "forma": "E"
+     },
+     {
+      "inicio": 2.23,
+      "forma": "X"
+     }
+    ],
+    "chave": "[\"Gente, a família inteira confirmou!\",\"pf_dora*0.5+af_bella*0.5\",1.05,true]"
+   }
+  }
+ ],
+ "ctaInicial": "Anota essa antes de casar",
+ "ctaFinal": "Organize seu casamento sem estresse no Laços",
+ "botaoFinal": "Link na bio 👆",
+ "capa": {
+  "titulo": "Convite em 15 dias é erro",
+  "destaque": "erro",
+  "estados": {
+   "noiva": {
+    "pose": "cabeca",
+    "expressao": "medo"
+   },
+   "cerimonialista": {
+    "pose": "explicando",
+    "expressao": "feliz"
+   }
+  }
+ },
+ "post": {
+  "titulo": "Convite com 15 dias de antecedência é erro",
+  "legenda": "O aviso de reserve a data seis meses antes muda tudo: o mais comum é o convite chegar de dois a três meses antes e a confirmação fechar trinta dias antes. E vocês, já sabem quando vão mandar os convites? #casamento #noiva #lacosapp"
+ },
+ "episodio": 4,
+ "idioma": "pt",
+ "elenco": [
+  {
+   "id": "noiva",
+   "nome": "Júlia",
+   "voz": "feminina-8",
+   "visual": {
+    "pele": "#E8B896",
+    "cabelo": "#4A2C20",
+    "roupa": "#F3C6C2",
+    "calca": "#A86166",
+    "sapato": "#FFFFFF",
+    "penteado": "ondulado",
+    "roupaEstilo": "blusa",
+    "mangaLonga": false,
+    "oculos": false,
+    "tiara": false,
+    "faixa": ""
+   },
+   "desenho": {
+    "atras": "<path d=\"M98 200 Q78 380 92 520 Q120 548 150 520 L250 520 Q280 548 308 520 Q322 380 302 200 Z\" fill=\"#4A2C20\" stroke=\"#2B2340\" stroke-width=\"6\" stroke-linejoin=\"round\"/>",
+    "corpo": "<path d=\"M180 770 L178 905\" fill=\"none\" stroke=\"#2B2340\" stroke-width=\"42\" stroke-linecap=\"round\"/><path d=\"M180 770 L178 905\" fill=\"none\" stroke=\"#E8B896\" stroke-width=\"30\" stroke-linecap=\"round\"/><path d=\"M220 770 L222 905\" fill=\"none\" stroke=\"#2B2340\" stroke-width=\"42\" stroke-linecap=\"round\"/><path d=\"M220 770 L222 905\" fill=\"none\" stroke=\"#E8B896\" stroke-width=\"30\" stroke-linecap=\"round\"/><ellipse cx=\"172\" cy=\"918\" rx=\"30\" ry=\"14\" fill=\"#FFFFFF\" stroke=\"#2B2340\" stroke-width=\"6\"/><ellipse cx=\"228\" cy=\"918\" rx=\"30\" ry=\"14\" fill=\"#FFFFFF\" stroke=\"#2B2340\" stroke-width=\"6\"/><rect x=\"182\" y=\"326\" width=\"36\" height=\"50\" fill=\"#E8B896\" stroke=\"#2B2340\" stroke-width=\"6\"/><path d=\"M150 548 L250 548 L298 772 Q200 792 102 772 Z\" fill=\"#A86166\" stroke=\"#2B2340\" stroke-width=\"6\" stroke-linejoin=\"round\"/><path d=\"M170 600 L160 760 M230 600 L240 760\" stroke=\"#8E4F55\" stroke-width=\"4\" fill=\"none\"/><path d=\"M128 382 Q200 362 272 382 L280 470 Q268 528 252 548 L148 548 Q132 528 120 470 Z\" fill=\"#F3C6C2\" stroke=\"#2B2340\" stroke-width=\"6\" stroke-linejoin=\"round\"/><path d=\"M176 372 Q200 404 224 372\" fill=\"none\" stroke=\"#2B2340\" stroke-width=\"5\"/><circle cx=\"126\" cy=\"410\" r=\"26\" fill=\"#F3C6C2\" stroke=\"#2B2340\" stroke-width=\"6\"/><circle cx=\"274\" cy=\"410\" r=\"26\" fill=\"#F3C6C2\" stroke=\"#2B2340\" stroke-width=\"6\"/><rect x=\"146\" y=\"540\" width=\"108\" height=\"16\" rx=\"6\" fill=\"#A86166\" stroke=\"#2B2340\" stroke-width=\"5\"/>",
+    "cabeca": "<circle cx=\"97\" cy=\"245\" r=\"18\" fill=\"#E8B896\" stroke=\"#2B2340\" stroke-width=\"6\"/><circle cx=\"303\" cy=\"245\" r=\"18\" fill=\"#E8B896\" stroke=\"#2B2340\" stroke-width=\"6\"/><ellipse cx=\"200\" cy=\"230\" rx=\"105\" ry=\"115\" fill=\"#E8B896\" stroke=\"#2B2340\" stroke-width=\"6\"/><ellipse cx=\"140\" cy=\"280\" rx=\"17\" ry=\"9\" fill=\"#FF8FA3\" opacity=\"0.45\"/><ellipse cx=\"260\" cy=\"280\" rx=\"17\" ry=\"9\" fill=\"#FF8FA3\" opacity=\"0.45\"/><path d=\"M196 262 Q200 272 206 264\" fill=\"none\" stroke=\"#2B2340\" stroke-width=\"4\" stroke-linecap=\"round\"/><path d=\"M96 232 Q86 112 200 104 Q314 112 304 232 Q298 166 252 146 Q214 178 158 150 Q112 168 96 232 Z\" fill=\"#4A2C20\" stroke=\"#2B2340\" stroke-width=\"6\" stroke-linejoin=\"round\"/><path d=\"M150 150 Q180 130 214 140\" fill=\"none\" stroke=\"#6B4434\" stroke-width=\"5\" stroke-linecap=\"round\"/><circle cx=\"276\" cy=\"150\" r=\"14\" fill=\"#A86166\" stroke=\"#2B2340\" stroke-width=\"4\"/><circle cx=\"294\" cy=\"160\" r=\"12\" fill=\"#F3C6C2\" stroke=\"#2B2340\" stroke-width=\"4\"/><circle cx=\"270\" cy=\"168\" r=\"12\" fill=\"#F3C6C2\" stroke=\"#2B2340\" stroke-width=\"4\"/><circle cx=\"281\" cy=\"160\" r=\"6\" fill=\"#FFD76A\" stroke=\"#2B2340\" stroke-width=\"3\"/>",
+    "olhos": {
+     "abertos": "<ellipse cx=\"162\" cy=\"236\" rx=\"15\" ry=\"14\" fill=\"#FFFFFF\" stroke=\"#2B2340\" stroke-width=\"5\"/><ellipse cx=\"238\" cy=\"236\" rx=\"15\" ry=\"14\" fill=\"#FFFFFF\" stroke=\"#2B2340\" stroke-width=\"5\"/><circle cx=\"164\" cy=\"238\" r=\"9\" fill=\"#6B4423\"/><circle cx=\"240\" cy=\"238\" r=\"9\" fill=\"#6B4423\"/><circle cx=\"164\" cy=\"238\" r=\"4.5\" fill=\"#2B2340\"/><circle cx=\"240\" cy=\"238\" r=\"4.5\" fill=\"#2B2340\"/><circle cx=\"167\" cy=\"234\" r=\"3\" fill=\"#FFFFFF\"/><circle cx=\"243\" cy=\"234\" r=\"3\" fill=\"#FFFFFF\"/>",
+     "fechados": "<path d=\"M147 238 Q162 248 177 238\" fill=\"none\" stroke=\"#2B2340\" stroke-width=\"6\" stroke-linecap=\"round\"/><path d=\"M223 238 Q238 248 253 238\" fill=\"none\" stroke=\"#2B2340\" stroke-width=\"6\" stroke-linecap=\"round\"/>"
+    },
+    "bocas": {
+     "fechada": "<path d=\"M184 302 Q200 312 216 302\" fill=\"none\" stroke=\"#B5505E\" stroke-width=\"6\" stroke-linecap=\"round\"/>",
+     "aberta": "<ellipse cx=\"200\" cy=\"306\" rx=\"16\" ry=\"15\" fill=\"#5A1F2B\" stroke=\"#2B2340\" stroke-width=\"5\"/><ellipse cx=\"200\" cy=\"314\" rx=\"8\" ry=\"5\" fill=\"#E0607A\"/>",
+     "sorriso": "<path d=\"M170 296 Q200 334 230 296 Q200 306 170 296 Z\" fill=\"#FFFFFF\" stroke=\"#2B2340\" stroke-width=\"5\" stroke-linejoin=\"round\"/>",
+     "triste": "<path d=\"M184 314 Q200 298 216 314\" fill=\"none\" stroke=\"#2B2340\" stroke-width=\"6\" stroke-linecap=\"round\"/>"
+    }
+   }
+  },
+  {
+   "id": "cerimonialista",
+   "nome": "Marta",
+   "voz": "feminina-4",
+   "visual": {
+    "pele": "#7A4A32",
+    "cabelo": "#1E1A24",
+    "roupa": "#A86166",
+    "calca": "#2B2B35",
+    "sapato": "#2B2340",
+    "penteado": "chanel",
+    "roupaEstilo": "blazer",
+    "mangaLonga": true,
+    "oculos": false,
+    "tiara": false,
+    "faixa": ""
+   },
+   "desenho": {
+    "atras": "<circle cx=\"200\" cy=\"92\" r=\"58\" fill=\"#1E1A24\" stroke=\"#2B2340\" stroke-width=\"6\"/><path d=\"M160 80 q8 -10 16 0 M190 62 q8 -10 16 0 M222 78 q8 -10 16 0 M176 112 q8 -10 16 0 M210 108 q8 -10 16 0\" fill=\"none\" stroke=\"#3A3446\" stroke-width=\"4\" stroke-linecap=\"round\"/>",
+    "corpo": "<path d=\"M178 640 L176 900\" fill=\"none\" stroke=\"#2B2340\" stroke-width=\"52\" stroke-linecap=\"round\"/><path d=\"M178 640 L176 900\" fill=\"none\" stroke=\"#2B2B35\" stroke-width=\"40\" stroke-linecap=\"round\"/><path d=\"M222 640 L224 900\" fill=\"none\" stroke=\"#2B2340\" stroke-width=\"52\" stroke-linecap=\"round\"/><path d=\"M222 640 L224 900\" fill=\"none\" stroke=\"#2B2B35\" stroke-width=\"40\" stroke-linecap=\"round\"/><path d=\"M140 900 L200 900 L200 926 L150 926 Q136 922 140 900 Z\" fill=\"#2B2340\"/><path d=\"M260 900 L200 900 L200 926 L250 926 Q264 922 260 900 Z\" fill=\"#2B2340\"/><rect x=\"182\" y=\"326\" width=\"36\" height=\"50\" fill=\"#7A4A32\" stroke=\"#2B2340\" stroke-width=\"6\"/><path d=\"M126 384 Q200 362 274 384 L284 640 Q200 660 116 640 Z\" fill=\"#A86166\" stroke=\"#2B2340\" stroke-width=\"6\" stroke-linejoin=\"round\"/><path d=\"M170 374 L200 380 L230 374 L222 560 L178 560 Z\" fill=\"#FFFFFF\" stroke=\"#2B2340\" stroke-width=\"5\" stroke-linejoin=\"round\"/><path d=\"M170 374 L150 450 L184 470 L178 560 M230 374 L250 450 L216 470 L222 560\" fill=\"none\" stroke=\"#2B2340\" stroke-width=\"5\" stroke-linejoin=\"round\"/><circle cx=\"200\" cy=\"590\" r=\"6\" fill=\"#D9C27A\" stroke=\"#2B2340\" stroke-width=\"3\"/>",
+    "cabeca": "<circle cx=\"97\" cy=\"245\" r=\"18\" fill=\"#7A4A32\" stroke=\"#2B2340\" stroke-width=\"6\"/><circle cx=\"303\" cy=\"245\" r=\"18\" fill=\"#7A4A32\" stroke=\"#2B2340\" stroke-width=\"6\"/><circle cx=\"94\" cy=\"275\" r=\"13\" fill=\"none\" stroke=\"#D9B54A\" stroke-width=\"5\"/><circle cx=\"306\" cy=\"275\" r=\"13\" fill=\"none\" stroke=\"#D9B54A\" stroke-width=\"5\"/><ellipse cx=\"200\" cy=\"230\" rx=\"105\" ry=\"115\" fill=\"#7A4A32\" stroke=\"#2B2340\" stroke-width=\"6\"/><ellipse cx=\"140\" cy=\"280\" rx=\"17\" ry=\"9\" fill=\"#FF8FA3\" opacity=\"0.45\"/><ellipse cx=\"260\" cy=\"280\" rx=\"17\" ry=\"9\" fill=\"#FF8FA3\" opacity=\"0.45\"/><path d=\"M196 262 Q200 272 206 264\" fill=\"none\" stroke=\"#2B2340\" stroke-width=\"4\" stroke-linecap=\"round\"/><path d=\"M96 222 Q92 122 200 116 Q308 122 304 222 Q290 160 200 150 Q110 160 96 222 Z\" fill=\"#1E1A24\" stroke=\"#2B2340\" stroke-width=\"6\" stroke-linejoin=\"round\"/><path d=\"M130 150 q6 -8 12 0 M164 134 q6 -8 12 0 M200 130 q6 -8 12 0 M236 136 q6 -8 12 0 M266 150 q6 -8 12 0\" fill=\"none\" stroke=\"#3A3446\" stroke-width=\"4\" stroke-linecap=\"round\"/>",
+    "olhos": {
+     "abertos": "<ellipse cx=\"162\" cy=\"236\" rx=\"15\" ry=\"14\" fill=\"#FFFFFF\" stroke=\"#2B2340\" stroke-width=\"5\"/><ellipse cx=\"238\" cy=\"236\" rx=\"15\" ry=\"14\" fill=\"#FFFFFF\" stroke=\"#2B2340\" stroke-width=\"5\"/><circle cx=\"164\" cy=\"238\" r=\"9\" fill=\"#2E1B12\"/><circle cx=\"240\" cy=\"238\" r=\"9\" fill=\"#2E1B12\"/><circle cx=\"164\" cy=\"238\" r=\"4.5\" fill=\"#2B2340\"/><circle cx=\"240\" cy=\"238\" r=\"4.5\" fill=\"#2B2340\"/><circle cx=\"167\" cy=\"234\" r=\"3\" fill=\"#FFFFFF\"/><circle cx=\"243\" cy=\"234\" r=\"3\" fill=\"#FFFFFF\"/>",
+     "fechados": "<path d=\"M147 238 Q162 248 177 238\" fill=\"none\" stroke=\"#2B2340\" stroke-width=\"6\" stroke-linecap=\"round\"/><path d=\"M223 238 Q238 248 253 238\" fill=\"none\" stroke=\"#2B2340\" stroke-width=\"6\" stroke-linecap=\"round\"/>"
+    },
+    "bocas": {
+     "fechada": "<path d=\"M184 302 Q200 312 216 302\" fill=\"none\" stroke=\"#5E2A2A\" stroke-width=\"6\" stroke-linecap=\"round\"/>",
+     "aberta": "<ellipse cx=\"200\" cy=\"306\" rx=\"16\" ry=\"15\" fill=\"#5A1F2B\" stroke=\"#2B2340\" stroke-width=\"5\"/><ellipse cx=\"200\" cy=\"314\" rx=\"8\" ry=\"5\" fill=\"#E0607A\"/>",
+     "sorriso": "<path d=\"M170 296 Q200 334 230 296 Q200 306 170 296 Z\" fill=\"#FFFFFF\" stroke=\"#2B2340\" stroke-width=\"5\" stroke-linejoin=\"round\"/>",
+     "triste": "<path d=\"M184 314 Q200 298 216 314\" fill=\"none\" stroke=\"#2B2340\" stroke-width=\"6\" stroke-linecap=\"round\"/>"
+    }
+   }
+  }
+ ],
+ "estilo": {
+  "modelo": "chapado",
+  "fundo": "claro"
+ }
+}

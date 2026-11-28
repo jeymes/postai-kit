@@ -3,6 +3,20 @@ import { spring, useCurrentFrame, useVideoConfig } from "remotion";
 import { cores } from "../../nucleo/marca";
 import { ObjetoNaMao } from "../objetos/ObjetosDeApoio";
 import { MarcaNaTesta } from "./MarcaNaTesta";
+import { Acessorio, CasacoDoBoneco, corDaManga, Estampa, mangaComprida, type Figurino } from "./figurino";
+import {
+  andarAgora,
+  estadoAnimado,
+  MaoDoObjetoContexto,
+  maosDoObjeto,
+  olhandoAgora,
+  tabelaCompleta,
+  vidaDosBracos,
+  viradoAgora,
+  type EstadoAnimado,
+  type Momento2D,
+} from "./movimento";
+import { corpoSemBracos } from "./semMangas";
 
 // Personagem de corpo inteiro, desenhado em vetor e montado em peças (cabeça,
 // olhos, sobrancelhas, boca, braços com cotovelo), no estilo 2D chapado com
@@ -56,6 +70,8 @@ export type Desenho = {
   bocas: { fechada: string; aberta: string; sorriso: string; triste?: string };
   /** false = o desenho já tem sobrancelhas (ou não usa); senão o kit desenha */
   sobrancelhas?: boolean;
+  /** Outros figurinos: corpos alternativos (mesmas regras do `corpo`); o figurino 1 usa o primeiro, e assim por diante */
+  figurinos?: string[];
 };
 
 const BOCA_ABERTA = new Set(["C", "D", "E", "H"]);
@@ -90,6 +106,8 @@ export type Visual = {
   mangaLonga?: boolean;
   oculos?: boolean;
   tiara?: boolean;
+  /** O figurino do episódio (estampa, casaco, acessório): o Conversa põe; sem isso, a roupa de sempre */
+  figurino?: Figurino;
 };
 
 // Ângulos de cada braço: [ombro, cotovelo] em graus. 0 = para baixo; positivo =
@@ -206,45 +224,58 @@ const Braco: React.FC<{
   visual: Visual;
   camada: "contorno" | "cor";
   celular?: ModoDoCelular;
-  /** Esta mão segura o objeto de apoio da cena (se houver) */
-  segura?: boolean;
-}> = ({ angulos: [ombro, cotovelo], visual, camada, celular, segura }) => {
+  /** O tamanho do celular (0 a 1): cresce ao pegar e encolhe ao guardar */
+  escalaDoCelular?: number;
+  /** Esta mão segura o objeto de apoio da cena (o número é o tamanho: 0 a 1) */
+  segura?: boolean | number;
+}> = ({ angulos: [ombro, cotovelo], visual, camada, celular, escalaDoCelular = 1, segura }) => {
   const contorno = camada === "contorno";
   const largura = contorno ? 46 : 34;
-  const corBraco = contorno ? TRACO : visual.roupa;
-  const corAntebraco = contorno ? TRACO : visual.mangaLonga ? visual.roupa : visual.pele;
+  const manga = corDaManga(visual.roupa, visual.figurino);
+  const corBraco = contorno ? TRACO : manga;
+  const corAntebraco = contorno ? TRACO : mangaComprida(visual.mangaLonga, visual.figurino) ? manga : visual.pele;
+  const escalaDoObjeto = typeof segura === "number" ? segura : segura ? 1 : 0;
   return (
     <g transform={`translate(${OMBRO.x} ${OMBRO.y}) rotate(${ombro})`}>
       <line x1={0} y1={0} x2={0} y2={BRACO} stroke={corBraco} strokeWidth={largura} strokeLinecap="round" />
       <g transform={`translate(0 ${BRACO}) rotate(${cotovelo})`}>
         <line x1={0} y1={0} x2={0} y2={BRACO} stroke={corAntebraco} strokeWidth={largura} strokeLinecap="round" />
-        {!contorno && visual.mangaLonga && <circle cx={0} cy={BRACO - 4} r={15} fill={visual.roupa} />}
+        {!contorno && mangaComprida(visual.mangaLonga, visual.figurino) && <circle cx={0} cy={BRACO - 4} r={15} fill={manga} />}
         <circle cx={0} cy={BRACO + 10} r={contorno ? 25 : 19} fill={contorno ? TRACO : visual.pele} />
-        {celular && !contorno && (
-          <g transform={`translate(0 ${BRACO + 2}) rotate(${-(ombro + cotovelo)})`}>
+        {celular && !contorno && escalaDoCelular > 0.01 && (
+          <g transform={`translate(0 ${BRACO + 2}) rotate(${-(ombro + cotovelo)}) scale(${escalaDoCelular})`}>
             {celular === "costas" ? <CostasDoCelular largura={46} altura={78} /> : <Celular />}
           </g>
         )}
-        {segura && !contorno && <ObjetoNaMao angulo={-(ombro + cotovelo)} y={BRACO + 2} />}
+        {escalaDoObjeto > 0.01 && !contorno && (
+          <g transform={`translate(0 ${BRACO + 2}) scale(${escalaDoObjeto}) translate(0 ${-(BRACO + 2)})`}>
+            <ObjetoNaMao angulo={-(ombro + cotovelo)} y={BRACO + 2} />
+          </g>
+        )}
       </g>
     </g>
   );
 };
 
-// Os dois braços: o direito é o esquerdo espelhado no meio do corpo (x = 200)
-const Bracos: React.FC<{ esq: Angulos; dir: Angulos; visual: Visual; celular: ModoDoCelular }> = ({ esq, dir, visual, celular }) => (
-  <>
-    {(["contorno", "cor"] as const).map((camada) => (
-      <g key={camada}>
-        {/* O objeto de apoio vai na mão livre: a direita, ou a esquerda se a direita tem o celular */}
-        <Braco angulos={esq} visual={visual} camada={camada} segura={Boolean(celular)} />
-        <g transform="translate(400 0) scale(-1 1)">
-          <Braco angulos={dir} visual={visual} camada={camada} celular={celular} segura={!celular} />
+// Os dois braços: o direito é o esquerdo espelhado no meio do corpo (x = 200).
+// O celular fica na mão direita; o objeto de apoio, na mão que o Conversa escolheu
+// (sem escolha: a mão livre). `sobe`: os ombros sobem (dar de ombros).
+const Bracos: React.FC<{ esq: Angulos; dir: Angulos; visual: Visual; estado: EstadoAnimado; sobe?: number }> = ({ esq, dir, visual, estado, sobe = 0 }) => {
+  const contexto = React.useContext(MaoDoObjetoContexto);
+  const objeto = maosDoObjeto(contexto, Boolean(estado.celular.modo) && estado.celular.escala > 0.5, estado.pose);
+  return (
+    <g transform={sobe ? `translate(0 ${-sobe})` : undefined}>
+      {(["contorno", "cor"] as const).map((camada) => (
+        <g key={camada}>
+          <Braco angulos={esq} visual={visual} camada={camada} segura={objeto.esq} />
+          <g transform="translate(400 0) scale(-1 1)">
+            <Braco angulos={dir} visual={visual} camada={camada} celular={estado.celular.modo} escalaDoCelular={estado.celular.escala} segura={objeto.dir} />
+          </g>
         </g>
-      </g>
-    ))}
-  </>
-);
+      ))}
+    </g>
+  );
+};
 
 const contornoDoCabelo = (visual: Visual) => ({ fill: visual.cabelo, stroke: TRACO, strokeWidth: 6, strokeLinejoin: "round" as const });
 
@@ -321,7 +352,7 @@ const Sobrancelhas: React.FC<{ expressao: Expressao }> = ({ expressao }) => {
   );
 };
 
-const Olhos: React.FC<{ expressao: Expressao; piscando: boolean }> = ({ expressao, piscando }) => (
+const Olhos: React.FC<{ expressao: Expressao; piscando: boolean; olho?: number }> = ({ expressao, piscando, olho = 0 }) => (
   <>
     {[160, 240].map((x) => {
       if (expressao === "radiante" || expressao === "aliviada")
@@ -329,7 +360,7 @@ const Olhos: React.FC<{ expressao: Expressao; piscando: boolean }> = ({ expressa
       if (piscando) return <path key={x} d={`M${x - 13} 246 Q${x} 252 ${x + 13} 246`} fill="none" stroke={TRACO} strokeWidth={6} strokeLinecap="round" />;
       const grande = expressao === "surpresa" || expressao === "medo";
       // Sem graça: olha para o lado
-      const olhar = expressao === "sem-graca" ? 7 : 0;
+      const olhar = (expressao === "sem-graca" ? 7 : 0) + olho;
       return (
         <g key={x}>
           <ellipse cx={x + olhar} cy={244} rx={grande ? 15 : 13} ry={grande ? 20 : 17} fill={TRACO} />
@@ -383,15 +414,23 @@ const textoDaFaixa = (visual: Visual) =>
   (visual.faixa ?? (visual.roupaEstilo === "faixa-noiva" ? "NOIVA" : "")).trim().toUpperCase().slice(0, 12);
 
 // `espelhar`: o personagem está virado; o texto da faixa desvira para ler certo
-const Roupa: React.FC<{ visual: Visual; espelhar?: boolean }> = ({ visual, espelhar }) => (
+const FORMA_DA_ROUPA = "M118 405 Q122 366 166 360 L234 360 Q278 366 282 405 L292 640 Q200 662 108 640 Z";
+const Roupa: React.FC<{ visual: Visual; espelhar?: boolean; semente?: number; costas?: boolean }> = ({ visual, espelhar, semente = 0, costas }) => (
   <>
-    <path
-      d="M118 405 Q122 366 166 360 L234 360 Q278 366 282 405 L292 640 Q200 662 108 640 Z"
-      fill={visual.roupa}
-      stroke={TRACO}
-      strokeWidth={6}
-      strokeLinejoin="round"
-    />
+    <path d={FORMA_DA_ROUPA} fill={visual.roupa} stroke={TRACO} strokeWidth={6} strokeLinejoin="round" />
+    {visual.figurino?.estampa && (
+      <Estampa id={`estampa-${semente}`} forma={<path d={FORMA_DA_ROUPA} />} tipo={visual.figurino.estampa} roupa={visual.roupa} caixa={[100, 356, 200, 310]} />
+    )}
+    {visual.figurino?.estampa && <path d={FORMA_DA_ROUPA} fill="none" stroke={TRACO} strokeWidth={6} strokeLinejoin="round" />}
+    {visual.figurino?.casaco && (costas ? <path d={FORMA_DA_ROUPA} fill={visual.figurino.casaco.cor} stroke={TRACO} strokeWidth={6} strokeLinejoin="round" /> : <CasacoDoBoneco casaco={visual.figurino.casaco} />)}
+    {costas ? null : <RoupaDaFrente visual={visual} espelhar={espelhar} />}
+    {visual.figurino?.acessorio && !costas && <Acessorio acessorio={visual.figurino.acessorio} />}
+  </>
+);
+
+// Os detalhes da frente da roupa (blazer, faixa): de costas não aparecem
+const RoupaDaFrente: React.FC<{ visual: Visual; espelhar?: boolean }> = ({ visual, espelhar }) => (
+  <>
     {visual.roupaEstilo === "blazer" && (
       <>
         <path d="M172 361 L200 440 L228 361 Z" fill="#FFFFFF" stroke={TRACO} strokeWidth={5} strokeLinejoin="round" />
@@ -424,9 +463,10 @@ const Roupa: React.FC<{ visual: Visual; espelhar?: boolean }> = ({ visual, espel
   </>
 );
 
-export const Boneco: React.FC<{
+/** As entradas de todo personagem 2D (o Boneco, o Liso e o Palito) */
+export type PropsDoBoneco = {
   visual: Visual;
-  momentos: Momento[];
+  momentos: Array<Momento | Momento2D>;
   palavras: Palavra[];
   boca?: FormaDaBoca[];
   /** Desenho próprio: substitui o corpo e o rosto do kit */
@@ -437,33 +477,78 @@ export const Boneco: React.FC<{
   espelhar?: boolean;
   /** Para os personagens não piscarem e respirarem juntos */
   semente?: number;
+  /** Vida (o Conversa liga): braços que balançam e gesticulam nas palavras, cabeça que acompanha a fala */
+  vida?: boolean;
+  /** Quando o outro fala (intervalos): olha para ele */
+  olhar?: Palavra[];
   style?: React.CSSProperties;
-}> = ({ visual, momentos, palavras, boca, desenho, altura, espelhar = false, semente = 0, style }) => {
+};
+
+const TABELA = tabelaCompleta(POSES);
+
+/** O movimento comum aos estilos: pose, vida, olhar, andar, virar e respirar (no espaço do desenho) */
+export function corpoAgora(props: Pick<PropsDoBoneco, "momentos" | "palavras" | "semente" | "vida" | "olhar">, frame: number, fps: number, tabela = TABELA) {
+  const { momentos, palavras, semente = 0, vida, olhar } = props;
+  const estado = estadoAnimado(momentos, frame, fps, tabela);
+  const vivo = vida ? vidaDosBracos(estado, frame, semente, palavras) : { esq: estado.esq, dir: estado.dir, cabeca: 0 };
+  const olhando = vida ? olhandoAgora(olhar, frame) : 0;
+  const andar = andarAgora(momentos, frame);
+  const virado = viradoAgora(momentos, frame);
+  const emFala = palavras.length > 0 && palavras[0].inicio <= frame && frame < palavras[palavras.length - 1].fim + 4;
+  const passo = andar.andando * Math.sin(andar.fase * Math.PI);
+  return {
+    estado,
+    esq: vivo.esq,
+    dir: vivo.dir,
+    // De quem ouve, a cabeça vira um pouco para quem fala
+    inclina: (emFala ? Math.sin(frame / 6 + semente) * 2.5 : Math.sin(frame / 40 + semente) * 1.2) + vivo.cabeca + olhando * 2.5,
+    olho: olhando * 6,
+    respira: Math.sin(frame / 14 + semente) * 3,
+    /** Andando: as pernas abrem (graus) e o corpo sobe e desce */
+    perna: passo * 18,
+    balancoDoPasso: -Math.abs(passo) * 12,
+    virado,
+  };
+}
+
+export const Boneco: React.FC<PropsDoBoneco> = (props) => {
+  const { visual, palavras, boca, desenho: desenhoDoRoteiro, altura, espelhar = false, semente = 0, style } = props;
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
-  const estado = estadoAgora(momentos, frame, fps);
+  const corpo = corpoAgora(props, frame, fps);
+  const { estado } = corpo;
+  // O desenho próprio sem as mangas no corpo (os braços são do kit): ver semMangas.ts
+  const desenho = React.useMemo(
+    () => (desenhoDoRoteiro ? { ...desenhoDoRoteiro, corpo: corpoSemBracos(desenhoDoRoteiro.corpo).corpo } : undefined),
+    [desenhoDoRoteiro],
+  );
   const falando = palavras.some((p) => p.inicio <= frame && frame < p.fim);
   const forma = boca?.length ? formaDoRhubarb(boca, frame) : falando ? FALANDO[Math.floor(frame / 3) % FALANDO.length] : null;
-  const emFala = palavras.length > 0 && palavras[0].inicio <= frame && frame < palavras[palavras.length - 1].fim + 4;
   // O ciclo começa no meio: ninguém pisca no quadro 0 (a prévia do feed)
   const piscando = (frame + semente * 37 + 50) % 97 < 4 && estado.expressao !== "radiante";
-  const respira = Math.sin(frame / 14 + semente) * 3;
-  const inclina = emFala ? Math.sin(frame / 6 + semente) * 2.5 : Math.sin(frame / 40 + semente) * 1.2;
+  const { respira, inclina } = corpo;
   const largura = altura * 0.6;
+  const descida = estado.descida * DESCIDA_SENTADO;
+  const sentado = estado.descida > 0.35;
+  const costas = corpo.virado.costas && !desenho;
+  // Vira (o outro lado) em torno do meio do corpo; espelhar é o lugar (à direita, virado para o da esquerda)
+  const giro = `${espelhar ? "translate(400 0) scale(-1 1) " : ""}translate(200 0) scale(${corpo.virado.lado} 1) translate(-200 0)`;
+  const sombra = <ellipse cx={200} cy={958} rx={150 * (1 - estado.descida)} ry={20} fill="rgba(43,35,64,0.16)" />;
+  const deslocamento = `translate(${estado.treme} ${estado.pulo + descida + corpo.balancoDoPasso})`;
   if (desenho) {
     const rosto = pecasDoRosto(desenho, estado.expressao, forma, piscando);
     return (
       <svg viewBox="-100 0 600 1000" width={largura} height={altura} style={{ overflow: "visible", ...style }}>
-        <g transform={espelhar ? "translate(400 0) scale(-1 1)" : undefined}>
-          {estado.pose !== "sentado" && <ellipse cx={200} cy={958} rx={150} ry={20} fill="rgba(43,35,64,0.16)" />}
-          <g transform={`translate(0 ${estado.pulo + (estado.pose === "sentado" ? DESCIDA_SENTADO : 0)})`}>
+        <g transform={giro}>
+          {estado.descida < 0.5 && sombra}
+          <g transform={deslocamento}>
             <g transform={`translate(0 ${respira})`}>
               <g transform={`rotate(${inclina} 200 360)`}>
                 <Svg html={desenho.atras} />
               </g>
               {/* Sentado: o desenho próprio traz as pernas junto do corpo; corta no quadril,
                   senão elas saem por baixo do sofá ou da cama (as do boneco comum já somem) */}
-              {estado.pose === "sentado" ? (
+              {sentado ? (
                 <>
                   <defs>
                     <clipPath id={`quadril-${semente}`}>
@@ -475,16 +560,20 @@ export const Boneco: React.FC<{
                   </g>
                 </>
               ) : (
-                <Svg html={desenho.corpo} />
+                <g transform={corpo.perna ? `rotate(${corpo.perna * 0.15} 200 640)` : undefined}>
+                  <Svg html={desenho.corpo} />
+                </g>
               )}
               <g transform={`rotate(${inclina} 200 360)`}>
                 <Svg html={desenho.cabeca} />
-                <Svg html={rosto.olhos} />
+                <g transform={corpo.olho ? `translate(${corpo.olho * 0.6} 0)` : undefined}>
+                  <Svg html={rosto.olhos} />
+                </g>
                 {desenho.sobrancelhas !== false && <Sobrancelhas expressao={estado.expressao} />}
                 <Svg html={rosto.boca} />
                 <MarcaNaTesta x={200} y={170} />
               </g>
-              <Bracos esq={estado.esq} dir={estado.dir} visual={visual} celular={modoDoCelular(estado.pose)} />
+              <Bracos esq={corpo.esq} dir={corpo.dir} visual={visual} estado={estado} sobe={estado.sobe} />
             </g>
           </g>
         </g>
@@ -493,43 +582,55 @@ export const Boneco: React.FC<{
   }
   return (
     <svg viewBox="-100 0 600 1000" width={largura} height={altura} style={{ overflow: "visible", ...style }}>
-      <g transform={espelhar ? "translate(400 0) scale(-1 1)" : undefined}>
-        {estado.pose !== "sentado" && <ellipse cx={200} cy={958} rx={150} ry={20} fill="rgba(43,35,64,0.16)" />}
-        <g transform={`translate(0 ${estado.pulo + (estado.pose === "sentado" ? DESCIDA_SENTADO : 0)})`}>
-          {/* Pernas e sapatos (sentado, ficam embaixo da coberta) */}
-          {estado.pose !== "sentado" && [172, 228].map((x) => (
-            <g key={x}>
-              <rect x={x - 26} y={600} width={52} height={330} rx={22} fill={visual.calca} stroke={TRACO} strokeWidth={6} />
-              <ellipse cx={x + (x < 200 ? -8 : 8)} cy={938} rx={38} ry={20} fill={visual.sapato} stroke={TRACO} strokeWidth={6} />
-            </g>
-          ))}
+      <g transform={giro}>
+        {estado.descida < 0.5 && sombra}
+        <g transform={deslocamento}>
+          {/* Pernas e sapatos (sentado, ficam embaixo da coberta); andando, abrem e fecham */}
+          {!sentado &&
+            [172, 228].map((x, k) => (
+              <g key={x} transform={corpo.perna ? `rotate(${(k ? -1 : 1) * corpo.perna} ${x} 610)` : undefined}>
+                <rect x={x - 26} y={600} width={52} height={330} rx={22} fill={visual.calca} stroke={TRACO} strokeWidth={6} />
+                <ellipse cx={x + (x < 200 ? -8 : 8)} cy={938} rx={38} ry={20} fill={visual.sapato} stroke={TRACO} strokeWidth={6} />
+              </g>
+            ))}
           <g transform={`translate(0 ${respira})`}>
+            {costas && <Bracos esq={corpo.esq} dir={corpo.dir} visual={visual} estado={estado} sobe={estado.sobe} />}
             <g transform={`rotate(${inclina} 200 360)`}>
               <CabeloAtras visual={visual} />
             </g>
             <rect x={181} y={318} width={38} height={60} fill={visual.pele} stroke={TRACO} strokeWidth={6} />
-            <Roupa visual={visual} espelhar={espelhar} />
+            <Roupa visual={visual} espelhar={espelhar} semente={semente} costas={costas} />
             <g transform={`rotate(${inclina} 200 360)`}>
               {[95, 305].map((x) => (
                 <g key={x}>
                   <circle cx={x} cy={248} r={19} fill={visual.pele} stroke={TRACO} strokeWidth={6} />
-                  <circle cx={x} cy={272} r={6} fill="#F5D36B" stroke={TRACO} strokeWidth={3} />
+                  {!costas && <circle cx={x} cy={272} r={6} fill="#F5D36B" stroke={TRACO} strokeWidth={3} />}
                 </g>
               ))}
               <ellipse cx={200} cy={232} rx={106} ry={112} fill={visual.pele} stroke={TRACO} strokeWidth={6} />
-              <ellipse cx={136} cy={282} rx={19} ry={10} fill={BOCHECHA} opacity={estado.expressao === "sem-graca" ? 0.95 : 0.5} />
-              <ellipse cx={264} cy={282} rx={19} ry={10} fill={BOCHECHA} opacity={estado.expressao === "sem-graca" ? 0.95 : 0.5} />
-              <Olhos expressao={estado.expressao} piscando={piscando} />
-              <Sobrancelhas expressao={estado.expressao} />
-              <path d="M195 270 Q200 277 205 270" fill="none" stroke={TRACO} strokeWidth={5} strokeLinecap="round" />
-              <Boca expressao={estado.expressao} forma={forma} />
-              <CabeloFrente visual={visual} />
-              {visual.oculos && (
-                <g fill="rgba(255,255,255,0.18)" stroke={TRACO} strokeWidth={6}>
-                  <circle cx={160} cy={244} r={31} />
-                  <circle cx={240} cy={244} r={31} />
-                  <path d="M191 240 Q200 234 209 240" fill="none" />
-                </g>
+              {costas ? (
+                // De costas: a nuca e o cabelo de trás cobrindo a cabeça
+                <>
+                  <path d="M96 236 C88 120 140 104 200 104 C260 104 312 120 304 236 C300 300 270 330 200 336 C130 330 100 300 96 236 Z" fill={visual.cabelo} stroke={TRACO} strokeWidth={6} strokeLinejoin="round" />
+                  {visual.penteado === "coque" && <circle cx={200} cy={150} r={44} fill={visual.cabelo} stroke={TRACO} strokeWidth={6} />}
+                </>
+              ) : (
+                <>
+                  <ellipse cx={136} cy={282} rx={19} ry={10} fill={BOCHECHA} opacity={estado.expressao === "sem-graca" ? 0.95 : 0.5} />
+                  <ellipse cx={264} cy={282} rx={19} ry={10} fill={BOCHECHA} opacity={estado.expressao === "sem-graca" ? 0.95 : 0.5} />
+                  <Olhos expressao={estado.expressao} piscando={piscando} olho={corpo.olho} />
+                  <Sobrancelhas expressao={estado.expressao} />
+                  <path d="M195 270 Q200 277 205 270" fill="none" stroke={TRACO} strokeWidth={5} strokeLinecap="round" />
+                  <Boca expressao={estado.expressao} forma={forma} />
+                  <CabeloFrente visual={visual} />
+                  {visual.oculos && (
+                    <g fill="rgba(255,255,255,0.18)" stroke={TRACO} strokeWidth={6}>
+                      <circle cx={160} cy={244} r={31} />
+                      <circle cx={240} cy={244} r={31} />
+                      <path d="M191 240 Q200 234 209 240" fill="none" />
+                    </g>
+                  )}
+                </>
               )}
               {visual.tiara && (
                 <path
@@ -540,9 +641,9 @@ export const Boneco: React.FC<{
                   strokeLinejoin="round"
                 />
               )}
-              <MarcaNaTesta x={200} y={170} />
+              {!costas && <MarcaNaTesta x={200} y={170} />}
             </g>
-            <Bracos esq={estado.esq} dir={estado.dir} visual={visual} celular={modoDoCelular(estado.pose)} />
+            {!costas && <Bracos esq={corpo.esq} dir={corpo.dir} visual={visual} estado={estado} sobe={estado.sobe} />}
           </g>
         </g>
       </g>

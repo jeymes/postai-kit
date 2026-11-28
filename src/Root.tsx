@@ -20,6 +20,7 @@ import { PreviaDoEstilo } from "./estilos/Previa";
 import { Vitrine3D, vitrine3dExemplo, vitrine3dSchema } from "./moldes/Vitrine3D";
 import { Mundo3D, mundo3dExemplo, mundo3dSchema } from "./moldes/Mundo3D";
 import { Vinheta, vinhetaExemplo, type PropsDaVinheta } from "./moldes/Vinheta";
+import { duracaoDaDemo, IlustracaoDemo, ilustracaoDemoSchema, type PropsDaDemo } from "./componentes/ilustracao/Demo";
 
 // Moldes do Kit Estúdio. O conteúdo de cada peça vem de conteudo/<peca>.json
 // (ver CLAUDE.md); aqui ficam só os exemplos para abrir no Studio. Os moldes
@@ -165,6 +166,18 @@ export const RemotionRoot: React.FC = () => (
         calculateMetadata={({ props }: { props: PropsDaVinheta }) => ({ width: props.largura, height: props.altura, durationInFrames: props.quadros })}
       />
       <Composition id="PreviaDoEstilo" component={PreviaDoEstilo} width={1080} height={1920} fps={FPS} durationInFrames={150} defaultProps={{ modelo: "chapado" as const, fundo: "claro" as const, cena: "dupla" as const }} />
+    </Folder>
+    {/* Testes de componentes (não são moldes): a ilustração da fala com todos os tipos */}
+    <Folder name="Testes">
+      <Composition
+        id="IlustracaoDemo"
+        component={IlustracaoDemo}
+        schema={ilustracaoDemoSchema}
+        defaultProps={{ modelo: "chapado" as const, fundo: "claro" as const, parte: "tipos" as const }}
+        {...video}
+        durationInFrames={duracaoDaDemo({})}
+        calculateMetadata={({ props }: { props: Partial<PropsDaDemo> }) => ({ durationInFrames: duracaoDaDemo(props) })}
+      />
     </Folder>
     <Folder name="Imagens">
       <Composition id="Capa" component={Capa} schema={capaSchema} defaultProps={capaExemplo} {...video} durationInFrames={QUADROS_DA_IMAGEM} />

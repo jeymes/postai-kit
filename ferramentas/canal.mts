@@ -71,7 +71,7 @@ try {
     // A vinheta do fim (o motion do app ou do site): o npm run renderizar cola
     // no fim de cada vídeo. Sem ela no Postaí (o dono apagou), sai daqui também.
     mkdirSync("public/marca", { recursive: true });
-    // Como o vídeo termina (chamada, vinheta ou ambos): o renderizar segue
+    // Como o vídeo termina (chamada, vinheta, ambos ou luz = só a frase na luz): o renderizar segue
     writeFileSync("public/marca/fim.json", `${JSON.stringify({ fim: fimDoVideo ?? "ambos" })}\n`);
     for (const antiga of readdirSync("public/marca").filter((nome) => nome.startsWith("vinheta."))) rmSync(join("public/marca", antiga));
     if (vinhetaUrl) {

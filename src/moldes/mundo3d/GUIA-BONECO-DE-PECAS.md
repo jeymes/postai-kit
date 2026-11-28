@@ -62,8 +62,39 @@ câmera mira o corpo) e `ate` [x, z] (a pessoa anda até lá durante a cena e co
 - **Barba:** `detalhes3d.barba: true` (na cor do cabelo).
 - **Cabelo:** `ondulado` = longo (com mechas dos lados), `curto`, `chanel` (com franja) e `coque`.
 
+## Animação (27/11/2026)
+
+O boneco ganhou cotovelo, joelho, tronco e pescoço. A animação fica em `animacao.ts` (posturas, mistura,
+passo, vida), `atuacao.ts` (o roteiro vira a trilha de cada um) e `filmagem.ts`/`camera.ts` (os planos).
+Formato e exemplo completo: `conteudo/exemplo-acoes-3d.json` (ações na palavra, entregar, abraçar, lugar por
+cena, personagem só em algumas cenas, figurino).
+
+- **Postura**: os ângulos de todas as juntas. As que encostam a mão em algum lugar (quadril, queixo, rosto, a
+  outra mão) são feitas por alvo (`bracoAte`, IK de dois ossos), uma vez ao carregar. O braço alcança uns 0,55 m
+  a partir do ombro: a cabeça é grande, então a mão no rosto pede a cabeça um pouco baixa.
+- **Mistura**: toda troca leva de 10 a 18 quadros (o ombro mistura por quatérnio, pelo caminho mais curto), com
+  uma pontinha de passagem no fim. Nada pula: quem não tem estado numa cena continua como estava, e a
+  antecipação do gesto nunca passa para a cena anterior.
+- **Vida**: respira, pisca (cada um no seu tempo), troca o peso de perna, a cabeça vira para quem fala (até 28
+  graus, para o rosto não sumir), a mão livre marca as palavras de quem fala e quem ouve acena com a cabeça.
+- **Passo**: a fase do passo vem da distância andada (o pé não escorrega) e o quadril se ajusta para a perna de
+  apoio tocar o chão (`alturaDoQuadril`): nada afunda nem flutua, também ajoelhado e sentado. Correndo, os
+  braços descem.
+- **Câmera**: sempre do lado da frente (regra dos 180 graus), o rosto do foco sempre no mesmo lugar da tela,
+  movimento suave por plano, um plano novo a cada pausa da frase (nada de corte com o título na tela), plano
+  aberto com o grupo inteiro, ninguém do elenco na frente do rosto nem colado na lente, multidão encostada em
+  alguém do elenco sai do plano, nada (árvore, casa, pedra, grama) no caminho da lente; `detalhe` mostra as mãos.
+- **Luz**: sol com sombra (acompanha onde a cena acontece; só bonecos e objetos fazem sombra), luz do céu,
+  contraluz, reflexo macio, céu em degradê e névoa de longe; `cenario.hora` muda tudo (dia, tarde, noite). No
+  render por software (nuvem): sombra com mapa menor e 1 amostra, o boneco não recebe sombra e não há o
+  reflexo macio (o tempo ficou perto do de antes; na placa de vídeo fica tudo ligado).
+- **Roupa**: 5 variações por personagem (`figurino`), a mesma pessoa.
+- **Rua viva** (`figurantes.tsx`, `cenario.figurantes`): na cidade, no moderno, na aldeia e no mar, gente passa
+  andando no fundo, um veículo atravessa de vez em quando (carro no moderno, carroça com burro nos antigos) e
+  um gato fica sentado num canto. Longe do elenco; com multidão na história, só o gato.
+
 ## O que ainda falta
 
-- Andar de um ponto a outro na cena (o balanço das pernas já existe; falta o caminho).
-- Mãos que seguram objetos (cajado, pão, pergaminho).
-- Mais lugares: mar e barco, monte, dentro do palácio e da casa.
+- Dedos (a mão é uma luva) e cabelo com fios (o cabelo é bloco e só balança).
+- Profundidade de campo (o fundo desfocado): o three não tem isso pronto sem um passo a mais de render.
+- Acontecimentos físicos na palavra (algo cair, afundar, rachar, a tela tremer) e o objeto que a fala cita aparecendo sozinho (ex.: bolo com 11 velas).

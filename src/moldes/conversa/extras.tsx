@@ -71,9 +71,12 @@ type Trecho = { cena: CenaComExtras; inicio: number };
  * O de ao lado fica no lugar: quando a fala troca de cenário, ele some (o da mão vai junto com a pessoa) */
 export function objetoAgora(linha: Trecho[], id: string, onde: "mao" | "ao-lado", frame: number) {
   let atual = null as { tipo: TipoDeApoio; desde: number; lado?: "esquerda" | "direita" } | null;
+  let lugar: string | undefined;
   for (const { cena, inicio } of linha) {
     if (inicio - 6 > frame) break;
-    if (onde === "ao-lado" && cena.cenario) atual = null;
+    // Só quando o lugar muda de verdade (27/11/2026: repetir o mesmo "cenario" numa fala fazia o objeto sumir e voltar)
+    if (onde === "ao-lado" && cena.cenario && lugar !== undefined && cena.cenario !== lugar) atual = null;
+    if (cena.cenario) lugar = cena.cenario;
     for (const o of cena.objetos ?? []) {
       if (o.quem !== id || (o.onde ?? "mao") !== onde) continue;
       if (o.tipo === "nenhum") atual = null;

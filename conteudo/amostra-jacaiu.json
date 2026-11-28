@@ -1,0 +1,1567 @@
+{
+  "molde": "Conversa",
+  "titulo": "R$ 15 por dia viram R$ 5.400 no ano",
+  "cenario": "escritorio",
+  "cenas": [
+    {
+      "quem": "bia",
+      "fala": "Quinze reais por dia viram cinco mil e quatrocentos no ano.",
+      "estados": {
+        "caio": {
+          "pose": "celular",
+          "expressao": "feliz"
+        },
+        "bia": {
+          "pose": "normal",
+          "expressao": "neutra"
+        }
+      },
+      "acoes": [
+        {
+          "quem": "bia",
+          "em": "Quinze",
+          "pose": "explicando"
+        },
+        {
+          "quem": "caio",
+          "em": "cinco",
+          "expressao": "surpresa"
+        }
+      ],
+      "ilustra": [
+        {
+          "tipo": "numero",
+          "valor": 15,
+          "prefixo": "R$",
+          "rotulo": "por dia",
+          "icone": "comida",
+          "em": "Quinze",
+          "lugar": "esquerda"
+        },
+        {
+          "tipo": "numero",
+          "valor": 5400,
+          "prefixo": "R$",
+          "rotulo": "no ano",
+          "icone": "saco-de-dinheiro",
+          "em": "cinco mil",
+          "lugar": "direita"
+        }
+      ],
+      "narracao": {
+        "audio": "narracao/amostra-jacaiu/cena-01-27b860bc.wav",
+        "duracaoSeg": 3.605,
+        "legendas": [
+          {
+            "texto": "Quinze",
+            "inicioMs": 0,
+            "fimMs": 260
+          },
+          {
+            "texto": "reais",
+            "inicioMs": 260,
+            "fimMs": 580
+          },
+          {
+            "texto": "por",
+            "inicioMs": 580,
+            "fimMs": 900
+          },
+          {
+            "texto": "dia",
+            "inicioMs": 900,
+            "fimMs": 1180
+          },
+          {
+            "texto": "viram",
+            "inicioMs": 1180,
+            "fimMs": 1480
+          },
+          {
+            "texto": "cinco",
+            "inicioMs": 1480,
+            "fimMs": 1820
+          },
+          {
+            "texto": "mil",
+            "inicioMs": 1820,
+            "fimMs": 1870
+          },
+          {
+            "texto": "e",
+            "inicioMs": 1820,
+            "fimMs": 1870
+          },
+          {
+            "texto": "quatrocentos",
+            "inicioMs": 1820,
+            "fimMs": 2500
+          },
+          {
+            "texto": "no",
+            "inicioMs": 2500,
+            "fimMs": 3060
+          },
+          {
+            "texto": "ano",
+            "inicioMs": 3060,
+            "fimMs": 3280,
+            "fimDeFrase": true
+          }
+        ],
+        "boca": [
+          {
+            "inicio": 0,
+            "forma": "B"
+          },
+          {
+            "inicio": 0.36,
+            "forma": "C"
+          },
+          {
+            "inicio": 0.64,
+            "forma": "B"
+          },
+          {
+            "inicio": 0.71,
+            "forma": "A"
+          },
+          {
+            "inicio": 0.79,
+            "forma": "F"
+          },
+          {
+            "inicio": 0.91,
+            "forma": "B"
+          },
+          {
+            "inicio": 1.05,
+            "forma": "C"
+          },
+          {
+            "inicio": 1.19,
+            "forma": "G"
+          },
+          {
+            "inicio": 1.26,
+            "forma": "B"
+          },
+          {
+            "inicio": 1.68,
+            "forma": "F"
+          },
+          {
+            "inicio": 1.89,
+            "forma": "A"
+          },
+          {
+            "inicio": 1.97,
+            "forma": "B"
+          },
+          {
+            "inicio": 2.07,
+            "forma": "F"
+          },
+          {
+            "inicio": 2.14,
+            "forma": "B"
+          },
+          {
+            "inicio": 2.21,
+            "forma": "D"
+          },
+          {
+            "inicio": 2.35,
+            "forma": "B"
+          },
+          {
+            "inicio": 3.05,
+            "forma": "F"
+          },
+          {
+            "inicio": 3.12,
+            "forma": "B"
+          },
+          {
+            "inicio": 3.4,
+            "forma": "X"
+          }
+        ],
+        "chave": "[\"Quinze reais por dia viram cinco mil e quatrocentos no ano.\",\"pf_dora*0.5+bf_isabella*0.5\",1,true]"
+      }
+    },
+    {
+      "quem": "caio",
+      "fala": "Mentira! É só um lanchinho no almoço.",
+      "estados": {
+        "caio": {
+          "pose": "celular",
+          "expressao": "sem-graca"
+        },
+        "bia": {
+          "pose": "normal",
+          "expressao": "neutra"
+        }
+      },
+      "acoes": [
+        {
+          "quem": "bia",
+          "em": "Mentira",
+          "pose": "bracos-cruzados",
+          "expressao": "brava"
+        },
+        {
+          "quem": "caio",
+          "em": "lanchinho",
+          "acao": "guardar-celular"
+        },
+        {
+          "quem": "caio",
+          "em": "almoço",
+          "pose": "ombros"
+        }
+      ],
+      "narracao": {
+        "audio": "narracao/amostra-jacaiu/cena-02-1199b0d3.wav",
+        "duracaoSeg": 2.304,
+        "legendas": [
+          {
+            "texto": "Mentira!",
+            "inicioMs": 0,
+            "fimMs": 540,
+            "fimDeFrase": true
+          },
+          {
+            "texto": "É",
+            "inicioMs": 540,
+            "fimMs": 720
+          },
+          {
+            "texto": "só",
+            "inicioMs": 720,
+            "fimMs": 820
+          },
+          {
+            "texto": "um",
+            "inicioMs": 820,
+            "fimMs": 920
+          },
+          {
+            "texto": "lanchinho",
+            "inicioMs": 920,
+            "fimMs": 1360
+          },
+          {
+            "texto": "no",
+            "inicioMs": 1360,
+            "fimMs": 1520
+          },
+          {
+            "texto": "almoço",
+            "inicioMs": 1520,
+            "fimMs": 2020,
+            "fimDeFrase": true
+          }
+        ],
+        "boca": [
+          {
+            "inicio": 0,
+            "forma": "X"
+          },
+          {
+            "inicio": 0.01,
+            "forma": "B"
+          },
+          {
+            "inicio": 0.04,
+            "forma": "X"
+          },
+          {
+            "inicio": 0.05,
+            "forma": "A"
+          },
+          {
+            "inicio": 0.08,
+            "forma": "B"
+          },
+          {
+            "inicio": 0.47,
+            "forma": "C"
+          },
+          {
+            "inicio": 0.68,
+            "forma": "B"
+          },
+          {
+            "inicio": 0.75,
+            "forma": "E"
+          },
+          {
+            "inicio": 0.82,
+            "forma": "A"
+          },
+          {
+            "inicio": 0.9,
+            "forma": "F"
+          },
+          {
+            "inicio": 0.99,
+            "forma": "B"
+          },
+          {
+            "inicio": 1.41,
+            "forma": "A"
+          },
+          {
+            "inicio": 1.49,
+            "forma": "E"
+          },
+          {
+            "inicio": 1.55,
+            "forma": "F"
+          },
+          {
+            "inicio": 1.6,
+            "forma": "A"
+          },
+          {
+            "inicio": 1.68,
+            "forma": "E"
+          },
+          {
+            "inicio": 1.85,
+            "forma": "F"
+          },
+          {
+            "inicio": 2.13,
+            "forma": "X"
+          }
+        ],
+        "chave": "[\"Mentira! É só um lanchinho no almoço.\",\"pm_alex*0.6+im_nicola*0.4\",1.04,true]"
+      },
+      "hora": "12:30",
+      "notificacao": {
+        "titulo": "Pedido",
+        "texto": "Lanche confirmado: R$ 15,00"
+      }
+    },
+    {
+      "quem": "bia",
+      "fala": "Então faz a conta comigo: quinze por dia, trinta dias.",
+      "estados": {
+        "caio": {
+          "pose": "ombros",
+          "expressao": "neutra"
+        },
+        "bia": {
+          "pose": "bracos-cruzados",
+          "expressao": "neutra"
+        }
+      },
+      "acoes": [
+        {
+          "quem": "bia",
+          "em": "conta",
+          "pose": "apontando",
+          "expressao": "feliz"
+        },
+        {
+          "quem": "caio",
+          "em": "trinta",
+          "pose": "queixo",
+          "expressao": "preocupada"
+        }
+      ],
+      "ilustra": [
+        {
+          "tipo": "conta",
+          "em": "quinze",
+          "passos": [
+            "R$ 15 × 30 dias",
+            {
+              "texto": "= R$ 450 por mês",
+              "em": "trinta"
+            }
+          ]
+        }
+      ],
+      "narracao": {
+        "audio": "narracao/amostra-jacaiu/cena-03-d8870115.wav",
+        "duracaoSeg": 3.584,
+        "legendas": [
+          {
+            "texto": "Então",
+            "inicioMs": 0,
+            "fimMs": 360
+          },
+          {
+            "texto": "faz",
+            "inicioMs": 360,
+            "fimMs": 580
+          },
+          {
+            "texto": "a",
+            "inicioMs": 580,
+            "fimMs": 700
+          },
+          {
+            "texto": "conta",
+            "inicioMs": 700,
+            "fimMs": 940
+          },
+          {
+            "texto": "comigo:",
+            "inicioMs": 940,
+            "fimMs": 1340
+          },
+          {
+            "texto": "quinze",
+            "inicioMs": 1840,
+            "fimMs": 2000
+          },
+          {
+            "texto": "por",
+            "inicioMs": 2000,
+            "fimMs": 2240
+          },
+          {
+            "texto": "dia,",
+            "inicioMs": 2240,
+            "fimMs": 2540
+          },
+          {
+            "texto": "trinta",
+            "inicioMs": 2640,
+            "fimMs": 2880
+          },
+          {
+            "texto": "dias",
+            "inicioMs": 2880,
+            "fimMs": 3260,
+            "fimDeFrase": true
+          }
+        ],
+        "boca": [
+          {
+            "inicio": 0,
+            "forma": "X"
+          },
+          {
+            "inicio": 0.01,
+            "forma": "B"
+          },
+          {
+            "inicio": 0.28,
+            "forma": "C"
+          },
+          {
+            "inicio": 0.35,
+            "forma": "E"
+          },
+          {
+            "inicio": 0.42,
+            "forma": "G"
+          },
+          {
+            "inicio": 0.56,
+            "forma": "B"
+          },
+          {
+            "inicio": 0.63,
+            "forma": "E"
+          },
+          {
+            "inicio": 0.84,
+            "forma": "C"
+          },
+          {
+            "inicio": 0.91,
+            "forma": "B"
+          },
+          {
+            "inicio": 0.98,
+            "forma": "F"
+          },
+          {
+            "inicio": 1.12,
+            "forma": "A"
+          },
+          {
+            "inicio": 1.2,
+            "forma": "B"
+          },
+          {
+            "inicio": 1.25,
+            "forma": "E"
+          },
+          {
+            "inicio": 1.51,
+            "forma": "F"
+          },
+          {
+            "inicio": 1.58,
+            "forma": "B"
+          },
+          {
+            "inicio": 2,
+            "forma": "A"
+          },
+          {
+            "inicio": 2.08,
+            "forma": "F"
+          },
+          {
+            "inicio": 2.27,
+            "forma": "B"
+          },
+          {
+            "inicio": 2.55,
+            "forma": "A"
+          },
+          {
+            "inicio": 2.63,
+            "forma": "B"
+          },
+          {
+            "inicio": 2.84,
+            "forma": "C"
+          },
+          {
+            "inicio": 2.98,
+            "forma": "B"
+          },
+          {
+            "inicio": 3.26,
+            "forma": "C"
+          },
+          {
+            "inicio": 3.33,
+            "forma": "B"
+          },
+          {
+            "inicio": 3.54,
+            "forma": "X"
+          }
+        ],
+        "chave": "[\"Então faz a conta comigo: quinze por dia, trinta dias.\",\"pf_dora*0.5+bf_isabella*0.5\",1,true]"
+      }
+    },
+    {
+      "quem": "bia",
+      "fala": "Quatrocentos e cinquenta por mês. No ano, cinco mil e quatrocentos.",
+      "camera": "close",
+      "foco": "caio",
+      "estados": {
+        "caio": {
+          "pose": "normal",
+          "expressao": "medo"
+        },
+        "bia": {
+          "pose": "explicando",
+          "expressao": "neutra"
+        }
+      },
+      "acoes": [
+        {
+          "quem": "caio",
+          "em": "cinco",
+          "acao": "cair-sentado",
+          "expressao": "medo"
+        }
+      ],
+      "ilustra": [
+        {
+          "tipo": "conta",
+          "em": "Quatrocentos",
+          "passos": [
+            "R$ 450 × 12 meses",
+            {
+              "texto": "= R$ 5.400 no ano",
+              "em": "cinco"
+            }
+          ]
+        },
+        {
+          "tipo": "texto",
+          "texto": "R$ 5.400!",
+          "forma": "carimbo",
+          "em": "mil",
+          "lugar": "baixo"
+        }
+      ],
+      "narracao": {
+        "audio": "narracao/amostra-jacaiu/cena-04-29ed5ead.wav",
+        "duracaoSeg": 4.245,
+        "legendas": [
+          {
+            "texto": "Quatrocentos",
+            "inicioMs": 0,
+            "fimMs": 50
+          },
+          {
+            "texto": "e",
+            "inicioMs": 0,
+            "fimMs": 50
+          },
+          {
+            "texto": "cinquenta",
+            "inicioMs": 0,
+            "fimMs": 540
+          },
+          {
+            "texto": "por",
+            "inicioMs": 540,
+            "fimMs": 1400
+          },
+          {
+            "texto": "mês",
+            "inicioMs": 1400,
+            "fimMs": 1760,
+            "fimDeFrase": true
+          },
+          {
+            "texto": "No",
+            "inicioMs": 2020,
+            "fimMs": 2360
+          },
+          {
+            "texto": "ano,",
+            "inicioMs": 2360,
+            "fimMs": 2560
+          },
+          {
+            "texto": "cinco",
+            "inicioMs": 2560,
+            "fimMs": 2610
+          },
+          {
+            "texto": "mil",
+            "inicioMs": 2560,
+            "fimMs": 2610
+          },
+          {
+            "texto": "e",
+            "inicioMs": 2560,
+            "fimMs": 2900
+          },
+          {
+            "texto": "quatrocentos",
+            "inicioMs": 2900,
+            "fimMs": 3460,
+            "fimDeFrase": true
+          }
+        ],
+        "boca": [
+          {
+            "inicio": 0,
+            "forma": "X"
+          },
+          {
+            "inicio": 0.01,
+            "forma": "B"
+          },
+          {
+            "inicio": 0.12,
+            "forma": "C"
+          },
+          {
+            "inicio": 0.33,
+            "forma": "B"
+          },
+          {
+            "inicio": 0.4,
+            "forma": "C"
+          },
+          {
+            "inicio": 0.47,
+            "forma": "B"
+          },
+          {
+            "inicio": 0.96,
+            "forma": "F"
+          },
+          {
+            "inicio": 1.03,
+            "forma": "B"
+          },
+          {
+            "inicio": 1.1,
+            "forma": "C"
+          },
+          {
+            "inicio": 1.17,
+            "forma": "A"
+          },
+          {
+            "inicio": 1.25,
+            "forma": "F"
+          },
+          {
+            "inicio": 1.41,
+            "forma": "A"
+          },
+          {
+            "inicio": 1.52,
+            "forma": "C"
+          },
+          {
+            "inicio": 1.61,
+            "forma": "B"
+          },
+          {
+            "inicio": 1.89,
+            "forma": "C"
+          },
+          {
+            "inicio": 2.17,
+            "forma": "F"
+          },
+          {
+            "inicio": 2.27,
+            "forma": "E"
+          },
+          {
+            "inicio": 2.31,
+            "forma": "H"
+          },
+          {
+            "inicio": 2.38,
+            "forma": "C"
+          },
+          {
+            "inicio": 2.45,
+            "forma": "B"
+          },
+          {
+            "inicio": 2.8,
+            "forma": "F"
+          },
+          {
+            "inicio": 3.01,
+            "forma": "A"
+          },
+          {
+            "inicio": 3.09,
+            "forma": "B"
+          },
+          {
+            "inicio": 3.25,
+            "forma": "D"
+          },
+          {
+            "inicio": 3.39,
+            "forma": "B"
+          },
+          {
+            "inicio": 3.67,
+            "forma": "C"
+          },
+          {
+            "inicio": 3.74,
+            "forma": "B"
+          },
+          {
+            "inicio": 4.23,
+            "forma": "X"
+          }
+        ],
+        "chave": "[\"Quatrocentos e cinquenta por mês. No ano, cinco mil e quatrocentos.\",\"pf_dora*0.5+bf_isabella*0.5\",1,true]"
+      }
+    },
+    {
+      "quem": "caio",
+      "fala": "Cinco mil? Dava pra viajar com isso!",
+      "estados": {
+        "caio": {
+          "pose": "sentado-livre",
+          "expressao": "medo"
+        },
+        "bia": {
+          "pose": "cintura",
+          "expressao": "feliz"
+        }
+      },
+      "acoes": [
+        {
+          "quem": "caio",
+          "em": "viajar",
+          "acao": "levantar",
+          "expressao": "surpresa"
+        },
+        {
+          "quem": "bia",
+          "em": "Cinco",
+          "expressao": "radiante"
+        }
+      ],
+      "ilustra": [
+        {
+          "tipo": "pensamento",
+          "quem": "caio",
+          "icone": "planeta",
+          "em": "viajar"
+        }
+      ],
+      "narracao": {
+        "audio": "narracao/amostra-jacaiu/cena-05-1ff08d9a.wav",
+        "duracaoSeg": 2.261,
+        "legendas": [
+          {
+            "texto": "Cinco",
+            "inicioMs": 0,
+            "fimMs": 240
+          },
+          {
+            "texto": "mil?",
+            "inicioMs": 240,
+            "fimMs": 520,
+            "fimDeFrase": true
+          },
+          {
+            "texto": "Dava",
+            "inicioMs": 520,
+            "fimMs": 860
+          },
+          {
+            "texto": "pra",
+            "inicioMs": 860,
+            "fimMs": 980
+          },
+          {
+            "texto": "viajar",
+            "inicioMs": 980,
+            "fimMs": 1380
+          },
+          {
+            "texto": "com",
+            "inicioMs": 1380,
+            "fimMs": 1560
+          },
+          {
+            "texto": "isso!",
+            "inicioMs": 1560,
+            "fimMs": 1920,
+            "fimDeFrase": true
+          }
+        ],
+        "boca": [
+          {
+            "inicio": 0,
+            "forma": "B"
+          },
+          {
+            "inicio": 0.34,
+            "forma": "A"
+          },
+          {
+            "inicio": 0.43,
+            "forma": "F"
+          },
+          {
+            "inicio": 0.55,
+            "forma": "A"
+          },
+          {
+            "inicio": 0.63,
+            "forma": "C"
+          },
+          {
+            "inicio": 0.72,
+            "forma": "A"
+          },
+          {
+            "inicio": 0.89,
+            "forma": "C"
+          },
+          {
+            "inicio": 0.93,
+            "forma": "A"
+          },
+          {
+            "inicio": 1.01,
+            "forma": "C"
+          },
+          {
+            "inicio": 1.17,
+            "forma": "B"
+          },
+          {
+            "inicio": 1.31,
+            "forma": "E"
+          },
+          {
+            "inicio": 1.52,
+            "forma": "B"
+          },
+          {
+            "inicio": 1.73,
+            "forma": "F"
+          },
+          {
+            "inicio": 2.08,
+            "forma": "X"
+          }
+        ],
+        "chave": "[\"Cinco mil? Dava pra viajar com isso!\",\"pm_alex*0.6+im_nicola*0.4\",1.04,true]"
+      }
+    },
+    {
+      "quem": "bia",
+      "fala": "Ou guardar. Leva marmita três vezes na semana.",
+      "cenario": "cozinha",
+      "estados": {
+        "caio": {
+          "pose": "normal",
+          "expressao": "surpresa"
+        },
+        "bia": {
+          "pose": "explicando",
+          "expressao": "feliz"
+        }
+      },
+      "acoes": [
+        {
+          "quem": "caio",
+          "em": "guardar",
+          "acao": "andar-perto",
+          "expressao": "neutra"
+        },
+        {
+          "quem": "bia",
+          "em": "marmita",
+          "pose": "apontando"
+        }
+      ],
+      "ilustra": [
+        {
+          "tipo": "icone",
+          "em": "marmita",
+          "icones": [
+            {
+              "icone": "comida",
+              "rotulo": "Marmita",
+              "em": "marmita"
+            },
+            {
+              "icone": "calendario",
+              "rotulo": "3x na semana",
+              "em": "três"
+            }
+          ]
+        }
+      ],
+      "narracao": {
+        "audio": "narracao/amostra-jacaiu/cena-06-7281d6f0.wav",
+        "duracaoSeg": 2.987,
+        "legendas": [
+          {
+            "texto": "Ou",
+            "inicioMs": 0,
+            "fimMs": 140
+          },
+          {
+            "texto": "guardar",
+            "inicioMs": 140,
+            "fimMs": 740,
+            "fimDeFrase": true
+          },
+          {
+            "texto": "Leva",
+            "inicioMs": 900,
+            "fimMs": 1080
+          },
+          {
+            "texto": "marmita",
+            "inicioMs": 1140,
+            "fimMs": 1480
+          },
+          {
+            "texto": "três",
+            "inicioMs": 1480,
+            "fimMs": 1740
+          },
+          {
+            "texto": "vezes",
+            "inicioMs": 1740,
+            "fimMs": 2100
+          },
+          {
+            "texto": "na",
+            "inicioMs": 2100,
+            "fimMs": 2300
+          },
+          {
+            "texto": "semana",
+            "inicioMs": 2300,
+            "fimMs": 2580,
+            "fimDeFrase": true
+          }
+        ],
+        "boca": [
+          {
+            "inicio": 0,
+            "forma": "X"
+          },
+          {
+            "inicio": 0.01,
+            "forma": "B"
+          },
+          {
+            "inicio": 0.06,
+            "forma": "E"
+          },
+          {
+            "inicio": 0.17,
+            "forma": "C"
+          },
+          {
+            "inicio": 0.24,
+            "forma": "F"
+          },
+          {
+            "inicio": 0.31,
+            "forma": "B"
+          },
+          {
+            "inicio": 0.45,
+            "forma": "C"
+          },
+          {
+            "inicio": 0.87,
+            "forma": "H"
+          },
+          {
+            "inicio": 0.94,
+            "forma": "C"
+          },
+          {
+            "inicio": 1.01,
+            "forma": "B"
+          },
+          {
+            "inicio": 1.08,
+            "forma": "A"
+          },
+          {
+            "inicio": 1.17,
+            "forma": "C"
+          },
+          {
+            "inicio": 1.23,
+            "forma": "A"
+          },
+          {
+            "inicio": 1.31,
+            "forma": "B"
+          },
+          {
+            "inicio": 1.51,
+            "forma": "C"
+          },
+          {
+            "inicio": 1.72,
+            "forma": "B"
+          },
+          {
+            "inicio": 1.79,
+            "forma": "A"
+          },
+          {
+            "inicio": 1.87,
+            "forma": "C"
+          },
+          {
+            "inicio": 2.01,
+            "forma": "B"
+          },
+          {
+            "inicio": 2.43,
+            "forma": "A"
+          },
+          {
+            "inicio": 2.53,
+            "forma": "C"
+          },
+          {
+            "inicio": 2.82,
+            "forma": "X"
+          }
+        ],
+        "chave": "[\"Ou guardar. Leva marmita três vezes na semana.\",\"pf_dora*0.5+bf_isabella*0.5\",1,true]"
+      }
+    },
+    {
+      "quem": "bia",
+      "fala": "Doze dias sem lanche fora: cento e oitenta guardados por mês.",
+      "estados": {
+        "caio": {
+          "pose": "queixo",
+          "expressao": "neutra"
+        },
+        "bia": {
+          "pose": "explicando",
+          "expressao": "radiante"
+        }
+      },
+      "acoes": [
+        {
+          "quem": "bia",
+          "em": "Doze",
+          "pose": "cintura"
+        },
+        {
+          "quem": "caio",
+          "em": "cento",
+          "pose": "comemorando",
+          "expressao": "radiante"
+        }
+      ],
+      "ilustra": [
+        {
+          "tipo": "conta",
+          "em": "Doze",
+          "passos": [
+            "12 dias × R$ 15",
+            {
+              "texto": "= R$ 180 por mês",
+              "em": "cento"
+            }
+          ]
+        }
+      ],
+      "narracao": {
+        "audio": "narracao/amostra-jacaiu/cena-07-15cbaadc.wav",
+        "duracaoSeg": 4.096,
+        "legendas": [
+          {
+            "texto": "Doze",
+            "inicioMs": 0,
+            "fimMs": 320
+          },
+          {
+            "texto": "dias",
+            "inicioMs": 320,
+            "fimMs": 640
+          },
+          {
+            "texto": "sem",
+            "inicioMs": 640,
+            "fimMs": 880
+          },
+          {
+            "texto": "lanche",
+            "inicioMs": 880,
+            "fimMs": 1240
+          },
+          {
+            "texto": "fora:",
+            "inicioMs": 1240,
+            "fimMs": 1560
+          },
+          {
+            "texto": "cento",
+            "inicioMs": 1560,
+            "fimMs": 1893
+          },
+          {
+            "texto": "e",
+            "inicioMs": 1893,
+            "fimMs": 1960
+          },
+          {
+            "texto": "oitenta",
+            "inicioMs": 1960,
+            "fimMs": 2420
+          },
+          {
+            "texto": "guardados",
+            "inicioMs": 2420,
+            "fimMs": 3380
+          },
+          {
+            "texto": "por",
+            "inicioMs": 3380,
+            "fimMs": 3600
+          },
+          {
+            "texto": "mês",
+            "inicioMs": 3600,
+            "fimMs": 3840,
+            "fimDeFrase": true
+          }
+        ],
+        "boca": [
+          {
+            "inicio": 0,
+            "forma": "B"
+          },
+          {
+            "inicio": 0.58,
+            "forma": "C"
+          },
+          {
+            "inicio": 0.65,
+            "forma": "B"
+          },
+          {
+            "inicio": 0.79,
+            "forma": "C"
+          },
+          {
+            "inicio": 1.14,
+            "forma": "B"
+          },
+          {
+            "inicio": 1.28,
+            "forma": "G"
+          },
+          {
+            "inicio": 1.42,
+            "forma": "E"
+          },
+          {
+            "inicio": 1.49,
+            "forma": "C"
+          },
+          {
+            "inicio": 1.63,
+            "forma": "B"
+          },
+          {
+            "inicio": 1.84,
+            "forma": "X"
+          },
+          {
+            "inicio": 1.97,
+            "forma": "B"
+          },
+          {
+            "inicio": 2.12,
+            "forma": "C"
+          },
+          {
+            "inicio": 2.19,
+            "forma": "B"
+          },
+          {
+            "inicio": 2.61,
+            "forma": "C"
+          },
+          {
+            "inicio": 2.75,
+            "forma": "B"
+          },
+          {
+            "inicio": 3.03,
+            "forma": "A"
+          },
+          {
+            "inicio": 3.11,
+            "forma": "C"
+          },
+          {
+            "inicio": 3.22,
+            "forma": "A"
+          },
+          {
+            "inicio": 3.33,
+            "forma": "B"
+          },
+          {
+            "inicio": 3.37,
+            "forma": "A"
+          },
+          {
+            "inicio": 3.45,
+            "forma": "F"
+          },
+          {
+            "inicio": 3.59,
+            "forma": "A"
+          },
+          {
+            "inicio": 3.7,
+            "forma": "C"
+          },
+          {
+            "inicio": 3.78,
+            "forma": "B"
+          },
+          {
+            "inicio": 4.06,
+            "forma": "X"
+          }
+        ],
+        "chave": "[\"Doze dias sem lanche fora: cento e oitenta guardados por mês.\",\"pf_dora*0.5+bf_isabella*0.5\",1,true]"
+      }
+    },
+    {
+      "quem": "caio",
+      "fala": "Pix pra mim mesmo. Primeiro guardo, depois gasto.",
+      "luz": true,
+      "notificacao": {
+        "titulo": "Pix",
+        "texto": "Pix pra mim mesmo: R$ 180 guardados ✅"
+      },
+      "estados": {
+        "caio": {
+          "pose": "celular",
+          "expressao": "aliviada"
+        },
+        "bia": {
+          "pose": "comemorando",
+          "expressao": "radiante"
+        }
+      },
+      "acoes": [
+        {
+          "quem": "bia",
+          "em": "gasto",
+          "acao": "pular"
+        },
+        {
+          "quem": "caio",
+          "em": "guardo",
+          "expressao": "radiante"
+        }
+      ],
+      "narracao": {
+        "audio": "narracao/amostra-jacaiu/cena-08-04c4aba7.wav",
+        "duracaoSeg": 3.093,
+        "legendas": [
+          {
+            "texto": "Pix",
+            "inicioMs": 0,
+            "fimMs": 240
+          },
+          {
+            "texto": "pra",
+            "inicioMs": 240,
+            "fimMs": 400
+          },
+          {
+            "texto": "mim",
+            "inicioMs": 400,
+            "fimMs": 560
+          },
+          {
+            "texto": "mesmo",
+            "inicioMs": 560,
+            "fimMs": 960,
+            "fimDeFrase": true
+          },
+          {
+            "texto": "Primeiro",
+            "inicioMs": 1120,
+            "fimMs": 1420
+          },
+          {
+            "texto": "guardo,",
+            "inicioMs": 1420,
+            "fimMs": 2020
+          },
+          {
+            "texto": "depois",
+            "inicioMs": 2040,
+            "fimMs": 2240
+          },
+          {
+            "texto": "gasto",
+            "inicioMs": 2240,
+            "fimMs": 2900,
+            "fimDeFrase": true
+          }
+        ],
+        "boca": [
+          {
+            "inicio": 0,
+            "forma": "X"
+          },
+          {
+            "inicio": 0.01,
+            "forma": "B"
+          },
+          {
+            "inicio": 0.18,
+            "forma": "A"
+          },
+          {
+            "inicio": 0.26,
+            "forma": "F"
+          },
+          {
+            "inicio": 0.39,
+            "forma": "A"
+          },
+          {
+            "inicio": 0.47,
+            "forma": "B"
+          },
+          {
+            "inicio": 0.57,
+            "forma": "A"
+          },
+          {
+            "inicio": 0.65,
+            "forma": "B"
+          },
+          {
+            "inicio": 0.87,
+            "forma": "A"
+          },
+          {
+            "inicio": 0.89,
+            "forma": "B"
+          },
+          {
+            "inicio": 0.97,
+            "forma": "A"
+          },
+          {
+            "inicio": 1.04,
+            "forma": "B"
+          },
+          {
+            "inicio": 1.23,
+            "forma": "A"
+          },
+          {
+            "inicio": 1.31,
+            "forma": "C"
+          },
+          {
+            "inicio": 1.36,
+            "forma": "B"
+          },
+          {
+            "inicio": 1.4,
+            "forma": "F"
+          },
+          {
+            "inicio": 1.68,
+            "forma": "C"
+          },
+          {
+            "inicio": 1.75,
+            "forma": "B"
+          },
+          {
+            "inicio": 1.82,
+            "forma": "F"
+          },
+          {
+            "inicio": 1.89,
+            "forma": "A"
+          },
+          {
+            "inicio": 1.96,
+            "forma": "C"
+          },
+          {
+            "inicio": 2.03,
+            "forma": "A"
+          },
+          {
+            "inicio": 2.1,
+            "forma": "E"
+          },
+          {
+            "inicio": 2.24,
+            "forma": "B"
+          },
+          {
+            "inicio": 2.38,
+            "forma": "C"
+          },
+          {
+            "inicio": 2.59,
+            "forma": "B"
+          },
+          {
+            "inicio": 2.73,
+            "forma": "E"
+          },
+          {
+            "inicio": 2.87,
+            "forma": "F"
+          },
+          {
+            "inicio": 2.94,
+            "forma": "X"
+          }
+        ],
+        "chave": "[\"Pix pra mim mesmo. Primeiro guardo, depois gasto.\",\"pm_alex*0.6+im_nicola*0.4\",1.04,true]"
+      }
+    }
+  ],
+  "ctaInicial": "Já caiu? Então presta atenção…",
+  "final": {
+    "frase": "Gasto pequeno todo dia vira conta grande no fim do ano.",
+    "linha": "Exemplo de cálculo · 2026",
+    "botao": "Segue pra não cair de novo"
+  },
+  "ctaFinal": "Já caiu? Guarda primeiro, gasta depois.",
+  "botaoFinal": "Segue pra não cair 👆",
+  "capa": {
+    "titulo": "15 reais por dia: R$ 5.400",
+    "destaque": "5.400",
+    "estados": {
+      "caio": {
+        "pose": "cabeca",
+        "expressao": "medo"
+      },
+      "bia": {
+        "pose": "explicando",
+        "expressao": "feliz"
+      }
+    }
+  },
+  "post": {
+    "titulo": "R$ 15 por dia viram R$ 5.400 no ano",
+    "legenda": "O lanchinho de todo dia parece pouco, mas a conta do ano assusta. Quanto você gasta fora por dia? Exemplo de cálculo. #financas #dinheiro #jacaiu"
+  },
+  "episodio": 2,
+  "idioma": "pt",
+  "elenco": [
+    {
+      "id": "caio",
+      "nome": "Caio",
+      "voz": "masculina-3",
+      "visual": {
+        "pele": "#E0A878",
+        "cabelo": "#3A2A1E",
+        "roupa": "#F97316",
+        "calca": "#2E3A4F",
+        "sapato": "#2B2B2B",
+        "penteado": "curto",
+        "roupaEstilo": "blusa",
+        "mangaLonga": false,
+        "oculos": false,
+        "tiara": false,
+        "faixa": ""
+      }
+    },
+    {
+      "id": "bia",
+      "nome": "Bia",
+      "voz": "feminina-9",
+      "visual": {
+        "pele": "#C98B62",
+        "cabelo": "#1F1A1A",
+        "roupa": "#3B82F6",
+        "calca": "#1E3A5F",
+        "sapato": "#2B2B2B",
+        "penteado": "ondulado",
+        "roupaEstilo": "blusa",
+        "mangaLonga": false,
+        "oculos": true,
+        "tiara": false,
+        "faixa": ""
+      }
+    }
+  ],
+  "estilo": {
+    "modelo": "palito",
+    "fundo": "claro"
+  }
+}

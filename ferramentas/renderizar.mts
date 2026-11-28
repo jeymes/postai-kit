@@ -40,9 +40,18 @@ if (!caminho) {
 const peca = JSON.parse(readFileSync(caminho, "utf8"));
 const { molde, capa, post, ...props } = peca;
 
-// Como o vídeo termina: sem vinheta, sempre na chamada
+// Como o vídeo termina: sem vinheta, na chamada; "luz" = só a frase na luz (com o
+// botão de seguir), sem o cartão do fim nem a vinheta. A frase na luz só sai
+// quando o dono escolhe (28/11/2026: no Laços e no Já Caiu? ela não combinava, e
+// luz + cartão + vinheta eram três finais seguidos)
+type Fim = "chamada" | "vinheta" | "ambos" | "luz";
 const temVinheta = existsSync("public/marca") && readdirSync("public/marca").some((nome) => /^vinheta\.(mp4|mov|webm)$/.test(nome));
-const fimDoVideo: "chamada" | "vinheta" | "ambos" = temVinheta ? (lerJson<{ fim?: "chamada" | "vinheta" | "ambos" }>("public/marca/fim.json")?.fim ?? "ambos") : "chamada";
+const fimEscolhido = lerJson<{ fim?: Fim }>("public/marca/fim.json")?.fim;
+const fimDoVideo: Fim = fimEscolhido === "luz" ? "luz" : temVinheta ? (fimEscolhido ?? "ambos") : "chamada";
+if (molde === "Conversa" || molde === "Mundo3D") {
+  if (fimDoVideo !== "luz") delete props.final;
+  else if (props.final) delete props.ctaFinal;
+}
 // Só a vinheta: tira o cartão do fim dos moldes em que ele é opcional
 if (fimDoVideo === "vinheta" && !args.includes("--previa")) {
   if (molde === "Conversa") {
@@ -657,7 +666,7 @@ if (molde === "Carrossel") {
   const segundosDoRender = Math.round((Date.now() - inicioDoRender) / 1000);
   console.log(`Render levou ${Math.floor(segundosDoRender / 60)} min ${segundosDoRender % 60} s.`);
   desempenho = { nucleos, memoriaGb: Math.round(memoriaGb * 10) / 10, abas: abasUsadas, segundos: segundosDoRender };
-  const vinheta = fimDoVideo === "chamada" ? 0 : colarVinheta(video, molde === "Documentario" ? { largura: 1920, altura: 1080 } : { largura: 1080, altura: 1920 }, qualidade);
+  const vinheta = fimDoVideo === "chamada" || fimDoVideo === "luz" ? 0 : colarVinheta(video, molde === "Documentario" ? { largura: 1920, altura: 1080 } : { largura: 1080, altura: 1920 }, qualidade);
   if (vinheta) duracaoSeg = Math.round((duracaoSeg + vinheta) * 10) / 10;
   arquivos.push({ arquivo: video, tipo: "video/mp4", tamanho: tamanho(video) });
 

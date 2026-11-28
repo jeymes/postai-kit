@@ -1,0 +1,2349 @@
+{
+ "molde": "Conversa",
+ "titulo": "R$ 100 por mês viram R$ 23 mil?",
+ "cenario": "escritorio",
+ "ctaInicial": "Já caiu? Então presta atenção…",
+ "ctaFinal": "Já caiu? Segue pra aprender mais!",
+ "botaoFinal": "Segue 👆",
+ "capa": {
+  "titulo": "R$ 100 por mês: 23 mil",
+  "destaque": "23 mil",
+  "cena": 6,
+  "estados": {
+   "bia": {
+    "pose": "comemorando",
+    "expressao": "radiante"
+   }
+  }
+ },
+ "post": {
+  "titulo": "R$ 100 por mês viram R$ 23 mil? Juros compostos",
+  "legenda": "Juros sobre juros: o que o seu dinheiro rende também rende. Exemplo de cálculo com 1% ao mês; confira taxa, imposto e garantia antes de investir. #financas #dinheiro #jacaiu"
+ },
+ "idioma": "pt",
+ "estilo": {
+  "modelo": "palito",
+  "fundo": "claro"
+ },
+ "cenas": [
+  {
+   "quem": "bia",
+   "fala": "Cem reais por mês podem virar vinte e três mil em dez anos. O nome disso é juros compostos.",
+   "estados": {
+    "bia": {
+     "pose": "explicando",
+     "expressao": "feliz"
+    }
+   },
+   "acoes": [
+    {
+     "quem": "bia",
+     "em": "vinte",
+     "pose": "apontando",
+     "expressao": "radiante"
+    },
+    {
+     "quem": "bia",
+     "em": "compostos",
+     "pose": "explicando"
+    }
+   ],
+   "ilustra": [
+    {
+     "tipo": "numero",
+     "valor": 100,
+     "prefixo": "R$",
+     "rotulo": "por mês",
+     "icone": "moeda",
+     "em": "Cem",
+     "lugar": "esquerda"
+    },
+    {
+     "tipo": "numero",
+     "valor": 23000,
+     "prefixo": "R$",
+     "rotulo": "em 10 anos",
+     "icone": "saco-de-dinheiro",
+     "em": "vinte",
+     "lugar": "direita"
+    }
+   ],
+   "narracao": {
+    "audio": "narracao/aula-jacaiu/cena-01-6d1046fa.wav",
+    "duracaoSeg": 6.037,
+    "legendas": [
+     {
+      "texto": "Cem",
+      "inicioMs": 0,
+      "fimMs": 220
+     },
+     {
+      "texto": "reais",
+      "inicioMs": 220,
+      "fimMs": 480
+     },
+     {
+      "texto": "por",
+      "inicioMs": 480,
+      "fimMs": 800
+     },
+     {
+      "texto": "mês",
+      "inicioMs": 800,
+      "fimMs": 1000
+     },
+     {
+      "texto": "podem",
+      "inicioMs": 1000,
+      "fimMs": 1320
+     },
+     {
+      "texto": "virar",
+      "inicioMs": 1320,
+      "fimMs": 1700
+     },
+     {
+      "texto": "vinte",
+      "inicioMs": 1700,
+      "fimMs": 2020
+     },
+     {
+      "texto": "e",
+      "inicioMs": 2020,
+      "fimMs": 2240
+     },
+     {
+      "texto": "três",
+      "inicioMs": 2240,
+      "fimMs": 2500
+     },
+     {
+      "texto": "mil",
+      "inicioMs": 2500,
+      "fimMs": 2720
+     },
+     {
+      "texto": "em",
+      "inicioMs": 2720,
+      "fimMs": 2880
+     },
+     {
+      "texto": "dez",
+      "inicioMs": 2880,
+      "fimMs": 3140
+     },
+     {
+      "texto": "anos",
+      "inicioMs": 3140,
+      "fimMs": 3400,
+      "fimDeFrase": true
+     },
+     {
+      "texto": "O",
+      "inicioMs": 3900,
+      "fimMs": 4080
+     },
+     {
+      "texto": "nome",
+      "inicioMs": 4080,
+      "fimMs": 4280
+     },
+     {
+      "texto": "disso",
+      "inicioMs": 4280,
+      "fimMs": 4680
+     },
+     {
+      "texto": "é",
+      "inicioMs": 4680,
+      "fimMs": 4880
+     },
+     {
+      "texto": "juros",
+      "inicioMs": 4880,
+      "fimMs": 5140
+     },
+     {
+      "texto": "compostos",
+      "inicioMs": 5140,
+      "fimMs": 5900,
+      "fimDeFrase": true
+     }
+    ],
+    "boca": [
+     {
+      "inicio": 0,
+      "forma": "X"
+     },
+     {
+      "inicio": 0.01,
+      "forma": "B"
+     },
+     {
+      "inicio": 0.16,
+      "forma": "C"
+     },
+     {
+      "inicio": 0.51,
+      "forma": "B"
+     },
+     {
+      "inicio": 0.58,
+      "forma": "A"
+     },
+     {
+      "inicio": 0.66,
+      "forma": "F"
+     },
+     {
+      "inicio": 0.79,
+      "forma": "A"
+     },
+     {
+      "inicio": 0.89,
+      "forma": "C"
+     },
+     {
+      "inicio": 0.95,
+      "forma": "B"
+     },
+     {
+      "inicio": 1,
+      "forma": "A"
+     },
+     {
+      "inicio": 1.08,
+      "forma": "C"
+     },
+     {
+      "inicio": 1.21,
+      "forma": "B"
+     },
+     {
+      "inicio": 1.35,
+      "forma": "A"
+     },
+     {
+      "inicio": 1.43,
+      "forma": "B"
+     },
+     {
+      "inicio": 1.53,
+      "forma": "C"
+     },
+     {
+      "inicio": 1.67,
+      "forma": "A"
+     },
+     {
+      "inicio": 1.75,
+      "forma": "B"
+     },
+     {
+      "inicio": 2.19,
+      "forma": "A"
+     },
+     {
+      "inicio": 2.27,
+      "forma": "C"
+     },
+     {
+      "inicio": 2.41,
+      "forma": "B"
+     },
+     {
+      "inicio": 2.55,
+      "forma": "A"
+     },
+     {
+      "inicio": 2.63,
+      "forma": "F"
+     },
+     {
+      "inicio": 2.72,
+      "forma": "B"
+     },
+     {
+      "inicio": 2.93,
+      "forma": "C"
+     },
+     {
+      "inicio": 3.07,
+      "forma": "B"
+     },
+     {
+      "inicio": 3.14,
+      "forma": "C"
+     },
+     {
+      "inicio": 3.21,
+      "forma": "B"
+     },
+     {
+      "inicio": 3.84,
+      "forma": "X"
+     },
+     {
+      "inicio": 3.98,
+      "forma": "B"
+     },
+     {
+      "inicio": 4.02,
+      "forma": "F"
+     },
+     {
+      "inicio": 4.06,
+      "forma": "C"
+     },
+     {
+      "inicio": 4.13,
+      "forma": "D"
+     },
+     {
+      "inicio": 4.2,
+      "forma": "A"
+     },
+     {
+      "inicio": 4.28,
+      "forma": "B"
+     },
+     {
+      "inicio": 4.71,
+      "forma": "F"
+     },
+     {
+      "inicio": 4.78,
+      "forma": "C"
+     },
+     {
+      "inicio": 4.85,
+      "forma": "F"
+     },
+     {
+      "inicio": 5.06,
+      "forma": "B"
+     },
+     {
+      "inicio": 5.2,
+      "forma": "E"
+     },
+     {
+      "inicio": 5.27,
+      "forma": "A"
+     },
+     {
+      "inicio": 5.35,
+      "forma": "E"
+     },
+     {
+      "inicio": 5.59,
+      "forma": "B"
+     },
+     {
+      "inicio": 6.01,
+      "forma": "X"
+     }
+    ],
+    "chave": "[\"Cem reais por mês podem virar vinte e três mil em dez anos. O nome disso é juros compostos.\",\"pf_dora*0.5+bf_isabella*0.5\",1,true]"
+   }
+  },
+  {
+   "quem": "bia",
+   "fala": "Juros compostos são juros sobre juros: o que o seu dinheiro rende também passa a render.",
+   "estados": {
+    "bia": {
+     "pose": "pensando",
+     "expressao": "neutra"
+    }
+   },
+   "acoes": [
+    {
+     "quem": "bia",
+     "em": "compostos",
+     "pose": "apontando"
+    },
+    {
+     "quem": "bia",
+     "em": "sobre",
+     "pose": "explicando",
+     "expressao": "feliz"
+    },
+    {
+     "quem": "bia",
+     "em": "rende",
+     "pose": "cintura",
+     "expressao": "radiante"
+    }
+   ],
+   "ilustra": [
+    {
+     "tipo": "texto",
+     "texto": "Juros sobre juros",
+     "destaque": "juros",
+     "forma": "marcador",
+     "em": "sobre"
+    },
+    {
+     "tipo": "icone",
+     "em": "rende",
+     "icones": [
+      {
+       "icone": "moeda",
+       "rotulo": "Dinheiro",
+       "em": "dinheiro"
+      },
+      {
+       "icone": "sobe",
+       "rotulo": "Rende",
+       "em": "rende"
+      },
+      {
+       "icone": "saco-de-dinheiro",
+       "rotulo": "Rende mais",
+       "em": "render."
+      }
+     ]
+    }
+   ],
+   "narracao": {
+    "audio": "narracao/aula-jacaiu/cena-02-91e93a8a.wav",
+    "duracaoSeg": 5.44,
+    "legendas": [
+     {
+      "texto": "Juros",
+      "inicioMs": 0,
+      "fimMs": 300
+     },
+     {
+      "texto": "compostos",
+      "inicioMs": 300,
+      "fimMs": 1020
+     },
+     {
+      "texto": "são",
+      "inicioMs": 1020,
+      "fimMs": 1160
+     },
+     {
+      "texto": "juros",
+      "inicioMs": 1160,
+      "fimMs": 1500
+     },
+     {
+      "texto": "sobre",
+      "inicioMs": 1500,
+      "fimMs": 1740
+     },
+     {
+      "texto": "juros:",
+      "inicioMs": 1740,
+      "fimMs": 2300
+     },
+     {
+      "texto": "o",
+      "inicioMs": 2540,
+      "fimMs": 2800
+     },
+     {
+      "texto": "que",
+      "inicioMs": 2800,
+      "fimMs": 2880
+     },
+     {
+      "texto": "o",
+      "inicioMs": 2880,
+      "fimMs": 2980
+     },
+     {
+      "texto": "seu",
+      "inicioMs": 2980,
+      "fimMs": 3100
+     },
+     {
+      "texto": "dinheiro",
+      "inicioMs": 3100,
+      "fimMs": 3400
+     },
+     {
+      "texto": "rende",
+      "inicioMs": 3400,
+      "fimMs": 3980
+     },
+     {
+      "texto": "também",
+      "inicioMs": 3980,
+      "fimMs": 4240
+     },
+     {
+      "texto": "passa",
+      "inicioMs": 4240,
+      "fimMs": 4760
+     },
+     {
+      "texto": "a",
+      "inicioMs": 4760,
+      "fimMs": 4880
+     },
+     {
+      "texto": "render",
+      "inicioMs": 4880,
+      "fimMs": 5120,
+      "fimDeFrase": true
+     }
+    ],
+    "boca": [
+     {
+      "inicio": 0,
+      "forma": "X"
+     },
+     {
+      "inicio": 0.01,
+      "forma": "F"
+     },
+     {
+      "inicio": 0.22,
+      "forma": "B"
+     },
+     {
+      "inicio": 0.29,
+      "forma": "E"
+     },
+     {
+      "inicio": 0.43,
+      "forma": "A"
+     },
+     {
+      "inicio": 0.51,
+      "forma": "E"
+     },
+     {
+      "inicio": 0.76,
+      "forma": "B"
+     },
+     {
+      "inicio": 1.11,
+      "forma": "E"
+     },
+     {
+      "inicio": 1.18,
+      "forma": "F"
+     },
+     {
+      "inicio": 1.32,
+      "forma": "B"
+     },
+     {
+      "inicio": 1.6,
+      "forma": "A"
+     },
+     {
+      "inicio": 1.68,
+      "forma": "B"
+     },
+     {
+      "inicio": 1.85,
+      "forma": "F"
+     },
+     {
+      "inicio": 2.34,
+      "forma": "B"
+     },
+     {
+      "inicio": 2.55,
+      "forma": "X"
+     },
+     {
+      "inicio": 2.68,
+      "forma": "B"
+     },
+     {
+      "inicio": 2.93,
+      "forma": "F"
+     },
+     {
+      "inicio": 3.19,
+      "forma": "E"
+     },
+     {
+      "inicio": 3.24,
+      "forma": "C"
+     },
+     {
+      "inicio": 3.42,
+      "forma": "F"
+     },
+     {
+      "inicio": 3.56,
+      "forma": "C"
+     },
+     {
+      "inicio": 3.7,
+      "forma": "B"
+     },
+     {
+      "inicio": 4.05,
+      "forma": "C"
+     },
+     {
+      "inicio": 4.12,
+      "forma": "A"
+     },
+     {
+      "inicio": 4.2,
+      "forma": "C"
+     },
+     {
+      "inicio": 4.31,
+      "forma": "B"
+     },
+     {
+      "inicio": 4.38,
+      "forma": "A"
+     },
+     {
+      "inicio": 4.46,
+      "forma": "C"
+     },
+     {
+      "inicio": 4.57,
+      "forma": "E"
+     },
+     {
+      "inicio": 4.64,
+      "forma": "B"
+     },
+     {
+      "inicio": 4.78,
+      "forma": "C"
+     },
+     {
+      "inicio": 4.92,
+      "forma": "B"
+     },
+     {
+      "inicio": 5.06,
+      "forma": "C"
+     },
+     {
+      "inicio": 5.2,
+      "forma": "B"
+     },
+     {
+      "inicio": 5.41,
+      "forma": "X"
+     }
+    ],
+    "chave": "[\"Juros compostos são juros sobre juros: o que o seu dinheiro rende também passa a render.\",\"pf_dora*0.5+bf_isabella*0.5\",1,true]"
+   }
+  },
+  {
+   "quem": "bia",
+   "fala": "Exemplo: você guarda cem reais e rende um por cento ao mês. No primeiro mês, ganha um real.",
+   "estados": {
+    "bia": {
+     "pose": "cintura",
+     "expressao": "neutra"
+    }
+   },
+   "acoes": [
+    {
+     "quem": "bia",
+     "em": "Exemplo",
+     "pose": "apontando"
+    },
+    {
+     "quem": "bia",
+     "em": "primeiro",
+     "pose": "explicando",
+     "expressao": "feliz"
+    }
+   ],
+   "ilustra": [
+    {
+     "tipo": "conta",
+     "em": "cem",
+     "passos": [
+      "R$ 100 × 1%",
+      {
+       "texto": "= R$ 1 de juros",
+       "em": "ganha"
+      }
+     ]
+    }
+   ],
+   "narracao": {
+    "audio": "narracao/aula-jacaiu/cena-03-477789e1.wav",
+    "duracaoSeg": 5.44,
+    "legendas": [
+     {
+      "texto": "Exemplo:",
+      "inicioMs": 0,
+      "fimMs": 480
+     },
+     {
+      "texto": "você",
+      "inicioMs": 640,
+      "fimMs": 780
+     },
+     {
+      "texto": "guarda",
+      "inicioMs": 780,
+      "fimMs": 1120
+     },
+     {
+      "texto": "cem",
+      "inicioMs": 1120,
+      "fimMs": 1240
+     },
+     {
+      "texto": "reais",
+      "inicioMs": 1680,
+      "fimMs": 1730
+     },
+     {
+      "texto": "e",
+      "inicioMs": 1680,
+      "fimMs": 1900
+     },
+     {
+      "texto": "rende",
+      "inicioMs": 1900,
+      "fimMs": 2300
+     },
+     {
+      "texto": "um",
+      "inicioMs": 2300,
+      "fimMs": 2350
+     },
+     {
+      "texto": "por",
+      "inicioMs": 2300,
+      "fimMs": 2350
+     },
+     {
+      "texto": "cento",
+      "inicioMs": 2300,
+      "fimMs": 2360
+     },
+     {
+      "texto": "ao",
+      "inicioMs": 2700,
+      "fimMs": 2960
+     },
+     {
+      "texto": "mês",
+      "inicioMs": 2960,
+      "fimMs": 3180,
+      "fimDeFrase": true
+     },
+     {
+      "texto": "No",
+      "inicioMs": 3620,
+      "fimMs": 3780
+     },
+     {
+      "texto": "primeiro",
+      "inicioMs": 3780,
+      "fimMs": 4140
+     },
+     {
+      "texto": "mês,",
+      "inicioMs": 4140,
+      "fimMs": 4500
+     },
+     {
+      "texto": "ganha",
+      "inicioMs": 4680,
+      "fimMs": 4880
+     },
+     {
+      "texto": "um",
+      "inicioMs": 4880,
+      "fimMs": 4980
+     },
+     {
+      "texto": "real",
+      "inicioMs": 5320,
+      "fimMs": 5370,
+      "fimDeFrase": true
+     }
+    ],
+    "boca": [
+     {
+      "inicio": 0,
+      "forma": "X"
+     },
+     {
+      "inicio": 0.01,
+      "forma": "B"
+     },
+     {
+      "inicio": 0.17,
+      "forma": "C"
+     },
+     {
+      "inicio": 0.24,
+      "forma": "B"
+     },
+     {
+      "inicio": 0.31,
+      "forma": "A"
+     },
+     {
+      "inicio": 0.43,
+      "forma": "B"
+     },
+     {
+      "inicio": 0.53,
+      "forma": "G"
+     },
+     {
+      "inicio": 0.6,
+      "forma": "B"
+     },
+     {
+      "inicio": 0.88,
+      "forma": "F"
+     },
+     {
+      "inicio": 0.95,
+      "forma": "B"
+     },
+     {
+      "inicio": 1.23,
+      "forma": "C"
+     },
+     {
+      "inicio": 1.51,
+      "forma": "E"
+     },
+     {
+      "inicio": 1.58,
+      "forma": "C"
+     },
+     {
+      "inicio": 1.72,
+      "forma": "B"
+     },
+     {
+      "inicio": 1.86,
+      "forma": "C"
+     },
+     {
+      "inicio": 2.05,
+      "forma": "E"
+     },
+     {
+      "inicio": 2.1,
+      "forma": "F"
+     },
+     {
+      "inicio": 2.28,
+      "forma": "A"
+     },
+     {
+      "inicio": 2.36,
+      "forma": "F"
+     },
+     {
+      "inicio": 2.46,
+      "forma": "B"
+     },
+     {
+      "inicio": 2.74,
+      "forma": "E"
+     },
+     {
+      "inicio": 2.88,
+      "forma": "F"
+     },
+     {
+      "inicio": 2.95,
+      "forma": "A"
+     },
+     {
+      "inicio": 3.03,
+      "forma": "C"
+     },
+     {
+      "inicio": 3.09,
+      "forma": "B"
+     },
+     {
+      "inicio": 3.69,
+      "forma": "A"
+     },
+     {
+      "inicio": 3.76,
+      "forma": "B"
+     },
+     {
+      "inicio": 3.93,
+      "forma": "A"
+     },
+     {
+      "inicio": 4.01,
+      "forma": "C"
+     },
+     {
+      "inicio": 4.07,
+      "forma": "F"
+     },
+     {
+      "inicio": 4.26,
+      "forma": "A"
+     },
+     {
+      "inicio": 4.35,
+      "forma": "C"
+     },
+     {
+      "inicio": 4.42,
+      "forma": "B"
+     },
+     {
+      "inicio": 4.56,
+      "forma": "C"
+     },
+     {
+      "inicio": 4.77,
+      "forma": "F"
+     },
+     {
+      "inicio": 4.91,
+      "forma": "C"
+     },
+     {
+      "inicio": 5.19,
+      "forma": "E"
+     },
+     {
+      "inicio": 5.4,
+      "forma": "X"
+     }
+    ],
+    "chave": "[\"Exemplo: você guarda cem reais e rende um por cento ao mês. No primeiro mês, ganha um real.\",\"pf_dora*0.5+bf_isabella*0.5\",1,true]"
+   }
+  },
+  {
+   "quem": "bia",
+   "fala": "No mês seguinte, o juro vem em cima de cento e um, não de cem. Parece pouco, mas não para.",
+   "estados": {
+    "bia": {
+     "pose": "explicando",
+     "expressao": "neutra"
+    }
+   },
+   "acoes": [
+    {
+     "quem": "bia",
+     "em": "pouco",
+     "pose": "ombros",
+     "expressao": "sem-graca"
+    },
+    {
+     "quem": "bia",
+     "em": "para",
+     "pose": "apontando",
+     "expressao": "radiante"
+    }
+   ],
+   "ilustra": [
+    {
+     "tipo": "conta",
+     "em": "seguinte",
+     "passos": [
+      "R$ 101 × 1%",
+      {
+       "texto": "= R$ 1,01 de juros",
+       "em": "cem."
+      }
+     ]
+    }
+   ],
+   "narracao": {
+    "audio": "narracao/aula-jacaiu/cena-04-151b8099.wav",
+    "duracaoSeg": 5.397,
+    "legendas": [
+     {
+      "texto": "No",
+      "inicioMs": 0,
+      "fimMs": 140
+     },
+     {
+      "texto": "mês",
+      "inicioMs": 140,
+      "fimMs": 280
+     },
+     {
+      "texto": "seguinte,",
+      "inicioMs": 280,
+      "fimMs": 660
+     },
+     {
+      "texto": "o",
+      "inicioMs": 920,
+      "fimMs": 1020
+     },
+     {
+      "texto": "juro",
+      "inicioMs": 1020,
+      "fimMs": 1260
+     },
+     {
+      "texto": "vem",
+      "inicioMs": 1260,
+      "fimMs": 1460
+     },
+     {
+      "texto": "em",
+      "inicioMs": 1460,
+      "fimMs": 1660
+     },
+     {
+      "texto": "cima",
+      "inicioMs": 1660,
+      "fimMs": 1940
+     },
+     {
+      "texto": "de",
+      "inicioMs": 1940,
+      "fimMs": 2120
+     },
+     {
+      "texto": "cento",
+      "inicioMs": 2120,
+      "fimMs": 2580
+     },
+     {
+      "texto": "e",
+      "inicioMs": 2580,
+      "fimMs": 2680
+     },
+     {
+      "texto": "um,",
+      "inicioMs": 2680,
+      "fimMs": 2760
+     },
+     {
+      "texto": "não",
+      "inicioMs": 2760,
+      "fimMs": 2940
+     },
+     {
+      "texto": "de",
+      "inicioMs": 2940,
+      "fimMs": 3160
+     },
+     {
+      "texto": "cem",
+      "inicioMs": 3160,
+      "fimMs": 3440,
+      "fimDeFrase": true
+     },
+     {
+      "texto": "Parece",
+      "inicioMs": 3740,
+      "fimMs": 4080
+     },
+     {
+      "texto": "pouco,",
+      "inicioMs": 4080,
+      "fimMs": 4520
+     },
+     {
+      "texto": "mas",
+      "inicioMs": 4680,
+      "fimMs": 4800
+     },
+     {
+      "texto": "não",
+      "inicioMs": 4800,
+      "fimMs": 4980
+     },
+     {
+      "texto": "para",
+      "inicioMs": 4980,
+      "fimMs": 5200,
+      "fimDeFrase": true
+     }
+    ],
+    "boca": [
+     {
+      "inicio": 0,
+      "forma": "X"
+     },
+     {
+      "inicio": 0.01,
+      "forma": "B"
+     },
+     {
+      "inicio": 0.06,
+      "forma": "F"
+     },
+     {
+      "inicio": 0.11,
+      "forma": "A"
+     },
+     {
+      "inicio": 0.19,
+      "forma": "C"
+     },
+     {
+      "inicio": 0.27,
+      "forma": "B"
+     },
+     {
+      "inicio": 0.9,
+      "forma": "F"
+     },
+     {
+      "inicio": 1.25,
+      "forma": "G"
+     },
+     {
+      "inicio": 1.32,
+      "forma": "C"
+     },
+     {
+      "inicio": 1.39,
+      "forma": "B"
+     },
+     {
+      "inicio": 1.46,
+      "forma": "C"
+     },
+     {
+      "inicio": 1.53,
+      "forma": "B"
+     },
+     {
+      "inicio": 1.88,
+      "forma": "A"
+     },
+     {
+      "inicio": 1.96,
+      "forma": "B"
+     },
+     {
+      "inicio": 2.22,
+      "forma": "C"
+     },
+     {
+      "inicio": 2.29,
+      "forma": "B"
+     },
+     {
+      "inicio": 2.36,
+      "forma": "F"
+     },
+     {
+      "inicio": 2.57,
+      "forma": "B"
+     },
+     {
+      "inicio": 2.64,
+      "forma": "F"
+     },
+     {
+      "inicio": 2.78,
+      "forma": "C"
+     },
+     {
+      "inicio": 2.92,
+      "forma": "B"
+     },
+     {
+      "inicio": 3.2,
+      "forma": "C"
+     },
+     {
+      "inicio": 3.34,
+      "forma": "B"
+     },
+     {
+      "inicio": 3.55,
+      "forma": "C"
+     },
+     {
+      "inicio": 3.87,
+      "forma": "B"
+     },
+     {
+      "inicio": 3.98,
+      "forma": "C"
+     },
+     {
+      "inicio": 4.05,
+      "forma": "B"
+     },
+     {
+      "inicio": 4.12,
+      "forma": "A"
+     },
+     {
+      "inicio": 4.2,
+      "forma": "F"
+     },
+     {
+      "inicio": 4.42,
+      "forma": "B"
+     },
+     {
+      "inicio": 4.63,
+      "forma": "A"
+     },
+     {
+      "inicio": 4.72,
+      "forma": "C"
+     },
+     {
+      "inicio": 4.77,
+      "forma": "B"
+     },
+     {
+      "inicio": 4.88,
+      "forma": "C"
+     },
+     {
+      "inicio": 4.95,
+      "forma": "A"
+     },
+     {
+      "inicio": 5.03,
+      "forma": "C"
+     },
+     {
+      "inicio": 5.17,
+      "forma": "B"
+     },
+     {
+      "inicio": 5.38,
+      "forma": "X"
+     }
+    ],
+    "chave": "[\"No mês seguinte, o juro vem em cima de cento e um, não de cem. Parece pouco, mas não para.\",\"pf_dora*0.5+bf_isabella*0.5\",1,true]"
+   }
+  },
+  {
+   "quem": "bia",
+   "fala": "Guardando cem por mês, em dez anos você põe doze mil reais do seu bolso.",
+   "camera": "close",
+   "estados": {
+    "bia": {
+     "pose": "explicando",
+     "expressao": "neutra"
+    }
+   },
+   "acoes": [
+    {
+     "quem": "bia",
+     "em": "doze",
+     "pose": "apontando",
+     "expressao": "surpresa"
+    }
+   ],
+   "ilustra": [
+    {
+     "tipo": "conta",
+     "em": "Guardando",
+     "passos": [
+      "R$ 100 × 120 meses",
+      {
+       "texto": "= R$ 12.000",
+       "em": "doze"
+      }
+     ]
+    }
+   ],
+   "narracao": {
+    "audio": "narracao/aula-jacaiu/cena-05-c8c903ce.wav",
+    "duracaoSeg": 4.608,
+    "legendas": [
+     {
+      "texto": "Guardando",
+      "inicioMs": 0,
+      "fimMs": 460
+     },
+     {
+      "texto": "cem",
+      "inicioMs": 460,
+      "fimMs": 740
+     },
+     {
+      "texto": "por",
+      "inicioMs": 740,
+      "fimMs": 980
+     },
+     {
+      "texto": "mês,",
+      "inicioMs": 980,
+      "fimMs": 1340
+     },
+     {
+      "texto": "em",
+      "inicioMs": 1660,
+      "fimMs": 1860
+     },
+     {
+      "texto": "dez",
+      "inicioMs": 1860,
+      "fimMs": 2120
+     },
+     {
+      "texto": "anos",
+      "inicioMs": 2120,
+      "fimMs": 2360
+     },
+     {
+      "texto": "você",
+      "inicioMs": 2360,
+      "fimMs": 2640
+     },
+     {
+      "texto": "põe",
+      "inicioMs": 2640,
+      "fimMs": 2980
+     },
+     {
+      "texto": "doze",
+      "inicioMs": 2980,
+      "fimMs": 3140
+     },
+     {
+      "texto": "mil",
+      "inicioMs": 3140,
+      "fimMs": 3400
+     },
+     {
+      "texto": "reais",
+      "inicioMs": 3400,
+      "fimMs": 3700
+     },
+     {
+      "texto": "do",
+      "inicioMs": 3700,
+      "fimMs": 3920
+     },
+     {
+      "texto": "seu",
+      "inicioMs": 3920,
+      "fimMs": 4080
+     },
+     {
+      "texto": "bolso",
+      "inicioMs": 4080,
+      "fimMs": 4500,
+      "fimDeFrase": true
+     }
+    ],
+    "boca": [
+     {
+      "inicio": 0,
+      "forma": "F"
+     },
+     {
+      "inicio": 0.07,
+      "forma": "C"
+     },
+     {
+      "inicio": 0.13,
+      "forma": "B"
+     },
+     {
+      "inicio": 0.27,
+      "forma": "C"
+     },
+     {
+      "inicio": 0.34,
+      "forma": "B"
+     },
+     {
+      "inicio": 0.62,
+      "forma": "C"
+     },
+     {
+      "inicio": 0.69,
+      "forma": "B"
+     },
+     {
+      "inicio": 0.76,
+      "forma": "A"
+     },
+     {
+      "inicio": 0.84,
+      "forma": "F"
+     },
+     {
+      "inicio": 0.94,
+      "forma": "B"
+     },
+     {
+      "inicio": 1.01,
+      "forma": "A"
+     },
+     {
+      "inicio": 1.09,
+      "forma": "C"
+     },
+     {
+      "inicio": 1.2,
+      "forma": "B"
+     },
+     {
+      "inicio": 1.41,
+      "forma": "C"
+     },
+     {
+      "inicio": 1.76,
+      "forma": "B"
+     },
+     {
+      "inicio": 1.9,
+      "forma": "C"
+     },
+     {
+      "inicio": 2.04,
+      "forma": "B"
+     },
+     {
+      "inicio": 2.11,
+      "forma": "C"
+     },
+     {
+      "inicio": 2.25,
+      "forma": "B"
+     },
+     {
+      "inicio": 2.46,
+      "forma": "F"
+     },
+     {
+      "inicio": 2.53,
+      "forma": "B"
+     },
+     {
+      "inicio": 2.67,
+      "forma": "A"
+     },
+     {
+      "inicio": 2.75,
+      "forma": "E"
+     },
+     {
+      "inicio": 3.11,
+      "forma": "B"
+     },
+     {
+      "inicio": 3.25,
+      "forma": "A"
+     },
+     {
+      "inicio": 3.33,
+      "forma": "F"
+     },
+     {
+      "inicio": 3.43,
+      "forma": "C"
+     },
+     {
+      "inicio": 3.78,
+      "forma": "B"
+     },
+     {
+      "inicio": 3.92,
+      "forma": "F"
+     },
+     {
+      "inicio": 4.06,
+      "forma": "A"
+     },
+     {
+      "inicio": 4.18,
+      "forma": "B"
+     },
+     {
+      "inicio": 4.58,
+      "forma": "X"
+     }
+    ],
+    "chave": "[\"Guardando cem por mês, em dez anos você põe doze mil reais do seu bolso.\",\"pf_dora*0.5+bf_isabella*0.5\",1,true]"
+   }
+  },
+  {
+   "quem": "bia",
+   "fala": "Mas o saldo chega a uns vinte e três mil. Os juros fizeram quase metade do dinheiro.",
+   "estados": {
+    "bia": {
+     "pose": "cintura",
+     "expressao": "radiante"
+    }
+   },
+   "acoes": [
+    {
+     "quem": "bia",
+     "em": "metade",
+     "pose": "comemorando",
+     "expressao": "radiante"
+    }
+   ],
+   "ilustra": [
+    {
+     "tipo": "grafico",
+     "em": "saldo",
+     "grafico": {
+      "tipo": "linha",
+      "titulo": "Saldo guardando R$ 100 por mês",
+      "unidade": "R$",
+      "casas": 0,
+      "fonte": "Exemplo de cálculo: 1% ao mês",
+      "pontos": [
+       {
+        "x": "0",
+        "y": 0
+       },
+       {
+        "x": "2 anos",
+        "y": 2697
+       },
+       {
+        "x": "4 anos",
+        "y": 6122
+       },
+       {
+        "x": "6 anos",
+        "y": 10471
+       },
+       {
+        "x": "8 anos",
+        "y": 15993
+       },
+       {
+        "x": "10 anos",
+        "y": 23004
+       }
+      ],
+      "destaque": {
+       "x": "10 anos",
+       "rotulo": "R$ 23 mil"
+      }
+     }
+    }
+   ],
+   "narracao": {
+    "audio": "narracao/aula-jacaiu/cena-06-cd3a6d1c.wav",
+    "duracaoSeg": 5.141,
+    "legendas": [
+     {
+      "texto": "Mas",
+      "inicioMs": 0,
+      "fimMs": 200
+     },
+     {
+      "texto": "o",
+      "inicioMs": 200,
+      "fimMs": 340
+     },
+     {
+      "texto": "saldo",
+      "inicioMs": 340,
+      "fimMs": 700
+     },
+     {
+      "texto": "chega",
+      "inicioMs": 700,
+      "fimMs": 1000
+     },
+     {
+      "texto": "a",
+      "inicioMs": 1000,
+      "fimMs": 1180
+     },
+     {
+      "texto": "uns",
+      "inicioMs": 1180,
+      "fimMs": 1300
+     },
+     {
+      "texto": "vinte",
+      "inicioMs": 1300,
+      "fimMs": 1600
+     },
+     {
+      "texto": "e",
+      "inicioMs": 1600,
+      "fimMs": 1780
+     },
+     {
+      "texto": "três",
+      "inicioMs": 1780,
+      "fimMs": 2060
+     },
+     {
+      "texto": "mil",
+      "inicioMs": 2060,
+      "fimMs": 2280,
+      "fimDeFrase": true
+     },
+     {
+      "texto": "Os",
+      "inicioMs": 2720,
+      "fimMs": 2960
+     },
+     {
+      "texto": "juros",
+      "inicioMs": 2960,
+      "fimMs": 3220
+     },
+     {
+      "texto": "fizeram",
+      "inicioMs": 3220,
+      "fimMs": 3700
+     },
+     {
+      "texto": "quase",
+      "inicioMs": 3700,
+      "fimMs": 3920
+     },
+     {
+      "texto": "metade",
+      "inicioMs": 3920,
+      "fimMs": 4420
+     },
+     {
+      "texto": "do",
+      "inicioMs": 4420,
+      "fimMs": 4560
+     },
+     {
+      "texto": "dinheiro",
+      "inicioMs": 4560,
+      "fimMs": 4800,
+      "fimDeFrase": true
+     }
+    ],
+    "boca": [
+     {
+      "inicio": 0,
+      "forma": "X"
+     },
+     {
+      "inicio": 0.01,
+      "forma": "B"
+     },
+     {
+      "inicio": 0.04,
+      "forma": "X"
+     },
+     {
+      "inicio": 0.06,
+      "forma": "A"
+     },
+     {
+      "inicio": 0.1,
+      "forma": "C"
+     },
+     {
+      "inicio": 0.14,
+      "forma": "B"
+     },
+     {
+      "inicio": 0.46,
+      "forma": "C"
+     },
+     {
+      "inicio": 0.53,
+      "forma": "B"
+     },
+     {
+      "inicio": 0.88,
+      "forma": "C"
+     },
+     {
+      "inicio": 1.16,
+      "forma": "E"
+     },
+     {
+      "inicio": 1.23,
+      "forma": "B"
+     },
+     {
+      "inicio": 1.3,
+      "forma": "A"
+     },
+     {
+      "inicio": 1.41,
+      "forma": "B"
+     },
+     {
+      "inicio": 1.89,
+      "forma": "C"
+     },
+     {
+      "inicio": 2.03,
+      "forma": "B"
+     },
+     {
+      "inicio": 2.1,
+      "forma": "A"
+     },
+     {
+      "inicio": 2.18,
+      "forma": "B"
+     },
+     {
+      "inicio": 2.29,
+      "forma": "F"
+     },
+     {
+      "inicio": 2.43,
+      "forma": "B"
+     },
+     {
+      "inicio": 2.84,
+      "forma": "C"
+     },
+     {
+      "inicio": 2.88,
+      "forma": "B"
+     },
+     {
+      "inicio": 3.09,
+      "forma": "F"
+     },
+     {
+      "inicio": 3.16,
+      "forma": "B"
+     },
+     {
+      "inicio": 3.65,
+      "forma": "A"
+     },
+     {
+      "inicio": 3.73,
+      "forma": "D"
+     },
+     {
+      "inicio": 3.89,
+      "forma": "B"
+     },
+     {
+      "inicio": 3.96,
+      "forma": "A"
+     },
+     {
+      "inicio": 4.02,
+      "forma": "B"
+     },
+     {
+      "inicio": 4.07,
+      "forma": "A"
+     },
+     {
+      "inicio": 4.12,
+      "forma": "C"
+     },
+     {
+      "inicio": 4.35,
+      "forma": "B"
+     },
+     {
+      "inicio": 4.7,
+      "forma": "C"
+     },
+     {
+      "inicio": 4.84,
+      "forma": "B"
+     },
+     {
+      "inicio": 5.12,
+      "forma": "X"
+     }
+    ],
+    "chave": "[\"Mas o saldo chega a uns vinte e três mil. Os juros fizeram quase metade do dinheiro.\",\"pf_dora*0.5+bf_isabella*0.5\",1,true]"
+   }
+  },
+  {
+   "quem": "bia",
+   "fala": "Cuidado: um por cento é só um exemplo. Antes, confira a taxa, o imposto e se tem garantia.",
+   "estados": {
+    "bia": {
+     "pose": "bracos-cruzados",
+     "expressao": "preocupada"
+    }
+   },
+   "acoes": [
+    {
+     "quem": "bia",
+     "em": "confira",
+     "pose": "apontando",
+     "expressao": "neutra"
+    }
+   ],
+   "ilustra": [
+    {
+     "tipo": "icone",
+     "em": "confira",
+     "icones": [
+      {
+       "icone": "porcentagem",
+       "rotulo": "Taxa",
+       "em": "taxa"
+      },
+      {
+       "icone": "imposto",
+       "rotulo": "Imposto",
+       "em": "imposto"
+      },
+      {
+       "icone": "escudo",
+       "rotulo": "Garantia",
+       "em": "garantia."
+      }
+     ]
+    }
+   ],
+   "narracao": {
+    "audio": "narracao/aula-jacaiu/cena-07-ad09d8af.wav",
+    "duracaoSeg": 5.547,
+    "legendas": [
+     {
+      "texto": "Cuidado:",
+      "inicioMs": 0,
+      "fimMs": 480
+     },
+     {
+      "texto": "um",
+      "inicioMs": 480,
+      "fimMs": 530
+     },
+     {
+      "texto": "por",
+      "inicioMs": 520,
+      "fimMs": 580
+     },
+     {
+      "texto": "cento",
+      "inicioMs": 580,
+      "fimMs": 680
+     },
+     {
+      "texto": "é",
+      "inicioMs": 1080,
+      "fimMs": 1340
+     },
+     {
+      "texto": "só",
+      "inicioMs": 1340,
+      "fimMs": 1420
+     },
+     {
+      "texto": "um",
+      "inicioMs": 1420,
+      "fimMs": 1560
+     },
+     {
+      "texto": "exemplo",
+      "inicioMs": 1560,
+      "fimMs": 1940,
+      "fimDeFrase": true
+     },
+     {
+      "texto": "Antes,",
+      "inicioMs": 2360,
+      "fimMs": 2740
+     },
+     {
+      "texto": "confira",
+      "inicioMs": 2980,
+      "fimMs": 3300
+     },
+     {
+      "texto": "a",
+      "inicioMs": 3300,
+      "fimMs": 3420
+     },
+     {
+      "texto": "taxa,",
+      "inicioMs": 3420,
+      "fimMs": 3840
+     },
+     {
+      "texto": "o",
+      "inicioMs": 3920,
+      "fimMs": 3970
+     },
+     {
+      "texto": "imposto",
+      "inicioMs": 3960,
+      "fimMs": 4400
+     },
+     {
+      "texto": "e",
+      "inicioMs": 4400,
+      "fimMs": 4560
+     },
+     {
+      "texto": "se",
+      "inicioMs": 4560,
+      "fimMs": 4640
+     },
+     {
+      "texto": "tem",
+      "inicioMs": 4640,
+      "fimMs": 4820
+     },
+     {
+      "texto": "garantia",
+      "inicioMs": 4820,
+      "fimMs": 5420,
+      "fimDeFrase": true
+     }
+    ],
+    "boca": [
+     {
+      "inicio": 0,
+      "forma": "B"
+     },
+     {
+      "inicio": 0.14,
+      "forma": "C"
+     },
+     {
+      "inicio": 0.33,
+      "forma": "E"
+     },
+     {
+      "inicio": 0.38,
+      "forma": "F"
+     },
+     {
+      "inicio": 0.56,
+      "forma": "A"
+     },
+     {
+      "inicio": 0.65,
+      "forma": "F"
+     },
+     {
+      "inicio": 0.76,
+      "forma": "B"
+     },
+     {
+      "inicio": 0.97,
+      "forma": "C"
+     },
+     {
+      "inicio": 1.04,
+      "forma": "B"
+     },
+     {
+      "inicio": 1.11,
+      "forma": "C"
+     },
+     {
+      "inicio": 1.25,
+      "forma": "B"
+     },
+     {
+      "inicio": 1.39,
+      "forma": "E"
+     },
+     {
+      "inicio": 1.46,
+      "forma": "F"
+     },
+     {
+      "inicio": 1.53,
+      "forma": "B"
+     },
+     {
+      "inicio": 1.67,
+      "forma": "C"
+     },
+     {
+      "inicio": 1.74,
+      "forma": "B"
+     },
+     {
+      "inicio": 1.81,
+      "forma": "A"
+     },
+     {
+      "inicio": 1.96,
+      "forma": "B"
+     },
+     {
+      "inicio": 2.3,
+      "forma": "X"
+     },
+     {
+      "inicio": 2.48,
+      "forma": "B"
+     },
+     {
+      "inicio": 2.54,
+      "forma": "C"
+     },
+     {
+      "inicio": 2.59,
+      "forma": "B"
+     },
+     {
+      "inicio": 2.87,
+      "forma": "E"
+     },
+     {
+      "inicio": 3.01,
+      "forma": "G"
+     },
+     {
+      "inicio": 3.15,
+      "forma": "B"
+     },
+     {
+      "inicio": 3.22,
+      "forma": "C"
+     },
+     {
+      "inicio": 3.36,
+      "forma": "B"
+     },
+     {
+      "inicio": 3.5,
+      "forma": "C"
+     },
+     {
+      "inicio": 3.64,
+      "forma": "B"
+     },
+     {
+      "inicio": 3.78,
+      "forma": "E"
+     },
+     {
+      "inicio": 3.85,
+      "forma": "F"
+     },
+     {
+      "inicio": 3.92,
+      "forma": "B"
+     },
+     {
+      "inicio": 3.99,
+      "forma": "A"
+     },
+     {
+      "inicio": 4.07,
+      "forma": "F"
+     },
+     {
+      "inicio": 4.25,
+      "forma": "B"
+     },
+     {
+      "inicio": 4.88,
+      "forma": "C"
+     },
+     {
+      "inicio": 4.95,
+      "forma": "B"
+     },
+     {
+      "inicio": 5.51,
+      "forma": "X"
+     }
+    ],
+    "chave": "[\"Cuidado: um por cento é só um exemplo. Antes, confira a taxa, o imposto e se tem garantia.\",\"pf_dora*0.5+bf_isabella*0.5\",1,true]"
+   }
+  },
+  {
+   "quem": "bia",
+   "fala": "Resumo: comece cedo, mesmo com pouco. Quem faz o trabalho pesado é o tempo.",
+   "estados": {
+    "bia": {
+     "pose": "explicando",
+     "expressao": "feliz"
+    }
+   },
+   "acoes": [
+    {
+     "quem": "bia",
+     "em": "tempo",
+     "pose": "comemorando",
+     "expressao": "radiante"
+    }
+   ],
+   "ilustra": [
+    {
+     "tipo": "texto",
+     "texto": "Comece cedo",
+     "destaque": "cedo",
+     "forma": "sticker",
+     "em": "cedo"
+    }
+   ],
+   "narracao": {
+    "audio": "narracao/aula-jacaiu/cena-08-9a1a45a0.wav",
+    "duracaoSeg": 4.651,
+    "legendas": [
+     {
+      "texto": "Resumo:",
+      "inicioMs": 0,
+      "fimMs": 440
+     },
+     {
+      "texto": "comece",
+      "inicioMs": 560,
+      "fimMs": 860
+     },
+     {
+      "texto": "cedo,",
+      "inicioMs": 860,
+      "fimMs": 1260
+     },
+     {
+      "texto": "mesmo",
+      "inicioMs": 1340,
+      "fimMs": 1540
+     },
+     {
+      "texto": "com",
+      "inicioMs": 1540,
+      "fimMs": 1760
+     },
+     {
+      "texto": "pouco",
+      "inicioMs": 1760,
+      "fimMs": 2140,
+      "fimDeFrase": true
+     },
+     {
+      "texto": "Quem",
+      "inicioMs": 2520,
+      "fimMs": 2760
+     },
+     {
+      "texto": "faz",
+      "inicioMs": 2760,
+      "fimMs": 3060
+     },
+     {
+      "texto": "o",
+      "inicioMs": 3060,
+      "fimMs": 3160
+     },
+     {
+      "texto": "trabalho",
+      "inicioMs": 3160,
+      "fimMs": 3460
+     },
+     {
+      "texto": "pesado",
+      "inicioMs": 3460,
+      "fimMs": 4000
+     },
+     {
+      "texto": "é",
+      "inicioMs": 4000,
+      "fimMs": 4060
+     },
+     {
+      "texto": "o",
+      "inicioMs": 4060,
+      "fimMs": 4110
+     },
+     {
+      "texto": "tempo",
+      "inicioMs": 4100,
+      "fimMs": 4340,
+      "fimDeFrase": true
+     }
+    ],
+    "boca": [
+     {
+      "inicio": 0,
+      "forma": "B"
+     },
+     {
+      "inicio": 0.25,
+      "forma": "E"
+     },
+     {
+      "inicio": 0.32,
+      "forma": "A"
+     },
+     {
+      "inicio": 0.4,
+      "forma": "E"
+     },
+     {
+      "inicio": 0.47,
+      "forma": "D"
+     },
+     {
+      "inicio": 0.56,
+      "forma": "C"
+     },
+     {
+      "inicio": 0.6,
+      "forma": "A"
+     },
+     {
+      "inicio": 0.68,
+      "forma": "C"
+     },
+     {
+      "inicio": 0.75,
+      "forma": "B"
+     },
+     {
+      "inicio": 1.02,
+      "forma": "C"
+     },
+     {
+      "inicio": 1.09,
+      "forma": "F"
+     },
+     {
+      "inicio": 1.3,
+      "forma": "A"
+     },
+     {
+      "inicio": 1.38,
+      "forma": "C"
+     },
+     {
+      "inicio": 1.44,
+      "forma": "B"
+     },
+     {
+      "inicio": 1.5,
+      "forma": "A"
+     },
+     {
+      "inicio": 1.58,
+      "forma": "E"
+     },
+     {
+      "inicio": 1.72,
+      "forma": "A"
+     },
+     {
+      "inicio": 1.8,
+      "forma": "F"
+     },
+     {
+      "inicio": 1.95,
+      "forma": "E"
+     },
+     {
+      "inicio": 2.23,
+      "forma": "B"
+     },
+     {
+      "inicio": 2.58,
+      "forma": "C"
+     },
+     {
+      "inicio": 2.72,
+      "forma": "B"
+     },
+     {
+      "inicio": 2.86,
+      "forma": "G"
+     },
+     {
+      "inicio": 2.93,
+      "forma": "C"
+     },
+     {
+      "inicio": 3,
+      "forma": "B"
+     },
+     {
+      "inicio": 3.14,
+      "forma": "C"
+     },
+     {
+      "inicio": 3.21,
+      "forma": "A"
+     },
+     {
+      "inicio": 3.29,
+      "forma": "C"
+     },
+     {
+      "inicio": 3.39,
+      "forma": "B"
+     },
+     {
+      "inicio": 3.46,
+      "forma": "A"
+     },
+     {
+      "inicio": 3.54,
+      "forma": "B"
+     },
+     {
+      "inicio": 3.75,
+      "forma": "C"
+     },
+     {
+      "inicio": 3.82,
+      "forma": "B"
+     },
+     {
+      "inicio": 3.89,
+      "forma": "E"
+     },
+     {
+      "inicio": 4.03,
+      "forma": "B"
+     },
+     {
+      "inicio": 4.1,
+      "forma": "C"
+     },
+     {
+      "inicio": 4.24,
+      "forma": "B"
+     },
+     {
+      "inicio": 4.31,
+      "forma": "A"
+     },
+     {
+      "inicio": 4.47,
+      "forma": "B"
+     },
+     {
+      "inicio": 4.63,
+      "forma": "X"
+     }
+    ],
+    "chave": "[\"Resumo: comece cedo, mesmo com pouco. Quem faz o trabalho pesado é o tempo.\",\"pf_dora*0.5+bf_isabella*0.5\",1,true]"
+   }
+  }
+ ],
+ "elenco": [
+  {
+   "id": "bia",
+   "nome": "Bia",
+   "voz": "feminina-9",
+   "visual": {
+    "pele": "#C98B62",
+    "cabelo": "#1F1A1A",
+    "roupa": "#3B82F6",
+    "calca": "#1E3A5F",
+    "sapato": "#2B2B2B",
+    "penteado": "ondulado",
+    "roupaEstilo": "blusa",
+    "mangaLonga": false,
+    "oculos": true,
+    "tiara": false,
+    "faixa": ""
+   }
+  }
+ ]
+}

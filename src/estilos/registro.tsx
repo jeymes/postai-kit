@@ -4,6 +4,7 @@ import { z } from "zod";
 import { FundoNoite, FundoPapel, VeuDeNoite } from "../componentes/cenarios/FundoNoite";
 import { Boneco, type Desenho, type FormaDaBoca, type Momento, type Palavra, type Visual } from "../componentes/personagens/Boneco";
 import { Palito } from "../componentes/personagens/Palito";
+import type { Momento2D } from "../componentes/personagens/movimento";
 import { Liso } from "../componentes/personagens/Liso";
 import { FundoLousa, FundoNeon, FundoQuadrinhos } from "../componentes/cenarios/FundosDosEstilos";
 import { CENARIOS_SEM_HISTORIA } from "../componentes/cenarios/Cenarios";
@@ -43,8 +44,11 @@ export type Fundo = (typeof FUNDOS)[number];
 export type PropsDoPersonagem = {
   visual: Visual;
   desenho?: Desenho;
-  momentos: Momento[];
+  momentos: Array<Momento | Momento2D>;
   palavras: Palavra[];
+  /** Vida e olhar (o Conversa liga): ver Boneco */
+  vida?: boolean;
+  olhar?: Palavra[];
   boca?: FormaDaBoca[];
   altura: number;
   espelhar?: boolean;

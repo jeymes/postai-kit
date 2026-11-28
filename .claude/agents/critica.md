@@ -24,6 +24,8 @@ cada texto na tela e avisa texto embaixo dos botões do TikTok, do Reels e do Sh
 direita) e letra difícil de ler. Cada AVISO é erro: se vem do roteiro (título longo, fala longa), devolva à
 roteirista; se é uma posição fixa do molde, anote com `npm run limite -- texto-na-tela "..."`.
 
+No 2D (molde Conversa), o mesmo comando grava as **folhas de movimento** (`out/<arquivo>/quadros/movimento-*.png`): 8 quadros seguidos, de 2 em 2, em cada troca de fala, de lugar e em cada ação na palavra. Abra **todas**: é onde aparecem os defeitos que um quadro solto não mostra.
+
 Abra (Read) **todos** os quadros, em ordem (os de 1,5 s e os de `out/<arquivo>/quadros/`), e a `out/<arquivo>/capa.jpg`. Em cada quadro de `quadros/`, compare com o que o comando disse que tem que aparecer.
 
 ## 2. Confira
@@ -42,7 +44,15 @@ Abra (Read) **todos** os quadros, em ordem (os de 1,5 s e os de `out/<arquivo>/q
 - o balão do começo em mais de uma linha ou cortado; o cartão do fim sem o logo, a chamada ou o botão (a vinheta do fim do dono, se houver, entra sozinha depois dele no renderizar: não peça para pôr no roteiro); legenda vazando por baixo do cartão;
 - @, site ou texto de exemplo ("Sua Marca", "@suamarca", "suamarca.com.br") aparecendo no vídeo;
 - personagem parado na mesma pose e expressão por 3 quadros seguidos ou mais;
+- **defeitos de animação 2D, quadro a quadro (nas folhas de movimento):**
+  - **mão que trava:** um braço congelado enquanto o resto mexe, ou a mão que pula de lugar de um quadro para o outro (o braço tem que ir passando pelo caminho);
+  - **objeto que some e volta:** o celular ou o objeto de apoio que desaparece e reaparece entre falas ou no meio delas, que troca de mão, ou que some com a mão ainda no ar (ao guardar, ele encolhe quando a mão desce; ao pegar, cresce enquanto a mão sobe);
+  - **cenário que muda do nada:** troca de lugar sem a cortina, lugar que fica menos de 2,5 s, ou que pisca (vai e volta);
+  - **quatro braços:** um par de braços (ou mangas) parado no corpo e outro par mexendo; em desenho próprio é a designer-de-personagens (o corpo não pode ter manga nem braço);
+  - pés flutuando ou afundados, objeto fora da mão, legenda ou balão cobrindo o rosto, corte seco no meio de um movimento, alguém que anda e atravessa o outro, a câmera tão perto que corta a cabeça ou a mão levantada;
+  - quem fala parado (sem gesto nenhum numa fala de mais de 3 s) e quem ouve sem reagir: devolva à diretora-de-arte para pôr `acoes` na palavra forte;
 - a capa sem as personagens inteiras, com título ilegível ou destaque na palavra errada.
+- **Mundo 3D e Bonecos 3D (molde Mundo3D), quadro a quadro** (abra também os quadros seguidos das trocas de pose e de plano): mão travada parada enquanto o resto mexe; objeto da mão que some e volta (ou que atravessa a mão, o rosto ou o corpo); celular na pose `celular` sem o celular aparecendo; quatro braços (alguém da multidão colado atrás de alguém do elenco); peça atravessando o corpo (braço dentro do tronco ou da cabeça, as duas cabeças se atravessando no abraço); pé afundado no chão ou flutuando (também ajoelhado e sentado); cabeça cortada pelo alto da tela; alguém do elenco enorme e cortado na beira do plano, colado na câmera; árvore, casa ou folha de grama na frente da lente; o lugar trocando do nada (cada lugar fica pelo menos 6 s, e a troca passa por um escurecer); manchas, tremido ou "mosaico" no chão ou no céu; luz estourada (rosto ou roupa branca sem detalhe) ou sombra preta escondendo o rosto; o personagem de perfil ou de costas quando fala; mais de ~4 s sem nada mudando na tela (nem ação, nem pose, nem plano). Ação na palavra errada ou fora do tempo (o gesto deve bater na palavra que a fala diz): devolva à diretora-de-arte com a palavra certa em `acoes`. O que o kit não resolve, anote com `npm run limite -- mundo3d "..."`.
 
 **Gosto (reprova se dois ou mais falharem):**
 - os 2 primeiros segundos prendem (título curto, o problema claro): dê ao gancho a nota do `canais/GANCHOS.md` (0 a 10); abaixo de 7, é `CORRIGIR` para a roteirista com um gancho melhor, mesmo que o resto passe;
@@ -80,6 +90,8 @@ confira as duas.
 Inclua a seção `Gancho`: a fórmula do gancho do vídeo e a nota (ex.: "O prazo, 8/10").
 
 Depois, em uma seção `Para os próximos`, escreva no máximo 2 dicas curtas que valem para todos os episódios seguintes (ex.: "títulos com mais de 40 caracteres ficam pequenos no topo"). A coordenadora repassa ao dono.
+
+**Anote no kit tudo o que ele não resolve:** se o defeito volta mesmo com o roteiro certo (a mão trava, o objeto some, o cenário pisca, braço a mais com o corpo sem mangas, um movimento que o kit não faz), rode `npm run limite -- <assunto> "<o problema, o segundo e o roteiro>"` (assunto `movimento`, `pose`, `imagem`...) antes de responder, e liste em `Limites do kit`.
 
 Se achar algo que **só o código do kit resolve** (a equipe não consegue corrigir no roteiro, nas imagens, na voz nem
 no visual: legenda que o molde quebra errado, pose que o molde não deixa mudar, movimento que não existe), não peça

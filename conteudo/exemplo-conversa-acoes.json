@@ -1,0 +1,230 @@
+{
+ "molde": "Conversa",
+ "titulo": "POV: o pai achou a surpresa",
+ "elenco": [
+  {
+   "id": "carlos",
+   "nome": "Seu Carlos",
+   "voz": "masculina-7",
+   "tipo": "pessoa",
+   "visual": {
+    "pele": "#C9906A",
+    "cabelo": "#5A5A5A",
+    "roupa": "#5B6E8C",
+    "calca": "#2E3446",
+    "sapato": "#2B2B2B",
+    "penteado": "curto",
+    "roupaEstilo": "blusa",
+    "mangaLonga": true,
+    "oculos": false,
+    "tiara": false,
+    "faixa": ""
+   }
+  },
+  {
+   "id": "davi",
+   "nome": "Davi",
+   "voz": "masculina-11",
+   "tipo": "pessoa",
+   "visual": {
+    "pele": "#8D5A3B",
+    "cabelo": "#1A1A1A",
+    "roupa": "#3FA7D6",
+    "calca": "#2E3A4F",
+    "sapato": "#2B2B2B",
+    "penteado": "curto",
+    "roupaEstilo": "blusa",
+    "mangaLonga": false,
+    "oculos": true,
+    "tiara": false,
+    "faixa": ""
+   }
+  }
+ ],
+ "cenario": "cozinha",
+ "cenas": [
+  {
+   "quem": "carlos",
+   "fala": "Filho, achei esse presente escondido no armário.",
+   "estados": {
+    "carlos": {
+     "pose": "normal",
+     "expressao": "surpresa"
+    },
+    "davi": {
+     "pose": "normal",
+     "expressao": "neutra"
+    }
+   },
+   "objetos": [
+    {
+     "quem": "carlos",
+     "tipo": "presente"
+    }
+   ],
+   "acoes": [
+    {
+     "quem": "carlos",
+     "em": "presente",
+     "pose": "explicando"
+    },
+    {
+     "quem": "davi",
+     "em": "escondido",
+     "acao": "virar",
+     "expressao": "sem-graca"
+    },
+    {
+     "quem": "davi",
+     "em": "armário",
+     "pose": "queixo"
+    }
+   ]
+  },
+  {
+   "quem": "davi",
+   "fala": "Pai, não era pra você ver isso agora.",
+   "estados": {
+    "carlos": {
+     "pose": "cintura",
+     "expressao": "brava"
+    },
+    "davi": {
+     "pose": "ombros",
+     "expressao": "sem-graca"
+    }
+   },
+   "acoes": [
+    {
+     "quem": "davi",
+     "em": "Pai",
+     "acao": "desvirar"
+    },
+    {
+     "quem": "carlos",
+     "em": "ver",
+     "pose": "bracos-cruzados"
+    }
+   ]
+  },
+  {
+   "quem": "carlos",
+   "fala": "Então me explica direitinho o que é isso.",
+   "estados": {
+    "carlos": {
+     "pose": "apontando",
+     "expressao": "brava"
+    },
+    "davi": {
+     "pose": "normal",
+     "expressao": "preocupada"
+    }
+   },
+   "acoes": [
+    {
+     "quem": "davi",
+     "em": "direitinho",
+     "acao": "pegar-celular",
+     "expressao": "neutra"
+    },
+    {
+     "quem": "carlos",
+     "em": "isso",
+     "acao": "andar-perto"
+    }
+   ]
+  },
+  {
+   "fala": "Davi mostrou a mensagem no celular e o pai caiu sentado.",
+   "estados": {
+    "carlos": {
+     "pose": "normal",
+     "expressao": "surpresa"
+    },
+    "davi": {
+     "pose": "celular",
+     "expressao": "feliz"
+    }
+   },
+   "cenario": "sala",
+   "acoes": [
+    {
+     "quem": "carlos",
+     "em": "caiu",
+     "acao": "cair-sentado",
+     "expressao": "radiante"
+    },
+    {
+     "quem": "davi",
+     "em": "pai",
+     "acao": "guardar-celular"
+    }
+   ]
+  },
+  {
+   "quem": "carlos",
+   "fala": "Uma festa surpresa pra mim? Eu nem acredito!",
+   "estados": {
+    "carlos": {
+     "pose": "sentado",
+     "expressao": "radiante"
+    },
+    "davi": {
+     "pose": "comemorando",
+     "expressao": "radiante"
+    }
+   },
+   "acoes": [
+    {
+     "quem": "carlos",
+     "em": "acredito",
+     "acao": "levantar"
+    },
+    {
+     "quem": "davi",
+     "em": "festa",
+     "acao": "pular"
+    }
+   ]
+  },
+  {
+   "quem": "davi",
+   "fala": "Agora finge que não viu nada, tá bom?",
+   "estados": {
+    "carlos": {
+     "pose": "acenando",
+     "expressao": "feliz"
+    },
+    "davi": {
+     "pose": "maos-juntas",
+     "expressao": "sem-graca"
+    }
+   },
+   "acoes": [
+    {
+     "quem": "carlos",
+     "em": "nada",
+     "acao": "costas"
+    },
+    {
+     "quem": "davi",
+     "em": "bom",
+     "acao": "tremer",
+     "expressao": "medo"
+    }
+   ]
+  }
+ ],
+ "ctaInicial": "Marca o seu pai",
+ "ctaFinal": "Organize a festa no Laços",
+ "botaoFinal": "Link na bio 👆",
+ "capa": {
+  "titulo": "O pai achou a surpresa",
+  "destaque": "surpresa"
+ },
+ "post": {
+  "titulo": "t",
+  "legenda": "t"
+ },
+ "episodio": 3
+}

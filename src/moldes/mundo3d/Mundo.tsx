@@ -1,6 +1,10 @@
+import { useThree } from "@react-three/fiber";
 import React, { useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
-import { PALETAS, type Ambiente, type Paleta } from "./ambientes";
+import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
+import { sorteio } from "./animacao";
+import { renderPorSoftware } from "./BonecoDePecas";
+import { luzDaHora, PALETAS, type Ambiente, type Hora, type Paleta } from "./ambientes";
 
 // O mundo 3D low-poly do molde Mundo3D (protótipo, 18/11/2026): campo, rio,
 // ponte de madeira com cerca, árvores, montanhas, tendas, nuvens e grama.
@@ -9,40 +13,189 @@ import { PALETAS, type Ambiente, type Paleta } from "./ambientes";
 //
 // Medidas em "metros": o chão é y = 0; o rio corre no eixo x; a ponte cruza o
 // rio no x = 0.
+//
+// 27/11/2026 (luz de cinema): céu em degradê com o brilho do sol, sol com sombra
+// de verdade (macia), luz do céu, contraluz que desenha a borda dos bonecos,
+// chão com manchas (sem a cor chapada), a semente do episódio (as árvores, as
+// casas e as pedras mudam de lugar a cada vídeo) e nada no caminho da câmera
+// (o cenário recebe sombra, mas só os bonecos e os objetos fazem sombra: no render
+// da nuvem, por software, a sombra de tudo dobrava o tempo)
+// (antes, uma árvore da frente podia tapar o plano inteiro).
+
+/** Onde não pode ter nada (o caminho da câmera): true = livre */
+export type Livre = (x: number, z: number) => boolean;
+const sempre: Livre = () => true;
+/** Camadas no chão (rio, margem, tapete): um pouco acima e "puxadas" para a frente, sem tremer de longe */
+const deitado = { polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 } as const;
 
 export const RIO = { z: -7, largura: 5 };
 export const PONTE = { meiaLargura: 1.3, z1: -10.6, z2: -3.4, altura: 0.62 };
 
-/** Sorteio com semente (mulberry32): o mesmo número, a mesma sequência. */
-export function sorteio(semente: number) {
-  let a = semente >>> 0;
-  return () => {
-    a = (a + 0x6d2b79f5) | 0;
-    let t = Math.imul(a ^ (a >>> 15), 1 | a);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
+/** Sorteio com semente (mulberry32): o mesmo número, a mesma sequência (fica em animacao.ts, sem React) */
+export { sorteio };
+
+/** As manchas do chão (claro e escuro, de leve), repetidas: o chão não fica de uma cor só */
+let texturaDoChao: THREE.CanvasTexture | null = null;
+function manchas() {
+  if (texturaDoChao) return texturaDoChao;
+  const c = document.createElement("canvas");
+  c.width = 256;
+  c.height = 256;
+  const ctx = c.getContext("2d");
+  if (ctx) {
+    ctx.fillStyle = "#EDEDED";
+    ctx.fillRect(0, 0, 256, 256);
+    const r = sorteio(99);
+    for (let i = 0; i < 260; i++) {
+      const claro = r() < 0.45;
+      // Manchas leves (antes, as escuras viravam "poças" no plano aberto)
+      ctx.fillStyle = claro ? `rgba(255,255,255,${0.06 + r() * 0.08})` : `rgba(60,50,40,${0.015 + r() * 0.03})`;
+      const x = r() * 256;
+      const y = r() * 256;
+      const raio = 4 + r() * 26;
+      // Repete nas bordas (a textura emenda sem costura)
+      for (const dx of [-256, 0, 256])
+        for (const dy of [-256, 0, 256]) {
+          ctx.beginPath();
+          ctx.ellipse(x + dx, y + dy, raio, raio * (0.5 + r() * 0.5), r() * 3, 0, Math.PI * 2);
+          ctx.fill();
+        }
+    }
+  }
+  texturaDoChao = new THREE.CanvasTexture(c);
+  texturaDoChao.wrapS = THREE.RepeatWrapping;
+  texturaDoChao.wrapT = THREE.RepeatWrapping;
+  texturaDoChao.repeat.set(110, 110);
+  texturaDoChao.colorSpace = THREE.SRGBColorSpace;
+  texturaDoChao.anisotropy = 8;
+  return texturaDoChao;
 }
 
 const Chao: React.FC<{ cor: string }> = ({ cor }) => (
   <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
     <planeGeometry args={[400, 400]} />
-    <meshStandardMaterial color={cor} roughness={1} />
+    <meshStandardMaterial color={cor} map={manchas()} roughness={0.95} />
   </mesh>
 );
+
+/** O céu: degradê do horizonte para o alto, com o brilho em volta do sol */
+const Ceu: React.FC<{ topo: string; horizonte: string; sol: [number, number, number]; corDoSol: string }> = ({ topo, horizonte, sol, corDoSol }) => {
+  const material = useMemo(
+    () =>
+      new THREE.ShaderMaterial({
+        side: THREE.BackSide,
+        depthWrite: false,
+        fog: false,
+        uniforms: {
+          topo: { value: new THREE.Color(topo) },
+          horizonte: { value: new THREE.Color(horizonte) },
+          corDoSol: { value: new THREE.Color(corDoSol) },
+          sol: { value: new THREE.Vector3(...sol).normalize() },
+        },
+        vertexShader: `varying vec3 vDir; void main() { vDir = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+        fragmentShader: `uniform vec3 topo; uniform vec3 horizonte; uniform vec3 corDoSol; uniform vec3 sol; varying vec3 vDir;
+          void main() {
+            float h = max(vDir.y, 0.0);
+            vec3 cor = mix(horizonte, topo, pow(h, 0.55));
+            float s = max(dot(normalize(vDir), sol), 0.0);
+            cor += corDoSol * (pow(s, 24.0) * 0.35 + pow(s, 400.0) * 1.2);
+            gl_FragColor = vec4(cor, 1.0);
+            #include <tonemapping_fragment>
+            #include <colorspace_fragment>
+          }`,
+      }),
+    [topo, horizonte, sol, corDoSol],
+  );
+  return (
+    <mesh scale={320} material={material} renderOrder={-1}>
+      <sphereGeometry args={[1, 32, 16]} />
+    </mesh>
+  );
+};
+
+/** O reflexo macio do ambiente (uma sala clara, feita uma vez): o material ganha volume */
+const Reflexo: React.FC<{ forca: number }> = ({ forca }) => {
+  const { gl, scene } = useThree();
+  // Por software (a nuvem), sem o reflexo: ler o mapa em cada pixel dobrava o tempo dos planos de perto
+  const software = useMemo(() => {
+    const ctx = gl.getContext();
+    const info = ctx.getExtension("WEBGL_debug_renderer_info");
+    return /swiftshader|software|llvmpipe/i.test(String(info ? ctx.getParameter(info.UNMASKED_RENDERER_WEBGL) : ctx.getParameter(ctx.RENDERER)));
+  }, [gl]);
+  useMemo(() => {
+    renderPorSoftware(software);
+    if (software) return null;
+    const gerador = new THREE.PMREMGenerator(gl);
+    const textura = gerador.fromScene(new RoomEnvironment(), 0.04).texture;
+    gerador.dispose();
+    scene.environment = textura;
+    return textura;
+  }, [gl, scene, software]);
+  scene.environmentIntensity = forca;
+  return null;
+};
+
+/**
+ * As luzes de cinema: o sol (com sombra macia que acompanha onde a cena acontece),
+ * a luz do céu (preenche as sombras) e a contraluz por trás (desenha a borda).
+ */
+const Luzes: React.FC<{ hora: ReturnType<typeof luzDaHora>; centro: [number, number]; chao: string; forcaDoCeu?: number }> = ({ hora, centro, chao, forcaDoCeu = 1 }) => {
+  const alvo = useMemo(() => new THREE.Object3D(), []);
+  // Na nuvem o render é por software (SwiftShader): a sombra fica menor (1024) para não dobrar o tempo
+  const { gl } = useThree();
+  const tamanho = useMemo(() => {
+    const ctx = gl.getContext();
+    const info = ctx.getExtension("WEBGL_debug_renderer_info");
+    const nome = String(info ? ctx.getParameter(info.UNMASKED_RENDERER_WEBGL) : ctx.getParameter(ctx.RENDERER));
+    const software = /swiftshader|software|llvmpipe/i.test(nome);
+    // Por software, a sombra com 1 amostra (a filtrada lia o mapa 4 vezes em cada pixel do chão)
+    if (software) gl.shadowMap.type = THREE.BasicShadowMap;
+    return software ? 1024 : 2048;
+  }, [gl]);
+  alvo.position.set(centro[0], 0, centro[1]);
+  alvo.updateMatrixWorld();
+  const d = hora.direcaoDoSol;
+  const n = Math.hypot(...d);
+  const sol: [number, number, number] = [centro[0] + (d[0] / n) * 40, (d[1] / n) * 40, centro[1] + (d[2] / n) * 40];
+  return (
+    <>
+      <primitive object={alvo} />
+      <directionalLight
+        position={sol}
+        target={alvo}
+        intensity={hora.forcaDoSol}
+        color={hora.sol}
+        castShadow
+        shadow-mapSize-width={tamanho}
+        shadow-mapSize-height={tamanho}
+        shadow-camera-left={-11}
+        shadow-camera-right={11}
+        shadow-camera-top={11}
+        shadow-camera-bottom={-11}
+        shadow-camera-near={5}
+        shadow-camera-far={90}
+        shadow-bias={-0.0004}
+        shadow-normalBias={0.025}
+        shadow-radius={4}
+      />
+      <hemisphereLight args={[hora.luzDoCeu, chao, hora.forcaDoCeu * forcaDoCeu]} />
+      <directionalLight position={[centro[0] - 8, 14, centro[1] - 22]} intensity={hora.forcaDaContraluz} color={hora.contraluz} />
+    </>
+  );
+};
 
 const Rio: React.FC<{ margem: string }> = ({ margem }) => (
   <group>
     {/* As margens de terra */}
     {[RIO.z - RIO.largura / 2 - 0.25, RIO.z + RIO.largura / 2 + 0.25].map((z) => (
-      <mesh key={z} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, z]}>
+      <mesh key={z} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.015, z]} receiveShadow>
         <planeGeometry args={[400, 0.8]} />
-        <meshStandardMaterial color={margem} roughness={1} />
+        <meshStandardMaterial color={margem} roughness={1} {...deitado} />
       </mesh>
     ))}
-    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, RIO.z]}>
+    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.03, RIO.z]} receiveShadow>
       <planeGeometry args={[400, RIO.largura]} />
-      <meshStandardMaterial color="#3E8ED8" roughness={0.12} metalness={0.35} />
+      <meshStandardMaterial color="#3E8ED8" roughness={0.08} metalness={0.2} {...deitado} />
     </mesh>
   </group>
 );
@@ -57,14 +210,14 @@ export const Ponte: React.FC<{ balanco: number; queda?: number }> = ({ balanco, 
   return (
     <group position={[0, -queda * 1.1, (PONTE.z1 + PONTE.z2) / 2]} rotation={[queda * 0.22, 0, balanco + queda * 0.18]}>
       {Array.from({ length: tabuas }, (_, i) => (
-        <mesh key={i} position={[0, PONTE.altura - 0.06, -comprimento / 2 + 0.17 + i * 0.34]}>
+        <mesh key={i} castShadow position={[0, PONTE.altura - 0.06, -comprimento / 2 + 0.17 + i * 0.34]}>
           <boxGeometry args={[PONTE.meiaLargura * 2, 0.12, 0.3]} />
           <meshStandardMaterial color={i % 2 ? "#A8743F" : "#9A6A38"} roughness={0.9} flatShading />
         </mesh>
       ))}
       {/* As vigas embaixo e os pilares no rio */}
       {[-0.9, 0.9].map((x) => (
-        <mesh key={x} position={[x, PONTE.altura - 0.22, 0]}>
+        <mesh key={x} castShadow position={[x, PONTE.altura - 0.22, 0]}>
           <boxGeometry args={[0.18, 0.2, comprimento]} />
           <meshStandardMaterial color="#7A5530" flatShading />
         </mesh>
@@ -81,13 +234,13 @@ export const Ponte: React.FC<{ balanco: number; queda?: number }> = ({ balanco, 
       {[-PONTE.meiaLargura + 0.05, PONTE.meiaLargura - 0.05].map((x) => (
         <group key={x}>
           {Array.from({ length: 9 }, (_, i) => (
-            <mesh key={i} position={[x, PONTE.altura + 0.42, -comprimento / 2 + i * (comprimento / 8)]}>
+            <mesh key={i} castShadow position={[x, PONTE.altura + 0.42, -comprimento / 2 + i * (comprimento / 8)]}>
               <boxGeometry args={[0.09, 0.84, 0.09]} />
               <meshStandardMaterial color="#F4F4F0" roughness={0.6} />
             </mesh>
           ))}
           {[0.82, 0.46].map((y) => (
-            <mesh key={y} position={[x, PONTE.altura + y, 0]}>
+            <mesh key={y} castShadow position={[x, PONTE.altura + y, 0]}>
               <boxGeometry args={[0.07, 0.07, comprimento]} />
               <meshStandardMaterial color="#F4F4F0" roughness={0.6} />
             </mesh>
@@ -135,7 +288,7 @@ const Palmeira: React.FC<{ x: number; z: number; escala: number; tom: number }> 
   return (
     <group position={[x, 0, z]} scale={escala}>
       {Array.from({ length: gomos }, (_, i) => (
-        <mesh key={i} position={[curva * (i / gomos) ** 2 * 1.6, 0.25 + i * 0.5, 0]} rotation={[0, 0, -curva * (i / gomos) * 0.6]}>
+        <mesh key={i} castShadow position={[curva * (i / gomos) ** 2 * 1.6, 0.25 + i * 0.5, 0]} rotation={[0, 0, -curva * (i / gomos) * 0.6]}>
           <cylinderGeometry args={[0.13 - i * 0.008, 0.16 - i * 0.008, 0.52, 7]} />
           <meshStandardMaterial color={i % 2 ? "#8C6A42" : "#7A5A36"} flatShading />
         </mesh>
@@ -155,14 +308,15 @@ const Palmeira: React.FC<{ x: number; z: number; escala: number; tom: number }> 
 };
 
 /** As plantas: do outro lado do rio e nos lados, longe da ponte e da frente da câmera. */
-const Arvores: React.FC<{ tipo: Paleta["plantas"]; muitas: boolean; livre?: (x: number, z: number) => boolean }> = ({ tipo, muitas, livre = () => true }) => {
+const Arvores: React.FC<{ tipo: Paleta["plantas"]; muitas: boolean; livre?: Livre; semente: number }> = ({ tipo, muitas, livre = sempre, semente }) => {
   const lista = useMemo(() => {
-    const r = sorteio(7);
+    const r = sorteio(7 + semente);
     const arvores: Array<{ x: number; z: number; escala: number; pinheiro: boolean; tom: number }> = [];
     for (let i = 0; i < 90; i++) {
       const longe = i < 60;
       const x = (r() - 0.5) * (longe ? 90 : 60);
-      const z = longe ? -12 - r() * 40 : -2 + r() * 22;
+      // As de perto ficam dos lados, até z 9 (mais para a frente fica a câmera)
+      const z = longe ? -12 - r() * 40 : -2 + r() * 11;
       if (Math.abs(x) < (longe ? 3.2 : 7)) continue;
       const sorteado = { x, z, escala: 0.8 + r() * 0.9, pinheiro: r() < 0.35, tom: r() };
       // Palmeiras e casas pedem menos plantas (o lugar fica mais aberto)
@@ -171,7 +325,7 @@ const Arvores: React.FC<{ tipo: Paleta["plantas"]; muitas: boolean; livre?: (x: 
       arvores.push(sorteado);
     }
     return arvores;
-  }, [muitas, livre]);
+  }, [muitas, livre, semente]);
   return (
     <>
       {lista.map((a, i) =>
@@ -186,9 +340,9 @@ const Arvores: React.FC<{ tipo: Paleta["plantas"]; muitas: boolean; livre?: (x: 
 };
 
 /** As montanhas do fundo (no deserto e na cidade, dunas baixas e largas) */
-const Montanhas: React.FC<{ cor: Paleta["montanhas"] }> = ({ cor }) => {
+const Montanhas: React.FC<{ cor: Paleta["montanhas"]; semente: number }> = ({ cor, semente }) => {
   const lista = useMemo(() => {
-    const r = sorteio(11);
+    const r = sorteio(11 + semente);
     return Array.from({ length: 12 }, (_, i) => ({
       x: -110 + i * 20 + (r() - 0.5) * 10,
       z: -75 - r() * 30,
@@ -196,11 +350,11 @@ const Montanhas: React.FC<{ cor: Paleta["montanhas"] }> = ({ cor }) => {
       altura: (cor.baixas ? 6 : 16) + r() * (cor.baixas ? 8 : 18),
       cor: new THREE.Color().setHSL(cor.matiz + r() * 0.04, cor.saturacao, cor.luz + r() * 0.1).getStyle(),
     }));
-  }, [cor]);
+  }, [cor, semente]);
   return (
     <>
       {lista.map((m, i) => (
-        <mesh key={i} position={[m.x, m.altura / 2 - 0.5, m.z]}>
+        <mesh key={i} castShadow position={[m.x, m.altura / 2 - 0.5, m.z]}>
           <coneGeometry args={[m.raio, m.altura, 7]} />
           <meshStandardMaterial color={m.cor} flatShading roughness={1} />
         </mesh>
@@ -230,24 +384,24 @@ const Tenda: React.FC<{ x: number; z: number; cor: string }> = ({ x, z, cor }) =
   </group>
 );
 
-const Nuvens: React.FC = () => {
+const Nuvens: React.FC<{ semente: number; cor?: string }> = ({ semente, cor = "#FFFFFF" }) => {
   const lista = useMemo(() => {
-    const r = sorteio(23);
+    const r = sorteio(23 + semente);
     return Array.from({ length: 9 }, () => ({
       x: (r() - 0.5) * 120,
       y: 22 + r() * 10,
       z: -50 - r() * 40,
       bolas: Array.from({ length: 4 + Math.floor(r() * 3) }, () => [(r() - 0.5) * 7, (r() - 0.5) * 1.6, (r() - 0.5) * 3, 1.6 + r() * 1.6] as const),
     }));
-  }, []);
+  }, [semente]);
   return (
     <>
       {lista.map((n, i) => (
         <group key={i} position={[n.x, n.y, n.z]}>
           {n.bolas.map(([x, y, z, raio], j) => (
-            <mesh key={j} position={[x, y, z]}>
+            <mesh key={j} castShadow position={[x, y, z]}>
               <icosahedronGeometry args={[raio, 1]} />
-              <meshStandardMaterial color="#FFFFFF" flatShading roughness={1} />
+              <meshStandardMaterial color={cor} flatShading roughness={1} emissive={cor} emissiveIntensity={0.25} />
             </mesh>
           ))}
         </group>
@@ -257,29 +411,32 @@ const Nuvens: React.FC = () => {
 };
 
 /** A grama em 3D: milhares de folhas finas (uma malha só, desenhada de uma vez). */
-const Grama: React.FC<{ matiz: number; rio: boolean }> = ({ matiz, rio }) => {
+const Grama: React.FC<{ matiz: number; rio: boolean; semente: number; livre: Livre }> = ({ matiz, rio, semente, livre }) => {
   const ref = useRef<THREE.InstancedMesh>(null);
   const folhas = useMemo(() => {
-    const r = sorteio(3);
+    const r = sorteio(3 + semente);
     const lista: Array<{ x: number; z: number; altura: number; giro: number; inclina: number; cor: THREE.Color }> = [];
     const total = 7000;
     for (let i = 0; i < total; i++) {
       const perto = i < 5200;
       const x = (r() - 0.5) * (perto ? 30 : 40);
       const z = perto ? -4 + r() * 18 : -10 - r() * 14;
+      const altura = perto ? 0.1 + r() * 0.16 : 0.2 + r() * 0.3;
+      // Perto da câmera, nada de folha (no plano médio ela cobria as pernas)
+      if (!livre(x, z)) continue;
       // Nada de grama no rio
       if (rio && Math.abs(z - RIO.z) < RIO.largura / 2 + 0.5) continue;
       lista.push({
         x,
         z,
-        altura: 0.25 + r() * 0.35,
+        altura,
         giro: r() * Math.PI * 2,
         inclina: (r() - 0.5) * 0.5,
         cor: new THREE.Color().setHSL(matiz + r() * 0.06, 0.6, 0.3 + r() * 0.16),
       });
     }
     return lista;
-  }, [matiz, rio]);
+  }, [matiz, rio, semente, livre]);
   useLayoutEffect(() => {
     const malha = ref.current;
     if (!malha) return;
@@ -352,19 +509,21 @@ const Casa: React.FC<{ x: number; z: number; tipo: NonNullable<Paleta["casas"]>;
 };
 
 /** As casas: no fundo e nos lados, longe de onde os personagens ficam (x -4 a 4, z -2 a 6). */
-const Casas: React.FC<{ tipo: NonNullable<Paleta["casas"]>; rio: boolean }> = ({ tipo, rio }) => {
+const Casas: React.FC<{ tipo: NonNullable<Paleta["casas"]>; rio: boolean; semente: number; livre: Livre }> = ({ tipo, rio, semente, livre }) => {
   const lista = useMemo(() => {
-    const r = sorteio(31);
+    const r = sorteio(31 + semente);
     const casas: Array<{ x: number; z: number; tom: number; giro: number }> = [];
     for (let i = 0; i < 40 && casas.length < 16; i++) {
       const fundo = i % 3 !== 0;
       const x = fundo ? (r() - 0.5) * 34 : (r() < 0.5 ? -1 : 1) * (7 + r() * 9);
       const z = fundo ? (rio ? -12.5 : -6) - r() * 12 : -3 + r() * 9;
       if (casas.some((c) => Math.hypot(c.x - x, c.z - z) < 3.6)) continue;
+      // Nem na frente da câmera, nem no caminho dela (a casa tem uns 3 m: confere os cantos)
+      if (![[0, 0], [1.6, 1.6], [-1.6, 1.6], [1.6, -1.6], [-1.6, -1.6]].every(([dx, dz]) => livre(x + dx, z + dz))) continue;
       casas.push({ x, z, tom: r() * 0.999, giro: (r() - 0.5) * 0.5 });
     }
     return casas;
-  }, [rio]);
+  }, [rio, semente, livre]);
   return (
     <>
       {lista.map((c, i) => (
@@ -382,13 +541,13 @@ const Muralha: React.FC = () => (
       <meshStandardMaterial color="#CDAE74" flatShading roughness={1} />
     </mesh>
     {Array.from({ length: 45 }, (_, i) => (
-      <mesh key={i} position={[-44 + i * 2, 3.65, 0.4]}>
+      <mesh key={i} castShadow position={[-44 + i * 2, 3.65, 0.4]}>
         <boxGeometry args={[0.9, 0.5, 0.6]} />
         <meshStandardMaterial color="#C4A268" flatShading />
       </mesh>
     ))}
     {[-30, -16, -6, 6, 16, 30].map((x) => (
-      <mesh key={x} position={[x, 2.6, 0.2]}>
+      <mesh key={x} castShadow position={[x, 2.6, 0.2]}>
         <boxGeometry args={[2.6, 5.2, 2.6]} />
         <meshStandardMaterial color="#C8A66C" flatShading roughness={1} />
       </mesh>
@@ -402,19 +561,19 @@ const Muralha: React.FC = () => (
 );
 
 /** Pedras soltas pelo chão (deserto e aldeia). */
-const Pedras: React.FC<{ livre?: (x: number, z: number) => boolean }> = ({ livre = () => true }) => {
+const Pedras: React.FC<{ livre?: Livre; semente: number }> = ({ livre = sempre, semente }) => {
   const lista = useMemo(() => {
-    const r = sorteio(53);
+    const r = sorteio(53 + semente);
     return Array.from({ length: 26 }, () => {
       const x = (r() - 0.5) * 40;
       const z = -14 + r() * 18;
       return { x, z, tam: 0.15 + r() * 0.45, giro: r() * 6, tom: r() };
     }).filter((p) => !(Math.abs(p.x) < 4 && p.z > -3 && p.z < 7) && livre(p.x, p.z));
-  }, [livre]);
+  }, [livre, semente]);
   return (
     <>
       {lista.map((p, i) => (
-        <mesh key={i} position={[p.x, p.tam * 0.35, p.z]} rotation={[p.giro, p.giro * 2, 0]} scale={[1.3, 0.8, 1]}>
+        <mesh key={i} castShadow position={[p.x, p.tam * 0.35, p.z]} rotation={[p.giro, p.giro * 2, 0]} scale={[1.3, 0.8, 1]}>
           <icosahedronGeometry args={[p.tam, 0]} />
           <meshStandardMaterial color={p.tom > 0.5 ? "#B39A72" : "#9E8862"} flatShading />
         </mesh>
@@ -447,7 +606,7 @@ const Torre: React.FC<{ x: number; z: number; altura: number; raio: number; telh
     </mesh>
     {/* As janelinhas */}
     {[0.45, 0.7].map((f) => (
-      <mesh key={f} position={[0, altura * f, raio + 0.01]}>
+      <mesh key={f} castShadow position={[0, altura * f, raio + 0.01]}>
         <boxGeometry args={[0.35, 0.7, 0.05]} />
         <meshStandardMaterial color="#2E2A28" />
       </mesh>
@@ -463,7 +622,7 @@ const Castelo: React.FC = () => (
       <meshStandardMaterial color={PEDRA} flatShading roughness={1} />
     </mesh>
     {Array.from({ length: 13 }, (_, i) => (
-      <mesh key={i} position={[-12 + i * 2, 6.4, 0.5]}>
+      <mesh key={i} castShadow position={[-12 + i * 2, 6.4, 0.5]}>
         <boxGeometry args={[1, 0.8, 0.9]} />
         <meshStandardMaterial color="#A19A90" flatShading />
       </mesh>
@@ -495,16 +654,16 @@ const Mar: React.FC = () => (
   <group>
     <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.03, BEIRA - 100]}>
       <planeGeometry args={[400, 200]} />
-      <meshStandardMaterial color="#2F86C9" roughness={0.15} metalness={0.3} />
+      <meshStandardMaterial color="#2F86C9" roughness={0.1} metalness={0.2} {...deitado} />
     </mesh>
     {/* A água rasa e a espuma na beira */}
     <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.035, BEIRA - 1.2]}>
       <planeGeometry args={[400, 2.4]} />
-      <meshStandardMaterial color="#5FB6E0" roughness={0.2} metalness={0.2} />
+      <meshStandardMaterial color="#5FB6E0" roughness={0.15} metalness={0.1} {...deitado} />
     </mesh>
     <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.04, BEIRA + 0.1]}>
       <planeGeometry args={[400, 0.45]} />
-      <meshStandardMaterial color="#F6FBFF" roughness={1} />
+      <meshStandardMaterial color="#F6FBFF" roughness={1} {...deitado} />
     </mesh>
   </group>
 );
@@ -539,26 +698,26 @@ const Barcos: React.FC = () => (
 const OURO = "#D9A93E";
 const Salao: React.FC = () => (
   <group>
-    <mesh rotation={[-Math.PI / 2, 0, 0]}>
+    <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
       <planeGeometry args={[60, 60]} />
-      <meshStandardMaterial color="#9A8670" roughness={0.9} />
+      <meshStandardMaterial color="#9A8670" roughness={0.7} map={manchas()} />
     </mesh>
     {/* As lajotas: linhas mais escuras no chão */}
     {Array.from({ length: 13 }, (_, i) => (
-      <mesh key={`l${i}`} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.005, -14 + i * 2.5]}>
+      <mesh key={`l${i}`} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, -14 + i * 2.5]}>
         <planeGeometry args={[32, 0.06]} />
-        <meshStandardMaterial color="#7A6854" />
+        <meshStandardMaterial color="#7A6854" {...deitado} />
       </mesh>
     ))}
     {/* O tapete vermelho até o trono */}
-    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, -1]}>
+    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.025, -1]} receiveShadow>
       <planeGeometry args={[3.2, 24]} />
-      <meshStandardMaterial color="#9E2430" roughness={1} />
+      <meshStandardMaterial color="#9E2430" roughness={1} {...deitado} />
     </mesh>
     {[-1.65, 1.65].map((x) => (
-      <mesh key={x} rotation={[-Math.PI / 2, 0, 0]} position={[x, 0.025, -1]}>
+      <mesh key={x} rotation={[-Math.PI / 2, 0, 0]} position={[x, 0.035, -1]}>
         <planeGeometry args={[0.12, 24]} />
-        <meshStandardMaterial color={OURO} />
+        <meshStandardMaterial color={OURO} {...deitado} />
       </mesh>
     ))}
     {/* As paredes: o fundo e os lados */}
@@ -567,7 +726,7 @@ const Salao: React.FC = () => (
       <meshStandardMaterial color="#B9A68A" flatShading roughness={1} />
     </mesh>
     {[-16.5, 16.5].map((x) => (
-      <mesh key={x} position={[x, 7, 0]}>
+      <mesh key={x} castShadow position={[x, 7, 0]}>
         <boxGeometry args={[1, 14, 32]} />
         <meshStandardMaterial color="#AE9B80" flatShading roughness={1} />
       </mesh>
@@ -612,7 +771,7 @@ const Salao: React.FC = () => (
     {/* O trono no alto dos degraus */}
     <group position={[0, 0, -12]}>
       {[0, 1, 2].map((d) => (
-        <mesh key={d} position={[0, 0.2 + d * 0.4, -d * 0.6]}>
+        <mesh key={d} castShadow position={[0, 0.2 + d * 0.4, -d * 0.6]}>
           <boxGeometry args={[6 - d * 1.2, 0.4, 3.4 - d * 0.6]} />
           <meshStandardMaterial color="#C4B293" flatShading />
         </mesh>
@@ -645,51 +804,64 @@ const foraDoCastelo = (x: number, z: number) => !(Math.abs(x) < 19 && z < -18);
 const livreDo = (c: Paleta) => (c.mar ? naAreia : c.castelo ? foraDoCastelo : undefined);
 
 /** O mundo inteiro, com a luz e o céu, no lugar escolhido. */
-export const Mundo: React.FC<{ balanco: number; queda?: number; ponte?: boolean; tendas?: boolean; rio?: boolean; ambiente?: Ambiente }> = ({
-  balanco,
-  queda = 0,
-  ponte = true,
-  tendas = true,
-  rio = true,
-  ambiente = "campo",
-}) => {
+export const Mundo: React.FC<{
+  balanco: number;
+  queda?: number;
+  ponte?: boolean;
+  tendas?: boolean;
+  rio?: boolean;
+  ambiente?: Ambiente;
+  /** A semente do episódio: as árvores, as casas e as pedras mudam de lugar */
+  semente?: number;
+  hora?: Hora;
+  /** Onde a cena acontece agora (a sombra do sol cobre em volta) */
+  centro?: [number, number];
+  /** O caminho da câmera: nada fica ali */
+  livre?: Livre;
+  /** Perto da câmera: sem folha de grama */
+  semGrama?: Livre;
+}> = ({ balanco, queda = 0, ponte = true, tendas = true, rio = true, ambiente = "campo", semente = 0, hora = "dia", centro = [0, 2], livre = sempre, semGrama = sempre }) => {
   const c = PALETAS[ambiente];
+  const luz = luzDaHora(c, hora);
+  // O que já tinha um filtro (mar, castelo) soma o caminho da câmera
+  const doLugar = livreDo(c);
+  const livreTudo = useMemo<Livre>(() => (doLugar ? (x, z) => doLugar(x, z) && livre(x, z) : livre), [doLugar, livre]);
   if (c.interior)
     return (
       <>
         <color attach="background" args={[c.ceu]} />
         <fog attach="fog" args={[c.nevoa, 30, 90]} />
-        <hemisphereLight args={["#FFE9C9", c.luzDoChao, 0.9]} />
-        <directionalLight position={[6, 20, 14]} intensity={1.5} color={c.luzDoSol} />
+        <Reflexo forca={0.25} />
+        <Luzes hora={{ ...luz, sol: c.luzDoSol, forcaDoSol: 1.8, direcaoDoSol: [6, 20, 14], luzDoCeu: "#FFE9C9", forcaDoCeu: 0.8, contraluz: "#FFC982", forcaDaContraluz: 1.4 }} centro={centro} chao={c.luzDoChao} />
         <pointLight position={[0, 9, -8]} intensity={60} distance={30} color="#FFC982" />
-        <ambientLight intensity={0.35} />
         <Salao />
       </>
     );
   return (
     <>
-      <color attach="background" args={[c.ceu]} />
-      <fog attach="fog" args={[c.nevoa, 45, 170]} />
-      <hemisphereLight args={["#E6F4FF", c.luzDoChao, 1.25]} />
-      <directionalLight position={[20, 32, 12]} intensity={2.1} color={c.luzDoSol} />
-      <ambientLight intensity={0.25} />
-      <Chao cor={c.chao} />
+      <color attach="background" args={[luz.ceuHorizonte]} />
+      {/* A névoa da distância (o fundo clareia e dá profundidade) */}
+      <fog attach="fog" args={[luz.nevoa, 22, 140]} />
+      <Ceu topo={luz.ceuTopo} horizonte={luz.ceuHorizonte} sol={luz.direcaoDoSol} corDoSol={luz.sol} />
+      <Reflexo forca={hora === "noite" ? 0.12 : 0.3} />
+      <Luzes hora={luz} centro={centro} chao={c.luzDoChao} />
+      <Chao cor={hora === "noite" ? new THREE.Color(c.chao).multiplyScalar(0.55).getStyle() : c.chao} />
       {rio && <Rio margem={c.margem} />}
       {rio && ponte && <Ponte balanco={balanco} queda={queda} />}
-      <Arvores tipo={c.plantas} muitas={!c.casas && c.plantas !== "palmeiras"} livre={livreDo(c)} />
-      <Montanhas cor={c.montanhas} />
-      <Nuvens />
-      {c.casas && <Casas tipo={c.casas} rio={rio} />}
+      <Arvores tipo={c.plantas} muitas={!c.casas && c.plantas !== "palmeiras"} livre={livreTudo} semente={semente} />
+      <Montanhas cor={c.montanhas} semente={semente} />
+      {hora !== "noite" && <Nuvens semente={semente} cor={hora === "tarde" ? "#FFE2C6" : "#FFFFFF"} />}
+      {c.casas && <Casas tipo={c.casas} rio={rio} semente={semente} livre={livreTudo} />}
       {c.muralha && <Muralha />}
-      {c.pedras && <Pedras livre={livreDo(c)} />}
+      {c.pedras && <Pedras livre={livreTudo} semente={semente} />}
       {c.castelo && <Castelo />}
       {c.mar && <Mar />}
       {c.mar && <Barcos />}
       {/* As tendas ficam à esquerda: a câmera do plano aberto vem da direita */}
-      {tendas && <Tenda x={-6.8} z={0.4} cor="#3D6FD6" />}
-      {tendas && <Tenda x={-9.6} z={2.6} cor="#D64545" />}
-      {tendas && ambiente === "deserto" && <Tenda x={8.5} z={-4} cor="#D8A23A" />}
-      {c.grama !== null && <Grama matiz={c.grama} rio={rio} />}
+      {tendas && livreTudo(-6.8, 0.4) && <Tenda x={-6.8} z={0.4} cor="#3D6FD6" />}
+      {tendas && livreTudo(-9.6, 2.6) && <Tenda x={-9.6} z={2.6} cor="#D64545" />}
+      {tendas && ambiente === "deserto" && livreTudo(8.5, -4) && <Tenda x={8.5} z={-4} cor="#D8A23A" />}
+      {c.grama !== null && <Grama matiz={c.grama} rio={rio} semente={semente} livre={semGrama} />}
     </>
   );
 };

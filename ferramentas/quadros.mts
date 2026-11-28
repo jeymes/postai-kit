@@ -8,7 +8,8 @@
 // Uso: npm run quadros -- conteudo/<arquivo>.json   (depois do npm run renderizar)
 // Grava out/<arquivo>/quadros/cena-<n>-<a|b|c>.jpg e imprime a lista.
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { PNG } from "pngjs";
 import { basename, join } from "node:path";
 import { cenasDoMolde, falaDoNarrador, FPS, iniciosDasCenas } from "../src/moldes/tempos.ts";
 
@@ -86,6 +87,51 @@ cenas.forEach((cena, i) => {
     console.log(`  ${quando}: ${destino} (${segundo(quadro).toFixed(1)} s)`);
   }
 });
+// Folhas de movimento (27/11/2026): nas trocas (de fala, de lugar e em cada ação na palavra),
+// 8 quadros seguidos lado a lado, de 2 em 2, começando um pouco antes. É onde apareciam os
+// defeitos que um quadro solto não pega: a mão que trava, o celular que some e volta, o
+// cenário que pisca, braço a mais, objeto que pula de mão.
+if (molde === "Conversa") {
+  type ComAcoes = Cena & { acoes?: Array<{ quem?: string; em?: string; pose?: string; acao?: string }>; cenario?: string; narracao?: { legendas: Array<{ texto: string; inicioMs: number }> } };
+  const norm = (t: string) => t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "");
+  const marcos: Array<{ quadro: number; oQue: string }> = [];
+  (cenas as ComAcoes[]).forEach((cena, i) => {
+    const inicio = inicios[i + desloca];
+    if (inicio === undefined) return;
+    if (i > 0) marcos.push({ quadro: inicio - 10, oQue: `troca da cena ${i} para a ${i + 1}${cena.cenario ? ` (LUGAR: ${cena.cenario}, com a cortina)` : ""}` });
+    for (const a of cena.acoes ?? []) {
+      const w = cena.narracao?.legendas.find((l) => norm(l.texto) === norm(a.em ?? "") || norm(l.texto).startsWith(norm(a.em ?? "") || "-"));
+      const quadro = inicio + (w ? Math.round((w.inicioMs / 1000) * FPS) : 0) - 6;
+      marcos.push({ quadro, oQue: `cena ${i + 1}: ${a.quem} ${a.acao ?? a.pose ?? ""} na palavra "${a.em}"` });
+    }
+  });
+  console.log("\nFolhas de movimento (8 quadros seguidos, de 2 em 2): o movimento tem que ser contínuo, sem salto.");
+  const temporaria = join(pasta, "tmp");
+  marcos.forEach((m, n) => {
+    const destino = join(pasta, `movimento-${String(n + 1).padStart(2, "0")}.png`);
+    // 16 quadros seguidos (o ffmpeg do Remotion só tem scale e trim), juntados de 2 em 2 numa tira
+    rmSync(temporaria, { recursive: true, force: true });
+    mkdirSync(temporaria, { recursive: true });
+    const r = spawnSync(
+      "npx",
+      ["remotion", "ffmpeg", "-y", "-loglevel", "error", "-ss", segundo(Math.max(0, m.quadro)).toFixed(3), "-i", video, "-frames:v", "16", "-vf", "scale=240:-2", join(temporaria, "q-%02d.png")],
+      { stdio: "inherit" },
+    );
+    const quadros = readdirSync(temporaria).filter((f) => f.endsWith(".png")).sort().filter((_, k) => k % 2 === 0);
+    if (r.status !== 0 || !quadros.length) {
+      falhas++;
+      return;
+    }
+    const imagens = quadros.map((f) => PNG.sync.read(readFileSync(join(temporaria, f))));
+    const { width: l, height: a } = imagens[0];
+    const tira = new PNG({ width: l * imagens.length, height: a });
+    imagens.forEach((img, k) => PNG.bitblt(img, tira, 0, 0, l, a, k * l, 0));
+    writeFileSync(destino, PNG.sync.write(tira));
+    console.log(`  ${destino}: ${m.oQue}`);
+  });
+  rmSync(temporaria, { recursive: true, force: true });
+}
+
 console.log(
   "\nEm CADA quadro confira: o celular aparece na mão de quem está na pose celular ou sentado; nenhuma luz ou brilho sem o objeto; ninguém sem pernas, cortado no quadril ou atravessando móvel (atrás do sofá ou da cama, tudo bem); nenhum objeto sumindo da mão de uma cena para a outra; rosto e corpo inteiros na tela.",
 );

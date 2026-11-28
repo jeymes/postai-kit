@@ -1,0 +1,1067 @@
+{
+  "molde": "Mundo3D",
+  "bonecos": "pecas",
+  "titulo": "10 camelos e 1 oração no poço",
+  "destaqueDoTitulo": "oração",
+  "ctaInicial": "Gênesis 24 · O poço de Naor",
+  "personagens": [
+    {
+      "id": "servo",
+      "onde": [
+        -2.6,
+        3
+      ],
+      "espelhar": false,
+      "naPonte": false,
+      "figurino": 2,
+      "visual": {
+        "pele": "#C48A5E",
+        "cabelo": "#CFC8BE",
+        "roupa": "#8C6A48",
+        "calca": "#8C6A48",
+        "sapato": "#7A5230",
+        "penteado": "curto",
+        "roupaEstilo": "blusa"
+      },
+      "detalhes3d": {
+        "barba": true,
+        "figurino": "tunica-longa",
+        "acessorio": "turbante",
+        "pano": "#E3D3B0"
+      }
+    },
+    {
+      "id": "rebeca",
+      "onde": [
+        2.2,
+        2.4
+      ],
+      "espelhar": false,
+      "naPonte": false,
+      "figurino": 1,
+      "cenas": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "visual": {
+        "pele": "#E2AD80",
+        "cabelo": "#3A2418",
+        "roupa": "#3E6E8E",
+        "calca": "#3E6E8E",
+        "sapato": "#8B5A2B",
+        "penteado": "ondulado",
+        "roupaEstilo": "blusa"
+      },
+      "detalhes3d": {
+        "figurino": "tunica-longa",
+        "acessorio": "veu",
+        "pano": "#D9C9A8"
+      }
+    },
+    {
+      "id": "isaque",
+      "onde": [
+        4.2,
+        1.2
+      ],
+      "espelhar": false,
+      "naPonte": false,
+      "figurino": 3,
+      "cenas": [
+        6,
+        7,
+        8,
+        9
+      ],
+      "visual": {
+        "pele": "#D29A6C",
+        "cabelo": "#4A3226",
+        "roupa": "#B5352E",
+        "calca": "#B5352E",
+        "sapato": "#7A5230",
+        "penteado": "curto",
+        "roupaEstilo": "blusa"
+      },
+      "detalhes3d": {
+        "barba": true,
+        "figurino": "manto",
+        "acessorio": "nenhum",
+        "pano": "#7A2A22"
+      }
+    }
+  ],
+  "multidao": null,
+  "cenario": {
+    "ambiente": "cidade",
+    "hora": "tarde"
+  },
+  "objetos": [
+    {
+      "tipo": "jarro",
+      "perto": "rebeca",
+      "naMao": true,
+      "cenas": [
+        3,
+        4
+      ]
+    }
+  ],
+  "cenas": [
+    {
+      "fala": "Dez camelos e uma missão: achar uma esposa para Isaque, o filho de Abraão.",
+      "plano": "aberto",
+      "foco": "servo",
+      "destaque": [
+        "esposa"
+      ],
+      "estados": {
+        "servo": {
+          "pose": "normal",
+          "expressao": "preocupada"
+        }
+      },
+      "acoes": [
+        {
+          "quem": "servo",
+          "em": "camelos",
+          "acao": "andar",
+          "ate": [
+            -0.8,
+            3
+          ]
+        },
+        {
+          "quem": "servo",
+          "em": "Isaque",
+          "acao": "olhar",
+          "para": "cima"
+        }
+      ],
+      "ilustra": [
+        {
+          "tipo": "numero",
+          "valor": 10,
+          "rotulo": "camelos",
+          "icone": "montanha",
+          "em": "Dez",
+          "lugar": "baixo"
+        }
+      ],
+      "sons": [
+        {
+          "tipo": "passos",
+          "em": 0.6,
+          "repetir": 2
+        }
+      ],
+      "narracao": {
+        "audio": "narracao/amostra-biblia/cena-01-9899e581.wav",
+        "duracaoSeg": 4.48,
+        "legendas": [
+          {
+            "texto": "Dez",
+            "inicioMs": 0,
+            "fimMs": 50
+          },
+          {
+            "texto": "camelos",
+            "inicioMs": 0,
+            "fimMs": 720
+          },
+          {
+            "texto": "e",
+            "inicioMs": 720,
+            "fimMs": 800
+          },
+          {
+            "texto": "uma",
+            "inicioMs": 800,
+            "fimMs": 900
+          },
+          {
+            "texto": "missão:",
+            "inicioMs": 900,
+            "fimMs": 1360
+          },
+          {
+            "texto": "achar",
+            "inicioMs": 1360,
+            "fimMs": 1940
+          },
+          {
+            "texto": "uma",
+            "inicioMs": 1940,
+            "fimMs": 2080
+          },
+          {
+            "texto": "esposa",
+            "inicioMs": 2080,
+            "fimMs": 2520
+          },
+          {
+            "texto": "para",
+            "inicioMs": 2520,
+            "fimMs": 2700
+          },
+          {
+            "texto": "Isaque,",
+            "inicioMs": 2700,
+            "fimMs": 3020
+          },
+          {
+            "texto": "o",
+            "inicioMs": 3280,
+            "fimMs": 3330
+          },
+          {
+            "texto": "filho",
+            "inicioMs": 3320,
+            "fimMs": 3560
+          },
+          {
+            "texto": "de",
+            "inicioMs": 3560,
+            "fimMs": 3740
+          },
+          {
+            "texto": "Abraão",
+            "inicioMs": 3740,
+            "fimMs": 4160,
+            "fimDeFrase": true
+          }
+        ],
+        "chave": "[\"Dez camelos e uma missão: achar uma esposa para Isaque, o filho de Abraão.\",\"pm_santa*0.6+bm_fable*0.4\",1,false]"
+      }
+    },
+    {
+      "fala": "No poço de Naor, o servo se ajoelhou e orou pedindo um sinal.",
+      "plano": "medio",
+      "foco": "servo",
+      "destaque": [
+        "orou"
+      ],
+      "acoes": [
+        {
+          "quem": "servo",
+          "em": "ajoelhou",
+          "acao": "ajoelhar-orando"
+        }
+      ],
+      "ilustra": [
+        {
+          "tipo": "icone",
+          "icone": "gota",
+          "rotulo": "O poço de Naor",
+          "em": "poço"
+        },
+        {
+          "tipo": "pensamento",
+          "quem": "servo",
+          "texto": "Qual delas?",
+          "em": "orou"
+        }
+      ],
+      "narracao": {
+        "audio": "narracao/amostra-biblia/cena-02-641bcda7.wav",
+        "duracaoSeg": 4.075,
+        "legendas": [
+          {
+            "texto": "No",
+            "inicioMs": 0,
+            "fimMs": 120
+          },
+          {
+            "texto": "poço",
+            "inicioMs": 120,
+            "fimMs": 440
+          },
+          {
+            "texto": "de",
+            "inicioMs": 440,
+            "fimMs": 580
+          },
+          {
+            "texto": "Naor,",
+            "inicioMs": 580,
+            "fimMs": 1000
+          },
+          {
+            "texto": "o",
+            "inicioMs": 1220,
+            "fimMs": 1280
+          },
+          {
+            "texto": "servo",
+            "inicioMs": 1280,
+            "fimMs": 1680
+          },
+          {
+            "texto": "se",
+            "inicioMs": 1680,
+            "fimMs": 1780
+          },
+          {
+            "texto": "ajoelhou",
+            "inicioMs": 1780,
+            "fimMs": 2260
+          },
+          {
+            "texto": "e",
+            "inicioMs": 2260,
+            "fimMs": 2420
+          },
+          {
+            "texto": "orou",
+            "inicioMs": 2420,
+            "fimMs": 2680
+          },
+          {
+            "texto": "pedindo",
+            "inicioMs": 2680,
+            "fimMs": 3200
+          },
+          {
+            "texto": "um",
+            "inicioMs": 3200,
+            "fimMs": 3320
+          },
+          {
+            "texto": "sinal",
+            "inicioMs": 3320,
+            "fimMs": 3680,
+            "fimDeFrase": true
+          }
+        ],
+        "chave": "[\"No poço de Na-ôr, o servo se ajoelhou e orou pedindo um sinal.\",\"pm_santa*0.6+bm_fable*0.4\",1,false]"
+      }
+    },
+    {
+      "fala": "Antes de ele acabar de falar, Rebeca chegou com o cântaro no ombro.",
+      "plano": "medio-aberto",
+      "foco": "rebeca",
+      "destaque": [
+        "Rebeca"
+      ],
+      "estados": {
+        "rebeca": {
+          "pose": "normal",
+          "expressao": "neutra"
+        }
+      },
+      "acoes": [
+        {
+          "quem": "servo",
+          "em": "acabar",
+          "acao": "levantar",
+          "expressao": "surpresa"
+        },
+        {
+          "quem": "rebeca",
+          "em": "chegou",
+          "acao": "andar",
+          "ate": [
+            1,
+            2.8
+          ]
+        }
+      ],
+      "narracao": {
+        "audio": "narracao/amostra-biblia/cena-03-58d0b9d0.wav",
+        "duracaoSeg": 4.117,
+        "legendas": [
+          {
+            "texto": "Antes",
+            "inicioMs": 0,
+            "fimMs": 280
+          },
+          {
+            "texto": "de",
+            "inicioMs": 280,
+            "fimMs": 520
+          },
+          {
+            "texto": "ele",
+            "inicioMs": 520,
+            "fimMs": 620
+          },
+          {
+            "texto": "acabar",
+            "inicioMs": 620,
+            "fimMs": 900
+          },
+          {
+            "texto": "de",
+            "inicioMs": 900,
+            "fimMs": 1120
+          },
+          {
+            "texto": "falar,",
+            "inicioMs": 1120,
+            "fimMs": 1460
+          },
+          {
+            "texto": "Rebeca",
+            "inicioMs": 1780,
+            "fimMs": 2100
+          },
+          {
+            "texto": "chegou",
+            "inicioMs": 2100,
+            "fimMs": 2440
+          },
+          {
+            "texto": "com",
+            "inicioMs": 2440,
+            "fimMs": 2740
+          },
+          {
+            "texto": "o",
+            "inicioMs": 2740,
+            "fimMs": 2880
+          },
+          {
+            "texto": "cântaro",
+            "inicioMs": 2880,
+            "fimMs": 3260
+          },
+          {
+            "texto": "no",
+            "inicioMs": 3260,
+            "fimMs": 3400
+          },
+          {
+            "texto": "ombro",
+            "inicioMs": 3400,
+            "fimMs": 3820,
+            "fimDeFrase": true
+          }
+        ],
+        "chave": "[\"Antes de ele acabar de falar, Rebeca chegou com o cântaro no ombro.\",\"pm_santa*0.6+bm_fable*0.4\",1,false]"
+      },
+      "camera": {
+        "cortar": false
+      }
+    },
+    {
+      "fala": "Bebe, meu senhor.",
+      "quem": "rebeca",
+      "plano": "medio-aberto",
+      "foco": "rebeca",
+      "destaque": [
+        "Bebe"
+      ],
+      "estados": {
+        "rebeca": {
+          "pose": "normal",
+          "expressao": "feliz"
+        }
+      },
+      "acoes": [
+        {
+          "quem": "rebeca",
+          "em": "Bebe",
+          "acao": "entregar",
+          "para": "servo"
+        }
+      ],
+      "narracao": {
+        "audio": "narracao/amostra-biblia/cena-04-afe8a218.wav",
+        "duracaoSeg": 1.237,
+        "legendas": [
+          {
+            "texto": "Bebe,",
+            "inicioMs": 0,
+            "fimMs": 320
+          },
+          {
+            "texto": "meu",
+            "inicioMs": 320,
+            "fimMs": 520
+          },
+          {
+            "texto": "senhor",
+            "inicioMs": 520,
+            "fimMs": 840,
+            "fimDeFrase": true
+          }
+        ],
+        "chave": "[\"Bebe, meu senhor.\",\"pf_dora*0.6+ef_dora*0.4\",1,false]"
+      }
+    },
+    {
+      "fala": "Ela deu água até para os dez camelos. O sinal estava cumprido.",
+      "plano": "aberto",
+      "foco": "servo",
+      "destaque": [
+        "cumprido"
+      ],
+      "estados": {
+        "servo": {
+          "pose": "normal",
+          "expressao": "surpresa"
+        },
+        "rebeca": {
+          "pose": "explicando",
+          "expressao": "feliz"
+        }
+      },
+      "acoes": [
+        {
+          "quem": "servo",
+          "em": "cumprido",
+          "acao": "levantar-bracos",
+          "expressao": "radiante"
+        },
+        {
+          "quem": "rebeca",
+          "em": "camelos",
+          "acao": "virar",
+          "para": "frente"
+        }
+      ],
+      "ilustra": [
+        {
+          "tipo": "numero",
+          "valor": 10,
+          "rotulo": "camelos com sede",
+          "icone": "gota",
+          "em": "dez"
+        },
+        {
+          "tipo": "texto",
+          "texto": "Sinal cumprido",
+          "forma": "carimbo",
+          "em": "cumprido",
+          "lugar": "baixo"
+        }
+      ],
+      "narracao": {
+        "audio": "narracao/amostra-biblia/cena-05-df1cce4b.wav",
+        "duracaoSeg": 4.16,
+        "legendas": [
+          {
+            "texto": "Ela",
+            "inicioMs": 0,
+            "fimMs": 160
+          },
+          {
+            "texto": "deu",
+            "inicioMs": 160,
+            "fimMs": 400
+          },
+          {
+            "texto": "água",
+            "inicioMs": 540,
+            "fimMs": 780
+          },
+          {
+            "texto": "até",
+            "inicioMs": 780,
+            "fimMs": 1020
+          },
+          {
+            "texto": "para",
+            "inicioMs": 1020,
+            "fimMs": 1260
+          },
+          {
+            "texto": "os",
+            "inicioMs": 1260,
+            "fimMs": 1360
+          },
+          {
+            "texto": "dez",
+            "inicioMs": 1360,
+            "fimMs": 1410
+          },
+          {
+            "texto": "camelos",
+            "inicioMs": 1360,
+            "fimMs": 2160,
+            "fimDeFrase": true
+          },
+          {
+            "texto": "O",
+            "inicioMs": 2460,
+            "fimMs": 2560
+          },
+          {
+            "texto": "sinal",
+            "inicioMs": 2560,
+            "fimMs": 2900
+          },
+          {
+            "texto": "estava",
+            "inicioMs": 2900,
+            "fimMs": 3200
+          },
+          {
+            "texto": "cumprido",
+            "inicioMs": 3200,
+            "fimMs": 3840,
+            "fimDeFrase": true
+          }
+        ],
+        "chave": "[\"Ela deu água até para os dez camelos. O sinal estava cumprido.\",\"pm_santa*0.6+bm_fable*0.4\",1,false]"
+      }
+    },
+    {
+      "fala": "Dias depois, no campo, Isaque levantou os olhos e viu os camelos chegando.",
+      "plano": "medio-aberto",
+      "foco": "isaque",
+      "lugar": "campo",
+      "destaque": [
+        "viu"
+      ],
+      "estados": {
+        "isaque": {
+          "pose": "pensando",
+          "expressao": "neutra"
+        },
+        "servo": {
+          "pose": "normal",
+          "expressao": "feliz"
+        },
+        "rebeca": {
+          "pose": "normal",
+          "expressao": "neutra"
+        }
+      },
+      "acoes": [
+        {
+          "quem": "isaque",
+          "em": "levantou",
+          "acao": "olhar",
+          "para": "rebeca",
+          "expressao": "surpresa"
+        },
+        {
+          "quem": "servo",
+          "em": "chegando",
+          "acao": "apontar"
+        }
+      ],
+      "narracao": {
+        "audio": "narracao/amostra-biblia/cena-06-98d15220.wav",
+        "duracaoSeg": 4.736,
+        "legendas": [
+          {
+            "texto": "Dias",
+            "inicioMs": 0,
+            "fimMs": 320
+          },
+          {
+            "texto": "depois,",
+            "inicioMs": 320,
+            "fimMs": 680
+          },
+          {
+            "texto": "no",
+            "inicioMs": 940,
+            "fimMs": 990
+          },
+          {
+            "texto": "campo,",
+            "inicioMs": 960,
+            "fimMs": 1320
+          },
+          {
+            "texto": "Isaque",
+            "inicioMs": 1660,
+            "fimMs": 1900
+          },
+          {
+            "texto": "levantou",
+            "inicioMs": 1900,
+            "fimMs": 2480
+          },
+          {
+            "texto": "os",
+            "inicioMs": 2480,
+            "fimMs": 2640
+          },
+          {
+            "texto": "olhos",
+            "inicioMs": 2640,
+            "fimMs": 2940
+          },
+          {
+            "texto": "e",
+            "inicioMs": 2940,
+            "fimMs": 3240
+          },
+          {
+            "texto": "viu",
+            "inicioMs": 3240,
+            "fimMs": 3380
+          },
+          {
+            "texto": "os",
+            "inicioMs": 3380,
+            "fimMs": 3500
+          },
+          {
+            "texto": "camelos",
+            "inicioMs": 3500,
+            "fimMs": 3920
+          },
+          {
+            "texto": "chegando",
+            "inicioMs": 3920,
+            "fimMs": 4380,
+            "fimDeFrase": true
+          }
+        ],
+        "chave": "[\"Dias depois, no campo, Isaque levantou os olhos e viu os camelos chegando.\",\"pm_santa*0.6+bm_fable*0.4\",1,false]"
+      }
+    },
+    {
+      "fala": "Rebeca cobriu o rosto com o véu, e Isaque foi ao seu encontro.",
+      "plano": "medio",
+      "foco": "rebeca",
+      "destaque": [
+        "véu"
+      ],
+      "acoes": [
+        {
+          "quem": "rebeca",
+          "em": "véu",
+          "acao": "olhar-baixo",
+          "expressao": "sem-graca"
+        },
+        {
+          "quem": "isaque",
+          "em": "encontro",
+          "acao": "andar",
+          "para": "rebeca",
+          "expressao": "feliz"
+        }
+      ],
+      "narracao": {
+        "audio": "narracao/amostra-biblia/cena-07-42bd498f.wav",
+        "duracaoSeg": 3.904,
+        "legendas": [
+          {
+            "texto": "Rebeca",
+            "inicioMs": 0,
+            "fimMs": 380
+          },
+          {
+            "texto": "cobriu",
+            "inicioMs": 380,
+            "fimMs": 840
+          },
+          {
+            "texto": "o",
+            "inicioMs": 840,
+            "fimMs": 890
+          },
+          {
+            "texto": "rosto",
+            "inicioMs": 860,
+            "fimMs": 1220
+          },
+          {
+            "texto": "com",
+            "inicioMs": 1220,
+            "fimMs": 1420
+          },
+          {
+            "texto": "o",
+            "inicioMs": 1420,
+            "fimMs": 1500
+          },
+          {
+            "texto": "véu,",
+            "inicioMs": 1500,
+            "fimMs": 1840
+          },
+          {
+            "texto": "e",
+            "inicioMs": 1840,
+            "fimMs": 2100
+          },
+          {
+            "texto": "Isaque",
+            "inicioMs": 2100,
+            "fimMs": 2340
+          },
+          {
+            "texto": "foi",
+            "inicioMs": 2340,
+            "fimMs": 2660
+          },
+          {
+            "texto": "ao",
+            "inicioMs": 2660,
+            "fimMs": 2800
+          },
+          {
+            "texto": "seu",
+            "inicioMs": 2800,
+            "fimMs": 2960
+          },
+          {
+            "texto": "encontro",
+            "inicioMs": 2960,
+            "fimMs": 3580,
+            "fimDeFrase": true
+          }
+        ],
+        "chave": "[\"Rebeca cobriu o rosto com o véu, e Isaque foi ao seu encontro.\",\"pm_santa*0.6+bm_fable*0.4\",1,false]"
+      }
+    },
+    {
+      "fala": "Isaque tinha quarenta anos. Levou Rebeca para a tenda de sua mãe, e a amou.",
+      "plano": "medio-aberto",
+      "foco": "isaque",
+      "destaque": [
+        "amou"
+      ],
+      "acoes": [
+        {
+          "quem": "isaque",
+          "em": "Levou",
+          "acao": "abracar",
+          "para": "rebeca",
+          "expressao": "radiante"
+        }
+      ],
+      "ilustra": [
+        {
+          "tipo": "numero",
+          "valor": 40,
+          "rotulo": "anos",
+          "icone": "calendario",
+          "em": "quarenta"
+        },
+        {
+          "tipo": "icone",
+          "icone": "coracao",
+          "rotulo": "E a amou",
+          "em": "amou"
+        }
+      ],
+      "narracao": {
+        "audio": "narracao/amostra-biblia/cena-08-6411e13d.wav",
+        "duracaoSeg": 4.907,
+        "legendas": [
+          {
+            "texto": "Isaque",
+            "inicioMs": 0,
+            "fimMs": 300
+          },
+          {
+            "texto": "tinha",
+            "inicioMs": 300,
+            "fimMs": 640
+          },
+          {
+            "texto": "quarenta",
+            "inicioMs": 640,
+            "fimMs": 1000
+          },
+          {
+            "texto": "anos",
+            "inicioMs": 1000,
+            "fimMs": 1420,
+            "fimDeFrase": true
+          },
+          {
+            "texto": "Levou",
+            "inicioMs": 1820,
+            "fimMs": 2140
+          },
+          {
+            "texto": "Rebeca",
+            "inicioMs": 2200,
+            "fimMs": 2560
+          },
+          {
+            "texto": "para",
+            "inicioMs": 2560,
+            "fimMs": 2760
+          },
+          {
+            "texto": "a",
+            "inicioMs": 2760,
+            "fimMs": 2860
+          },
+          {
+            "texto": "tenda",
+            "inicioMs": 2860,
+            "fimMs": 3220
+          },
+          {
+            "texto": "de",
+            "inicioMs": 3220,
+            "fimMs": 3300
+          },
+          {
+            "texto": "sua",
+            "inicioMs": 3300,
+            "fimMs": 3440
+          },
+          {
+            "texto": "mãe,",
+            "inicioMs": 3440,
+            "fimMs": 3840
+          },
+          {
+            "texto": "e",
+            "inicioMs": 3840,
+            "fimMs": 4160
+          },
+          {
+            "texto": "a",
+            "inicioMs": 4160,
+            "fimMs": 4240
+          },
+          {
+            "texto": "amou",
+            "inicioMs": 4240,
+            "fimMs": 4440,
+            "fimDeFrase": true
+          }
+        ],
+        "chave": "[\"Isaque tinha quarenta anos. Levou Rebeca para a tenda de sua mãe, e a amou.\",\"pm_santa*0.6+bm_fable*0.4\",1,false]"
+      }
+    },
+    {
+      "fala": "Mas vinte anos depois, os dois ainda esperavam um filho.",
+      "plano": "medio-aberto",
+      "foco": "isaque",
+      "destaque": [
+        "vinte"
+      ],
+      "estados": {
+        "rebeca": {
+          "pose": "normal",
+          "expressao": "preocupada"
+        },
+        "isaque": {
+          "pose": "normal",
+          "expressao": "preocupada"
+        }
+      },
+      "acoes": [
+        {
+          "quem": "isaque",
+          "em": "esperavam",
+          "acao": "ajoelhar-orando"
+        }
+      ],
+      "ilustra": [
+        {
+          "tipo": "numero",
+          "valor": 20,
+          "rotulo": "anos de espera",
+          "icone": "ampulheta",
+          "em": "vinte"
+        }
+      ],
+      "narracao": {
+        "audio": "narracao/amostra-biblia/cena-09-36ddb70c.wav",
+        "duracaoSeg": 3.691,
+        "legendas": [
+          {
+            "texto": "Mas",
+            "inicioMs": 0,
+            "fimMs": 180
+          },
+          {
+            "texto": "vinte",
+            "inicioMs": 180,
+            "fimMs": 500
+          },
+          {
+            "texto": "anos",
+            "inicioMs": 500,
+            "fimMs": 740
+          },
+          {
+            "texto": "depois,",
+            "inicioMs": 740,
+            "fimMs": 1220
+          },
+          {
+            "texto": "os",
+            "inicioMs": 1620,
+            "fimMs": 1760
+          },
+          {
+            "texto": "dois",
+            "inicioMs": 1760,
+            "fimMs": 1940
+          },
+          {
+            "texto": "ainda",
+            "inicioMs": 1940,
+            "fimMs": 2200
+          },
+          {
+            "texto": "esperavam",
+            "inicioMs": 2200,
+            "fimMs": 2820
+          },
+          {
+            "texto": "um",
+            "inicioMs": 2820,
+            "fimMs": 3000
+          },
+          {
+            "texto": "filho",
+            "inicioMs": 3000,
+            "fimMs": 3240,
+            "fimDeFrase": true
+          }
+        ],
+        "chave": "[\"Mas vinte anos depois, os dois ainda esperavam um filho.\",\"pm_santa*0.6+bm_fable*0.4\",1,false]"
+      }
+    }
+  ],
+  "voz": "masculina-12",
+  "vozes": {
+    "rebeca": {
+      "voz": "pf_dora*0.6+ef_dora*0.4"
+    },
+    "servo": {
+      "voz": "pm_alex*0.5+bm_george*0.5"
+    },
+    "isaque": {
+      "voz": "pm_alex*0.5+am_liam*0.5"
+    }
+  },
+  "musica": "musica/calma-esperanca.mp3",
+  "volumeMusica": 0.1,
+  "final": {
+    "frase": "E tomou a Rebeca, e foi-lhe por mulher, e amou-a.",
+    "linha": "Gênesis 24:67"
+  },
+  "ctaFinal": "Siga para a próxima história",
+  "botaoFinal": "Siga o canal 👆",
+  "capa": {
+    "titulo": "10 camelos e 1 oração",
+    "destaque": "oração",
+    "cena": 2,
+    "estados": {
+      "servo": {
+        "pose": "normal",
+        "expressao": "aliviada"
+      }
+    }
+  },
+  "post": {
+    "titulo": "10 camelos e 1 oração no poço",
+    "legenda": "O servo pediu um sinal, e a resposta chegou antes de ele terminar de orar. E você, hoje: pede sinais ou espera de olhos abertos? História bíblica: Gênesis 24. Cenas ilustrativas. #historiabiblica #biblia #umahistoriadabiblia"
+  },
+  "pronuncia": {
+    "Naor": "Na-ôr"
+  },
+  "idioma": "pt"
+}

@@ -1,3 +1,4 @@
+import * as THREE from "three";
 import type { Visual } from "../../componentes/personagens/Boneco";
 
 // Os lugares do Mundo 3D e o que cada um muda: o chão, o céu, as plantas, as
@@ -231,5 +232,133 @@ export function visualDeFigurante(semente: number, veste?: string): Visual {
     sapato: "#6B4A2E",
     penteado: semente % 4 === 1 ? "ondulado" : "curto",
     roupaEstilo: "blusa",
+  };
+}
+
+// ---------- Variações de roupa (27/11/2026) ----------
+// O dono: "cenas e roupas se repetem". Cada personagem tem 5 variações da roupa,
+// sempre com a mesma identidade (rosto, pele, cabelo, barba e a cor principal):
+// 1 = a do elenco; 2 = barra e cinto de pano; 3 = colete escuro e manga comprida;
+// 4 = faixa atravessada no peito; 5 = capa curta nos ombros e barra. A equipe
+// escolhe no campo "figurino" do personagem; sem ele, muda sozinha a cada episódio.
+
+export type Variacao = {
+  roupa?: string;
+  barra?: string;
+  cinto?: string;
+  colete?: string;
+  faixa?: string;
+  capaCurta?: string;
+  mangaLonga?: boolean;
+};
+export const VARIACOES = [1, 2, 3, 4, 5] as const;
+
+const tom = (cor: string, luz: number, sat = 0) => {
+  const c = new THREE.Color(cor);
+  const hsl = { h: 0, s: 0, l: 0 };
+  c.getHSL(hsl);
+  return "#" + new THREE.Color().setHSL(hsl.h, Math.min(1, Math.max(0, hsl.s + sat)), Math.min(0.92, Math.max(0.08, hsl.l + luz))).getHexString();
+};
+
+/** Os detalhes da variação n (1 a 5) da roupa de quem tem este visual e este traje */
+export function variacaoDoFigurino(n: number, visual: Visual, traje: Traje): Variacao {
+  const pano = traje.pano;
+  const roupa = visual.roupa;
+  const v = ((Math.round(n) - 1) % 5 + 5) % 5 + 1;
+  if (traje.figurino === "armadura") return v % 2 === 0 ? { capaCurta: pano } : {};
+  if (traje.figurino === "moderno") {
+    switch (v) {
+      case 2:
+        return { colete: tom(pano, -0.18), mangaLonga: true };
+      case 3:
+        return { roupa: tom(roupa, 0.12, -0.05), faixa: tom(pano, -0.05) };
+      case 4:
+        return { mangaLonga: true, roupa: tom(roupa, -0.1) };
+      case 5:
+        return { colete: tom(roupa, -0.25) };
+      default:
+        return {};
+    }
+  }
+  switch (v) {
+    case 2:
+      return { barra: pano, cinto: tom(pano, -0.15) };
+    case 3:
+      return { colete: tom(roupa, -0.22, 0.05), mangaLonga: true };
+    case 4:
+      return { roupa: tom(roupa, 0.08), faixa: pano };
+    case 5:
+      return { capaCurta: pano, barra: tom(roupa, -0.2) };
+    default:
+      return {};
+  }
+}
+
+/** Um número de 0 a 2^31 a partir de um texto (o título do episódio): a semente do episódio */
+export function sementeDoTexto(texto: string) {
+  let h = 2166136261;
+  for (let i = 0; i < texto.length; i++) {
+    h ^= texto.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return (h >>> 0) % 2147483647;
+}
+
+// ---------- A hora do dia (27/11/2026): o céu e a luz combinam ----------
+export const HORAS = ["dia", "tarde", "noite"] as const;
+export type Hora = (typeof HORAS)[number];
+
+export type LuzDaHora = {
+  ceuTopo: string;
+  ceuHorizonte: string;
+  nevoa: string;
+  sol: string;
+  forcaDoSol: number;
+  /** De onde vem o sol (direção, não precisa ser unitária) */
+  direcaoDoSol: [number, number, number];
+  luzDoCeu: string;
+  forcaDoCeu: number;
+  contraluz: string;
+  forcaDaContraluz: number;
+};
+
+export function luzDaHora(p: Paleta, hora: Hora): LuzDaHora {
+  if (hora === "tarde")
+    return {
+      ceuTopo: "#6E8FCB",
+      ceuHorizonte: "#F6C08A",
+      nevoa: "#F0C9A0",
+      sol: "#FFC587",
+      forcaDoSol: 2.5,
+      direcaoDoSol: [14, 9, 10],
+      luzDoCeu: "#C9D6F2",
+      forcaDoCeu: 0.85,
+      contraluz: "#FFB46B",
+      forcaDaContraluz: 1.6,
+    };
+  if (hora === "noite")
+    return {
+      ceuTopo: "#0E1630",
+      ceuHorizonte: "#2C3A66",
+      nevoa: "#24315A",
+      sol: "#A9C2FF",
+      forcaDoSol: 0.9,
+      direcaoDoSol: [-10, 22, 12],
+      luzDoCeu: "#5A6FA8",
+      forcaDoCeu: 0.55,
+      contraluz: "#8FB0FF",
+      forcaDaContraluz: 1.2,
+    };
+  return {
+    ceuTopo: new THREE.Color(p.ceu).offsetHSL(0.01, 0.05, -0.12).getStyle(),
+    ceuHorizonte: p.nevoa,
+    nevoa: p.nevoa,
+    sol: p.luzDoSol,
+    forcaDoSol: 2.6,
+    direcaoDoSol: [16, 26, 14],
+    luzDoCeu: "#DDEEFF",
+    forcaDoCeu: 1.0,
+    contraluz: "#FFF1D6",
+    forcaDaContraluz: 1.3,
   };
 }
