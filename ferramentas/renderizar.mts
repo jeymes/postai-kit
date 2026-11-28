@@ -48,21 +48,20 @@ type Fim = "chamada" | "vinheta" | "ambos" | "luz";
 const temVinheta = existsSync("public/marca") && readdirSync("public/marca").some((nome) => /^vinheta\.(mp4|mov|webm)$/.test(nome));
 const fimEscolhido = lerJson<{ fim?: Fim }>("public/marca/fim.json")?.fim;
 const fimDoVideo: Fim = fimEscolhido === "luz" ? "luz" : temVinheta ? (fimEscolhido ?? "ambos") : "chamada";
+// Tirar o cartão do fim é pôr o texto VAZIO, não apagar o campo: sem o campo, o
+// Remotion usa o texto de exemplo do molde (o Mundo3D tem "Siga para mais
+// histórias…") e o cartão voltava (28/11/2026)
 if (molde === "Conversa" || molde === "Mundo3D") {
   if (fimDoVideo !== "luz") delete props.final;
-  else if (props.final) delete props.ctaFinal;
+  else if (props.final) props.ctaFinal = "";
 }
 // Só a vinheta: tira o cartão do fim dos moldes em que ele é opcional
 if (fimDoVideo === "vinheta" && !args.includes("--previa")) {
-  if (molde === "Conversa") {
+  if (molde === "Conversa" || molde === "Mundo3D") {
     delete props.final;
-    delete props.ctaFinal;
+    props.ctaFinal = "";
   }
-  if (molde === "Documentario") delete props.encerramento;
-  if (molde === "Mundo3D") {
-    delete props.final;
-    delete props.ctaFinal;
-  }
+  if (molde === "Documentario") props.encerramento = "";
 }
 
 function lerJson<T>(arquivo: string): T | null {

@@ -8,7 +8,7 @@
 // Cada problema diz quem corrige. Sai com erro (código 1) se houver algum ERRO.
 //
 // Uso: npm run conferir -- conteudo/<arquivo>.json
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { cenariosFaltando } from "./cenarios-do-roteiro.ts";
 import { CONVERSA, duracaoDoMolde, estimarPalavras, falaDoNarrador, FPS, quadrosDaFala, quadrosDaFalaConversa } from "../src/moldes/tempos.ts";
 import { VOZES, VOZES_DO_ELENCO } from "../src/componentes/personagens/vozes.ts";
@@ -894,6 +894,36 @@ else {
 // ---- Texto de exemplo e marca ----
 const tudo = JSON.stringify({ ...peca, cenas: cenas.map(({ narracao: _n, ...resto }) => resto), elenco: undefined });
 if (/sua ?marca|@suamarca|lorem ipsum/i.test(tudo)) erro("roteirista", 'texto de exemplo ("Sua Marca", "@suamarca") no roteiro');
+// Cenário repetido: os lugares dos últimos 3 vídeos (coluna Cenários do episodios.md
+// do canal). Erro quando o canal pede para não repetir; aviso nos outros (28/11/2026)
+{
+  const pastaDoCanal = (() => {
+    const i = process.argv.indexOf("--canal");
+    if (i > 0 && process.argv[i + 1]) return process.argv[i + 1];
+    if (!existsSync("canais")) return "";
+    const comRegistro = readdirSync("canais").filter((p) => existsSync(`canais/${p}/episodios.md`));
+    return comRegistro.length === 1 ? `canais/${comRegistro[0]}` : "";
+  })();
+  const registro = pastaDoCanal && existsSync(`${pastaDoCanal}/episodios.md`) ? readFileSync(`${pastaDoCanal}/episodios.md`, "utf8") : "";
+  const linhas = registro.split("\n").filter((l) => l.startsWith("|"));
+  const cabecalho = linhas[0]?.split("|").map((c) => c.trim()) ?? [];
+  const coluna = cabecalho.indexOf("Cenários");
+  if (coluna > 0) {
+    const recentes = new Set(
+      linhas
+        .slice(2)
+        .slice(-3)
+        .flatMap((l) => (l.split("|")[coluna] ?? "").split(",").map((c) => c.trim()))
+        .filter((c) => c && c !== "-"),
+    );
+    const id = (c: unknown) => (typeof c === "string" ? c : c && typeof c === "object" && "id" in c ? String((c as { id: unknown }).id) : "");
+    const p = peca as { cenario?: unknown; cenas?: Array<{ cenario?: unknown; lugar?: unknown }> };
+    const usados = [...new Set([id(p.cenario), ...(p.cenas ?? []).flatMap((c) => [id(c.cenario), id(c.lugar)])].filter(Boolean))];
+    const repetidos = usados.filter((c) => recentes.has(c));
+    const naoRepete = existsSync(`${pastaDoCanal}/canal-postai.md`) && /repetir cen[aá]rio|nenhum se repete|n[aã]o repet\w* (o )?cen[aá]rio/i.test(readFileSync(`${pastaDoCanal}/canal-postai.md`, "utf8"));
+    if (repetidos.length) (naoRepete ? erro : aviso)("roteirista", `cenário repetido dos últimos 3 vídeos: ${repetidos.join(", ")} (troque por um lugar que não saiu, veja a coluna Cenários do episodios.md)`);
+  }
+}
 // Como o vídeo termina: a frase na luz só quando o dono escolheu (public/marca/fim.json)
 if (peca.molde === "Conversa" || peca.molde === "Mundo3D") {
   const fimEscolhido = existsSync("public/marca/fim.json") ? (JSON.parse(readFileSync("public/marca/fim.json", "utf8")) as { fim?: string }).fim : undefined;
