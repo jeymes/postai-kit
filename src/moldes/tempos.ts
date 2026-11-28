@@ -71,6 +71,18 @@ export const quadrosDoVideoDoApp = (v: { de: number; ate: number }) => Math.roun
 /** Mundo3D: respiro entre as cenas, o tempo da queda (na cena que tem) e o cartão do fim */
 export const MUNDO3D = { entreCenas: 10, queda: 16, cartao: 105, final: 150 } as const;
 
+/**
+ * Silhueta: o respiro antes da voz em cada cena, o respiro depois (a câmera
+ * segue andando e a cena seguinte entra por cima, devagar), a frase na luz e o
+ * cartão do fim. O título aparece desde o quadro 0, junto com a primeira fala.
+ */
+export const SILHUETA = { antes: 6, depois: 14, transicao: 18, final: 150, ctaFinal: 105 } as const;
+
+/** Uma cena do Silhueta: o respiro, a fala (a voz ou a estimativa) e o respiro depois */
+export function quadrosDaCenaSilhueta(cena: CenaNarrada) {
+  return SILHUETA.antes + quadrosDaFalaConversa(cena) + SILHUETA.depois;
+}
+
 /** Tempo estimado de cada palavra (antes da voz): curtas ~0,2 s, longas ~0,5 s, pausa na pontuação */
 export function estimarPalavras(fala: string) {
   let quadro = 0;
@@ -127,6 +139,8 @@ export function cenasDoMolde(molde: string, c: Conteudo): number[] {
       return [...((c.cenas ?? []) as CenaNarrada[]).map(quadrosDaFala), QUADROS_DO_FIM_DO_CORTE];
     case "Mundo3D":
       return [...((c.cenas ?? []) as Array<{ fala?: string; narracao?: { duracaoSeg: number }; queda?: string }>).map(quadrosDaCenaDoMundo3D), ...(c.final ? [MUNDO3D.final] : []), ...(c.ctaFinal ? [MUNDO3D.cartao] : [])];
+    case "Silhueta":
+      return [...((c.cenas ?? []) as CenaNarrada[]).map(quadrosDaCenaSilhueta), ...(c.final ? [SILHUETA.final] : []), ...(c.ctaFinal ? [SILHUETA.ctaFinal] : [])];
     case "Conversa":
       return [
         CONVERSA.inicio,
@@ -187,6 +201,7 @@ export const MOLDES_DE_VIDEO = [
   "Vitrine3D",
   "Conversa",
   "Mundo3D",
+  "Silhueta",
   ...Object.keys(CENAS_DOS_MEUS_MOLDES),
 ];
 

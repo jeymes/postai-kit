@@ -61,6 +61,7 @@ import { andarAgora, ehSentado, MaoDoObjetoContexto, type Momento2D } from "../c
 import { POSES as POSES_DO_KIT } from "../componentes/personagens/Boneco";
 import { figurinoDe, numeroDoTexto, QUANTOS_FIGURINOS } from "../componentes/personagens/figurino";
 import { CamadaDaFala, ilustraSchema, palavrasDaNarracao, palavrasEstimadas } from "../componentes/ilustracao";
+import { CamadaDosRotulos, rotulosSchema } from "../componentes/rotulos";
 
 // Cena de conversa entre personagens fixos do elenco, em desenho 2D: cada
 // cena é a fala de um personagem, com a pose e a expressão de cada um naquele
@@ -214,6 +215,8 @@ export const conversaSchema = z.object({
         ...camposDeDirecao,
         // Ilustração da fala (27/11/2026): número, conta, gráfico, ícone, texto, seta, círculo, pensamento ou objeto na palavra dita
         ilustra: ilustraSchema,
+        // Texto na cena (28/11/2026): lugar e data, nome de quem entra (na faixa de baixo) e bilhete em close; a placa é só do Mundo3D
+        rotulos: rotulosSchema,
       }),
     )
     .min(1)
@@ -1007,6 +1010,21 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
                 personagens={Object.fromEntries(elenco.map((p, i) => [p.id, { x: aqui(i).left + 270, y: 860 - subirNoCartao }]))}
                 // A faixa de baixo é o corpo de quem está de pé e encosta na legenda: o "baixo" sobe para o alto
                 semBaixo
+              />
+            ) : null,
+          )}
+        {/* Texto na cena (28/11/2026): a etiqueta de lugar e data embaixo do título, o nome na faixa de baixo e o bilhete em close */}
+        {frame < fimDasFalas &&
+          linha.map((l, n) =>
+            l.cena.rotulos?.some((r) => r.tipo !== "placa") ? (
+              <CamadaDosRotulos
+                key={`rotulos-${n}`}
+                rotulos={l.cena.rotulos}
+                palavras={l.cena.narracao ? palavrasDaNarracao(l.cena.narracao.legendas, l.inicio) : palavrasEstimadas(l.cena.fala, l.inicio)}
+                inicio={l.inicio}
+                fim={l.inicio + quadrosDaFalaConversa(l.cena) + CONVERSA.entreFalas}
+                legenda={doNarrador[n] ? 1385 - Math.round(estilo.legenda * 0.35) : 1420}
+                topoDaEtiqueta={baixoDoTitulo(props.titulo, props.parte) + 24 + (props.ctaInicial && l.inicio < 125 ? 115 : 0)}
               />
             ) : null,
           )}

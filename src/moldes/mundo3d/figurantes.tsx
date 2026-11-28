@@ -14,7 +14,7 @@ import { BonecoDePecas } from "./BonecoDePecas";
 
 const FPS = 30;
 /** Os lugares com rua (gente passando e veículo) */
-export const COM_RUA: Ambiente[] = ["cidade", "moderno", "aldeia", "mar"];
+export const COM_RUA: Ambiente[] = ["cidade", "moderno", "aldeia", "mar", "serra", "sertao", "europa"];
 
 const Material: React.FC<{ cor: string; brilho?: boolean }> = ({ cor, brilho }) => <meshStandardMaterial color={cor} roughness={brilho ? 0.3 : 0.75} metalness={brilho ? 0.4 : 0} />;
 
@@ -166,7 +166,9 @@ export const Figurantes: React.FC<{ ambiente: Ambiente; semente: number; rio: bo
     }
     return null;
   }, [semente, livre]);
-  const veiculo = ambiente === "mar" ? null : ambiente === "moderno" ? "carro" : "carroca";
+  // Na serra, quem passa é o carro descendo a estrada (lugaresNovos.tsx): ninguém a pé no asfalto
+  const serra = ambiente === "serra";
+  const veiculo = ambiente === "mar" || serra ? null : ambiente === "moderno" ? "carro" : "carroca";
   const cor = ["#C2453A", "#3F63B8", "#F2C14E", "#5E8C5A"][semente % 4];
   // O veículo passa de vez em quando (a cada 14 s), devagar, bem no fundo
   const periodo = 14;
@@ -176,7 +178,7 @@ export const Figurantes: React.FC<{ ambiente: Ambiente; semente: number; rio: bo
   return (
     <>
       {/* Com multidão na história, ela já dá vida: ninguém passa no meio dela */}
-      {!comMultidao && gente.map((g, i) => {
+      {!comMultidao && !serra && gente.map((g, i) => {
         // Atravessa de um lado ao outro (32 m) e volta a entrar pelo começo, fora do plano
         const andou = g.comeco + t * g.velocidade;
         const x = -16 + (andou % 32);
@@ -200,7 +202,7 @@ export const Figurantes: React.FC<{ ambiente: Ambiente; semente: number; rio: bo
           {veiculo === "carro" ? <Carro cor={cor} giro={-(tv * vel) / 0.32} /> : <Carroca giro={-(tv * vel) / 0.5} fase={tv * 7} />}
         </group>
       )}
-      {gato && ambiente !== "mar" && (
+      {gato && ambiente !== "mar" && !serra && (
         <group position={[gato[0], 0, gato[1]]} rotation={[0, (gato[0] > 0 ? -1 : 1) * 0.9, 0]}>
           <Gato quadro={quadro} />
         </group>

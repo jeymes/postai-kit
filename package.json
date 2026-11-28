@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "remotion studio",
     "lint": "eslint src && tsc",
-    "testes": "node --test src/componentes/ilustracao/tempo.test.ts src/componentes/ilustracao/layout.test.ts src/moldes/conversa/enquadramento.test.ts src/componentes/personagens/vozesGoogle.test.ts ferramentas/voz/motor.test.ts",
+    "testes": "node --test src/componentes/rotulos/tempo.test.ts src/componentes/ilustracao/tempo.test.ts src/componentes/ilustracao/layout.test.ts src/moldes/conversa/enquadramento.test.ts src/componentes/personagens/vozesGoogle.test.ts ferramentas/voz/motor.test.ts",
     "renderizar": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --import ./ferramentas/falhas.mts ferramentas/renderizar.mts",
     "fundo": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --import ./ferramentas/falhas.mts ferramentas/fundo.mts",
     "ponto": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --import ./ferramentas/falhas.mts ferramentas/ponto.mts",

@@ -15,13 +15,13 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { ferramenta } from "./postai.ts";
 
-const MOLDES: Record<string, string> = { conversa: "Conversa", documentario: "Documentario", mundo3d: "Mundo3D", bonecos3d: "Mundo3D" };
+const MOLDES: Record<string, string> = { conversa: "Conversa", documentario: "Documentario", mundo3d: "Mundo3D", bonecos3d: "Mundo3D", silhueta: "Silhueta" };
 // Um molde com outro jeito de desenhar: o quadro de teste usa o exemplo dele
 const EXEMPLOS: Record<string, string> = { bonecos3d: "conteudo/exemplo-lugar-cidade.json" };
 const pedido = (process.argv[2] ?? "").toLowerCase();
 const molde = MOLDES[pedido];
 if (!molde) {
-  console.error("Uso: npm run checar -- conversa | documentario | mundo3d | bonecos3d");
+  console.error("Uso: npm run checar -- conversa | documentario | mundo3d | bonecos3d | silhueta");
   process.exit(1);
 }
 

@@ -1,0 +1,134 @@
+{
+  "molde": "Mundo3D",
+  "bonecos": "pecas",
+  "voz": "pm_alex",
+  "multidao": null,
+  "ctaFinal": "Siga para mais causos do Brasil",
+  "botaoFinal": "Siga o canal 👆",
+  "titulo": "A carta que atravessou a guerra",
+  "destaqueDoTitulo": "carta",
+  "personagens": [
+    {
+      "id": "dito",
+      "onde": [
+        -0.9,
+        2.5
+      ],
+      "visual": {
+        "pele": "#E0A882",
+        "cabelo": "#4A3226",
+        "roupa": "#C2453A",
+        "calca": "#3B4A6B",
+        "sapato": "#6B4A2E",
+        "penteado": "curto",
+        "roupaEstilo": "blusa"
+      },
+      "detalhes3d": {
+        "barba": true
+      }
+    },
+    {
+      "id": "rosa",
+      "onde": [
+        1.0,
+        2.8
+      ],
+      "espelhar": true,
+      "visual": {
+        "pele": "#C68B5E",
+        "cabelo": "#2E211A",
+        "roupa": "#3F63B8",
+        "calca": "#3B4A6B",
+        "sapato": "#6B4A2E",
+        "penteado": "ondulado",
+        "roupaEstilo": "blusa"
+      }
+    }
+  ],
+  "cenario": {
+    "ambiente": "europa",
+    "hora": "dia"
+  },
+  "cenas": [
+    {
+      "fala": "Numa praça do norte da Itália, os soldados brasileiros esperavam notícias.",
+      "plano": "aberto",
+      "foco": "dito",
+      "destaque": [
+        "Itália"
+      ],
+      "rotulos": [
+        {
+          "tipo": "lugarEData",
+          "texto": "Itália · fevereiro de 1945"
+        },
+        {
+          "tipo": "placa",
+          "texto": "Piazza Grande",
+          "estilo": "rua"
+        }
+      ],
+      "acoes": [
+        {
+          "quem": "dito",
+          "em": "esperavam",
+          "acao": "olhar",
+          "para": "rosa"
+        }
+      ]
+    },
+    {
+      "fala": "A enfermeira Rosa trazia o correio toda semana.",
+      "plano": "medio-aberto",
+      "foco": "rosa",
+      "destaque": [
+        "correio"
+      ],
+      "rotulos": [
+        {
+          "tipo": "nome",
+          "quem": "rosa",
+          "nome": "Rosa",
+          "papel": "enfermeira",
+          "em": "Rosa"
+        }
+      ],
+      "acoes": [
+        {
+          "quem": "rosa",
+          "em": "correio",
+          "acao": "mostrar"
+        }
+      ]
+    },
+    {
+      "fala": "Naquele dia, a carta do Dito tinha um carimbo vermelho.",
+      "plano": "medio",
+      "foco": "dito",
+      "destaque": [
+        "carimbo"
+      ],
+      "rotulos": [
+        {
+          "tipo": "bilhete",
+          "texto": "Licença aprovada. Volta para casa em março.",
+          "papel": "documento",
+          "carimbo": "APROVADO",
+          "em": "carta"
+        }
+      ],
+      "acoes": [
+        {
+          "quem": "dito",
+          "em": "vermelho",
+          "acao": "comemorar",
+          "expressao": "radiante"
+        }
+      ]
+    }
+  ],
+  "post": {
+    "titulo": "A carta que atravessou a guerra",
+    "legenda": "Exemplo do kit: a praça europeia antiga com texto na cena."
+  }
+}

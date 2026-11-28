@@ -1,0 +1,203 @@
+{
+  "molde": "Mundo3D",
+  "bonecos": "pecas",
+  "voz": "pm_alex",
+  "multidao": null,
+  "ctaFinal": "Siga para mais causos do Brasil",
+  "botaoFinal": "Siga o canal 👆",
+  "titulo": "A placa que salvou a curva",
+  "destaqueDoTitulo": "placa",
+  "personagens": [
+    {
+      "id": "dito",
+      "onde": [
+        -0.9,
+        2.5
+      ],
+      "visual": {
+        "pele": "#E0A882",
+        "cabelo": "#4A3226",
+        "roupa": "#C2453A",
+        "calca": "#3B4A6B",
+        "sapato": "#6B4A2E",
+        "penteado": "curto",
+        "roupaEstilo": "blusa"
+      },
+      "detalhes3d": {
+        "barba": true
+      }
+    },
+    {
+      "id": "rosa",
+      "onde": [
+        1.0,
+        2.8
+      ],
+      "espelhar": true,
+      "visual": {
+        "pele": "#C68B5E",
+        "cabelo": "#2E211A",
+        "roupa": "#3F63B8",
+        "calca": "#3B4A6B",
+        "sapato": "#6B4A2E",
+        "penteado": "ondulado",
+        "roupaEstilo": "blusa"
+      }
+    }
+  ],
+  "cenario": {
+    "ambiente": "serra",
+    "hora": "dia"
+  },
+  "cenas": [
+    {
+      "fala": "Nessa curva da serra, quase todo mês um carro passava direto.",
+      "plano": "aberto",
+      "foco": "dito",
+      "destaque": [
+        "curva"
+      ],
+      "rotulos": [
+        {
+          "tipo": "lugarEData",
+          "texto": "Serra da Mantiqueira · 1986"
+        },
+        {
+          "tipo": "placa",
+          "texto": "Curva perigosa",
+          "linha2": "reduza",
+          "estilo": "aviso"
+        }
+      ],
+      "acoes": [
+        {
+          "quem": "dito",
+          "em": "carro",
+          "acao": "apontar"
+        }
+      ]
+    },
+    {
+      "fala": "O Seu Dito tinha uma borracharia logo ali e já não aguentava mais.",
+      "plano": "medio-aberto",
+      "foco": "dito",
+      "destaque": [
+        "borracharia"
+      ],
+      "rotulos": [
+        {
+          "tipo": "nome",
+          "quem": "dito",
+          "nome": "Seu Dito",
+          "papel": "borracheiro",
+          "em": "Dito"
+        }
+      ],
+      "acoes": [
+        {
+          "quem": "dito",
+          "em": "aguentava",
+          "acao": "cruzar-bracos",
+          "expressao": "preocupada"
+        }
+      ]
+    },
+    {
+      "fala": "Ele escreveu uma carta para a prefeitura pedindo uma placa maior.",
+      "plano": "medio",
+      "foco": "dito",
+      "destaque": [
+        "carta"
+      ],
+      "rotulos": [
+        {
+          "tipo": "bilhete",
+          "texto": "Pedimos uma placa maior na curva do km 42.",
+          "assinatura": "Benedito",
+          "papel": "carta",
+          "em": "carta"
+        }
+      ],
+      "acoes": [
+        {
+          "quem": "dito",
+          "em": "escreveu",
+          "acao": "pensar"
+        }
+      ]
+    },
+    {
+      "fala": "A resposta chegou três meses depois.",
+      "plano": "close",
+      "foco": "dito",
+      "destaque": [
+        "três"
+      ],
+      "rotulos": [
+        {
+          "tipo": "bilhete",
+          "texto": "Pedido negado por falta de verba.",
+          "papel": "documento",
+          "carimbo": "NEGADO",
+          "em": "resposta"
+        }
+      ]
+    },
+    {
+      "fala": "Então a Rosa, a filha dele, pegou tinta e pintou a placa ela mesma.",
+      "plano": "medio-aberto",
+      "foco": "rosa",
+      "destaque": [
+        "pintou"
+      ],
+      "rotulos": [
+        {
+          "tipo": "nome",
+          "quem": "rosa",
+          "nome": "Rosa",
+          "papel": "a filha",
+          "em": "Rosa"
+        }
+      ],
+      "acoes": [
+        {
+          "quem": "rosa",
+          "em": "tinta",
+          "acao": "mostrar"
+        },
+        {
+          "quem": "dito",
+          "em": "pintou",
+          "acao": "olhar",
+          "para": "rosa"
+        }
+      ]
+    },
+    {
+      "fala": "Naquele ano, nenhum carro passou da mureta.",
+      "plano": "aberto",
+      "foco": "rosa",
+      "destaque": [
+        "nenhum"
+      ],
+      "acoes": [
+        {
+          "quem": "rosa",
+          "em": "nenhum",
+          "acao": "comemorar",
+          "expressao": "radiante"
+        },
+        {
+          "quem": "dito",
+          "em": "mureta",
+          "acao": "comemorar",
+          "expressao": "feliz"
+        }
+      ]
+    }
+  ],
+  "post": {
+    "titulo": "A placa que salvou a curva",
+    "legenda": "Exemplo do kit: texto na cena (lugar e data, nome, placa e bilhete) na estrada de serra."
+  }
+}

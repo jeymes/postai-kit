@@ -5,7 +5,9 @@ import type { Visual } from "../../componentes/personagens/Boneco";
 // casas e a roupa dos bonecos. A equipe escolhe só o lugar (cenario.ambiente) e
 // tudo combina: o boneco "segue o ambiente".
 
-export const AMBIENTES = ["campo", "deserto", "cidade", "aldeia", "moderno", "reino", "mar", "salao"] as const;
+// serra, sertao e europa (28/11/2026): os lugares dos causos em alta (a curva da
+// serra com a mureta, o sertão de chão rachado e mandacaru, a praça de pedra)
+export const AMBIENTES = ["campo", "deserto", "cidade", "aldeia", "moderno", "reino", "mar", "salao", "serra", "sertao", "europa"] as const;
 export type Ambiente = (typeof AMBIENTES)[number];
 
 export const FIGURINOS = ["tunica-curta", "tunica-longa", "manto", "armadura", "moderno"] as const;
@@ -24,8 +26,8 @@ export type Paleta = {
   /** Grama 3D na frente (o matiz da cor) ou nada */
   grama: number | null;
   montanhas: { matiz: number; saturacao: number; luz: number; baixas: boolean };
-  plantas: "arvores" | "palmeiras" | "redondas";
-  casas: "barro" | "palha" | "coloridas" | null;
+  plantas: "arvores" | "palmeiras" | "redondas" | "caatinga";
+  casas: "barro" | "palha" | "coloridas" | "taipa" | null;
   muralha: boolean;
   pedras: boolean;
   rio: boolean;
@@ -36,6 +38,12 @@ export type Paleta = {
   mar?: boolean;
   /** Lugar fechado: o salão do trono (sem céu, montanhas nem plantas) */
   interior?: boolean;
+  /** A estrada de serra com a curva, a mureta e o vale atrás (lugaresNovos.tsx) */
+  estrada?: boolean;
+  /** O chão: com manchas (padrão), rachado (sertão) ou de pedra (calçamento) */
+  textura?: "manchas" | "rachado" | "pedras";
+  /** A praça de cidade europeia antiga: sobrados de pedra, a torre com relógio e o chafariz */
+  praca?: boolean;
 };
 
 export const PALETAS: Record<Ambiente, Paleta> = {
@@ -170,6 +178,63 @@ export const PALETAS: Record<Ambiente, Paleta> = {
     tendas: false,
     interior: true,
   },
+  // A estrada de serra: asfalto com faixa amarela, a curva com a mureta e as placas
+  // de curva, o vale lá embaixo e as montanhas verdes (a referência: o borracheiro da curva)
+  serra: {
+    chao: "#6FB04A",
+    margem: "#8E8C84",
+    ceu: "#A8CDEB",
+    nevoa: "#D3E3EE",
+    luzDoChao: "#4F7F33",
+    luzDoSol: "#FFFFFF",
+    grama: 0.27,
+    montanhas: { matiz: 0.31, saturacao: 0.32, luz: 0.36, baixas: false },
+    plantas: "arvores",
+    casas: null,
+    muralha: false,
+    pedras: false,
+    rio: false,
+    tendas: false,
+    estrada: true,
+  },
+  // O sertão: chão de terra rachada, mandacaru, galho seco, casinha de taipa e serras baixas
+  sertao: {
+    chao: "#D2A56C",
+    margem: "#B88A55",
+    ceu: "#86C3F2",
+    nevoa: "#EED9B6",
+    luzDoChao: "#A97C48",
+    luzDoSol: "#FFF1D8",
+    grama: null,
+    montanhas: { matiz: 0.07, saturacao: 0.42, luz: 0.5, baixas: true },
+    plantas: "caatinga",
+    casas: "taipa",
+    muralha: false,
+    pedras: true,
+    rio: false,
+    tendas: false,
+    textura: "rachado",
+  },
+  // A cidade europeia antiga: calçamento de pedra, sobrados de dois e três andares com
+  // telhado e janela de veneziana, a torre com relógio e o chafariz no meio da praça
+  europa: {
+    chao: "#B9B1A3",
+    margem: "#9C9486",
+    ceu: "#AFCBE3",
+    nevoa: "#DCE2E6",
+    luzDoChao: "#8E8678",
+    luzDoSol: "#FFF6E8",
+    grama: null,
+    montanhas: { matiz: 0.3, saturacao: 0.18, luz: 0.5, baixas: true },
+    plantas: "redondas",
+    casas: null,
+    muralha: false,
+    pedras: false,
+    rio: false,
+    tendas: false,
+    textura: "pedras",
+    praca: true,
+  },
 };
 
 /** Cores de pano (véu, turbante, capa) que combinam com roupa antiga */
@@ -204,6 +269,12 @@ export function trajeDoAmbiente(ambiente: Ambiente, visual: Visual, semente: num
       return { figurino: "tunica-curta", acessorio: cabeloCurto && semente % 2 === 0 ? "turbante" : "nenhum", pano };
     case "reino":
       return cabeloCurto ? { figurino: "tunica-curta", acessorio: "nenhum", pano } : { figurino: "tunica-longa", acessorio: "nenhum", pano };
+    // Os lugares de hoje (ou de há pouco): roupa de hoje; no sertão, às vezes o chapéu
+    case "serra":
+    case "europa":
+      return { figurino: "moderno", acessorio: "nenhum", pano };
+    case "sertao":
+      return { figurino: "moderno", acessorio: cabeloCurto && semente % 2 === 0 ? "chapeu" : "nenhum", pano };
     default:
       return { figurino: visual.calca === visual.roupa ? "tunica-longa" : "tunica-curta", acessorio: "nenhum", pano };
   }

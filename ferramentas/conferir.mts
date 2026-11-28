@@ -1,4 +1,4 @@
-// Conferência automática de um episódio animado (molde Conversa ou Mundo3D) ou
+// Conferência automática de um episódio animado (molde Conversa, Mundo3D ou Silhueta) ou
 // de um vídeo do Canal dark (molde Documentario), antes de
 // renderizar. Confere o que é regra fixa e não depende de gosto: tamanhos,
 // CTAs, @ e texto de exemplo, movimento dos personagens, capa e post. Não
@@ -21,6 +21,10 @@ import { corpoSemBracos } from "../src/componentes/personagens/semMangas.ts";
 import { conferirIlustra } from "../src/componentes/ilustracao/tempo.ts";
 import type { CenaDoPlano } from "../src/moldes/mundo3d/plano.ts";
 import { ilustraSchema } from "../src/componentes/ilustracao/schema.ts";
+import { rotulosSchema } from "../src/componentes/rotulos/schema.ts";
+import { conferirRotulos } from "../src/componentes/rotulos/tempo.ts";
+import { acharPalavra, palavrasEstimadas } from "../src/componentes/ilustracao/tempo.ts";
+import { LIMITES_DA_SILHUETA, silhuetaSchema } from "../src/moldes/silhueta/schema.ts";
 
 const arquivo = process.argv.slice(2).find((arg) => !arg.startsWith("--"));
 if (!arquivo || !existsSync(arquivo)) {
@@ -56,6 +60,18 @@ const conferirIlustracoes = (lista: ReadonlyArray<{ fala?: string; ilustra?: unk
       return;
     }
     for (const problema of conferirIlustra(c.ilustra as Parameters<typeof conferirIlustra>[0], c.fala ?? "")) aviso("roteirista", `cena ${i + 1}: ${problema}`);
+  });
+
+// Texto na cena (28/11/2026): o formato dos rótulos e a palavra de cada um na fala
+const conferirTextoNaCena = (lista: ReadonlyArray<{ fala?: string; rotulos?: unknown; ilustra?: unknown[] }>, molde: "Mundo3D" | "Conversa", ids: Iterable<string>) =>
+  lista.forEach((c, i) => {
+    if (c.rotulos === undefined) return;
+    const formato = rotulosSchema.safeParse(c.rotulos);
+    if (!formato.success) {
+      for (const q of formato.error.issues.slice(0, 3)) erro("roteirista", `cena ${i + 1}: rotulos.${q.path.join(".")}: ${q.message.slice(0, 160)}`);
+      return;
+    }
+    for (const problema of conferirRotulos(formato.data, c.fala ?? "", { ids, molde, comIlustracao: Boolean(c.ilustra?.length) })) aviso("roteirista", `cena ${i + 1}: ${problema}`);
   });
 
 // Letras como a pessoa vê (um emoji simples conta como um)
@@ -445,7 +461,7 @@ if (peca.molde === "Mundo3D") {
   const pecas = m.bonecos === "pecas";
   const ids = new Set((m.personagens ?? []).map((p) => p.id));
   const PLANOS = ["aberto", "medio-aberto", "medio", "close", "de-baixo", "por-cima", "ombro", "detalhe"];
-  const AMBIENTES = ["campo", "deserto", "cidade", "aldeia", "moderno", "reino", "mar", "salao"];
+  const AMBIENTES = ["campo", "deserto", "cidade", "aldeia", "moderno", "reino", "mar", "salao", "serra", "sertao", "europa"];
   const ACOES = [
     "normal", "cintura", "celular", "celular-baixo", "cabeca", "explicando", "comemorando", "pensando", "sentado", "apontando", "caido", "abraco",
     "andar", "correr", "virar", "olhar", "olhar-cima", "olhar-baixo", "ajoelhar", "orar", "ajoelhar-orando", "levantar-bracos", "chorar", "acenar",
@@ -489,6 +505,7 @@ if (peca.molde === "Mundo3D") {
   const objetoNaMao = (id: string, n: number) =>
     (m.objetos ?? []).some((o) => o.naMao && donoNaCena(o, n) === id && (!o.cenas?.length || (n >= Math.min(...o.cenas) && n <= Math.max(...o.cenas))));
   conferirIlustracoes(cenas);
+  conferirTextoNaCena(cenas as Array<Cena3D & { rotulos?: unknown; ilustra?: unknown[] }>, "Mundo3D", ids);
   cenas.forEach((cena, i) => {
     const n = i + 1;
     if (!cena.fala?.trim()) erro("roteirista", `cena ${n} sem fala`);
@@ -603,8 +620,107 @@ if (peca.molde === "Mundo3D") {
   resultado();
 }
 
+// ---- Silhueta (paisagens em silhueta com narrador): o formato e o loop ----
+// 28/11/2026: a pergunta do título é a primeira fala e volta na última (o loop);
+// 6 a 10 cenas, 35 a 60 s; cenário, clima, figura e câmera da lista; o diagrama
+// na palavra dita.
+if (peca.molde === "Silhueta") {
+  const L = LIMITES_DA_SILHUETA;
+  const doc = peca as unknown as Record<string, unknown>;
+  // O formato inteiro pelo schema do molde (cenário, clima, figura e câmera válidos; diagrama com um tipo só)
+  const { molde: _molde, ...semMolde } = doc;
+  const formato = silhuetaSchema.safeParse(semMolde);
+  if (!formato.success)
+    for (const q of formato.error.issues.slice(0, 8)) {
+      // "cenas.2.cenario" vira "cena 3: cenario" (a contagem que a roteirista usa)
+      const campo = q.path.map(String).join(".").replace(/^cenas\.(\d+)\.?/, (_, n) => `cena ${Number(n) + 1}: `) || "(raiz)";
+      erro("roteirista", `${campo}${campo.endsWith(" ") ? "" : ": "}${q.message.slice(0, 160)}`);
+    }
+  type CenaS = { fala?: string; cenario?: string; clima?: string; figura?: string; camera?: string; gestos?: Array<{ em?: string; pose?: string }>; narracao?: { duracaoSeg?: number }; diagrama?: { em?: string; ate?: string; seta?: { de: string; para: string }; lista?: string[]; versus?: { isto: string; aquilo: string } } };
+  const cenas = (peca.cenas ?? []) as unknown as CenaS[];
+  const titulo = String(peca.titulo ?? "");
+  if (cenas.length < 4 || cenas.length > 12) erro("roteirista", `${cenas.length} cenas: o Silhueta pede de ${L.cenasMin} a ${L.cenasMax}`);
+  else if (cenas.length < L.cenasMin || cenas.length > L.cenasMax) aviso("roteirista", `${cenas.length} cenas: o formato pede de ${L.cenasMin} a ${L.cenasMax}`);
+  cenas.forEach((c, i) => {
+    const n = palavras(c.fala);
+    if (n > L.palavrasPorFala + 6) erro("roteirista", `cena ${i + 1}: fala com ${n} palavras (até ${L.palavrasPorFala}): divida em duas cenas`);
+    else if (n > L.palavrasPorFala) aviso("roteirista", `cena ${i + 1}: fala com ${n} palavras (até ${L.palavrasPorFala})`);
+    conferirVoz("roteirista", `cena ${i + 1}`, c.fala);
+    // Os gestos da figura acontecem na palavra dita
+    if (c.gestos?.length) {
+      if (!c.figura || c.figura === "nenhuma") erro("roteirista", `cena ${i + 1}: gestos sem figura (ponha "figura" com a pose de começo)`);
+      const ditas = palavrasEstimadas(c.fala ?? "");
+      for (const g of c.gestos) if (g.em && acharPalavra(ditas, g.em) < 0) aviso("roteirista", `cena ${i + 1}: gesto em "${g.em}", que não está na fala; ele não acontece`);
+    }
+    // O diagrama aparece na palavra dita: a palavra tem de estar na fala
+    const d = c.diagrama;
+    if (d) {
+      const ditas = palavrasEstimadas(c.fala ?? "");
+      if (d.em && acharPalavra(ditas, d.em) < 0) aviso("roteirista", `cena ${i + 1}: diagrama.em "${d.em}" não está na fala; ele entra no começo da fala`);
+      if (d.ate && acharPalavra(ditas, d.ate) < 0) aviso("roteirista", `cena ${i + 1}: diagrama.ate "${d.ate}" não está na fala; ele fica até o fim da cena`);
+      const grande = i === 0 || (i === cenas.length - 1 && doc.tituloNoFim !== false);
+      if (grande) aviso("diretora-de-arte", `cena ${i + 1}: diagrama numa cena com o título grande (a primeira e a última): ele desce para baixo do título e pode encostar na paisagem; prefira as cenas do meio`);
+    }
+  });
+  // Quantas cenas com diagrama: 2 a 4 dão ritmo sem poluir
+  const comDiagrama = cenas.filter((c) => c.diagrama).length;
+  if (cenas.length >= 6 && comDiagrama < 2) aviso("roteirista", `só ${comDiagrama} cena(s) com diagrama: ponha 2 a 4 (A → B, lista 01/02/03, isto | aquilo) nas palavras fortes`);
+  if (comDiagrama > 5) aviso("roteirista", `${comDiagrama} cenas com diagrama: mais de 5 polui; deixe só as viradas`);
+  // A paisagem muda: a mesma imagem (cenário, clima e figura iguais) duas cenas seguidas parece parada
+  cenas.forEach((c, i) => {
+    const a = cenas[i - 1];
+    if (a && a.cenario === c.cenario && (a.clima ?? "") === (c.clima ?? "") && (a.figura ?? "nenhuma") === (c.figura ?? "nenhuma"))
+      aviso("diretora-de-arte", `cenas ${i} e ${i + 1}: o mesmo cenário, clima e figura (parecem a mesma imagem): mude o clima, a figura ou o cenário`);
+  });
+  if (new Set(cenas.map((c) => c.cenario)).size < 2 && cenas.length >= 4) aviso("diretora-de-arte", "todas as cenas no mesmo cenário: varie (2 a 4 lugares) para a paisagem contar a história");
+  // O tempo: 35 a 60 s de fala
+  const segundos = cenas.reduce((soma, c) => soma + (c.narracao?.duracaoSeg ?? palavras(c.fala) / 2.6), 0);
+  if (segundos > 75) erro("roteirista", `uns ${Math.round(segundos)} s de fala: o Short do Silhueta vai até uns 60 s`);
+  else if (segundos > L.segundosMax || segundos < L.segundosMin) aviso("roteirista", `uns ${Math.round(segundos)} s de fala: o formato pede de ${L.segundosMin} a ${L.segundosMax} s`);
+  // O título e o loop: a pergunta do título abre e fecha o vídeo
+  if (!titulo) erro("roteirista", "falta o título (a pergunta do vídeo)");
+  else {
+    if (tamanho(titulo) > L.titulo) erro("roteirista", `título com ${tamanho(titulo)} letras (até ${L.titulo})`);
+    if (!/\?\s*$/.test(titulo)) aviso("roteirista", "o título do Silhueta é uma pergunta (termine com ?)");
+    const destaque = String(doc.destaqueDoTitulo ?? "");
+    if (!destaque) aviso("roteirista", "sem destaqueDoTitulo: uma palavra do título sai em itálico dourado");
+    else if (destaque.split(/\s+/).some((p) => !titulo.toLowerCase().includes(p.toLowerCase().replace(/[?!.,]$/, ""))))
+      erro("roteirista", `destaqueDoTitulo "${destaque}" não está no título`);
+    // As palavras que contam (3 letras ou mais) do título
+    const chave = (texto: string) => new Set(texto.split(/\s+/).map(normalizarPalavra).filter((p) => p.length >= 3));
+    const doTitulo = chave(titulo);
+    const parecido = (fala = "") => {
+      const ditas = chave(fala);
+      const iguais = [...doTitulo].filter((p) => ditas.has(p)).length;
+      return doTitulo.size ? iguais / doTitulo.size : 0;
+    };
+    const primeira = cenas[0]?.fala ?? "";
+    const ultima = cenas[cenas.length - 1]?.fala ?? "";
+    if (parecido(primeira.split(/(?<=[?!.])\s+/)[0]) < 0.6) aviso("roteirista", "a primeira fala não começa com a pergunta do título: no Silhueta a primeira frase dita é o título");
+    // O loop: a última frase devolve a pergunta do começo
+    const fimDaUltima = ultima.split(/(?<=[?!.])\s+/).slice(-2).join(" ");
+    if (parecido(fimDaUltima) < 0.6)
+      aviso("roteirista", `o loop: a última fala não retoma a pergunta do título ("${titulo}"). Termine com ela (ou quase igual), para quem assiste de novo emendar no começo`);
+    else if (!/\?\s*$/.test(ultima.trim())) aviso("roteirista", "o loop: a última fala devolve a pergunta; termine com ?");
+  }
+  if (tamanho(String(doc.sobretitulo ?? "")) > L.sobretitulo) erro("roteirista", `sobretitulo com mais de ${L.sobretitulo} letras`);
+  const cta = doc.ctaInicial as string | undefined;
+  if (cta && tamanho(cta) > 36) erro("roteirista", `ctaInicial com ${tamanho(cta)} letras (até 36, numa linha)`);
+  if (!peca.ctaFinal) aviso("roteirista", "sem ctaFinal: o vídeo termina sem o cartão da marca");
+  if (peca.ctaFinal && (/@/.test(peca.ctaFinal) || /link na bio/i.test(peca.ctaFinal))) erro("roteirista", "ctaFinal sem @ e sem link na bio (isso vai no botão)");
+  if (!peca.post?.titulo || !peca.post?.legenda) erro("roteirista", 'falta "post": { "titulo", "legenda" }');
+  // Como o vídeo termina: a frase na luz só quando o dono escolheu (public/marca/fim.json)
+  const fimEscolhido = existsSync("public/marca/fim.json") ? (JSON.parse(readFileSync("public/marca/fim.json", "utf8")) as { fim?: string }).fim : undefined;
+  if (fimEscolhido === "luz" && !doc.final) erro("roteirista", 'o dono escolheu terminar na frase na luz: ponha "final" { frase, linha, botao (pedindo para seguir) }');
+  if (fimEscolhido !== "luz" && doc.final) aviso("roteirista", 'o "final" (frase na luz) não sai: o dono não escolheu terminar na luz (o vídeo acaba no cartão do fim)');
+  const textoTodo = JSON.stringify({ ...doc, cenas: cenas.map(({ narracao: _n, ...resto }) => resto) });
+  if (/sua ?marca|@suamarca|lorem ipsum/i.test(textoTodo)) erro("roteirista", 'texto de exemplo ("Sua Marca") no roteiro');
+  console.log(`Silhueta: ${cenas.length} cenas, uns ${Math.round(segundos)} s de fala, ${comDiagrama} diagrama(s), ${new Set(cenas.map((c) => c.cenario)).size} cenário(s).`);
+  resultado();
+}
+
 if (peca.molde !== "Conversa") {
-  console.log(`Molde ${peca.molde ?? "?"}: esta conferência é para os moldes Conversa, Documentario e Mundo3D.`);
+  console.log(`Molde ${peca.molde ?? "?"}: esta conferência é para os moldes Conversa, Documentario, Mundo3D e Silhueta.`);
   process.exit(0);
 }
 
@@ -624,6 +740,7 @@ else if (cenas.length > 7) aviso("roteirista", `${cenas.length} cenas: só se o 
 const idsDoElenco = peca.elenco?.length ? peca.elenco.map((p) => p.id) : ["noiva", "organizadora"];
 const doNarrador = (cena: Cena) => falaDoNarrador(cena.quem, idsDoElenco);
 conferirIlustracoes(cenas);
+conferirTextoNaCena(cenas as Array<Cena & { ilustra?: unknown[] }>, "Conversa", idsDoElenco);
 // A coluna do título já cheia (hora + notificação, ou uma delas com o balão do começo): a ilustração no alto fica espremida
 cenas.forEach((cena, i) => {
   const c = cena as Cena & { hora?: string; notificacao?: unknown; ilustra?: Array<{ lugar?: string }> };

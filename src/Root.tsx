@@ -19,6 +19,7 @@ import { Teste3D } from "./componentes/3d/Teste3D";
 import { PreviaDoEstilo } from "./estilos/Previa";
 import { Vitrine3D, vitrine3dExemplo, vitrine3dSchema } from "./moldes/Vitrine3D";
 import { Mundo3D, mundo3dExemplo, mundo3dSchema } from "./moldes/Mundo3D";
+import { CapaSilhueta, Silhueta, silhuetaExemplo, silhuetaSchema } from "./moldes/Silhueta";
 import { Vinheta, vinhetaExemplo, type PropsDaVinheta } from "./moldes/Vinheta";
 import { duracaoDaDemo, IlustracaoDemo, ilustracaoDemoSchema, type PropsDaDemo } from "./componentes/ilustracao/Demo";
 
@@ -106,6 +107,16 @@ export const RemotionRoot: React.FC = () => (
         durationInFrames={duracaoDoMolde("Vitrine3D", vitrine3dExemplo)}
         {...duracao("Vitrine3D", vitrine3dSchema)}
       />
+      {/* Paisagens em silhueta com narrador, título serifado e diagramas (o loop da pergunta) */}
+      <Composition
+        id="Silhueta"
+        component={Silhueta}
+        schema={silhuetaSchema}
+        defaultProps={silhuetaExemplo}
+        {...video}
+        durationInFrames={duracaoDoMolde("Silhueta", silhuetaExemplo)}
+        {...duracao("Silhueta", silhuetaSchema)}
+      />
       <Composition
         id="Conversa"
         component={Conversa}
@@ -181,6 +192,15 @@ export const RemotionRoot: React.FC = () => (
     </Folder>
     <Folder name="Imagens">
       <Composition id="Capa" component={Capa} schema={capaSchema} defaultProps={capaExemplo} {...video} durationInFrames={QUADROS_DA_IMAGEM} />
+      <Composition
+        id="CapaSilhueta"
+        component={CapaSilhueta}
+        schema={silhuetaSchema}
+        defaultProps={silhuetaExemplo}
+        {...video}
+        durationInFrames={QUADROS_DA_IMAGEM}
+        calculateMetadata={({ props }) => ({ durationInFrames: QUADROS_DA_IMAGEM, props: silhuetaSchema.parse(props) })}
+      />
       <Composition id="CapaConversa" component={CapaConversa} defaultProps={conversaExemplo} {...video} durationInFrames={QUADROS_DA_IMAGEM} />
       <Composition
         id="Carrossel"

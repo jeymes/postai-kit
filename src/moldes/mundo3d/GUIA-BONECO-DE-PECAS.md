@@ -20,6 +20,9 @@ A equipe escolhe só o lugar da história em `cenario.ambiente`, e o mundo e a r
 | `reino`   | grama, árvores e um castelo de pedra com torres no fundo   | túnica curta ou comprida                            |
 | `mar`     | praia de areia, o mar no fundo, barcos a vela, palmeiras   | túnica curta, às vezes turbante                     |
 | `salao`   | salão do trono: chão de pedra, tapete, colunas, o trono    | roupa comprida e capa; véu (cabelo comprido)        |
+| `serra`   | estrada de asfalto com a curva, mureta, placas de curva, o vale e o carro que desce | roupa de hoje                    |
+| `sertao`  | terra rachada, mandacaru, galho seco, casinha de taipa, serras baixas | roupa de hoje, às vezes chapéu    |
+| `europa`  | praça de pedra, sobrados com veneziana, torre com relógio, chafariz, postes | roupa de hoje                 |
 
 Gestos (em `estados` de cada cena): `apontando` (o braço esticado), `caido` (tomba de lado e fica deitado; a
 câmera mira o corpo) e `ate` [x, z] (a pessoa anda até lá durante a cena e continua de lá nas próximas).
@@ -100,6 +103,15 @@ cena, personagem só em algumas cenas, figurino).
 - **Rua viva** (`figurantes.tsx`, `cenario.figurantes`): na cidade, no moderno, na aldeia e no mar, gente passa
   andando no fundo, um veículo atravessa de vez em quando (carro no moderno, carroça com burro nos antigos) e
   um gato fica sentado num canto. Longe do elenco; com multidão na história, só o gato.
+
+## Lugares novos e texto na cena (28/11/2026)
+
+- `serra`, `sertao` e `europa` ficam em `lugaresNovos.tsx` (a geometria da estrada, conta pura, em `estrada.ts`). Na serra o
+  elenco fica no acostamento, na frente da estrada (z de 1 a 4); a estrada corre atrás (z -4), faz a curva à esquerda e some no
+  fundo, e atrás da mureta o chão acaba no vale (nada de planta, grama ou pedra no asfalto nem no vale). Leves para o render
+  por software: material fosco, o cenário não faz sombra, as árvores do vale numa malha só.
+- O texto na cena (`rotulos` da cena): a placa é 3D (`placa.tsx`, o texto num canvas); a etiqueta de lugar e data, o nome e o
+  bilhete são 2D, por cima (`src/componentes/rotulos/`).
 
 ## O que ainda falta
 

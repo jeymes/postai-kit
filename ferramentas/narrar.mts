@@ -99,7 +99,9 @@ const nome = basename(caminho, ".json");
 const doCanal = existsSync(".postai-idioma") ? readFileSync(".postai-idioma", "utf8").trim() : "";
 const idioma: IdiomaDaVoz = IDIOMAS_DA_VOZ.includes(peca.idioma) ? peca.idioma : IDIOMAS_DA_VOZ.includes(doCanal as IdiomaDaVoz) ? (doCanal as IdiomaDaVoz) : "pt";
 // O narrador ("voz" no topo) aceita o id do catálogo ("masculina-4") ou o nome do Kokoro
-const doCatalogo: Voz | undefined = peca.voz ? VOZES[peca.voz as string] : undefined;
+// Sem "voz": a padrão do molde (o Silhueta é de narrador grave, contador de histórias)
+const VOZ_PADRAO_DO_MOLDE: Record<string, string> = { Silhueta: "masculina-12" };
+const doCatalogo: Voz | undefined = VOZES[(peca.voz ?? VOZ_PADRAO_DO_MOLDE[peca.molde] ?? "") as string];
 const voz: string = vozNoIdioma(doCatalogo?.voz ?? peca.voz ?? "pf_dora", idioma);
 const velocidade: number = peca.velocidade ?? doCatalogo?.velocidade ?? 1;
 // As pronúncias do kit (grego e hebraico da Bíblia...) com as do roteiro por cima
@@ -195,7 +197,7 @@ if (google) {
     }
   })();
   const vozesDoRoteiro = (peca.vozes ?? {}) as Record<string, { voz?: string; vozGoogle?: string } | string>;
-  const padraoDoNarrador = molde === "Documentario" || molde === "Mundo3D" ? PADRAO_MASCULINA : PADRAO_FEMININA;
+  const padraoDoNarrador = molde === "Documentario" || molde === "Mundo3D" || molde === "Silhueta" ? PADRAO_MASCULINA : PADRAO_FEMININA;
   const vozDoNarrador = vozGoogleValida(google.narrador) ?? recomendarVozGoogle(peca.voz, padraoDoNarrador);
   const doNarrador = (cena: Cena) => falaDoNarrador(cena.quem, idsDoElenco);
   const vozGoogleDa = (cena: Cena): string => {

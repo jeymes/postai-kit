@@ -42,6 +42,9 @@ import { PainelDoQr, textoDoQr } from "../componentes/midia/QrCode";
 import { Mundo } from "./mundo3d/Mundo";
 import { linhaDoTempo, planejarFilmagem, PONTE, type PalavraDita } from "./mundo3d/plano";
 import { CamadaDaFala, ilustraSchema } from "../componentes/ilustracao";
+import { CamadaDosRotulos, rotulosSchema, type Placa } from "../componentes/rotulos";
+import { estiloDaPlaca, Placa3D } from "./mundo3d/placa";
+import { ESTRADA } from "./mundo3d/estrada";
 import { duracaoDoMolde, FPS, MUNDO3D } from "./tempos";
 
 // PROTÓTIPO (18/11/2026, branch prototipo-mundo3d): personagens de palito
@@ -191,6 +194,8 @@ export const mundo3dSchema = z.object({
         narracao: narracaoSchema.optional(),
         // Ilustração da fala (27/11/2026): o que é dito aparece na tela, na palavra exata
         ilustra: ilustraSchema,
+        // Texto na cena (28/11/2026): lugar e data, nome de quem entra, placa do cenário e bilhete em close
+        rotulos: rotulosSchema,
       }),
     )
     .min(1),
@@ -758,6 +763,46 @@ export const Mundo3D: React.FC<Mundo3DProps> = (props) => {
     return lista.length ? lista : [{ em: 0, pose: "normal", expressao: "neutra" }];
   };
 
+  // Texto na cena: as placas do cenário. Cada uma entra no corte da cena dela e fica até o
+  // lugar mudar; sem "onde", fica atrás e ao lado do foco da cena, virada para a frente
+  const placasPorCena = useMemo(() => {
+    const lista: Array<Array<{ placa: Placa; estilo: NonNullable<Placa["estilo"]>; posicao: [number, number, number]; giro: number; chave: string }>> = [];
+    let atuais: (typeof lista)[number] = [];
+    linha.forEach((t, n) => {
+      if (n > 0 && plano.lugarDaCena(n) !== plano.lugarDaCena(n - 1)) atuais = [];
+      (t.cena.rotulos ?? []).forEach((r, k) => {
+        if (r.tipo !== "placa") return;
+        let x: number;
+        let z: number;
+        if (r.onde) [x, z] = r.onde;
+        else {
+          const grupo = meioDoGrupo(t.cena.foco);
+          const [fx, fz] = ids.includes(t.cena.foco) ? ondeNoChao(t.cena.foco, t.inicio) : grupo ? [grupo[0], grupo[2]] : [0, 2.5];
+          // Bem atrás e ao lado: aparece no plano aberto e, no médio, não fica colada atrás da cabeça.
+          // Na serra, do outro lado da estrada, encostada na mureta (o asfalto fica livre)
+          const serra = plano.lugarDaCena(n) === "serra";
+          x = fx + (r.lado === "direita" ? 1 : -1) * (serra ? 2.6 : 2.8);
+          z = serra ? ESTRADA.z - ESTRADA.largura / 2 - 0.75 : fz - 3.6;
+        }
+        // De frente para onde a câmera costuma estar (na frente do palco), sem virar demais
+        const giro = Math.max(-0.6, Math.min(0.6, Math.atan2(-x, 12 - z) * 0.7));
+        atuais = [...atuais, { placa: r, estilo: r.estilo ?? estiloDaPlaca(plano.lugarDaCena(n) as Ambiente), posicao: [x, 0, z], giro, chave: `placa-${n}-${k}` }];
+      });
+      lista.push(atuais);
+    });
+    return lista;
+  }, [linha, plano, meioDoGrupo, ids, ondeNoChao]);
+  // O alto da cabeça de cada um na tela, neste quadro (o nome de quem entra fica em cima dela)
+  const cabecas: Record<string, { x: number; y: number } | null> = {};
+  for (const p of props.personagens) {
+    if (!aqui.has(p.id)) continue;
+    const pes = pontoNoChao(p.id, frame);
+    const r = pecas ? rostoDe(p.id, frame) : null;
+    const alto: Ponto = r ? [r[0], r[1] + 0.42, r[2]] : [pes[0], pes[1] + ALTURA_DO_BONECO, pes[2]];
+    const naTelaAgora = projetar(camera, alto, width, height);
+    cabecas[p.id] = naTelaAgora.naFrente ? { x: naTelaAgora.x, y: naTelaAgora.y } : null;
+  }
+
   // A luz do céu: um feixe dourado que desce sobre o foco
   const focoNaTela = cena.luz ? projetar(camera, grupoAgora ? [grupoAgora[0], grupoAgora[1] - 1.3, grupoAgora[2]] : pontoNoChao(tomada.foco, frame), width, height) : null;
 
@@ -788,9 +833,13 @@ export const Mundo3D: React.FC<Mundo3DProps> = (props) => {
           centro={tomada.centro}
           livre={livre}
           semGrama={semGrama}
+          figurantes={props.cenario.figurantes ?? COM_RUA.includes(ambiente)}
         />
         {/* A vida da rua: gente passando no fundo, o veículo e o gato (bonecos de peças) */}
         {pecas && (props.cenario.figurantes ?? COM_RUA.includes(ambiente)) && <Figurantes ambiente={ambiente} semente={semente % 1000} rio={temRio} livre={livre} comMultidao={lugares.length > 0} />}
+        {(placasPorCena[indiceDaCena] ?? []).map((p) => (
+          <Placa3D key={p.chave} placa={p.placa} estilo={p.estilo} posicao={p.posicao} giro={p.giro} />
+        ))}
         {objetosDaCena.map((o) => (
           <ObjetoDeCena key={o.chave} tipo={o.tipo} posicao={o.posicao} escala={o.escala} giro={o.lado === "esquerda" ? Math.PI : 0} />
         ))}
@@ -909,6 +958,25 @@ export const Mundo3D: React.FC<Mundo3DProps> = (props) => {
               // A cena do começo divide o alto com o título e o balão da chamada (28/11/2026: o "10" cobria o balão)
               topo={t.inicio < 125 ? (props.ctaInicial ? 540 : 420) : undefined}
               faixas={faixasDaIlustracao(tomada.plano)}
+            />
+          ) : null,
+        )}
+      {/* Texto na cena (28/11/2026): lugar e data, o nome de quem entra e o bilhete em close, na palavra exata */}
+      {!props.semLegenda &&
+        frame < fimDasCenas &&
+        linha.map((t, n) =>
+          t.cena.rotulos?.some((r) => r.tipo !== "placa") ? (
+            <CamadaDosRotulos
+              key={`rotulos-${n}`}
+              rotulos={t.cena.rotulos}
+              palavras={t.palavras}
+              inicio={t.inicio}
+              fim={t.fim}
+              // O título do começo fica na tela até o quadro ~90
+              naoAntesDe={90}
+              cabecas={n === indiceDaCena ? cabecas : undefined}
+              legenda={t.cena.plano === "close" ? 1420 : 1180}
+              topoDaEtiqueta={130}
             />
           ) : null,
         )}

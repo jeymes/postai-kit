@@ -20,18 +20,18 @@ import { existsSync, readFileSync, rmSync, statSync, writeFileSync } from "node:
 import { tmpdir } from "node:os";
 import { basename, dirname, join } from "node:path";
 import { exigirChave, ferramenta } from "./postai.ts";
-import { FPS, iniciosDasCenas, TEMPOS } from "../src/moldes/tempos.ts";
+import { FPS, iniciosDasCenas, SILHUETA, TEMPOS } from "../src/moldes/tempos.ts";
 
 // O que é falado em cada segundo (23/11/2026): a retenção do YouTube mostra a
 // fala de cada queda. Uma fala por cena, no segundo em que a voz começa.
 function falasNoTempo(p: { molde?: string; cenas?: Array<{ fala?: string }> } & Record<string, unknown>) {
   const molde = String(p.molde ?? "");
   const cenas = p.cenas ?? [];
-  if (!cenas.length || !["Conversa", "Documentario", "CorteVertical", "Narrado", "Mundo3D"].includes(molde)) return undefined;
+  if (!cenas.length || !["Conversa", "Documentario", "CorteVertical", "Narrado", "Mundo3D", "Silhueta"].includes(molde)) return undefined;
   const inicios = iniciosDasCenas(molde, p as Parameters<typeof iniciosDasCenas>[1]);
   // Na Conversa o primeiro trecho é o respiro antes da primeira fala
   const desloca = molde === "Conversa" ? 1 : 0;
-  const atraso = molde === "Conversa" || molde === "Mundo3D" ? 0 : TEMPOS.antesDaFala;
+  const atraso = molde === "Conversa" || molde === "Mundo3D" ? 0 : molde === "Silhueta" ? SILHUETA.antes : TEMPOS.antesDaFala;
   const falas = cenas.flatMap((c, i) => {
     const quadro = inicios[i + desloca];
     const texto = (c.fala ?? "").trim();
@@ -207,7 +207,7 @@ const titulo = info.post?.titulo?.trim();
 // Vídeo longo: os capítulos ("00:00 Título") no fim da descrição viram os capítulos do YouTube
 const legenda = [info.post?.legenda?.trim(), info.capitulos].filter(Boolean).join("\n\n");
 // Vídeo de um canal (Animação ou Canal dark): vai para a tela dele, com o "Pedir ajuste"
-const doCanal = peca.molde === "Conversa" || peca.molde === "Documentario" || peca.molde === "CorteVertical" || peca.molde === "Mundo3D";
+const doCanal = peca.molde === "Conversa" || peca.molde === "Documentario" || peca.molde === "CorteVertical" || peca.molde === "Mundo3D" || peca.molde === "Silhueta";
 if (!titulo || !legenda) {
   console.error('A peça precisa de "post": { "titulo", "legenda" }.');
   process.exit(1);

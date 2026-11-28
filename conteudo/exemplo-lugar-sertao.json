@@ -1,0 +1,126 @@
+{
+  "molde": "Mundo3D",
+  "bonecos": "pecas",
+  "voz": "pm_alex",
+  "multidao": null,
+  "ctaFinal": "Siga para mais causos do Brasil",
+  "botaoFinal": "Siga o canal 👆",
+  "titulo": "O bilhete que chegou no sítio",
+  "destaqueDoTitulo": "bilhete",
+  "personagens": [
+    {
+      "id": "dito",
+      "onde": [
+        -0.9,
+        2.5
+      ],
+      "visual": {
+        "pele": "#E0A882",
+        "cabelo": "#4A3226",
+        "roupa": "#C2453A",
+        "calca": "#3B4A6B",
+        "sapato": "#6B4A2E",
+        "penteado": "curto",
+        "roupaEstilo": "blusa"
+      },
+      "detalhes3d": {
+        "barba": true
+      }
+    },
+    {
+      "id": "rosa",
+      "onde": [
+        1.0,
+        2.8
+      ],
+      "espelhar": true,
+      "visual": {
+        "pele": "#C68B5E",
+        "cabelo": "#2E211A",
+        "roupa": "#3F63B8",
+        "calca": "#3B4A6B",
+        "sapato": "#6B4A2E",
+        "penteado": "ondulado",
+        "roupaEstilo": "blusa"
+      }
+    }
+  ],
+  "cenario": {
+    "ambiente": "sertao",
+    "hora": "tarde"
+  },
+  "cenas": [
+    {
+      "fala": "No sertão, a seca já durava dois anos.",
+      "plano": "aberto",
+      "foco": "dito",
+      "destaque": [
+        "seca"
+      ],
+      "rotulos": [
+        {
+          "tipo": "lugarEData",
+          "texto": "Sertão da Bahia, 1932"
+        },
+        {
+          "tipo": "placa",
+          "texto": "Sítio Boa Vista",
+          "estilo": "madeira",
+          "lado": "direita"
+        }
+      ]
+    },
+    {
+      "fala": "Até que um menino chegou correndo com um bilhete na mão.",
+      "plano": "medio",
+      "foco": "rosa",
+      "destaque": [
+        "bilhete"
+      ],
+      "rotulos": [
+        {
+          "tipo": "bilhete",
+          "texto": "Vai chover na quinta. Guardem a água.",
+          "assinatura": "o vizinho",
+          "em": "bilhete"
+        }
+      ],
+      "acoes": [
+        {
+          "quem": "rosa",
+          "em": "correndo",
+          "acao": "assustar",
+          "expressao": "surpresa"
+        }
+      ]
+    },
+    {
+      "fala": "Ninguém acreditou, mas o Seu Dito preparou as cisternas.",
+      "plano": "medio-aberto",
+      "foco": "dito",
+      "destaque": [
+        "cisternas"
+      ],
+      "rotulos": [
+        {
+          "tipo": "nome",
+          "quem": "dito",
+          "nome": "Seu Dito",
+          "papel": "dono do sítio",
+          "em": "Dito"
+        }
+      ],
+      "acoes": [
+        {
+          "quem": "dito",
+          "em": "preparou",
+          "acao": "explicar"
+        }
+      ]
+    }
+  ],
+  "post": {
+    "titulo": "O bilhete que chegou no sítio",
+    "legenda": "Exemplo do kit: o sertão (terra rachada, mandacaru, casa de taipa) com texto na cena."
+  }
+}

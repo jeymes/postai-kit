@@ -7,6 +7,8 @@ import { renderPorSoftware } from "./BonecoDePecas";
 import { luzDaHora, PALETAS, type Ambiente, type Hora, type Paleta } from "./ambientes";
 import { PONTE } from "./plano";
 import { Fosco, useSoftware } from "./software";
+import { Caatinga, livreNaSerra, Praca, Serra, texturaDePedras, texturaRachada } from "./lugaresNovos";
+import { ESTRADA } from "./estrada";
 
 // O mundo 3D low-poly do molde Mundo3D (protótipo, 18/11/2026): campo, rio,
 // ponte de madeira com cerca, árvores, montanhas, tendas, nuvens e grama.
@@ -74,9 +76,12 @@ function manchas() {
   return texturaDoChao;
 }
 
-const Chao: React.FC<{ cor: string }> = ({ cor }) => {
+/** A textura do chão do lugar: manchas (padrão), terra rachada (sertão) ou calçamento de pedra */
+const texturaDo = (tipo: Paleta["textura"]) => (tipo === "rachado" ? texturaRachada() : tipo === "pedras" ? texturaDePedras() : manchas());
+
+const Chao: React.FC<{ cor: string; tipo?: Paleta["textura"] }> = ({ cor, tipo }) => {
   const software = useSoftware();
-  const textura = manchas();
+  const textura = texturaDo(tipo);
   if (software) textura.anisotropy = 1;
   return (
     <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
@@ -343,7 +348,7 @@ const Arvores: React.FC<{ tipo: Paleta["plantas"]; muitas: boolean; livre?: Livr
 };
 
 /** As montanhas do fundo (no deserto e na cidade, dunas baixas e largas) */
-const Montanhas: React.FC<{ cor: Paleta["montanhas"]; semente: number }> = ({ cor, semente }) => {
+const Montanhas: React.FC<{ cor: Paleta["montanhas"]; semente: number; base?: number }> = ({ cor, semente, base = 0 }) => {
   const lista = useMemo(() => {
     const r = sorteio(11 + semente);
     return Array.from({ length: 12 }, (_, i) => ({
@@ -357,8 +362,9 @@ const Montanhas: React.FC<{ cor: Paleta["montanhas"]; semente: number }> = ({ co
   return (
     <>
       {lista.map((m, i) => (
-        <mesh key={i} castShadow position={[m.x, m.altura / 2 - 0.5, m.z]}>
-          <coneGeometry args={[m.raio, m.altura, 7]} />
+        // Na serra elas nascem no fundo do vale (base negativa): mais altas, para não flutuar
+        <mesh key={i} castShadow position={[m.x, (m.altura - base) / 2 - 0.5 + base, m.z]}>
+          <coneGeometry args={[m.raio, m.altura - base, 7]} />
           <Fosco color={m.cor} flatShading roughness={1} />
         </mesh>
       ))}
@@ -466,14 +472,16 @@ const Grama: React.FC<{ matiz: number; rio: boolean; semente: number; livre: Liv
 /** Uma casa: de barro (teto reto), de palha (telhado de pirâmide) ou colorida (telhado de duas águas). */
 const Casa: React.FC<{ x: number; z: number; tipo: NonNullable<Paleta["casas"]>; tom: number; giro: number }> = ({ x, z, tipo, tom, giro }) => {
   const largura = 2.2 + tom * 1.2;
-  const altura = tipo === "barro" ? 1.7 + tom * 0.9 : 1.6 + tom * 0.4;
+  const altura = tipo === "barro" ? 1.7 + tom * 0.9 : tipo === "taipa" ? 2.1 + tom * 0.3 : 1.6 + tom * 0.4;
   const fundura = 2 + tom;
   const parede =
     tipo === "barro"
       ? ["#E8D4AA", "#D9BD8C", "#EFE0C0", "#D2B07C"][Math.floor(tom * 4)]
       : tipo === "palha"
         ? ["#C9A77A", "#B89466", "#D4B488"][Math.floor(tom * 3)]
-        : ["#F2A65A", "#7FB7E6", "#F28C8C", "#F6E27A", "#9BD48A"][Math.floor(tom * 5)];
+        : tipo === "taipa"
+          ? ["#C98F5C", "#B97E4E", "#D4A06C", "#E2C9A0"][Math.floor(tom * 4)]
+          : ["#F2A65A", "#7FB7E6", "#F28C8C", "#F6E27A", "#9BD48A"][Math.floor(tom * 5)];
   return (
     <group position={[x, 0, z]} rotation={[0, giro, 0]}>
       <mesh position={[0, altura / 2, 0]}>
@@ -487,8 +495,25 @@ const Casa: React.FC<{ x: number; z: number; tipo: NonNullable<Paleta["casas"]>;
       </mesh>
       <mesh position={[largura * 0.25, altura * 0.62, fundura / 2 + 0.01]}>
         <boxGeometry args={[0.42, 0.38, 0.04]} />
-        <Fosco color={tipo === "coloridas" ? "#CFE9F7" : "#4A3524"} />
+        <Fosco color={tipo === "coloridas" ? "#CFE9F7" : tipo === "taipa" ? "#3E6E8E" : "#4A3524"} />
       </mesh>
+      {/* Taipa (sertão): a barra de barro mais escura embaixo, a porta pintada e o telhado de telha com beiral */}
+      {tipo === "taipa" && (
+        <>
+          <mesh position={[0, 0.22, 0]}>
+            <boxGeometry args={[largura + 0.04, 0.44, fundura + 0.04]} />
+            <Fosco color="#8E5F3A" flatShading />
+          </mesh>
+          <mesh position={[-largura * 0.15, 0.5, fundura / 2 + 0.03]}>
+            <boxGeometry args={[0.55, 1, 0.04]} />
+            <Fosco color={tom > 0.5 ? "#2F7F8A" : "#C2453A"} />
+          </mesh>
+          <mesh position={[0, altura + 0.42, 0]} rotation={[0, 0, -Math.PI / 2]} scale={[0.85, 1, (fundura / 2 + 0.35) / 0.866]}>
+            <cylinderGeometry args={[1, 1, largura + 0.5, 3, 1, false, Math.PI / 6]} />
+            <Fosco color="#A5492F" flatShading />
+          </mesh>
+        </>
+      )}
       {tipo === "barro" && (
         <mesh position={[0, altura + 0.08, 0]}>
           <boxGeometry args={[largura + 0.16, 0.16, fundura + 0.16]} />
@@ -516,7 +541,9 @@ const Casas: React.FC<{ tipo: NonNullable<Paleta["casas"]>; rio: boolean; sement
   const lista = useMemo(() => {
     const r = sorteio(31 + semente);
     const casas: Array<{ x: number; z: number; tom: number; giro: number }> = [];
-    for (let i = 0; i < 40 && casas.length < 16; i++) {
+    // No sertão, só umas casinhas de taipa espalhadas
+    const maximo = tipo === "taipa" ? 3 : 16;
+    for (let i = 0; i < 40 && casas.length < maximo; i++) {
       const fundo = i % 3 !== 0;
       const x = fundo ? (r() - 0.5) * 34 : (r() < 0.5 ? -1 : 1) * (7 + r() * 9);
       const z = fundo ? (rio ? -12.5 : -6) - r() * 12 : -3 + r() * 9;
@@ -526,7 +553,7 @@ const Casas: React.FC<{ tipo: NonNullable<Paleta["casas"]>; rio: boolean; sement
       casas.push({ x, z, tom: r() * 0.999, giro: (r() - 0.5) * 0.5 });
     }
     return casas;
-  }, [rio, semente, livre]);
+  }, [rio, semente, livre, tipo]);
   return (
     <>
       {lista.map((c, i) => (
@@ -804,7 +831,7 @@ const Salao: React.FC = () => (
 // Onde pode ter planta e pedra: nada no mar nem na frente do castelo
 const naAreia = (_x: number, z: number) => z > BEIRA + 1;
 const foraDoCastelo = (x: number, z: number) => !(Math.abs(x) < 19 && z < -18);
-const livreDo = (c: Paleta) => (c.mar ? naAreia : c.castelo ? foraDoCastelo : undefined);
+const livreDo = (c: Paleta) => (c.mar ? naAreia : c.castelo ? foraDoCastelo : c.estrada ? livreNaSerra : undefined);
 
 /** O mundo inteiro, com a luz e o céu, no lugar escolhido. */
 export const Mundo: React.FC<{
@@ -823,12 +850,16 @@ export const Mundo: React.FC<{
   livre?: Livre;
   /** Perto da câmera: sem folha de grama */
   semGrama?: Livre;
-}> = ({ balanco, queda = 0, ponte = true, tendas = true, rio = true, ambiente = "campo", semente = 0, hora = "dia", centro = [0, 2], livre = sempre, semGrama = sempre }) => {
+  /** A rua viva ligada (na serra: o carro que desce de vez em quando) */
+  figurantes?: boolean;
+}> = ({ balanco, queda = 0, ponte = true, tendas = true, rio = true, ambiente = "campo", semente = 0, hora = "dia", centro = [0, 2], livre = sempre, semGrama = sempre, figurantes = false }) => {
   const c = PALETAS[ambiente];
   const luz = luzDaHora(c, hora);
-  // O que já tinha um filtro (mar, castelo) soma o caminho da câmera
+  // O que já tinha um filtro (mar, castelo, a estrada da serra) soma o caminho da câmera
   const doLugar = livreDo(c);
   const livreTudo = useMemo<Livre>(() => (doLugar ? (x, z) => doLugar(x, z) && livre(x, z) : livre), [doLugar, livre]);
+  const semGramaTudo = useMemo<Livre>(() => (c.estrada ? (x, z) => livreNaSerra(x, z) && semGrama(x, z) : semGrama), [c.estrada, semGrama]);
+  const corDoChao = hora === "noite" ? new THREE.Color(c.chao).multiplyScalar(0.55).getStyle() : c.chao;
   if (c.interior)
     return (
       <>
@@ -848,11 +879,16 @@ export const Mundo: React.FC<{
       <Ceu topo={luz.ceuTopo} horizonte={luz.ceuHorizonte} sol={luz.direcaoDoSol} corDoSol={luz.sol} />
       <Reflexo forca={hora === "noite" ? 0.12 : 0.3} />
       <Luzes hora={luz} centro={centro} chao={c.luzDoChao} />
-      <Chao cor={hora === "noite" ? new THREE.Color(c.chao).multiplyScalar(0.55).getStyle() : c.chao} />
+      {c.estrada ? <Serra chao={corDoChao} mapa={manchas()} semente={semente} carro={figurantes} /> : <Chao cor={corDoChao} tipo={c.textura} />}
       {rio && <Rio margem={c.margem} />}
       {rio && ponte && <Ponte balanco={balanco} queda={queda} />}
-      <Arvores tipo={c.plantas} muitas={!c.casas && c.plantas !== "palmeiras"} livre={livreTudo} semente={semente} />
-      <Montanhas cor={c.montanhas} semente={semente} />
+      {c.plantas === "caatinga" ? (
+        <Caatinga livre={livreTudo} semente={semente} />
+      ) : (
+        !c.praca && <Arvores tipo={c.plantas} muitas={!c.casas && c.plantas !== "palmeiras"} livre={livreTudo} semente={semente} />
+      )}
+      {c.praca && <Praca livre={livreTudo} semente={semente} />}
+      <Montanhas cor={c.montanhas} semente={semente} base={c.estrada ? ESTRADA.fundoDoVale : 0} />
       {hora !== "noite" && <Nuvens semente={semente} cor={hora === "tarde" ? "#FFE2C6" : "#FFFFFF"} />}
       {c.casas && <Casas tipo={c.casas} rio={rio} semente={semente} livre={livreTudo} />}
       {c.muralha && <Muralha />}
@@ -864,7 +900,7 @@ export const Mundo: React.FC<{
       {tendas && livreTudo(-6.8, 0.4) && <Tenda x={-6.8} z={0.4} cor="#3D6FD6" />}
       {tendas && livreTudo(-9.6, 2.6) && <Tenda x={-9.6} z={2.6} cor="#D64545" />}
       {tendas && ambiente === "deserto" && livreTudo(8.5, -4) && <Tenda x={8.5} z={-4} cor="#D8A23A" />}
-      {c.grama !== null && <Grama matiz={c.grama} rio={rio} semente={semente} livre={semGrama} />}
+      {c.grama !== null && <Grama matiz={c.grama} rio={rio} semente={semente} livre={semGramaTudo} />}
     </>
   );
 };

@@ -1,6 +1,6 @@
 // Transforma uma peça (conteudo/<nome>.json) em arquivos prontos para o Postaí,
 // em out/<nome>/:
-//   vídeo (Oferta, Lista, Tutorial, AntesDepois, Depoimento, Trend, Narrado, Vitrine3D): video.mp4 + capa.jpg
+//   vídeo (Oferta, Lista, Tutorial, AntesDepois, Depoimento, Trend, Narrado, Vitrine3D, Silhueta...): video.mp4 + capa.jpg
 //   Documentario (vídeo longo, deitado): video.mp4 + capa.jpg (1280×720, do YouTube) + os capítulos
 //   Carrossel: slide-01.jpg, slide-02.jpg... (JPEG, como o Instagram pede)
 // e um info.json com o tamanho de cada arquivo, a duração do vídeo e o texto
@@ -51,13 +51,13 @@ const fimDoVideo: Fim = fimEscolhido === "luz" ? "luz" : temVinheta ? (fimEscolh
 // Tirar o cartão do fim é pôr o texto VAZIO, não apagar o campo: sem o campo, o
 // Remotion usa o texto de exemplo do molde (o Mundo3D tem "Siga para mais
 // histórias…") e o cartão voltava (28/11/2026)
-if (molde === "Conversa" || molde === "Mundo3D") {
+if (molde === "Conversa" || molde === "Mundo3D" || molde === "Silhueta") {
   if (fimDoVideo !== "luz") delete props.final;
   else if (props.final) props.ctaFinal = "";
 }
 // Só a vinheta: tira o cartão do fim dos moldes em que ele é opcional
 if (fimDoVideo === "vinheta" && !args.includes("--previa")) {
-  if (molde === "Conversa" || molde === "Mundo3D") {
+  if (molde === "Conversa" || molde === "Mundo3D" || molde === "Silhueta") {
     delete props.final;
     props.ctaFinal = "";
   }
@@ -98,7 +98,7 @@ if (!MOLDES.includes(molde)) {
   process.exit(1);
 }
 
-if ((molde === "Narrado" || molde === "Documentario" || molde === "CorteVertical" || molde === "Mundo3D") && !previa && !(args.includes("--capa") && molde === "Documentario") && props.cenas.some((c: { narracao?: unknown }) => !c.narracao)) {
+if ((molde === "Narrado" || molde === "Documentario" || molde === "CorteVertical" || molde === "Mundo3D" || molde === "Silhueta") && !previa && !(args.includes("--capa") && molde === "Documentario") && props.cenas.some((c: { narracao?: unknown }) => !c.narracao)) {
   console.error(`Falta a voz de alguma cena. Rode antes: npm run narrar -- ${caminho}`);
   process.exit(1);
 }
@@ -672,6 +672,8 @@ if (molde === "Carrossel") {
   const destinoDaCapa = join(saida, "capa.jpg");
   // Vídeo animado: a capa é a cena com os personagens
   if (molde === "Conversa") imagem("CapaConversa", { ...props, capa: capa ?? {} }, destinoDaCapa);
+  // Silhueta: a paisagem da cena da capa (capa.cena; sem ela, a 1ª), parada, com o título grande
+  else if (molde === "Silhueta") imagem("CapaSilhueta", { ...props, capa: capa ?? {} }, destinoDaCapa);
   // Mundo 3D: o primeiro plano, já com o título inteiro na tela
   // Mundo3D: a capa é um quadro da cena escolhida (capa.cena; sem ela, a 1ª), com o título
   // e o destaque da capa e as poses de capa.estados

@@ -1,0 +1,906 @@
+{
+  "molde": "Silhueta",
+  "titulo": "O que você responderia a esta pergunta de Jesus?",
+  "sobretitulo": "Marcos 10",
+  "destaqueDoTitulo": "pergunta",
+  "paleta": "sepia",
+  "ctaInicial": "Pare um instante e pense",
+  "voz": "masculina-12",
+  "velocidade": 1,
+  "musica": "musica/calma-reflexao.mp3",
+  "volumeMusica": 0.1,
+  "cenas": [
+    {
+      "fala": "O que você responderia a esta pergunta de Jesus? Ela foi feita a um cego, na saída de Jericó.",
+      "cenario": "cidade-antiga",
+      "clima": "amanhecer",
+      "camera": "zoom-in",
+      "narracao": {
+        "audio": "narracao/exemplo-silhueta/cena-01-038645bb.wav",
+        "duracaoSeg": 6.016,
+        "legendas": [
+          {
+            "texto": "O",
+            "inicioMs": 0,
+            "fimMs": 120
+          },
+          {
+            "texto": "que",
+            "inicioMs": 120,
+            "fimMs": 220
+          },
+          {
+            "texto": "você",
+            "inicioMs": 220,
+            "fimMs": 500
+          },
+          {
+            "texto": "responderia",
+            "inicioMs": 500,
+            "fimMs": 1320
+          },
+          {
+            "texto": "a",
+            "inicioMs": 1320,
+            "fimMs": 1400
+          },
+          {
+            "texto": "esta",
+            "inicioMs": 1400,
+            "fimMs": 1540
+          },
+          {
+            "texto": "pergunta",
+            "inicioMs": 1540,
+            "fimMs": 1960
+          },
+          {
+            "texto": "de",
+            "inicioMs": 1960,
+            "fimMs": 2220
+          },
+          {
+            "texto": "Jesus?",
+            "inicioMs": 2220,
+            "fimMs": 2620,
+            "fimDeFrase": true
+          },
+          {
+            "texto": "Ela",
+            "inicioMs": 3020,
+            "fimMs": 3280
+          },
+          {
+            "texto": "foi",
+            "inicioMs": 3280,
+            "fimMs": 3480
+          },
+          {
+            "texto": "feita",
+            "inicioMs": 3480,
+            "fimMs": 3900
+          },
+          {
+            "texto": "a",
+            "inicioMs": 3900,
+            "fimMs": 3980
+          },
+          {
+            "texto": "um",
+            "inicioMs": 3980,
+            "fimMs": 4040
+          },
+          {
+            "texto": "cego,",
+            "inicioMs": 4040,
+            "fimMs": 4480
+          },
+          {
+            "texto": "na",
+            "inicioMs": 4480,
+            "fimMs": 4700
+          },
+          {
+            "texto": "saída",
+            "inicioMs": 4700,
+            "fimMs": 5100
+          },
+          {
+            "texto": "de",
+            "inicioMs": 5100,
+            "fimMs": 5260
+          },
+          {
+            "texto": "Jericó",
+            "inicioMs": 5260,
+            "fimMs": 5720,
+            "fimDeFrase": true
+          }
+        ],
+        "chave": "[\"O que você responderia a esta pergunta de Jesus? Ela foi feita a um cego, na saída de Jericó.\",\"pm_santa*0.6+bm_fable*0.4\",1,false]"
+      }
+    },
+    {
+      "fala": "Bartimeu passava os dias sentado à beira do caminho, pedindo esmola a quem passasse.",
+      "cenario": "estrada",
+      "figura": "sentada",
+      "camera": "pan-direita",
+      "destaque": [
+        "esmola"
+      ],
+      "narracao": {
+        "audio": "narracao/exemplo-silhueta/cena-02-2972186f.wav",
+        "duracaoSeg": 5.291,
+        "legendas": [
+          {
+            "texto": "Bartimeu",
+            "inicioMs": 0,
+            "fimMs": 560
+          },
+          {
+            "texto": "passava",
+            "inicioMs": 560,
+            "fimMs": 1020
+          },
+          {
+            "texto": "os",
+            "inicioMs": 1020,
+            "fimMs": 1160
+          },
+          {
+            "texto": "dias",
+            "inicioMs": 1160,
+            "fimMs": 1400
+          },
+          {
+            "texto": "sentado",
+            "inicioMs": 1400,
+            "fimMs": 1960
+          },
+          {
+            "texto": "à",
+            "inicioMs": 1960,
+            "fimMs": 2060
+          },
+          {
+            "texto": "beira",
+            "inicioMs": 2060,
+            "fimMs": 2360
+          },
+          {
+            "texto": "do",
+            "inicioMs": 2360,
+            "fimMs": 2460
+          },
+          {
+            "texto": "caminho,",
+            "inicioMs": 2460,
+            "fimMs": 2800
+          },
+          {
+            "texto": "pedindo",
+            "inicioMs": 3060,
+            "fimMs": 3620
+          },
+          {
+            "texto": "esmola",
+            "inicioMs": 3620,
+            "fimMs": 4040
+          },
+          {
+            "texto": "a",
+            "inicioMs": 4040,
+            "fimMs": 4090
+          },
+          {
+            "texto": "quem",
+            "inicioMs": 4040,
+            "fimMs": 4300
+          },
+          {
+            "texto": "passasse",
+            "inicioMs": 4300,
+            "fimMs": 4980,
+            "fimDeFrase": true
+          }
+        ],
+        "chave": "[\"Bartimeu passava os dias sentado à beira do caminho, pedindo esmola a quem passasse.\",\"pm_santa*0.6+bm_fable*0.4\",1,false]"
+      }
+    },
+    {
+      "fala": "Um dia, ouviu que Jesus de Nazaré estava passando. E começou a gritar: Filho de Davi, tem misericórdia de mim!",
+      "cenario": "estrada",
+      "clima": "nevoa",
+      "figura": "sentada",
+      "camera": "zoom-in",
+      "destaque": [
+        "misericórdia"
+      ],
+      "narracao": {
+        "audio": "narracao/exemplo-silhueta/cena-03-de714af5.wav",
+        "duracaoSeg": 6.869,
+        "legendas": [
+          {
+            "texto": "Um",
+            "inicioMs": 0,
+            "fimMs": 120
+          },
+          {
+            "texto": "dia,",
+            "inicioMs": 120,
+            "fimMs": 420
+          },
+          {
+            "texto": "ouviu",
+            "inicioMs": 420,
+            "fimMs": 920
+          },
+          {
+            "texto": "que",
+            "inicioMs": 920,
+            "fimMs": 1020
+          },
+          {
+            "texto": "Jesus",
+            "inicioMs": 1020,
+            "fimMs": 1280
+          },
+          {
+            "texto": "de",
+            "inicioMs": 1280,
+            "fimMs": 1480
+          },
+          {
+            "texto": "Nazaré",
+            "inicioMs": 1480,
+            "fimMs": 1880
+          },
+          {
+            "texto": "estava",
+            "inicioMs": 1880,
+            "fimMs": 2100
+          },
+          {
+            "texto": "passando",
+            "inicioMs": 2100,
+            "fimMs": 2740,
+            "fimDeFrase": true
+          },
+          {
+            "texto": "E",
+            "inicioMs": 2740,
+            "fimMs": 3160
+          },
+          {
+            "texto": "começou",
+            "inicioMs": 3160,
+            "fimMs": 3520
+          },
+          {
+            "texto": "a",
+            "inicioMs": 3520,
+            "fimMs": 3640
+          },
+          {
+            "texto": "gritar:",
+            "inicioMs": 3640,
+            "fimMs": 4020
+          },
+          {
+            "texto": "Filho",
+            "inicioMs": 4320,
+            "fimMs": 4600
+          },
+          {
+            "texto": "de",
+            "inicioMs": 4600,
+            "fimMs": 4700
+          },
+          {
+            "texto": "Davi,",
+            "inicioMs": 4700,
+            "fimMs": 5140
+          },
+          {
+            "texto": "tem",
+            "inicioMs": 5140,
+            "fimMs": 5340
+          },
+          {
+            "texto": "misericórdia",
+            "inicioMs": 5340,
+            "fimMs": 6160
+          },
+          {
+            "texto": "de",
+            "inicioMs": 6160,
+            "fimMs": 6280
+          },
+          {
+            "texto": "mim!",
+            "inicioMs": 6280,
+            "fimMs": 6420,
+            "fimDeFrase": true
+          }
+        ],
+        "chave": "[\"Um dia, ouviu que Jesus de Nazaré estava passando. E começou a gritar: Filho de Davi, tem misericórdia de mim!\",\"pm_santa*0.6+bm_fable*0.4\",1,false]"
+      },
+      "gestos": [
+        {
+          "em": "gritar",
+          "pose": "bracos-abertos"
+        }
+      ]
+    },
+    {
+      "fala": "Muitos mandavam: cale-se! Mas ele gritava ainda mais alto.",
+      "cenario": "cidade-antiga",
+      "clima": "entardecer",
+      "figura": "bracos-abertos",
+      "camera": "zoom-out",
+      "diagrama": {
+        "rotulo": "a multidão · ele",
+        "versus": {
+          "isto": "cale-se",
+          "aquilo": "mais alto"
+        },
+        "em": "mandavam"
+      },
+      "narracao": {
+        "audio": "narracao/exemplo-silhueta/cena-04-bf89f8e6.wav",
+        "duracaoSeg": 3.755,
+        "legendas": [
+          {
+            "texto": "Muitos",
+            "inicioMs": 0,
+            "fimMs": 360
+          },
+          {
+            "texto": "mandavam:",
+            "inicioMs": 360,
+            "fimMs": 880
+          },
+          {
+            "texto": "cale-se!",
+            "inicioMs": 880,
+            "fimMs": 1500,
+            "fimDeFrase": true
+          },
+          {
+            "texto": "Mas",
+            "inicioMs": 1760,
+            "fimMs": 1860
+          },
+          {
+            "texto": "ele",
+            "inicioMs": 1860,
+            "fimMs": 2000
+          },
+          {
+            "texto": "gritava",
+            "inicioMs": 2000,
+            "fimMs": 2440
+          },
+          {
+            "texto": "ainda",
+            "inicioMs": 2440,
+            "fimMs": 2660
+          },
+          {
+            "texto": "mais",
+            "inicioMs": 2660,
+            "fimMs": 2980
+          },
+          {
+            "texto": "alto",
+            "inicioMs": 2980,
+            "fimMs": 3360,
+            "fimDeFrase": true
+          }
+        ],
+        "chave": "[\"Muitos mandavam: cale-se! Mas ele gritava ainda mais alto.\",\"pm_santa*0.6+bm_fable*0.4\",1,false]"
+      }
+    },
+    {
+      "fala": "Jesus parou e mandou chamá-lo. Ele jogou a capa, deu um salto e foi.",
+      "cenario": "estrada",
+      "figura": "sentada",
+      "camera": "pan-esquerda",
+      "diagrama": {
+        "rotulo": "Marcos 10:50",
+        "lista": [
+          "jogou a capa",
+          "deu um salto",
+          "foi até Jesus"
+        ],
+        "em": "jogou"
+      },
+      "narracao": {
+        "audio": "narracao/exemplo-silhueta/cena-05-08cb70b5.wav",
+        "duracaoSeg": 4.395,
+        "legendas": [
+          {
+            "texto": "Jesus",
+            "inicioMs": 0,
+            "fimMs": 260
+          },
+          {
+            "texto": "parou",
+            "inicioMs": 260,
+            "fimMs": 720
+          },
+          {
+            "texto": "e",
+            "inicioMs": 720,
+            "fimMs": 800
+          },
+          {
+            "texto": "mandou",
+            "inicioMs": 800,
+            "fimMs": 1100
+          },
+          {
+            "texto": "chamá-lo",
+            "inicioMs": 1100,
+            "fimMs": 1700,
+            "fimDeFrase": true
+          },
+          {
+            "texto": "Ele",
+            "inicioMs": 1960,
+            "fimMs": 2120
+          },
+          {
+            "texto": "jogou",
+            "inicioMs": 2120,
+            "fimMs": 2480
+          },
+          {
+            "texto": "a",
+            "inicioMs": 2480,
+            "fimMs": 2560
+          },
+          {
+            "texto": "capa,",
+            "inicioMs": 2560,
+            "fimMs": 2960
+          },
+          {
+            "texto": "deu",
+            "inicioMs": 3060,
+            "fimMs": 3140
+          },
+          {
+            "texto": "um",
+            "inicioMs": 3140,
+            "fimMs": 3300
+          },
+          {
+            "texto": "salto",
+            "inicioMs": 3300,
+            "fimMs": 3720
+          },
+          {
+            "texto": "e",
+            "inicioMs": 3720,
+            "fimMs": 3840
+          },
+          {
+            "texto": "foi",
+            "inicioMs": 3840,
+            "fimMs": 4000,
+            "fimDeFrase": true
+          }
+        ],
+        "chave": "[\"Jesus parou e mandou chamá-lo. Ele jogou a capa, deu um salto e foi.\",\"pm_santa*0.6+bm_fable*0.4\",1,false]"
+      },
+      "gestos": [
+        {
+          "em": "salto",
+          "pose": "de-pe"
+        },
+        {
+          "em": "foi",
+          "pose": "caminhando"
+        }
+      ]
+    },
+    {
+      "fala": "Jesus perguntou: o que você quer que eu faça? E ele respondeu: Mestre, que eu volte a ver.",
+      "cenario": "deserto",
+      "clima": "luz",
+      "figura": "de-pe",
+      "camera": "zoom-in",
+      "destaque": [
+        "Mestre"
+      ],
+      "narracao": {
+        "audio": "narracao/exemplo-silhueta/cena-06-4704636b.wav",
+        "duracaoSeg": 5.291,
+        "legendas": [
+          {
+            "texto": "Jesus",
+            "inicioMs": 0,
+            "fimMs": 260
+          },
+          {
+            "texto": "perguntou:",
+            "inicioMs": 260,
+            "fimMs": 920
+          },
+          {
+            "texto": "o",
+            "inicioMs": 920,
+            "fimMs": 1100
+          },
+          {
+            "texto": "que",
+            "inicioMs": 1100,
+            "fimMs": 1180
+          },
+          {
+            "texto": "você",
+            "inicioMs": 1180,
+            "fimMs": 1420
+          },
+          {
+            "texto": "quer",
+            "inicioMs": 1420,
+            "fimMs": 1660
+          },
+          {
+            "texto": "que",
+            "inicioMs": 1660,
+            "fimMs": 1820
+          },
+          {
+            "texto": "eu",
+            "inicioMs": 1820,
+            "fimMs": 1920
+          },
+          {
+            "texto": "faça?",
+            "inicioMs": 1920,
+            "fimMs": 2520,
+            "fimDeFrase": true
+          },
+          {
+            "texto": "E",
+            "inicioMs": 2700,
+            "fimMs": 2780
+          },
+          {
+            "texto": "ele",
+            "inicioMs": 2780,
+            "fimMs": 2860
+          },
+          {
+            "texto": "respondeu:",
+            "inicioMs": 2860,
+            "fimMs": 3540
+          },
+          {
+            "texto": "Mestre,",
+            "inicioMs": 3700,
+            "fimMs": 4020
+          },
+          {
+            "texto": "que",
+            "inicioMs": 4140,
+            "fimMs": 4190
+          },
+          {
+            "texto": "eu",
+            "inicioMs": 4180,
+            "fimMs": 4300
+          },
+          {
+            "texto": "volte",
+            "inicioMs": 4300,
+            "fimMs": 4500
+          },
+          {
+            "texto": "a",
+            "inicioMs": 4500,
+            "fimMs": 4680
+          },
+          {
+            "texto": "ver",
+            "inicioMs": 4680,
+            "fimMs": 4880,
+            "fimDeFrase": true
+          }
+        ],
+        "chave": "[\"Jesus perguntou: o que você quer que eu faça? E ele respondeu: Mestre, que eu volte a ver.\",\"pm_santa*0.6+bm_fable*0.4\",1,false]"
+      },
+      "gestos": [
+        {
+          "em": "Mestre",
+          "pose": "ajoelhada"
+        }
+      ]
+    },
+    {
+      "fala": "Na mesma hora, voltou a enxergar. E seguiu Jesus pelo caminho.",
+      "cenario": "estrada",
+      "clima": "amanhecer",
+      "figura": "caminhando",
+      "camera": "zoom-out",
+      "diagrama": {
+        "rotulo": "antes e depois",
+        "seta": {
+          "de": "à beira do caminho",
+          "para": "no caminho"
+        },
+        "em": "seguiu"
+      },
+      "narracao": {
+        "audio": "narracao/exemplo-silhueta/cena-07-77551192.wav",
+        "duracaoSeg": 3.947,
+        "legendas": [
+          {
+            "texto": "Na",
+            "inicioMs": 0,
+            "fimMs": 140
+          },
+          {
+            "texto": "mesma",
+            "inicioMs": 140,
+            "fimMs": 360
+          },
+          {
+            "texto": "hora,",
+            "inicioMs": 360,
+            "fimMs": 740
+          },
+          {
+            "texto": "voltou",
+            "inicioMs": 840,
+            "fimMs": 1200
+          },
+          {
+            "texto": "a",
+            "inicioMs": 1200,
+            "fimMs": 1280
+          },
+          {
+            "texto": "enxergar",
+            "inicioMs": 1280,
+            "fimMs": 1820,
+            "fimDeFrase": true
+          },
+          {
+            "texto": "E",
+            "inicioMs": 1820,
+            "fimMs": 2200
+          },
+          {
+            "texto": "seguiu",
+            "inicioMs": 2200,
+            "fimMs": 2540
+          },
+          {
+            "texto": "Jesus",
+            "inicioMs": 2540,
+            "fimMs": 2820
+          },
+          {
+            "texto": "pelo",
+            "inicioMs": 2820,
+            "fimMs": 3160
+          },
+          {
+            "texto": "caminho",
+            "inicioMs": 3160,
+            "fimMs": 3440,
+            "fimDeFrase": true
+          }
+        ],
+        "chave": "[\"Na mesma hora, voltou a enxergar. E seguiu Jesus pelo caminho.\",\"pm_santa*0.6+bm_fable*0.4\",1,false]"
+      }
+    },
+    {
+      "fala": "Ele podia ter pedido uma moeda. Pediu o que só Jesus podia dar.",
+      "cenario": "monte",
+      "clima": "entardecer",
+      "figura": "de-pe",
+      "camera": "pan-direita",
+      "diagrama": {
+        "rotulo": "o pedido",
+        "versus": {
+          "isto": "uma moeda",
+          "aquilo": "a visão"
+        },
+        "em": "moeda"
+      },
+      "narracao": {
+        "audio": "narracao/exemplo-silhueta/cena-08-e4d260c8.wav",
+        "duracaoSeg": 4.309,
+        "legendas": [
+          {
+            "texto": "Ele",
+            "inicioMs": 0,
+            "fimMs": 140
+          },
+          {
+            "texto": "podia",
+            "inicioMs": 140,
+            "fimMs": 420
+          },
+          {
+            "texto": "ter",
+            "inicioMs": 420,
+            "fimMs": 720
+          },
+          {
+            "texto": "pedido",
+            "inicioMs": 720,
+            "fimMs": 1220
+          },
+          {
+            "texto": "uma",
+            "inicioMs": 1220,
+            "fimMs": 1360
+          },
+          {
+            "texto": "moeda",
+            "inicioMs": 1360,
+            "fimMs": 1800,
+            "fimDeFrase": true
+          },
+          {
+            "texto": "Pediu",
+            "inicioMs": 2000,
+            "fimMs": 2520
+          },
+          {
+            "texto": "o",
+            "inicioMs": 2520,
+            "fimMs": 2570
+          },
+          {
+            "texto": "que",
+            "inicioMs": 2520,
+            "fimMs": 2660
+          },
+          {
+            "texto": "só",
+            "inicioMs": 2660,
+            "fimMs": 2840
+          },
+          {
+            "texto": "Jesus",
+            "inicioMs": 2840,
+            "fimMs": 3160
+          },
+          {
+            "texto": "podia",
+            "inicioMs": 3160,
+            "fimMs": 3620
+          },
+          {
+            "texto": "dar",
+            "inicioMs": 3620,
+            "fimMs": 3900,
+            "fimDeFrase": true
+          }
+        ],
+        "chave": "[\"Ele podia ter pedido uma moeda. Pediu o que só Jesus podia dar.\",\"pm_santa*0.6+bm_fable*0.4\",1,false]"
+      },
+      "gestos": [
+        {
+          "em": "Pediu",
+          "pose": "bracos-abertos"
+        }
+      ]
+    },
+    {
+      "fala": "E se a pergunta fosse para você? O que você responderia a esta pergunta de Jesus?",
+      "cenario": "estrada",
+      "figura": "caminhando",
+      "camera": "zoom-in",
+      "narracao": {
+        "audio": "narracao/exemplo-silhueta/cena-09-797396ca.wav",
+        "duracaoSeg": 5.056,
+        "legendas": [
+          {
+            "texto": "E",
+            "inicioMs": 0,
+            "fimMs": 160
+          },
+          {
+            "texto": "se",
+            "inicioMs": 160,
+            "fimMs": 240
+          },
+          {
+            "texto": "a",
+            "inicioMs": 240,
+            "fimMs": 300
+          },
+          {
+            "texto": "pergunta",
+            "inicioMs": 300,
+            "fimMs": 620
+          },
+          {
+            "texto": "fosse",
+            "inicioMs": 620,
+            "fimMs": 1120
+          },
+          {
+            "texto": "para",
+            "inicioMs": 1120,
+            "fimMs": 1340
+          },
+          {
+            "texto": "você?",
+            "inicioMs": 1340,
+            "fimMs": 1680,
+            "fimDeFrase": true
+          },
+          {
+            "texto": "O",
+            "inicioMs": 2140,
+            "fimMs": 2240
+          },
+          {
+            "texto": "que",
+            "inicioMs": 2240,
+            "fimMs": 2340
+          },
+          {
+            "texto": "você",
+            "inicioMs": 2340,
+            "fimMs": 2580
+          },
+          {
+            "texto": "responderia",
+            "inicioMs": 2580,
+            "fimMs": 3360
+          },
+          {
+            "texto": "a",
+            "inicioMs": 3360,
+            "fimMs": 3440
+          },
+          {
+            "texto": "esta",
+            "inicioMs": 3440,
+            "fimMs": 3600
+          },
+          {
+            "texto": "pergunta",
+            "inicioMs": 3600,
+            "fimMs": 4020
+          },
+          {
+            "texto": "de",
+            "inicioMs": 4020,
+            "fimMs": 4260
+          },
+          {
+            "texto": "Jesus?",
+            "inicioMs": 4260,
+            "fimMs": 4520,
+            "fimDeFrase": true
+          }
+        ],
+        "chave": "[\"E se a pergunta fosse para você? O que você responderia a esta pergunta de Jesus?\",\"pm_santa*0.6+bm_fable*0.4\",1,false]"
+      }
+    }
+  ],
+  "ctaFinal": "Siga para mais histórias da Bíblia",
+  "botaoFinal": "Siga o canal 👆",
+  "capa": {
+    "titulo": "O que você responderia a Jesus?",
+    "destaque": "responderia",
+    "sobretitulo": "Marcos 10",
+    "cena": 7
+  },
+  "post": {
+    "titulo": "O que você responderia a esta pergunta de Jesus?",
+    "legenda": "Bartimeu passava os dias à beira do caminho, pedindo esmola. Quando Jesus perguntou o que ele queria, ele podia ter pedido uma moeda. Pediu para voltar a ver, e seguiu Jesus pelo caminho (Marcos 10:46-52).\n\nE você, o que responderia?\n\n#biblia #jesus #fe #marcos10 #shorts"
+  },
+  "idioma": "pt"
+}
