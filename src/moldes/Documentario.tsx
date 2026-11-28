@@ -936,7 +936,8 @@ const CapaDeCinema: React.FC<CapaDocumentario> = ({ titulo, destaque, foto, lado
   for (const p of palavras) {
     const ultima = linhas[linhas.length - 1];
     const soCurtas = ultima?.every((x) => x.length <= 3 && !ehForte(x));
-    if (ultima && ehForte(p) && soCurtas) ultima.push(p);
+    // Só junta "DE", "O" na linha do destaque se ele for curto (ENLOUQUECEU com "O REI QUE" na frente encolhia tudo)
+    if (ultima && ehForte(p) && soCurtas && limpa(p).length <= 7) ultima.push(p);
     else if (!ultima || ultima.join(" ").length + p.length > 13 || ehForte(p) !== ultima.some(ehForte)) linhas.push([p]);
     else ultima.push(p);
   }
@@ -944,8 +945,25 @@ const CapaDeCinema: React.FC<CapaDocumentario> = ({ titulo, destaque, foto, lado
   for (let i = 0; i < linhas.length - 1; i++) {
     const proxima = linhas[i + 1];
     const ultima = linhas[i][linhas[i].length - 1];
-    if (linhas[i].length > 1 && proxima.some(ehForte) && ultima.length <= 3) proxima.unshift(linhas[i].pop() as string);
+    const destaqueCurto = proxima.filter(ehForte).every((x) => limpa(x).length <= 7);
+    if (linhas[i].length > 1 && proxima.some(ehForte) && destaqueCurto && ultima.length <= 3) proxima.unshift(linhas[i].pop() as string);
   }
+  // 27/11/2026 (o dono: "texto muito pequeno"): cada linha enche a largura da
+  // caixa (antes as comuns paravam em 96 px e "DE SALOMÃO" ocupava metade dela).
+  // Bebas é estreita: ~0,46 da altura por letra. O destaque vai até 300 px; as
+  // comuns até 3/4 dele (o destaque continua o maior); tudo encolhe junto se
+  // passar da altura da capa.
+  const LARGURA = 620;
+  const enche = (letras: number) => LARGURA / (Math.max(letras, 2) * 0.46);
+  const letrasDa = (linha: string[]) =>
+    linha.reduce((soma, p, j) => soma + (ehForte(p) || !linha.some(ehForte) ? p.length : p.length * 0.5) + (j > 0 ? 0.5 : 0), 0);
+  const forteTam = Math.min(300, ...linhas.filter((l) => l.some(ehForte)).map((l) => enche(letrasDa(l))));
+  const temForte = linhas.some((l) => l.some(ehForte));
+  const brutos = linhas.map((l) =>
+    l.some(ehForte) ? forteTam : Math.min(170, enche(letrasDa(l)), temForte ? forteTam * 0.75 : 170),
+  );
+  const altura = brutos.reduce((a, b) => a + b * 1.04, 0);
+  const tamanhos = brutos.map((t) => Math.round(t * Math.min(1, 620 / altura)));
   const dourado = {
     background: "linear-gradient(180deg, #FFF6C9 0%, #FFD772 35%, #E9A93A 62%, #A8661A 100%)",
     WebkitBackgroundClip: "text",
@@ -974,7 +992,7 @@ const CapaDeCinema: React.FC<CapaDocumentario> = ({ titulo, destaque, foto, lado
           top: 0,
           bottom: 0,
           [naDireita ? "right" : "left"]: 50,
-          width: 600,
+          width: 660,
           display: "flex",
           flexDirection: "column",
           justifyContent: "center",
@@ -986,11 +1004,9 @@ const CapaDeCinema: React.FC<CapaDocumentario> = ({ titulo, destaque, foto, lado
           filter: "drop-shadow(0 8px 14px rgba(0,0,0,0.85)) drop-shadow(0 0 22px rgba(255,186,73,0.35))",
         }}
       >
-        {linhas.map((linha, i) => {
+        {tamanhos.map((tamanho, i) => {
+          const linha = linhas[i];
           const forte = linha.some(ehForte);
-          const letras = linha.filter(ehForte).join(" ").length || linha.join(" ").length;
-          // As linhas comuns sempre menores que a do destaque
-          const tamanho = forte ? Math.min(210, Math.round(1100 / Math.max(letras, 4))) : Math.min(96, Math.round(860 / Math.max(letras, 8)));
           return (
             <div key={i} style={{ display: "flex", alignItems: "baseline", gap: "0.22em", fontSize: tamanho }}>
               {linha.map((p, j) => (
