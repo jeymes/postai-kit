@@ -1,5 +1,6 @@
-// Narra uma peça: cada cena com "fala" ganha a voz (Kokoro), a legenda com o
-// tempo de cada palavra e a conferência do que a voz disse (Whisper). Com
+// Narra uma peça: cada cena com "fala" ganha a voz (do Google pelo Postaí, ou
+// o Kokoro local), a legenda com o tempo de cada palavra e a conferência do que
+// a voz disse (Whisper). Com
 // "mascote": true (ou no molde Conversa) e o Rhubarb instalado, também a boca.
 // No Conversa, cada cena é a fala de um personagem ("quem"), com a voz dele em
 // "vozes" (ou a do elenco), ou do NARRADOR (sem "quem", ou quem "narrador"), com a
@@ -9,21 +10,71 @@
 // conteudo/<peça>.json, em "narracao" de cada cena. Só refaz a cena cujo
 // texto, voz ou velocidade mudou.
 //
-// Uso: npm run narrar -- conteudo/<peça>.json [--refazer]
-// Antes, uma vez: npm run voz:instalar
+// Uso: npm run narrar -- conteudo/<peça>.json [--refazer] [--canal canais/<canal>]
+// Antes, uma vez: npm run voz:instalar (o Whisper e o Rhubarb servem às duas vozes)
+//
+// QUAL VOZ (decisão do dono, 27/11/2026): o npm run canal grava em
+// canais/<canal>/vozes.json o que o canal escolheu no Postaí:
+//   { "motor": "gemini" | "chirp" | "kokoro", "semCota": "esperar" | "reserva", "narrador"?: "Charon" }
+// A pasta do canal: --canal, ou canais/dark na rotina do Canal dark (.postai-canal),
+// ou canais/canal, ou a única pasta de canais/ com vozes.json. Sem vozes.json (ou
+// motor "kokoro"), tudo como antes: o Kokoro local.
+// Com gemini ou chirp (Google, pelo gerar_voz do Postaí; Gemini e Chirp têm as
+// mesmas 30 vozes pelo nome, em src/componentes/personagens/vozesGoogle.ts):
+//   - a voz de quem fala é a "vozGoogle" do personagem (o npm run elenco copia do
+//     elenco.json); a do narrador, "narrador" do vozes.json; faltando, a recomendada
+//     pela voz antiga do Kokoro (feminina-N/masculina-N, mesmo gênero e jeito);
+//   - ANTES de narrar, conta o que falta (pedidos no Gemini, letras no Chirp), vê a
+//     cota (ver_cota_de_voz) e escolhe UM motor para o vídeo inteiro: o do canal, se
+//     couber; senão, com "reserva", o outro (a mesma voz); senão para com
+//     ESPERAR_COTA e o código de saída 75, sem gerar nada. Nunca troca para o Kokoro;
+//   - se o gerar_voz responder COTA_ACABOU ou VOZ_FALHOU no meio, nada desta rodada
+//     entra no vídeo: com "reserva", refaz tudo no outro motor; senão ESPERAR_COTA (75);
+//   - cada trecho que o Google devolveu fica guardado em out/.vozes-google/ (pelo
+//     motor, voz, idioma, jeito e texto): narrar de novo, ou com --refazer, não gasta
+//     a cota com a fala que não mudou;
+//   - a velocidade: só a "velocidade" do topo do roteiro, aplicada com o atempo do
+//     ffmpeg (as velocidades do catálogo do Kokoro não valem para o Google);
+//   - no Gemini vai um "jeito" curto pelo molde (documentário calmo no Documentario;
+//     natural e expressivo no Conversa e no Mundo3D).
+// ESPERAR_COTA não é defeito do kit: a rotina para, conta ao dono e tenta outro dia.
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { basename, join } from "node:path";
+import { basename, delimiter, join, resolve } from "node:path";
 import { alinhar, falar, type Ouvida } from "./voz/texto.ts";
 import { palavrasDificeis, pronunciasDoVideo } from "./voz/pronuncias.ts";
 import { PYTHON, RHUBARB } from "./voz/caminhos.ts";
 import { falaDoNarrador } from "../src/moldes/tempos.ts";
 import { IDIOMAS_DA_VOZ, VOZES, VOZES_DO_ELENCO, vozNoIdioma, type IdiomaDaVoz, type Voz } from "../src/componentes/personagens/vozes.ts";
+import {
+  PADRAO_FEMININA,
+  PADRAO_MASCULINA,
+  outroMotor,
+  recomendarVozGoogle,
+  vozGoogleValida,
+  VOZES_GOOGLE_DO_ELENCO,
+  type MotorGoogle,
+} from "../src/componentes/personagens/vozesGoogle.ts";
+import {
+  dividirTexto,
+  erroDeCota,
+  escolherMotor,
+  jeitoDaFala,
+  lerVozesDoCanal,
+  nomeDoMotor,
+  SAIDA_ESPERAR_COTA,
+  type CotaDeVoz,
+  type Gasto,
+  type VozesDoCanal,
+} from "./voz/motor.ts";
+import { gerarTrecho, verCota, vozFalsa } from "./voz/google.ts";
+import { pastaDoFfmpeg } from "./avatar/caminhos.ts";
 
 const args = process.argv.slice(2);
-const caminho = args.find((arg) => !arg.startsWith("--"));
+const indiceDoCanal = args.indexOf("--canal");
+const caminho = args.find((arg, i) => !arg.startsWith("--") && !(indiceDoCanal >= 0 && i === indiceDoCanal + 1));
 const refazer = args.includes("--refazer");
 if (!caminho) {
   console.error("Uso: npm run narrar -- conteudo/<peça>.json");
@@ -89,50 +140,239 @@ const velocidadeDa = (cena: Cena) => (cena.quem && vozes[cena.quem]?.velocidade)
 if (comMascote && !existsSync(RHUBARB))
   console.log("O Rhubarb não está instalado: o mascote mexe a boca pelo tempo das palavras. Para a boca exata: npm run voz:instalar -- --mascote");
 
-const pendentes = cenas
-  .map((cena, indice) => {
-    if (!cena.fala) return null;
+const idsDoElenco = ((peca.elenco ?? []) as Array<{ id: string }>).map((p) => p.id);
+
+type Pendente = { indice: number; roteiro: ReturnType<typeof falar>; textoDaVoz: string; chave: string; audio: string; voz: string; velocidade: number };
+type Resultado = { duracao: number; palavras: Ouvida[] };
+let pendentes: Pendente[] = [];
+let resultados: Resultado[] = [];
+
+// ---- Qual voz: a do canal (canais/<canal>/vozes.json) ----
+const pastaDoCanal = (() => {
+  if (indiceDoCanal >= 0 && args[indiceDoCanal + 1]) return args[indiceDoCanal + 1];
+  const daRotina = existsSync(".postai-canal") ? readFileSync(".postai-canal", "utf8").trim() : "";
+  if (daRotina === "dark" && existsSync("canais/dark")) return "canais/dark";
+  if (existsSync("canais/canal/vozes.json")) return "canais/canal";
+  if (!existsSync("canais")) return "";
+  const comVozes = readdirSync("canais").filter((p) => existsSync(join("canais", p, "vozes.json")));
+  return comVozes.length === 1 ? join("canais", comVozes[0]) : "";
+})();
+const vozesDoCanal: VozesDoCanal | undefined = (() => {
+  const arquivo = pastaDoCanal ? join(pastaDoCanal, "vozes.json") : "";
+  if (!arquivo || !existsSync(arquivo)) return undefined;
+  try {
+    return lerVozesDoCanal(JSON.parse(readFileSync(arquivo, "utf8")));
+  } catch {
+    console.log(`(${arquivo} ilegível: sigo com a voz local)`);
+    return undefined;
+  }
+})();
+const google = vozesDoCanal && vozesDoCanal.motor !== "kokoro" ? (vozesDoCanal as VozesDoCanal & { motor: MotorGoogle }) : undefined;
+
+/** Para o vídeo sem gerar nada: falta cota (a rotina para e tenta outro dia; nunca o Kokoro). */
+function esperarCota(motivo: string): never {
+  console.log(`\nESPERAR_COTA: ${motivo}`);
+  console.log(
+    "O vídeo espera a cota da voz: pare a rotina aqui e conte ao dono (npm run andamento -- producao erro \"Sem cota de voz: <motivo>\"). Não troque para a voz Kokoro nem mude o motor: o dono escolhe isso no Postaí.",
+  );
+  process.exit(SAIDA_ESPERAR_COTA);
+}
+
+if (google) {
+  if (!vozFalsa && !process.env.POSTAI_CHAVE && !existsSync(join(process.env.HOME ?? "", ".postai-passe"))) {
+    console.error(`O canal usa a voz do Google (${nomeDoMotor(google.motor)}), que vem pelo Postaí: falta o acesso (o passe em ~/.postai-passe ou a POSTAI_CHAVE).`);
+    process.exit(1);
+  }
+  const molde: string | undefined = peca.molde;
+  const elencoDoRoteiro = (peca.elenco ?? []) as Array<{ id: string; voz?: string; vozGoogle?: string }>;
+  // O elenco do canal (npm run canal) também diz a vozGoogle (o Mundo 3D não leva o elenco no roteiro)
+  const elencoDoCanal = (() => {
+    const arquivo = join(pastaDoCanal, "elenco.json");
+    try {
+      return existsSync(arquivo) ? (JSON.parse(readFileSync(arquivo, "utf8")) as Array<{ id: string; voz?: string; vozGoogle?: string }>) : [];
+    } catch {
+      return [];
+    }
+  })();
+  const vozesDoRoteiro = (peca.vozes ?? {}) as Record<string, { voz?: string; vozGoogle?: string } | string>;
+  const padraoDoNarrador = molde === "Documentario" || molde === "Mundo3D" ? PADRAO_MASCULINA : PADRAO_FEMININA;
+  const vozDoNarrador = vozGoogleValida(google.narrador) ?? recomendarVozGoogle(peca.voz, padraoDoNarrador);
+  const doNarrador = (cena: Cena) => falaDoNarrador(cena.quem, idsDoElenco);
+  const vozGoogleDa = (cena: Cena): string => {
+    if (doNarrador(cena) || !cena.quem) return vozDoNarrador;
+    const noRoteiro = vozesDoRoteiro[cena.quem];
+    const r = typeof noRoteiro === "string" ? { voz: noRoteiro } : noRoteiro;
+    const e = elencoDoRoteiro.find((p) => p.id === cena.quem);
+    const c = elencoDoCanal.find((p) => p.id === cena.quem);
+    const pedida = vozGoogleValida(r?.vozGoogle) ?? vozGoogleValida(e?.vozGoogle) ?? vozGoogleValida(c?.vozGoogle);
+    if (pedida) return pedida;
+    const antiga = r?.voz ?? e?.voz ?? c?.voz;
+    if (antiga) return recomendarVozGoogle(antiga, padraoDoNarrador);
+    // A Bia e a Lu (sem elenco) e quem não tem voz: como no Kokoro, a do narrador
+    return VOZES_GOOGLE_DO_ELENCO[cena.quem] ?? vozDoNarrador;
+  };
+  // Só a velocidade do topo do roteiro (as do catálogo são do Kokoro)
+  const velocidadeGoogle = Math.min(1.4, Math.max(0.7, Number(peca.velocidade ?? 1) || 1));
+  const rhubarbNaChave = comMascote && existsSync(RHUBARB);
+
+  type Fala = { indice: number; roteiro: ReturnType<typeof falar>; textoDaVoz: string; voz: string; jeito: string; trechos: string[] };
+  const falas: Fala[] = cenas.flatMap((cena, indice) => {
+    if (!cena.fala) return [];
     const roteiro = falar(cena.fala, pronuncia, idioma);
     const textoDaVoz = roteiro.map((p) => p.falado).join(" ");
-    const chave = JSON.stringify([textoDaVoz, vozDa(cena), velocidadeDa(cena), comMascote && existsSync(RHUBARB)]);
-    // O nome do áudio leva uma marca da fala (22/11/2026): com só o número da cena,
-    // cenas novas no meio do roteiro gravavam por cima do áudio das que mudaram de
-    // número, e o vídeo saía com a fala de uma cena na outra.
-    const audio = `narracao/${nome}/cena-${String(indice + 1).padStart(2, "0")}-${createHash("sha1").update(chave).digest("hex").slice(0, 8)}.wav`;
-    const anterior = cena.narracao?.audio;
-    const pronta = cena.narracao?.chave === chave && typeof anterior === "string" && existsSync(join("public", anterior));
-    return pronta && !refazer ? null : { indice, roteiro, textoDaVoz, chave, audio, voz: vozDa(cena), velocidade: velocidadeDa(cena) };
-  })
-  .filter((p) => p !== null);
+    return [{ indice, roteiro, textoDaVoz, voz: vozGoogleDa(cena), jeito: jeitoDaFala(molde, doNarrador(cena), idioma), trechos: dividirTexto(textoDaVoz) }];
+  });
+  const jeitoNo = (motor: MotorGoogle, f: Fala) => (motor === "gemini" ? f.jeito : "");
+  const chaveDe = (motor: MotorGoogle, f: Fala) => JSON.stringify([f.textoDaVoz, motor, f.voz, jeitoNo(motor, f), velocidadeGoogle, rhubarbNaChave]);
+  const audioDe = (f: Fala, chave: string) =>
+    `narracao/${nome}/cena-${String(f.indice + 1).padStart(2, "0")}-${createHash("sha1").update(chave).digest("hex").slice(0, 8)}.wav`;
+  const pronta = (motor: MotorGoogle, f: Fala) => {
+    const n = cenas[f.indice].narracao;
+    return n?.chave === chaveDe(motor, f) && typeof n.audio === "string" && existsSync(join("public", n.audio));
+  };
+  // Os trechos que o Google já devolveu ficam guardados (não gastam a cota de novo)
+  const GUARDADOS = join("out", ".vozes-google");
+  const guardado = (motor: MotorGoogle, f: Fala, trecho: string) =>
+    join(GUARDADOS, `${createHash("sha1").update(JSON.stringify([motor, f.voz, idioma, jeitoNo(motor, f), trecho])).digest("hex")}.wav`);
+  const faltamNo = (motor: MotorGoogle) => falas.filter((f) => refazer || !pronta(motor, f));
+  const gastoNo = (motor: MotorGoogle): Gasto => {
+    const novos = faltamNo(motor).flatMap((f) => f.trechos.filter((t) => !existsSync(guardado(motor, f, t))));
+    return { pedidos: novos.length, letras: novos.reduce((soma, t) => soma + t.length, 0) };
+  };
 
-if (pendentes.length === 0) {
-  console.log("A narração já está em dia com o texto. Para gerar de novo: --refazer");
-  process.exit(0);
-}
+  // O vídeo já está inteiro num motor permitido (o do canal, ou a reserva que saiu ontem)? Fica.
+  const permitidos: MotorGoogle[] = google.semCota === "reserva" ? [google.motor, outroMotor(google.motor)] : [google.motor];
+  const emDia = !refazer && permitidos.find((m) => faltamNo(m).length === 0);
+  if (emDia) {
+    console.log(`A narração já está em dia com o texto (voz do Google, ${nomeDoMotor(emDia)}). Para gerar de novo: --refazer`);
+    process.exit(0);
+  }
 
-console.log(`Narrando ${pendentes.length} cena(s) em ${{ pt: "português", en: "inglês", es: "espanhol" }[idioma]} com a voz ${[...new Set(pendentes.map((p) => p.voz))].join(", ")}...`);
-const temporaria = mkdtempSync(join(tmpdir(), "narrar-"));
-const pedido = join(temporaria, "pedido.json");
-writeFileSync(
-  pedido,
-  JSON.stringify({
-    voz,
-    velocidade,
-    idioma,
-    falas: pendentes.map((p) => ({ texto: p.textoDaVoz, saida: join(process.cwd(), "public", p.audio), voz: p.voz, velocidade: p.velocidade })),
-  }),
-);
-const resposta = spawnSync(PYTHON, [join("ferramentas", "voz", "voz.py"), pedido], {
-  encoding: "utf8",
-  maxBuffer: 64 * 1024 * 1024,
-});
-rmSync(temporaria, { recursive: true, force: true });
-if (resposta.status !== 0) {
-  console.error(resposta.stderr);
-  console.error("A voz falhou. Se for a primeira vez, rode de novo: npm run voz:instalar");
-  process.exit(1);
+  const cota: CotaDeVoz | null = await verCota();
+  const jaFalhou: MotorGoogle[] = [];
+  let motor: MotorGoogle | undefined;
+  for (;;) {
+    const escolha = escolherMotor(google, { gemini: gastoNo("gemini"), chirp: gastoNo("chirp") }, cota, jaFalhou);
+    if ("esperar" in escolha) esperarCota(escolha.esperar);
+    motor = escolha.motor;
+    if (escolha.aviso) console.log(escolha.aviso);
+    const faltam = faltamNo(motor);
+    const gasto = gastoNo(motor);
+    console.log(
+      `Narrando ${faltam.length} cena(s) em ${{ pt: "português", en: "inglês", es: "espanhol" }[idioma]} no ${nomeDoMotor(motor)} com a voz ${[...new Set(faltam.map((f) => f.voz))].join(", ")}` +
+        ` (${gasto.pedidos} trecho(s) novo(s), ${gasto.letras} letras${gasto.pedidos < faltam.reduce((s, f) => s + f.trechos.length, 0) ? "; o resto já estava guardado" : ""})...`,
+    );
+    try {
+      for (const f of faltam)
+        for (const trecho of f.trechos) {
+          const destino = guardado(motor, f, trecho);
+          if (!existsSync(destino)) await gerarTrecho({ texto: trecho, voz: f.voz, motor, idioma, jeito: jeitoNo(motor, f), peca: nome }, destino);
+        }
+      break;
+    } catch (erro) {
+      const mensagem = erro instanceof Error ? erro.message : String(erro);
+      const tipo = erroDeCota(mensagem);
+      if (!tipo) {
+        console.error(`A voz do Google falhou: ${mensagem}`);
+        process.exit(1);
+      }
+      // Nada desta rodada entra no vídeo (nunca dois motores no mesmo vídeo): a escolha de novo,
+      // sem este motor (os trechos que vieram ficam guardados para a próxima vez)
+      console.log(`O ${nomeDoMotor(motor)} parou no meio (${tipo}): ${mensagem.replace(/^gerar_voz:\s*/, "").slice(0, 200)}`);
+      jaFalhou.push(motor);
+    }
+  }
+
+  // Junta os trechos e aplica a velocidade (ffmpeg do Remotion), quando precisa
+  const temporaria = mkdtempSync(join(tmpdir(), "narrar-google-"));
+  const ffmpeg = (() => {
+    let pasta = "";
+    return () => (pasta ||= pastaDoFfmpeg());
+  })();
+  const motorFinal = motor as MotorGoogle;
+  const entradaDa = (f: Fala, i: number) => {
+    const partes = f.trechos.map((t) => guardado(motorFinal, f, t));
+    if (partes.length === 1 && velocidadeGoogle === 1) return partes[0];
+    const saida = join(temporaria, `fala-${i}.wav`);
+    const filtro = `${partes.map((_, j) => `[${j}:a]`).join("")}concat=n=${partes.length}:v=0:a=1[junta]${velocidadeGoogle !== 1 ? `;[junta]atempo=${velocidadeGoogle}[fim]` : ""}`;
+    const pasta = ffmpeg();
+    const r = spawnSync(
+      join(pasta, process.platform === "win32" ? "ffmpeg.exe" : "ffmpeg"),
+      ["-y", "-loglevel", "error", ...partes.flatMap((p) => ["-i", p]), "-filter_complex", filtro, "-map", velocidadeGoogle !== 1 ? "[fim]" : "[junta]", saida],
+      { encoding: "utf8", env: { ...process.env, PATH: `${pasta}${delimiter}${process.env.PATH}`, LD_LIBRARY_PATH: pasta, DYLD_LIBRARY_PATH: pasta } },
+    );
+    if (r.status !== 0) {
+      console.error(`Não consegui juntar a fala da cena ${f.indice + 1}: ${r.stderr.slice(-300)}`);
+      process.exit(1);
+    }
+    return saida;
+  };
+  const faltam = faltamNo(motorFinal);
+  pendentes = faltam.map((f) => {
+    const chave = chaveDe(motorFinal, f);
+    return { indice: f.indice, roteiro: f.roteiro, textoDaVoz: f.textoDaVoz, chave, audio: audioDe(f, chave), voz: f.voz, velocidade: velocidadeGoogle };
+  });
+  // O volume no nível da narração e a conferência do Whisper (o Kokoro nem carrega)
+  const pedido = join(temporaria, "pedido.json");
+  writeFileSync(
+    pedido,
+    JSON.stringify({ idioma, falas: faltam.map((f, i) => ({ entrada: resolve(entradaDa(f, i)), saida: resolve("public", pendentes[i].audio) })) }),
+  );
+  const resposta = spawnSync(PYTHON, [join("ferramentas", "voz", "voz.py"), "--escutar", pedido], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
+  rmSync(temporaria, { recursive: true, force: true });
+  if (resposta.status !== 0) {
+    console.error(resposta.stderr);
+    console.error("A conferência da voz (Whisper) falhou. Se for a primeira vez, rode de novo: npm run voz:instalar");
+    process.exit(1);
+  }
+  resultados = JSON.parse(resposta.stdout);
+  console.log(`Voz do Google: ${nomeDoMotor(motorFinal)} no vídeo inteiro.`);
+} else {
+  pendentes = cenas
+    .map((cena, indice) => {
+      if (!cena.fala) return null;
+      const roteiro = falar(cena.fala, pronuncia, idioma);
+      const textoDaVoz = roteiro.map((p) => p.falado).join(" ");
+      const chave = JSON.stringify([textoDaVoz, vozDa(cena), velocidadeDa(cena), comMascote && existsSync(RHUBARB)]);
+      // O nome do áudio leva uma marca da fala (22/11/2026): com só o número da cena,
+      // cenas novas no meio do roteiro gravavam por cima do áudio das que mudaram de
+      // número, e o vídeo saía com a fala de uma cena na outra.
+      const audio = `narracao/${nome}/cena-${String(indice + 1).padStart(2, "0")}-${createHash("sha1").update(chave).digest("hex").slice(0, 8)}.wav`;
+      const anterior = cena.narracao?.audio;
+      const pronta = cena.narracao?.chave === chave && typeof anterior === "string" && existsSync(join("public", anterior));
+      return pronta && !refazer ? null : { indice, roteiro, textoDaVoz, chave, audio, voz: vozDa(cena), velocidade: velocidadeDa(cena) };
+    })
+    .filter((p) => p !== null);
+
+  if (pendentes.length === 0) {
+    console.log("A narração já está em dia com o texto. Para gerar de novo: --refazer");
+    process.exit(0);
+  }
+
+  console.log(`Narrando ${pendentes.length} cena(s) em ${{ pt: "português", en: "inglês", es: "espanhol" }[idioma]} com a voz ${[...new Set(pendentes.map((p) => p.voz))].join(", ")}...`);
+  const temporaria = mkdtempSync(join(tmpdir(), "narrar-"));
+  const pedido = join(temporaria, "pedido.json");
+  writeFileSync(
+    pedido,
+    JSON.stringify({
+      voz,
+      velocidade,
+      idioma,
+      falas: pendentes.map((p) => ({ texto: p.textoDaVoz, saida: join(process.cwd(), "public", p.audio), voz: p.voz, velocidade: p.velocidade })),
+    }),
+  );
+  const resposta = spawnSync(PYTHON, [join("ferramentas", "voz", "voz.py"), pedido], {
+    encoding: "utf8",
+    maxBuffer: 64 * 1024 * 1024,
+  });
+  rmSync(temporaria, { recursive: true, force: true });
+  if (resposta.status !== 0) {
+    console.error(resposta.stderr);
+    console.error("A voz falhou. Se for a primeira vez, rode de novo: npm run voz:instalar");
+    process.exit(1);
+  }
+  resultados = JSON.parse(resposta.stdout);
 }
-const resultados: Array<{ duracao: number; palavras: Ouvida[] }> = JSON.parse(resposta.stdout);
 
 /** Formas da boca (A a H e X, do Rhubarb), com o segundo em que cada uma começa */
 function boca(audio: string) {
@@ -145,7 +385,6 @@ function boca(audio: string) {
   return mouthCues.map((c) => ({ inicio: c.start, forma: c.value }));
 }
 
-const idsDoElenco = ((peca.elenco ?? []) as Array<{ id: string }>).map((p) => p.id);
 const avisos: string[] = [];
 pendentes.forEach((p, i) => {
   const { duracao, palavras } = resultados[i];

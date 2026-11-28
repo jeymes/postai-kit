@@ -8,6 +8,12 @@ description: Vídeo com narração no Kit Estúdio: uma voz lê o roteiro no idi
 A voz fala o idioma do canal (português, inglês ou espanhol, voz nativa de cada língua); as mensagens para o dono, em pt-BR. A voz é gerada no computador do dono, sem custo por vídeo: Kokoro (voz, Apache 2.0),
 faster-whisper (confere a fala e dá o tempo da legenda, MIT) e, para o mascote, o Rhubarb (boca, MIT).
 
+**Voz do Google:** se o canal escolheu no Postaí o Gemini ou o Chirp 3 HD (o `npm run canal` grava em
+`canais/<canal>/vozes.json`), o `narrar` pede a voz ao Postaí, com a cota do canal, e o Whisper e o Rhubarb
+continuam iguais. As 30 vozes do Google estão em `src/componentes/personagens/vozesGoogle.ts` (a voz de cada
+personagem é a `vozGoogle` do elenco; a do narrador vem do Postaí). Se ele terminar com **ESPERAR_COTA**
+(código 75), a cota acabou: diga ao dono o motivo e quando volta; não troque para o Kokoro.
+
 ## 1. Instalar (só na primeira vez)
 
 Se não existir a pasta `.voz/python`, avise o dono antes: baixa uns **1,2 GB** e leva alguns minutos.

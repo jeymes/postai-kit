@@ -611,7 +611,21 @@ cenas.forEach((cena, i) => {
 {
   const doTopo = (peca as Record<string, unknown>).voz as string | undefined;
   const narradas = cenas.filter(doNarrador).length;
-  if (narradas) {
+  // Narrado pela voz do Google (o motor e a voz vão na chave da narração): o narrador
+  // vem do vozes.json do canal, não do "voz" do topo; confere só se repete a voz de alguém
+  const doGoogle = (c: Cena) => {
+    try {
+      const chave = JSON.parse(String((c.narracao as { chave?: string } | undefined)?.chave ?? "[]")) as unknown[];
+      return chave[1] === "gemini" || chave[1] === "chirp" ? String(chave[2]) : undefined;
+    } catch {
+      return undefined;
+    }
+  };
+  if (narradas && cenas.some((c) => doGoogle(c))) {
+    const doNarradorGoogle = new Set(cenas.filter(doNarrador).map(doGoogle).filter(Boolean));
+    const repetidas = new Set(cenas.filter((c) => !doNarrador(c) && c.quem && doNarradorGoogle.has(doGoogle(c))).map((c) => c.quem));
+    for (const id of repetidas) aviso("roteirista", `o narrador tem a mesma voz do Google de "${id}": escolha outra voz para o narrador no Postaí`);
+  } else if (narradas) {
     if (!doTopo) aviso("roteirista", `${narradas} fala(s) do narrador sem "voz" no topo do roteiro: sai a voz padrão (feminina); ponha a voz do narrador que o canal diz (um id de src/componentes/personagens/vozes.ts)`);
     else if (!VOZES[doTopo] && !/^[a-z]{2}_[a-z]+/.test(doTopo))
       erro("roteirista", `"voz" do narrador "${doTopo}" não existe: use um id de src/componentes/personagens/vozes.ts (ex.: "masculina-12")`);

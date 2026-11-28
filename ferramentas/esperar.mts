@@ -1,6 +1,8 @@
 // Espera um comando que roda em segundo plano (npm run fundo) por até 9
 // minutos e diz como ficou: PRONTO, FALHOU ou AINDA RODANDO (aí é só rodar
 // o mesmo npm run esperar de novo). Rode com o tempo máximo do comando (10 min).
+// Na narração pela voz do Google, também ESPERAR_COTA (sai com 75): a cota
+// acabou, a rotina para e conta ao dono (ver o topo do ferramentas/narrar.mts).
 //
 // Uso: npm run esperar -- <comando> [argumentos]   (os mesmos do npm run fundo)
 //      --minutos N: espera até N minutos (padrão 9)
@@ -37,6 +39,12 @@ for (;;) {
   if (pronto(texto)) {
     console.log(`${fim(texto)}\nPRONTO`);
     process.exit(0);
+  }
+  // A narração parou porque a cota da voz do Google acabou (código 75 do narrar):
+  // não é falha para corrigir, a rotina para e tenta outro dia
+  if (/^ESPERAR_COTA:/m.test(texto) && !rodando(registro)) {
+    console.log(`${fim(texto)}\nESPERAR_COTA: o vídeo espera a cota da voz. Pare a rotina e conte ao dono; não troque para o Kokoro.`);
+    process.exit(75);
   }
   // Terminou sem "Pronto:": falhou (a mensagem está nas últimas linhas)
   if (!rodando(registro) || /^Falhou/m.test(texto)) {

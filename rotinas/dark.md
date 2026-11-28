@@ -29,7 +29,7 @@ O DONO VÊ A EQUIPE AO VIVO: antes de passar trabalho a uma agente, rode `source
 4. LIMITES DO KIT: para cada item da seção "Limites do kit" da critica-narrado, rode source ferramentas/nuvem.sh && npm run limite -- <assunto> "<o problema e o segundo>" (o dono junta e manda corrigir o kit).
 5. No fim: npm run andamento -- coordenadora feito "Vídeo pronto: está esperando você no Canal dark".
 
-Não faça commit nem push: o registro fica no Postaí. Se uma etapa falhar e não se resolver em uns 20 minutos, não mande nada para aprovação (a narração e o render em segundo plano não contam: enquanto o npm run esperar não disser FALHOU, é só esperar), rode npm run andamento -- coordenadora erro "<o problema em palavras simples>" e termine explicando. Ninguém muda código do kit (src/, ferramentas/). A chave POSTAI_CHAVE nunca é impressa nem escrita em arquivo.
+Não faça commit nem push: o registro fica no Postaí. Se a narração parar com ESPERAR_COTA (saída 75: acabou a cota da voz do canal), não troque de voz nem renderize: rode npm run andamento -- coordenadora erro "Sem cota de voz: <a mensagem do ESPERAR_COTA>" e termine; o vídeo sai na próxima rotina, com a mesma voz. Se uma etapa falhar e não se resolver em uns 20 minutos, não mande nada para aprovação (a narração e o render em segundo plano não contam: enquanto o npm run esperar não disser FALHOU, é só esperar), rode npm run andamento -- coordenadora erro "<o problema em palavras simples>" e termine explicando. Ninguém muda código do kit (src/, ferramentas/). A chave POSTAI_CHAVE nunca é impressa nem escrita em arquivo.
 
 Resposta final curta, em português do Brasil: título, tipo de vídeo, duração, quantas imagens e o resultado do envio.
 

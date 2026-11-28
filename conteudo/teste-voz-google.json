@@ -1,0 +1,23 @@
+{
+  "molde": "Conversa",
+  "titulo": "POV: a voz nova do canal",
+  "vozes": { "noiva": { "voz": "feminina-1", "vozGoogle": "Leda" } },
+  "cenas": [
+    {
+      "quem": "noiva",
+      "fala": "Gente, o canal ganhou uma voz nova hoje!",
+      "noiva": { "pose": "comemorando", "expressao": "radiante" },
+      "organizadora": { "pose": "normal", "expressao": "feliz" }
+    },
+    {
+      "fala": "E ela já sabe contar a história do começo ao fim.",
+      "noiva": { "pose": "normal", "expressao": "feliz" },
+      "organizadora": { "pose": "explicando", "expressao": "feliz" }
+    }
+  ],
+  "capa": { "titulo": "A voz nova do canal", "destaque": "voz nova" },
+  "post": {
+    "titulo": "A voz nova do canal",
+    "legenda": "Teste da voz do Google pelo Postaí (roteiro de teste do narrar, não publicar)."
+  }
+}

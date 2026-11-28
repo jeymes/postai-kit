@@ -79,6 +79,7 @@ export const personagemSchema = z.object({
   id: z.string().regex(/^[a-z0-9-]{1,20}$/).describe('Quem fala, nas cenas ("quem")'),
   nome: z.string().max(30),
   voz: z.string().optional().describe("Voz do kit (src/componentes/personagens/vozes.ts)"),
+  vozGoogle: z.string().optional().describe("Voz do Google (src/componentes/personagens/vozesGoogle.ts), quando o canal narra pelo Gemini ou Chirp; o npm run elenco copia"),
   tipo: z.enum(["pessoa", "criatura"]).optional().describe("criatura: só desenho (a Sombra do kit ou desenho próprio), sem pele nem roupa"),
   criatura: z.enum(["sombra"]).optional().describe("Criatura desenhada pelo kit (quando não tem desenho próprio)"),
   objeto: z.enum(OBJETOS_DA_SOMBRA).optional().describe("De onde a Sombra sai: celular, garrafa ou espelho"),
@@ -278,7 +279,7 @@ export const conversaSchema = z.object({
   qr: qrDoRoteiroSchema,
   legendas: z.boolean().default(true),
   efeitos: z.boolean().default(true),
-  vozes: z.record(z.string(), z.object({ voz: z.string(), velocidade: z.number().optional() })).optional(),
+  vozes: z.record(z.string(), z.object({ voz: z.string(), velocidade: z.number().optional(), vozGoogle: z.string().optional() })).optional(),
   voz: z
     .string()
     .optional()

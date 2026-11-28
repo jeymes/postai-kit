@@ -85,6 +85,7 @@ npm run capturar-site -- https://site nome    # print da página inteira em publ
 npm run buscar-fotos -- --candidatos x="termo em inglês"   # fotos CC0 em public/fotos/
 npm run voz:instalar [-- --mascote]           # instala a narração neste computador (uma vez, ~1,2 GB)
 npm run narrar -- conteudo/<nome>.json        # voz, legenda e conferência das cenas com "fala"
+#   com a voz do Google (canais/<canal>/vozes.json): ESPERAR_COTA e saída 75 = a cota acabou, o vídeo espera
 npm run avatar:instalar                       # avatar falante (placa NVIDIA; uma vez, ~7 GB)
 npm run avatar -- conteudo/<nome>.json        # a pessoa falando, cena por cena (depois do narrar)
 npm run lottie                                # refaz as animações com as cores da marca

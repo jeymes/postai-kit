@@ -12,6 +12,10 @@
 #
 # Uso: python voz.py <pedido.json>
 #      python voz.py --testar     (fala uma frase curta e confere)
+#      python voz.py --escutar <pedido.json>
+#          a voz já veio pronta (do Google, pelo Postaí): {"idioma"?, "falas": [{"entrada", "saida"}]}.
+#          Só iguala o volume, grava em "saida" e o Whisper escuta (o Kokoro nem carrega).
+#          Saída igual à de cima.
 import json
 import os
 import sys
@@ -27,10 +31,13 @@ from kokoro_onnx import Kokoro
 PASTA = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".voz", "modelos")
 
 
+def carregar_whisper():
+    return WhisperModel("small", device="cpu", compute_type="int8", download_root=os.path.join(PASTA, "whisper"))
+
+
 def carregar():
     kokoro = Kokoro(os.path.join(PASTA, "kokoro.onnx"), os.path.join(PASTA, "vozes.bin"))
-    whisper = WhisperModel("small", device="cpu", compute_type="int8", download_root=os.path.join(PASTA, "whisper"))
-    return kokoro, whisper
+    return kokoro, carregar_whisper()
 
 
 def voz_de(kokoro, nome):
@@ -94,7 +101,26 @@ def igualar_volume(amostras, taxa):
     return a
 
 
+def escutar_prontas(caminho):
+    # A voz do Google: o áudio já existe; aqui ele só fica no nível da narração e é conferido
+    with open(caminho, encoding="utf-8") as arquivo:
+        pedido = json.load(arquivo)
+    whisper = carregar_whisper()
+    idioma = pedido.get("idioma") or "pt"
+    resultado = []
+    for fala in pedido["falas"]:
+        amostras, taxa = sf.read(fala["entrada"], dtype="float32", always_2d=True)
+        amostras = igualar_volume(amostras.mean(axis=1), taxa)
+        os.makedirs(os.path.dirname(fala["saida"]), exist_ok=True)
+        sf.write(fala["saida"], amostras, taxa, subtype="PCM_16")
+        resultado.append({"duracao": round(len(amostras) / taxa, 3), "palavras": escutar(whisper, amostras, taxa, idioma)})
+    sys.stdout.write(json.dumps(resultado, ensure_ascii=False))
+
+
 def main():
+    if sys.argv[1:2] == ["--escutar"]:
+        escutar_prontas(sys.argv[2])
+        return
     if sys.argv[1:] == ["--testar"]:
         kokoro, whisper = carregar()
         amostras, taxa = kokoro.create("Tudo pronto para narrar.", voice="pf_dora", speed=1.0, lang="pt-br")

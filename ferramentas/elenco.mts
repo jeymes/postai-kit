@@ -31,7 +31,8 @@ if (!arquivoDoElenco || !existsSync(arquivoDoElenco)) {
   process.exit(1);
 }
 
-type Personagem = { id: string; nome: string; voz?: string; tipo?: string; criatura?: string; objeto?: string; visual: unknown; desenho?: unknown };
+// vozGoogle: a voz do Google (Gemini/Chirp) que o dono escolheu para o personagem no Postaí
+type Personagem = { id: string; nome: string; voz?: string; vozGoogle?: string; tipo?: string; criatura?: string; objeto?: string; visual: unknown; desenho?: unknown };
 const elenco: Personagem[] = JSON.parse(readFileSync(arquivoDoElenco, "utf8"));
 // Convidados do episódio (desenhados só para ele): canais/<canal>/convidados/<id>.json
 const doConvidado = (id: string): Personagem | undefined => {
@@ -54,6 +55,9 @@ if (ehMundo3D) {
     }
     p.visual = doElenco.visual;
     if (doElenco.voz && !peca3d.vozes[p.id]) peca3d.vozes[p.id] = VOZES[doElenco.voz] ?? { voz: doElenco.voz };
+    // A voz do Google vai junto (o narrar usa quando o canal narra pelo Google)
+    if (doElenco.vozGoogle && peca3d.vozes[p.id] && !peca3d.vozes[p.id].vozGoogle)
+      peca3d.vozes[p.id] = { ...peca3d.vozes[p.id], vozGoogle: doElenco.vozGoogle };
     achados.push(doElenco.nome);
   }
   writeFileSync(caminho, `${JSON.stringify(peca3d, null, 2)}\n`);
@@ -67,11 +71,12 @@ const escolhidos = ids.map((id) => {
     console.error(`Não achei "${id}" no elenco nem em convidados/. Ids do elenco: ${elenco.map((e) => e.id).join(", ")}`);
     process.exit(1);
   }
-  const { id: pid, nome, voz, tipo, criatura, objeto, visual, desenho } = p;
+  const { id: pid, nome, voz, vozGoogle, tipo, criatura, objeto, visual, desenho } = p;
   return {
     id: pid,
     nome,
     ...(voz ? { voz } : {}),
+    ...(vozGoogle ? { vozGoogle } : {}),
     ...(tipo === "criatura" ? { tipo, ...(criatura ? { criatura } : {}), ...(objeto ? { objeto } : {}) } : {}),
     visual,
     ...(desenho ? { desenho } : {}),

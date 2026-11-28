@@ -69,8 +69,9 @@ function resumo() {
 }
 
 // No "exit" só dá para fazer coisa síncrona: um node filho manda e o comando espera (até 5 s)
+// 75 = ESPERAR_COTA do narrar (a cota da voz do Google acabou): não é defeito do kit
 process.on("exit", (codigo) => {
-  if (codigo === 0 || IGNORAR.has(comando) || !comando || comando.startsWith("..")) return;
+  if (codigo === 0 || codigo === 75 || IGNORAR.has(comando) || !comando || comando.startsWith("..")) return;
   const chave = acesso();
   const mensagem = resumo();
   if (!chave || !mensagem) return;

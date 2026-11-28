@@ -9,6 +9,8 @@ import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync,
 import { spawnSync } from "node:child_process";
 import { join } from "node:path";
 import { exigirChave, ferramenta } from "./postai.ts";
+import { lerVozesDoCanal, nomeDoMotor } from "./voz/motor.ts";
+import { outroMotor } from "../src/componentes/personagens/vozesGoogle.ts";
 
 const pasta = process.argv.slice(2).find((arg) => !arg.startsWith("--"));
 if (!pasta || !existsSync(pasta)) {
@@ -93,6 +95,8 @@ try {
       cenarios?: unknown[];
       // Canal dark: o modelo visual, a cor, a letra e o que o dono pediu com as palavras dele
       estiloDoNarrado?: { modelo: string; cor?: string | null; letra?: string | null; pedido?: string };
+      // A voz do canal (27/11/2026): o motor, o que fazer sem cota e a voz do narrador
+      vozes?: { motor?: string; semCota?: string; narrador?: string };
     };
     if (dark) {
       const { pedido: _pedido, ...estilo } = elenco.estiloDoNarrado ?? { modelo: "classico" };
@@ -104,6 +108,17 @@ try {
     const idioma = ["pt", "en", "es"].includes(elenco.idioma ?? "") ? (elenco.idioma as string) : "pt";
     writeFileSync(".postai-idioma", `${idioma}\n`);
     console.log(`Idioma dos vídeos: ${{ pt: "português", en: "inglês", es: "espanhol" }[idioma]}.`);
+    // A voz do canal: o narrar.mts lê o vozes.json (Gemini ou Chirp 3 HD pelo Postaí, ou o
+    // Kokoro local). Sem "vozes" (Postaí antigo), apaga o de antes: o narrar segue com o Kokoro,
+    // nunca com a escolha de outra conta.
+    const arquivoDeVozes = join(pasta, "vozes.json");
+    const vozes = lerVozesDoCanal(elenco.vozes);
+    if (vozes) {
+      writeFileSync(arquivoDeVozes, `${JSON.stringify(vozes, null, 2)}\n`);
+      console.log(
+        `Voz do canal: ${vozes.motor === "kokoro" ? "a local (Kokoro)" : `${nomeDoMotor(vozes.motor)}${vozes.narrador ? `, narrador ${vozes.narrador}` : ""}; sem cota, ${vozes.semCota === "reserva" ? `a reserva (${nomeDoMotor(outroMotor(vozes.motor))}, a mesma voz)` : "o vídeo espera"}`}.`,
+      );
+    } else rmSync(arquivoDeVozes, { force: true });
     // Os cenários que a equipe já criou para o canal: o npm run cenarios põe no roteiro
     writeFileSync(join(pasta, "cenarios.json"), `${JSON.stringify(elenco.cenarios ?? [], null, 2)}\n`);
     if (elenco.cenarios?.length) console.log(`Cenários criados pela equipe: ${elenco.cenarios.length} em ${join(pasta, "cenarios.json")}.`);

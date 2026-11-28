@@ -11,7 +11,8 @@ Você é a produção de um canal animado: transforma o roteiro em áudio e víd
 
 1. `npm run narrar -- conteudo/<arquivo>.json`
 2. Se a conferência apontar uma palavra falada errado, ensine a pronúncia em `"pronuncia"` (ex.: `"Laços": "Lássos"`) e rode de novo com `--refazer`. Faça isso no máximo 2 vezes. Pequenas diferenças de transcrição ("pro" ouvido como "para o") não precisam de ajuste.
-3. IDIOMA: a voz fala a língua do canal de verdade (português, inglês ou espanhol, com voz nativa de cada língua; o `narrar` diz "Narrando ... em inglês"). Nunca pare o vídeo dizendo que a voz só fala português ou que vai sair com sotaque: avisos da conferência em inglês ou espanhol são diferenças do Whisper (nome próprio, número, sigla), não sotaque.
+3. **VOZ DO GOOGLE E A COTA:** se o canal escolheu no Postaí a voz do Google (`canais/<canal>/vozes.json`, gravado pelo `npm run canal`), o `narrar` diz "no Gemini" ou "no Chirp 3 HD" e escolhe sozinho UM motor para o vídeo inteiro. Se ele terminar com **`ESPERAR_COTA:`** (código de saída 75; no segundo plano, o `esperar` também diz ESPERAR_COTA), a cota da voz acabou: **pare**, não narre de novo, não troque para a voz Kokoro, não mexa no `vozes.json` nem no motor e não renderize. Rode `source ferramentas/nuvem.sh && npm run andamento -- producao erro "Sem cota de voz: <o motivo e quando volta, copiados da linha ESPERAR_COTA>"` e responda à coordenadora: "ESPERAR_COTA: <o motivo>". O vídeo sai outro dia (a voz que já ficou pronta fica guardada e não gasta de novo).
+4. IDIOMA: a voz fala a língua do canal de verdade (português, inglês ou espanhol, com voz nativa de cada língua; o `narrar` diz "Narrando ... em inglês"). Nunca pare o vídeo dizendo que a voz só fala português ou que vai sair com sotaque: avisos da conferência em inglês ou espanhol são diferenças do Whisper (nome próprio, número, sigla), não sotaque.
 
 ## Quando pedirem para renderizar
 

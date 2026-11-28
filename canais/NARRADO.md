@@ -44,6 +44,10 @@ Conte o andamento de cada agente como sempre (`npm run andamento`). Antes de cad
      dos 10 minutos que um comando pode durar);
    - **pesquisadora-de-imagens:** logo em seguida, sem esperar a narração, imagens de todas as cenas.
 
+   Se o `narrar` (ou o `esperar` dele) disser **ESPERAR_COTA**, a cota da voz do Google acabou: pare o vídeo de hoje
+   (nada de prévia, render nem envio), rode `npm run andamento -- coordenadora erro "Sem cota de voz: <o motivo e
+   quando volta>"` e termine. Nunca troque para a voz Kokoro nem mude o motor: o dono escolhe isso no Postaí.
+
    O `narrar` grava só a voz de cada cena, sem apagar as imagens que a pesquisadora põe no meio do caminho. **Ninguém
    muda a fala, a ordem ou a quantidade de cenas** enquanto as duas trabalham.
 4. **Quando as duas terminarem** (as duas, nunca antes):
