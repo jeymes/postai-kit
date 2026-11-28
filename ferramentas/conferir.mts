@@ -923,6 +923,15 @@ if (/sua ?marca|@suamarca|lorem ipsum/i.test(tudo)) erro("roteirista", 'texto de
     const naoRepete = existsSync(`${pastaDoCanal}/canal-postai.md`) && /repetir cen[aá]rio|nenhum se repete|n[aã]o repet\w* (o )?cen[aá]rio/i.test(readFileSync(`${pastaDoCanal}/canal-postai.md`, "utf8"));
     if (repetidos.length) (naoRepete ? erro : aviso)("roteirista", `cenário repetido dos últimos 3 vídeos: ${repetidos.join(", ")} (troque por um lugar que não saiu, veja a coluna Cenários do episodios.md)`);
   }
+  // Personagem repetido: quando o canal pede ("repetir personagem dos últimos 4"), o nome de
+  // quem está no elenco não pode estar no título nem no tema dos últimos 4 vídeos (28/11/2026)
+  const textoDoCanal = pastaDoCanal && existsSync(`${pastaDoCanal}/canal-postai.md`) ? readFileSync(`${pastaDoCanal}/canal-postai.md`, "utf8") : "";
+  if (/repetir personagem/i.test(textoDoCanal) && linhas.length > 2) {
+    const ultimos = linhas.slice(2).slice(-4).join(" ").toLowerCase();
+    const nomes = ((peca as { elenco?: Array<{ nome?: string }> }).elenco ?? []).map((p) => p.nome ?? "").filter((n) => n.length > 2);
+    const vistos = nomes.filter((n) => new RegExp(`(^|[^\\p{L}])${n.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}([^\\p{L}]|$)`, "u").test(ultimos));
+    if (vistos.length) erro("roteirista", `personagem dos últimos 4 vídeos: ${vistos.join(", ")} (o canal pede um personagem diferente a cada vídeo; veja o episodios.md)`);
+  }
 }
 // Como o vídeo termina: a frase na luz só quando o dono escolheu (public/marca/fim.json)
 if (peca.molde === "Conversa" || peca.molde === "Mundo3D") {
