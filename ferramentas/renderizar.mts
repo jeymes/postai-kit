@@ -22,6 +22,7 @@ import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, renameS
 import { cpus, totalmem } from "node:os";
 import { basename, join } from "node:path";
 import { duracaoDoMolde, FPS, iniciosDasCenas, MOLDES_3D, MOLDES_DE_VIDEO, QUADROS_DA_IMAGEM, quadrosDaPrevia } from "../src/moldes/tempos.ts";
+import { escolherFimDo3D, proximoEpisodio } from "../src/moldes/mundo3d/fim.ts";
 import { avisoDeDuracao, minutosDoCanal } from "./duracao-do-canal.ts";
 import { fonte3dDesatualizada, prepararFonte3d } from "./fonte-3d.mts";
 import { quadrosQuebrados } from "./quadros-quebrados.mts";
@@ -62,6 +63,17 @@ if (fimDoVideo === "vinheta" && !args.includes("--previa")) {
     props.ctaFinal = "";
   }
   if (molde === "Documentario") props.encerramento = "";
+}
+// O fim dos vídeos 3D (28/11/2026): dentro da cena, de quatro jeitos (grua, placa, cinema,
+// pose; ver src/moldes/mundo3d/fim.ts). Sem o roteiro pedir um, vai pelo número do episódio
+// no registro do canal (episodios.md): um vídeo nunca termina igual ao anterior. Sem
+// registro, o molde escolhe pelo título. Sem chamada (só a vinheta, frase na luz), não há fim
+if (molde === "Mundo3D" && props.ctaFinal && !props.fimDoVideo3d) {
+  const i = args.indexOf("--canal");
+  const comRegistro = existsSync("canais") ? readdirSync("canais").filter((p) => existsSync(join("canais", p, "episodios.md"))) : [];
+  const pasta = i >= 0 && args[i + 1] ? args[i + 1] : comRegistro.length === 1 ? join("canais", comRegistro[0]) : "";
+  const episodio = pasta && existsSync(join(pasta, "episodios.md")) ? proximoEpisodio(readFileSync(join(pasta, "episodios.md"), "utf8")) : null;
+  if (episodio !== null) props.fimDoVideo3d = escolherFimDo3D({ titulo: String(props.titulo ?? ""), episodio, comQr: Boolean(props.qr) });
 }
 
 function lerJson<T>(arquivo: string): T | null {

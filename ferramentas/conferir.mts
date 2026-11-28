@@ -454,6 +454,8 @@ if (peca.molde === "Mundo3D") {
     objetos?: Array<{ tipo: string; perto?: string; naMao?: boolean; cenas?: number[] }>;
     ctaFinal?: string;
     botaoFinal?: string;
+    fimDoVideo3d?: string;
+    qr?: unknown;
     cenario?: { ponte?: boolean; ambiente?: string; rio?: boolean };
     post?: { titulo?: string; legenda?: string };
   };
@@ -613,8 +615,15 @@ if (peca.molde === "Mundo3D") {
   if (cenas.length >= 4 && repetidos > cenas.length / 2) aviso("roteirista", "muitos planos iguais seguidos: varie (aberto, médio, de baixo, close)");
   const segundos = cenas.reduce((soma, c) => soma + segundosDe(c), 0);
   if (segundos > 75) erro("roteirista", `uns ${Math.round(segundos)} s de fala: o Short vai até uns 60 s`);
-  if (!m.ctaFinal) aviso("roteirista", "sem ctaFinal: o vídeo termina sem o cartão da marca");
+  if (!m.ctaFinal) aviso("roteirista", "sem ctaFinal: o vídeo termina sem o fim da marca");
   if (m.ctaFinal && (/@/.test(m.ctaFinal) || /link na bio/i.test(m.ctaFinal))) erro("roteirista", "ctaFinal sem @ e sem link na bio (isso vai no botão)");
+  // O fim dentro da cena (28/11/2026): grua, placa, cinema ou pose; sem o campo, muda sozinho
+  if (m.fimDoVideo3d !== undefined) {
+    if (!["grua", "placa", "cinema", "pose"].includes(m.fimDoVideo3d)) erro("roteirista", `fimDoVideo3d "${m.fimDoVideo3d}": use grua, placa, cinema ou pose (ou tire o campo: muda sozinho a cada vídeo)`);
+    else if (m.fimDoVideo3d === "pose" && !(m.personagens ?? []).some((p) => !p.cenas?.length || p.cenas.includes(cenas.length)))
+      aviso("diretora-de-arte", 'fimDoVideo3d "pose" sem ninguém do elenco na última cena: sai a "grua"');
+    else if (m.fimDoVideo3d === "placa" && m.qr) aviso("diretora-de-arte", 'fimDoVideo3d "placa" com qr: o QR fica pequeno ao lado; prefira "cinema" ou "pose"');
+  }
   if (!m.post?.titulo || !m.post?.legenda) erro("roteirista", 'falta "post": { "titulo", "legenda" }');
   console.log(`Mundo3D: ${cenas.length} cenas, uns ${Math.round(segundos)} s de fala, ${cenas.reduce((s2, c) => s2 + (c.acoes?.length ?? 0), 0)} ações.`);
   resultado();

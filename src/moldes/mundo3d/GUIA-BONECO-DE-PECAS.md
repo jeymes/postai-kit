@@ -113,6 +113,18 @@ cena, personagem só em algumas cenas, figurino).
 - O texto na cena (`rotulos` da cena): a placa é 3D (`placa.tsx`, o texto num canvas); a etiqueta de lugar e data, o nome e o
   bilhete são 2D, por cima (`src/componentes/rotulos/`).
 
+## O fim do vídeo (28/11/2026)
+
+- Sem o cartão branco do kit: o fim é dentro da cena, em 4 s (`MUNDO3D.cartao`), de quatro jeitos (`fim.ts`): `grua` (a câmera
+  sobe e recua, o elenco acena e a chamada aparece no céu), `placa` (o `LetreiroDoFim3D` de `placa.tsx` brota do chão atrás do
+  elenco: madeira, pedra, placa verde de estrada ou azul de rua, pelo lugar, com o logo, a chamada e o @), `cinema` (o
+  `Freeze` congela o último quadro, que desfoca e escurece; faixas pretas e o letreiro) e `pose` (o elenco em fila, de frente,
+  comemorando e acenando, com confete e a chamada embaixo). Na grua, placa e pose quem está na última cena fica em fila no
+  meio, vira para a câmera e faz o gesto; a câmera do fim é própria, num corte, e abre para caber o grupo.
+- A escolha: `fimDoVideo3d` no roteiro; sem ele, o renderizar usa o número do episódio (`episodios.md` do canal), e sem
+  registro o molde usa o título. Com `qr`, a placa vira cinema. O texto 2D fica em `FimDoVideo.tsx` (tudo acima de 1540 px).
+- A regra do fim do kit continua: sem `ctaFinal` (só a vinheta ou a frase na luz), não há fim.
+
 ## O que ainda falta
 
 - Dedos (a mão é uma luva) e cabelo com fios (o cabelo é bloco e só balança).

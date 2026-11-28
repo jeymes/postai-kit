@@ -68,3 +68,66 @@ export const FimDaSilhueta: React.FC<{ chamada: string; botao: string; cores: Pi
     </div>
   );
 };
+
+/**
+ * A frase na luz do Silhueta (28/11/2026: "cada estilo com o seu fim"). No lugar da
+ * cena escura genérica do kit: a última paisagem continua ao fundo, raios de luz
+ * descem do alto, o versículo entra em serifa clara, a referência em versal dourada
+ * e o botão com contorno dourado (o mesmo jeito do cartão do fim).
+ */
+export const FraseNaLuzDaSilhueta: React.FC<{ frase: string; linha?: string; botao: string; cores: Pick<CoresDaCena, "ouroDaLegenda"> }> = ({ frase, linha, botao, cores }) => {
+  const t = useCurrentFrame();
+  const ouro = cores.ouroDaLegenda;
+  const tamanho = frase.length > 110 ? 58 : frase.length > 70 ? 66 : 76;
+  const sobe = (de: number): React.CSSProperties => ({ opacity: entra(t, de, 22), transform: `translateY(${(1 - entra(t, de, 22)) * 24}px)` });
+  const brilho = entra(t, 0, 40);
+  const pulso = 1 + 0.025 * Math.sin(Math.max(0, t - 60) / 7);
+  return (
+    <div style={{ position: "absolute", inset: 0 }}>
+      <div style={{ position: "absolute", inset: 0, opacity: entra(t, 0, 24), background: "linear-gradient(180deg, rgba(8,6,4,0.35) 0%, rgba(8,6,4,0.6) 45%, rgba(8,6,4,0.9) 100%)" }} />
+      {/* Os raios de luz descendo do alto, abrindo devagar */}
+      <div
+        style={{
+          position: "absolute",
+          left: -200,
+          right: -200,
+          top: -120,
+          height: 1500,
+          opacity: 0.6 * brilho,
+          WebkitMaskImage: "linear-gradient(180deg, #000 0%, #000 45%, transparent 92%)",
+          maskImage: "linear-gradient(180deg, #000 0%, #000 45%, transparent 92%)",
+          background: `conic-gradient(from 150deg at 50% 0%, transparent 0deg, ${ouro}88 13deg, transparent 21deg, ${ouro}66 30deg, transparent 39deg, ${ouro}88 47deg, transparent 60deg, transparent 360deg)`,
+          transform: `scaleX(${0.7 + 0.3 * brilho})`,
+          transformOrigin: "50% 0%",
+          mixBlendMode: "screen",
+        }}
+      />
+      <div style={{ position: "absolute", top: 470, left: 90, right: 90, display: "flex", flexDirection: "column", alignItems: "center", gap: 36 }}>
+        <div style={{ ...sobe(10), fontFamily: SERIFA, fontStyle: "italic", fontWeight: 500, fontSize: tamanho, lineHeight: 1.14, color: "#FBF4E6", textAlign: "center", textShadow: "0 2px 22px rgba(0,0,0,0.7)" }}>“{frase}”</div>
+        {linha && (
+          <div style={sobe(30)}>
+            <Versal texto={linha} cor={ouro} fio={ouro} tamanho={30} />
+          </div>
+        )}
+        <div
+          style={{
+            ...sobe(48),
+            transform: `${sobe(48).transform} scale(${pulso})`,
+            marginTop: 20,
+            border: `2px solid ${ouro}`,
+            borderRadius: 60,
+            padding: "16px 44px",
+            fontFamily: SERIFA,
+            fontWeight: 700,
+            fontSize: 42,
+            letterSpacing: "0.04em",
+            color: ouro,
+            background: "rgba(0,0,0,0.3)",
+          }}
+        >
+          {botao}
+        </div>
+      </div>
+    </div>
+  );
+};

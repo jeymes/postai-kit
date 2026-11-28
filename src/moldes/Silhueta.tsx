@@ -2,7 +2,6 @@ import { Audio } from "@remotion/media";
 import React, { useMemo } from "react";
 import { AbsoluteFill, Img, interpolate, Sequence, staticFile, useCurrentFrame } from "remotion";
 import { Musica } from "../componentes/audio/Som";
-import { FraseNaLuz } from "../componentes/cenas/FraseNaLuz";
 import { palavrasDaNarracao, palavrasEstimadas, quadroDaPalavra, type PalavraNoTempo } from "../componentes/ilustracao/tempo";
 import { cores as coresDaMarca } from "../nucleo/marca";
 import { textosDoIdioma } from "../nucleo/textosFixos";
@@ -10,7 +9,7 @@ import { normalizarPalavra } from "./documentario/infografico/numeros";
 import { coresDaCena, misturar, type CoresDaCena } from "./silhueta/cores";
 import { Paisagem, VARIACOES } from "./silhueta/Paisagem";
 import { cameraDaCena, type CenaDaSilhueta, type PoseDaFigura, type SilhuetaProps } from "./silhueta/schema";
-import { FimDaSilhueta } from "./silhueta/Fim";
+import { FimDaSilhueta, FraseNaLuzDaSilhueta } from "./silhueta/Fim";
 import { alturaDoTitulo, ChamadaInicial, Diagrama, Legenda, paginasDaLegenda, tempoDoDiagrama, Titulo, type PalavraDaLegenda } from "./silhueta/Textos";
 import { duracaoDoMolde, estimarPalavras, FPS, quadrosDaCenaSilhueta, quadrosDaFalaConversa, SILHUETA } from "./tempos";
 
@@ -225,7 +224,7 @@ export const Silhueta: React.FC<SilhuetaProps> = (props) => {
       {props.musica && <Musica src={props.musica} total={duracaoDoMolde("Silhueta", props)} volume={props.volumeMusica} />}
       {props.final && (
         <Sequence from={fimDasCenas} durationInFrames={SILHUETA.final} name="Frase na luz">
-          <FraseNaLuz frase={props.final.frase} linha={props.final.linha} botao={props.final.botao ?? props.botaoFinal ?? textosDoIdioma(props.idioma).linkNaBio} cor={c.ouroDaLegenda} />
+          <FraseNaLuzDaSilhueta frase={props.final.frase} linha={props.final.linha} botao={props.final.botao ?? props.botaoFinal ?? textosDoIdioma(props.idioma).linkNaBio} cores={c} />
         </Sequence>
       )}
       {props.ctaFinal && (

@@ -1,16 +1,15 @@
 import { Audio } from "@remotion/media";
 import { ThreeCanvas } from "@remotion/three";
 import React, { useMemo } from "react";
-import { AbsoluteFill, Sequence, spring, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
+import { AbsoluteFill, Easing, Freeze, interpolate, Sequence, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 import * as THREE from "three";
 import { z } from "zod";
 import { SONS, Som, type TipoSom } from "../componentes/audio/Som";
-import { BalaoDeChamada, CartaoDeChamada, medidaDoCartao } from "../componentes/cenas/ChamadaAnimada";
+import { BalaoDeChamada } from "../componentes/cenas/ChamadaAnimada";
 import { FraseNaLuz } from "../componentes/cenas/FraseNaLuz";
 import type { Momento, Pose, Visual } from "../componentes/personagens/Boneco";
 import { Palito } from "../componentes/personagens/Palito";
 import { paginar } from "../componentes/texto/paginar";
-import { fontes } from "../nucleo/marca";
 import {
   ACESSORIOS,
   AMBIENTES,
@@ -29,7 +28,7 @@ import { aplicar, distancia, MOVIMENTOS, PLANOS, projetar, type Ponto } from "./
 import { BonecoDePecas } from "./mundo3d/BonecoDePecas";
 import { COM_RUA, Figurantes } from "./mundo3d/figurantes";
 import { caminhoLivre, poseDaTomadaPronta, rostoDaTomada } from "./mundo3d/filmagem";
-import { ACOES, batidaDaFala, giroCurto, GRAUS, passo, posicaoNoQuadro, posturaDaAcao, posturaNoQuadro, poseDoPalito, viver } from "./mundo3d/animacao";
+import { ACOES, batidaDaFala, curva, giroCurto, GRAUS, misturar, passo, posicaoNoQuadro, posturaDaAcao, posturaNoQuadro, poseDoPalito, POSTURAS, viver } from "./mundo3d/animacao";
 import { donoNoQuadro, numeroSuave } from "./mundo3d/atuacao";
 import { ObjetoDeCena, OBJETOS } from "./mundo3d/objetos";
 import { ehObjetoDeMao, ObjetoNaMao3D } from "./mundo3d/objetos";
@@ -38,12 +37,15 @@ import { ObjetoNaMaoContexto, type TipoDeApoio } from "../componentes/objetos/Ob
 
 /** Os objetos de festa que o palito (2D) sabe desenhar na mão */
 const APOIO_2D: Partial<Record<string, TipoDeApoio>> = { "caixinha-de-alianca": "caixinha-de-alianca", buque: "buque", bolo: "bolo", presente: "presente", "terno-no-cabide": "terno" };
-import { PainelDoQr, textoDoQr } from "../componentes/midia/QrCode";
+import { textoDoQr } from "../componentes/midia/QrCode";
 import { Mundo } from "./mundo3d/Mundo";
 import { linhaDoTempo, planejarFilmagem, PONTE, type PalavraDita } from "./mundo3d/plano";
 import { CamadaDaFala, ilustraSchema } from "../componentes/ilustracao";
 import { CamadaDosRotulos, rotulosSchema, type Placa } from "../componentes/rotulos";
-import { estiloDaPlaca, Placa3D } from "./mundo3d/placa";
+import { estiloDaPlaca, estiloDoLetreiro, LetreiroDoFim3D, Placa3D } from "./mundo3d/placa";
+import { cameraDoFim, escolherFimDo3D, filaDoFim, FINS_DO_3D, GESTOS_DA_GRUA, GESTOS_DA_PLACA, GESTOS_DA_POSE, longeDosTrechos, placaDoFim, trechosDoFim, type FimDo3D } from "./mundo3d/fim";
+import { TextoDoFim3D } from "./mundo3d/FimDoVideo";
+import { cores, fontes, marca } from "../nucleo/marca";
 import { ESTRADA } from "./mundo3d/estrada";
 import { duracaoDoMolde, FPS, MUNDO3D } from "./tempos";
 
@@ -226,8 +228,14 @@ export const mundo3dSchema = z.object({
     })
     .default({ ambiente: "campo", hora: "dia" })
     .describe("O mundo da história"),
-  ctaFinal: z.string().max(80).optional().describe("Frase do cartão do fim (com o logo da marca), sem @ e sem link na bio"),
-  botaoFinal: z.string().max(24).optional().describe('O botão do cartão do fim, ex.: "Siga o canal 👆"'),
+  ctaFinal: z.string().max(80).optional().describe("A chamada do fim (com o logo da marca), sem @ e sem link na bio. Vazio: o vídeo acaba sem o fim da marca"),
+  botaoFinal: z.string().max(24).optional().describe('O botão do fim, ex.: "Siga o canal 👆"'),
+  fimDoVideo3d: z
+    .enum(FINS_DO_3D)
+    .optional()
+    .describe(
+      'Como o vídeo termina, dentro da cena: "grua" (a câmera sobe, todos acenam e a chamada aparece no céu), "placa" (um letreiro do lugar brota atrás do elenco com a chamada e o @), "cinema" (o último plano congela e a chamada entra em letreiro de cinema) ou "pose" (o elenco se junta no meio e faz a pose final, com a chamada embaixo). Sem isso, muda sozinho a cada vídeo',
+    ),
   objetos: z
     .array(
       z.object({
@@ -253,7 +261,7 @@ export const mundo3dSchema = z.object({
       legenda: z.string().max(28).optional().describe('Linha curta embaixo do QR, ex.: "Aponte a câmera"'),
     })
     .optional()
-    .describe("QR Code de verdade (escaneável) no cartão do fim, acima da chamada"),
+    .describe("QR Code de verdade (escaneável) no fim do vídeo, junto da chamada"),
   final: z
     .object({
       frase: z.string().max(180).describe("A frase grande (versículo, citação, lição)"),
@@ -261,7 +269,7 @@ export const mundo3dSchema = z.object({
       botao: z.string().max(30).optional(),
     })
     .optional()
-    .describe("Frase na luz: cena final escura com feixe de luz e a frase (versículo com a referência), antes do cartão do fim"),
+    .describe("Frase na luz: cena final escura com feixe de luz e a frase (versículo com a referência), antes do fim da marca"),
   capa: z
     .object({
       titulo: z.string().optional().describe("O título da capa (sem isso, o do vídeo)"),
@@ -464,9 +472,13 @@ const Titulo: React.FC<{ texto: string; destaque?: string; fixo?: boolean; balao
 
 const POSES_COM_AS_DUAS_MAOS = new Set(["cabeca", "chorar", "orar", "ajoelhar-orando", "abraco", "cruzar-bracos", "comemorando", "comemorar", "levantar-bracos"]);
 
-export const Mundo3D: React.FC<Mundo3DProps> = (props) => {
+/** As poses do fim (grua, placa e pose): cada um com o seu gesto, um pouco depois do outro */
+const GESTOS_DO_FIM: Record<Exclude<FimDo3D, "cinema">, readonly string[]> = { grua: GESTOS_DA_GRUA, placa: GESTOS_DA_PLACA, pose: GESTOS_DA_POSE };
+
+/** A cena do vídeo (o mundo, os personagens, a legenda e o título), sem o som e sem o texto do fim */
+const CenaDoMundo3D: React.FC<Mundo3DProps & { fim: FimDo3D | null; inicioDoFim: number }> = ({ fim, inicioDoFim, ...props }) => {
   const frame = useCurrentFrame();
-  const { width, height, fps } = useVideoConfig();
+  const { width, height } = useVideoConfig();
   const linha = useMemo(() => linhaDoTempo(props.cenas), [props.cenas]);
   const paginas = useMemo(() => paginasDasCenas(linha), [linha]);
   const agora = linha.find((t) => frame < t.fim) ?? linha[linha.length - 1];
@@ -506,6 +518,35 @@ export const Mundo3D: React.FC<Mundo3DProps> = (props) => {
     [props.personagens, multidao, props.objetos, props.cenario.ambiente, semente, linha, width, height],
   );
   const { atuacao, lugares, presentes, presentesNoQuadro, ondeNoChao, rumoDe, meioDoGrupo, sozinho, palco, tomadas } = plano;
+
+  // O fim dentro da cena (28/11/2026, ver mundo3d/fim.ts): na grua, placa e pose, quem está
+  // na última cena fica em fila no meio do grupo, vira para a câmera e faz o gesto; a
+  // câmera do fim é própria (num corte). No cinema a cena congela (o Freeze, no Mundo3D)
+  const noFim = fim !== null && fim !== "cinema" && frame >= inicioDoFim;
+  const desdeOFim = frame - inicioDoFim;
+  const doFim = useMemo(() => {
+    if (!fim || fim === "cinema") return null;
+    const ultima = Math.max(0, linha.length - 1);
+    const antes = Math.max(0, inicioDoFim - 1);
+    const onde = presentes(ultima).map((id) => {
+      const [x, z] = ondeNoChao(id, antes);
+      return { id, x, z, naPonte: props.personagens.find((p) => p.id === id)?.naPonte };
+    });
+    // Em fila no meio do grupo (lado a lado, sem um tapar o outro), na mesma ordem da esquerda para a direita
+    const fila = filaDoFim(onde);
+    const pontos = Object.values(fila);
+    const ultimaTomada = tomadas[tomadas.length - 1];
+    const centro: [number, number] = pontos.length
+      ? [pontos.reduce((s, p) => s + p[0], 0) / pontos.length, pontos.reduce((s, p) => s + p[1], 0) / pontos.length]
+      : ultimaTomada.centro;
+    const xs = pontos.map((p) => p[0]);
+    const largo = xs.length ? Math.max(...xs) - Math.min(...xs) : 0;
+    const gestos = GESTOS_DO_FIM[fim];
+    const ordem = [...onde].sort((a, b) => a.x - b.x).map((p) => p.id);
+    const gestoDe = Object.fromEntries(ordem.map((id, i) => [id, { gesto: gestos[i % gestos.length], atraso: 4 + i * 3 }]));
+    const camera = cameraDoFim(fim, 1, centro, largo).posicao;
+    return { fila, centro, largo, gestoDe, camera, trechos: trechosDoFim(fim, centro, largo) };
+  }, [fim, linha.length, inicioDoFim, presentes, ondeNoChao, props.personagens, tomadas]);
   const lugarDaCena = (n: number) => plano.lugarDaCena(n) as Ambiente;
   const aqui = new Set(presentes(indiceDaCena));
   const { trilhas } = atuacao;
@@ -514,7 +555,7 @@ export const Mundo3D: React.FC<Mundo3DProps> = (props) => {
   /** Os pés no mundo (na ponte, em cima das tábuas e girando com ela) */
   const pontoNoChao = (id: string, quadro: number): Ponto => {
     const p = props.personagens.find((x) => x.id === id);
-    const [x, zz] = ondeNoChao(id, quadro);
+    const [x, zz] = doFim && quadro >= inicioDoFim && doFim.fila[id] ? doFim.fila[id] : ondeNoChao(id, quadro);
     if (!p?.naPonte) return [x, 0, zz];
     const y = PONTE.altura;
     return [x * Math.cos(balanco) - y * Math.sin(balanco), x * Math.sin(balanco) + y * Math.cos(balanco) - queda * DESCIDA_DA_QUEDA, zz];
@@ -538,9 +579,27 @@ export const Mundo3D: React.FC<Mundo3DProps> = (props) => {
 
   const tomada = tomadas.find((t) => frame < t.fim) ?? tomadas[tomadas.length - 1];
   const progresso = (frame - tomada.inicio) / Math.max(1, tomada.fim - tomada.inicio);
-  const escondidos = new Set(tomada.escondidos);
-  // O caminho da câmera de todas as tomadas: nada de árvore, casa ou pedra ali
-  const { livre, semGrama } = useMemo(() => caminhoLivre(tomadas, palco), [tomadas, palco]);
+  // No fim, sai da tela quem da multidão fica entre a câmera e o grupo ou no meio da fila
+  const escondidos = new Set(
+    noFim && doFim
+      ? lugares
+          .map((l, i) => ({ l, i }))
+          .filter(({ l }) => !longeDosTrechos(doFim.trechos, l[0], l[1], 0.9) || (Math.abs(l[0] - doFim.centro[0]) < doFim.largo / 2 + 0.9 && Math.abs(l[1] - doFim.centro[1]) < 1))
+          .map(({ i }) => i)
+      : tomada.escondidos,
+  );
+  // O caminho da câmera de todas as tomadas (e a do fim): nada de árvore, casa ou pedra ali
+  const { livre, semGrama } = useMemo(() => {
+    const dasTomadas = caminhoLivre(tomadas, palco);
+    const trechos = doFim?.trechos ?? [];
+    if (!trechos.length) return dasTomadas;
+    // A placa do fim também precisa do lugar dela livre (sem árvore atravessando)
+    const placa = fim === "placa" && doFim ? ([doFim.centro[0], doFim.centro[1] - placaDoFim(doFim.largo).atras] as const) : null;
+    return {
+      livre: (x: number, z: number) => dasTomadas.livre(x, z) && longeDosTrechos(trechos, x, z) && (!placa || Math.hypot(x - placa[0], z - placa[1]) > 2.2),
+      semGrama: (x: number, z: number) => dasTomadas.semGrama(x, z) && longeDosTrechos(trechos, x, z, 1.2),
+    };
+  }, [tomadas, palco, doFim, fim]);
 
   // A câmera agora: segue o rosto do foco (macio e sem a vida, para não tremer)
   const grupoAgora = meioDoGrupo(tomada.foco);
@@ -562,29 +621,8 @@ export const Mundo3D: React.FC<Mundo3DProps> = (props) => {
   camera.clearViewOffset();
   aplicar(camera, poseDaTomadaPronta(tomada, progresso, rostoDoFoco, tomada.parceiro ? suave((q) => rostoDe(tomada.parceiro as string, q)) : null, { sozinho, ids }));
 
-  // No cartão do fim, a imagem sobe para o rosto de quem está em cena ficar acima do selo do
-  // logo (26/11/2026: o logo cobria o rosto do Caim). Desloca a "janela" da câmera (o 3D e os
-  // palitos usam a mesma conta), sem mexer no cenário: embaixo aparece mais chão
-  const inicioDoCta = fimDasCenas + (props.final ? MUNDO3D.final : 0);
-  if (props.ctaFinal && frame >= inicioDoCta && !props.semLegenda) {
-    const limite = medidaDoCartao(props.ctaFinal).topo - 110 - 40;
-    let subir = 0;
-    let folgaEmCima = Infinity;
-    for (const p of props.personagens) {
-      const r = rostoDe(p.id, frame);
-      const queixo = projetar(camera, [r[0], r[1] - 0.3, r[2]], width, height);
-      const alto = projetar(camera, [r[0], r[1] + 0.33, r[2]], width, height);
-      if (!queixo.naFrente || queixo.x < -100 || queixo.x > width + 100 || alto.y > height) continue;
-      subir = Math.max(subir, queixo.y - limite);
-      folgaEmCima = Math.min(folgaEmCima, alto.y - 140);
-    }
-    // Sem cortar o alto da cabeça (no close, o rosto grande pode não caber inteiro)
-    subir = Math.min(Math.max(0, subir), Math.max(0, folgaEmCima), 700);
-    if (subir > 0) {
-      const p = spring({ frame: frame - inicioDoCta, fps, config: { damping: 16, stiffness: 110 } });
-      camera.setViewOffset(width, height, 0, subir * p, width, height);
-    }
-  }
+  // A câmera do fim (grua, placa e pose): própria, num corte
+  if (noFim && doFim && fim) aplicar(camera, cameraDoFim(fim, desdeOFim / (MUNDO3D.cartao - 1), doFim.centro, doFim.largo));
 
   // A troca de lugar passa por um escurecer rápido
   const ambiente = lugarDaCena(indiceDaCena);
@@ -706,6 +744,29 @@ export const Mundo3D: React.FC<Mundo3DProps> = (props) => {
         ? { objeto: <ObjetoNaMao3D tipo={obj.tipo} />, escala: obj.escala * (1 - ocupado), lado: (celular ? -1 : 1) as 1 | -1 }
         : null;
     const pulo = !naCapa && chave.trocouExpressao && chave.desde < 10 ? Math.sin((chave.desde / 10) * Math.PI) * 0.035 : 0;
+    // O fim: de pé, de frente para a câmera, fazendo o gesto (com um pulinho na pose final)
+    const gestoDoFim = noFim && doFim ? doFim.gestoDe[id] : undefined;
+    if (gestoDoFim && doFim) {
+      const desde = Math.max(0, desdeOFim - gestoDoFim.atraso);
+      const alvo = posturaDaAcao(gestoDoFim.gesto) ?? POSTURAS.normal;
+      let p = misturar(POSTURAS.normal, alvo, curva(desde / 12));
+      p = viver(p, { quadro: frame, semente: sementeDoAtor, batida: 0, ouvindo: 0, olharLado: 0, nome: gestoDoFim.gesto, desde });
+      const [x, zz] = doFim.fila[id] ?? ondeNoChao(id, frame);
+      return {
+        estado: {
+          postura: p,
+          expressao: (gestoDoFim.gesto === "acenar" || gestoDoFim.gesto === "mostrar" ? "feliz" : "radiante") as (typeof EXPRESSOES)[number],
+          lagrimas: false,
+          pulo: fim === "pose" && desde < 14 ? Math.sin((desde / 14) * Math.PI) * 0.12 : 0,
+          celular: null,
+          naMao: null,
+          vento: 0,
+        },
+        corpo: Math.atan2(doFim.camera[0] - x, doFim.camera[2] - zz),
+        pos: { ...pos, andando: 0, correndo: false },
+        chave,
+      };
+    }
     return {
       estado: {
         postura,
@@ -760,6 +821,14 @@ export const Mundo3D: React.FC<Mundo3DProps> = (props) => {
     // Sentado ou caído que olha para cima ou mexe os braços continua sentado ou caído (o palito só tem uma pose por vez)
     const poseDaChave = (c: (typeof chaves)[number]): Pose => (c.postura.deitado > 0.5 ? "caido" : c.postura.sentado > 0.5 ? "sentado" : ((poseDoPalito(c.nome) ?? "normal") as Pose));
     const lista = chaves.map((c) => ({ em: c.quadro, pose: poseDaChave(c), expressao: c.expressao }));
+    // O fim: de pé, no gesto do fim (o palito só tem as poses de sempre)
+    const gestoDoFim = doFim?.gestoDe[id];
+    if (gestoDoFim)
+      return [
+        ...(lista.length ? lista.filter((m) => m.em < inicioDoFim) : [{ em: 0, pose: "normal" as Pose, expressao: "neutra" as const }]),
+        { em: inicioDoFim, pose: "normal" as Pose, expressao: "feliz" as const },
+        { em: inicioDoFim + gestoDoFim.atraso, pose: (poseDoPalito(gestoDoFim.gesto) ?? "comemorando") as Pose, expressao: "radiante" as const },
+      ];
     return lista.length ? lista : [{ em: 0, pose: "normal", expressao: "neutra" }];
   };
 
@@ -830,13 +899,30 @@ export const Mundo3D: React.FC<Mundo3DProps> = (props) => {
           ambiente={ambiente}
           semente={semente % 1000}
           hora={props.cenario.hora}
-          centro={tomada.centro}
+          centro={noFim && doFim ? doFim.centro : tomada.centro}
           livre={livre}
           semGrama={semGrama}
           figurantes={props.cenario.figurantes ?? COM_RUA.includes(ambiente)}
         />
         {/* A vida da rua: gente passando no fundo, o veículo e o gato (bonecos de peças) */}
         {pecas && (props.cenario.figurantes ?? COM_RUA.includes(ambiente)) && <Figurantes ambiente={ambiente} semente={semente % 1000} rio={temRio} livre={livre} comMultidao={lugares.length > 0} />}
+        {/* O letreiro do fim "placa": brota do chão atrás do elenco */}
+        {fim === "placa" && doFim && props.ctaFinal && (
+          <LetreiroDoFim3D
+            chamada={props.ctaFinal}
+            arroba={String((marca as { instagram?: string }).instagram ?? "").trim()}
+            estilo={estiloDoLetreiro(lugarDaCena(linha.length - 1))}
+            destaque={cores.destaque}
+            textoNoDestaque={cores.textoNoDestaque}
+            logo={marca.logo}
+            inicial={(marca.nome || "?").trim().charAt(0).toUpperCase()}
+            posicao={[doFim.centro[0], 0, doFim.centro[1] - placaDoFim(doFim.largo).atras]}
+            largura={placaDoFim(doFim.largo).largura}
+            altura={placaDoFim(doFim.largo).altura}
+            meio={placaDoFim(doFim.largo).meio}
+            desde={desdeOFim}
+          />
+        )}
         {(placasPorCena[indiceDaCena] ?? []).map((p) => (
           <Placa3D key={p.chave} placa={p.placa} estilo={p.estilo} posicao={p.posicao} giro={p.giro} />
         ))}
@@ -898,8 +984,9 @@ export const Mundo3D: React.FC<Mundo3DProps> = (props) => {
         const p = x.p;
         const fala = p && cena.quem === p.id ? agora.palavras : [];
         const boca = p && cena.quem === p.id ? agora.boca : undefined;
-        const andando = p ? posicaoNoQuadro(trilhas[p.id], frame).andando : 0;
-        const deitado = p ? posturaNoQuadro(trilhas[p.id].chaves, frame).postura.deitado : 0;
+        const deFim = Boolean(p && noFim && doFim?.gestoDe[p.id]);
+        const andando = p && !deFim ? posicaoNoQuadro(trilhas[p.id], frame).andando : 0;
+        const deitado = p && !deFim ? posturaNoQuadro(trilhas[p.id].chaves, frame).postura.deitado : 0;
         const momentos = p ? momentosDoPalito(p.id) : momentosDoPalito("multidao");
         const naMaoAgora = p ? objetoNaMao(p.id) : null;
         return (
@@ -981,40 +1068,6 @@ export const Mundo3D: React.FC<Mundo3DProps> = (props) => {
           ) : null,
         )}
       {!props.semLegenda && frame < fimDasCenas && <Legenda paginas={paginas} destaque={cena.destaque} close={cena.plano === "close"} />}
-      {/* A voz de cada cena, a música baixinho e os sons do mundo */}
-      {linha.map((t, i) => (
-        <Sequence key={i} from={t.inicio} durationInFrames={t.fim - t.inicio} layout="none" name={`Cena ${i + 1}`}>
-          {t.cena.narracao && <Audio src={staticFile(t.cena.narracao.audio)} />}
-          {t.cena.sons.flatMap((som, k) =>
-            Array.from({ length: som.repetir }, (_, n) => <Som key={`${k}-${n}`} tipo={som.tipo} em={Math.round(som.em * FPS) + n * SONS[som.tipo].quadros} />),
-          )}
-          {t.queda !== undefined && <Som tipo="estalo" em={t.queda - t.inicio - 2} />}
-        </Sequence>
-      ))}
-      {props.musica && <Audio src={staticFile(props.musica)} volume={() => props.volumeMusica} />}
-      {/* O cartão do fim, com o logo e a chamada da marca, por cima do último plano */}
-      {/* O versículo (ou a lição) na luz, antes do cartão do fim */}
-      {props.final && (
-        <Sequence from={fimDasCenas} durationInFrames={MUNDO3D.final} name="Frase na luz">
-          <FraseNaLuz frase={props.final.frase} linha={props.final.linha} botao={props.final.botao ?? props.botaoFinal} />
-        </Sequence>
-      )}
-      {props.ctaFinal && (
-        <Sequence from={fimDasCenas + (props.final ? MUNDO3D.final : 0)} layout="none" name="CTA final">
-          <CartaoDeChamada chamada={props.ctaFinal} botao={props.botaoFinal} />
-          {/* O QR Code no cartão do fim, entre o alto e o selo do cartão (26/11/2026) */}
-          {props.qr && textoDoQr(props.qr.texto) && (
-            <PainelDoQr
-              texto={textoDoQr(props.qr.texto)}
-              legenda={props.qr.legenda}
-              tamanho={Math.max(240, Math.min(400, Math.floor((medidaDoCartao(props.ctaFinal).topo - 110 - 300) / (1.1 + (props.qr.legenda ? 0.17 : 0)))))}
-              em={14}
-              style={{ top: 280, left: 0, right: 0, marginLeft: "auto", marginRight: "auto", width: "fit-content" }}
-            />
-          )}
-          <Som tipo="sucesso" em={2} />
-        </Sequence>
-      )}
       <Titulo
         texto={(naCapa && props.capa?.titulo) || props.titulo}
         destaque={(naCapa && props.capa?.destaque) || props.destaqueDoTitulo}
@@ -1022,6 +1075,60 @@ export const Mundo3D: React.FC<Mundo3DProps> = (props) => {
         // A chamada inicial embaixo do título, na coluna dele (antes só o Conversa desenhava)
         balao={props.ctaInicial && !naCapa ? <BalaoDeChamada texto={props.ctaInicial} jaNaTela noFluxo /> : undefined}
       />
+    </AbsoluteFill>
+  );
+};
+
+/** O fim deste vídeo: o que o roteiro pediu ou o do título; sem ninguém na última cena, a pose vira grua */
+export function fimDoMundo3D(props: Pick<Mundo3DProps, "fimDoVideo3d" | "titulo" | "personagens" | "cenas" | "ctaFinal" | "semLegenda" | "qr">): FimDo3D | null {
+  if (!props.ctaFinal || props.semLegenda) return null;
+  const fim = escolherFimDo3D({ pedido: props.fimDoVideo3d, titulo: props.titulo, comQr: Boolean(props.qr) });
+  const ultima = props.cenas.length;
+  const naUltima = props.personagens.filter((p) => !p.cenas?.length || p.cenas.includes(ultima));
+  return fim === "pose" && !naUltima.length ? "grua" : fim;
+}
+
+export const Mundo3D: React.FC<Mundo3DProps> = (props) => {
+  const frame = useCurrentFrame();
+  const linha = useMemo(() => linhaDoTempo(props.cenas), [props.cenas]);
+  const fimDasCenas = linha[linha.length - 1].fim;
+  const inicioDoFim = fimDasCenas + (props.final ? MUNDO3D.final : 0);
+  const fim = fimDoMundo3D(props);
+  // Cinema: o último plano congela, desfoca de leve e chega um pouco mais perto
+  const congelar = fim === "cinema" && frame >= inicioDoFim;
+  const t = interpolate(frame - inicioDoFim, [0, 30], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: Easing.out(Easing.cubic) });
+  const aproxima = interpolate(frame - inicioDoFim, [0, MUNDO3D.cartao], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  const qr = props.qr && textoDoQr(props.qr.texto) ? { texto: textoDoQr(props.qr.texto), legenda: props.qr.legenda } : null;
+  return (
+    <AbsoluteFill style={{ backgroundColor: "#0B0910" }}>
+      <AbsoluteFill style={congelar ? { filter: `blur(${(5 * t).toFixed(2)}px) saturate(${1 - 0.3 * t})`, transform: `scale(${1.02 + 0.05 * aproxima})` } : undefined}>
+        <Freeze frame={Math.max(0, fimDasCenas - 1)} active={congelar}>
+          <CenaDoMundo3D {...props} fim={fim} inicioDoFim={inicioDoFim} />
+        </Freeze>
+      </AbsoluteFill>
+      {/* A voz de cada cena, a música baixinho e os sons do mundo */}
+      {linha.map((t2, i) => (
+        <Sequence key={i} from={t2.inicio} durationInFrames={t2.fim - t2.inicio} layout="none" name={`Cena ${i + 1}`}>
+          {t2.cena.narracao && <Audio src={staticFile(t2.cena.narracao.audio)} />}
+          {t2.cena.sons.flatMap((som, k) =>
+            Array.from({ length: som.repetir }, (_, n) => <Som key={`${k}-${n}`} tipo={som.tipo} em={Math.round(som.em * FPS) + n * SONS[som.tipo].quadros} />),
+          )}
+          {t2.queda !== undefined && <Som tipo="estalo" em={t2.queda - t2.inicio - 2} />}
+        </Sequence>
+      ))}
+      {props.musica && <Audio src={staticFile(props.musica)} volume={() => props.volumeMusica} />}
+      {/* O versículo (ou a lição) na luz, antes do fim da marca */}
+      {props.final && (
+        <Sequence from={fimDasCenas} durationInFrames={MUNDO3D.final} name="Frase na luz">
+          <FraseNaLuz frase={props.final.frase} linha={props.final.linha} botao={props.final.botao ?? props.botaoFinal} />
+        </Sequence>
+      )}
+      {/* O fim da marca, dentro da cena (grua, placa, cinema ou pose: ver mundo3d/fim.ts) */}
+      {fim && props.ctaFinal && (
+        <Sequence from={inicioDoFim} layout="none" name={`Fim: ${fim}`}>
+          <TextoDoFim3D fim={fim} chamada={props.ctaFinal} botao={props.botaoFinal} qr={qr} />
+        </Sequence>
+      )}
     </AbsoluteFill>
   );
 };

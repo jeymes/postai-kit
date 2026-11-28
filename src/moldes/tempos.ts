@@ -68,8 +68,8 @@ export const CONVERSA = { inicio: 20, entreFalas: 12, fim: 18, ctaFinal: 105, fi
 /** O trecho do vídeo real do app no fim do Conversa (de 1 a 6 s), antes do cartão final */
 export const quadrosDoVideoDoApp = (v: { de: number; ate: number }) => Math.round(Math.min(6, Math.max(1, v.ate - v.de)) * 30);
 
-/** Mundo3D: respiro entre as cenas, o tempo da queda (na cena que tem) e o cartão do fim */
-export const MUNDO3D = { entreCenas: 10, queda: 16, cartao: 105, final: 150 } as const;
+/** Mundo3D: respiro entre as cenas, o tempo da queda (na cena que tem) e o fim da marca (grua, placa, cinema ou pose: 4 s) */
+export const MUNDO3D = { entreCenas: 10, queda: 16, cartao: 120, final: 150 } as const;
 
 /**
  * Silhueta: o respiro antes da voz em cada cena, o respiro depois (a câmera
