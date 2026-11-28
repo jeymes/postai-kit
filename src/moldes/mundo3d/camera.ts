@@ -158,7 +158,8 @@ const suave = (t: number) => {
  * A câmera da tomada no instante t (0 a 1). `rosto`: o meio do rosto de quem
  * está no foco (ou o meio do grupo); `lado`: 1 se quem está junto fica à
  * direita do foco (a câmera vai para o lado dele, como no cinema), -1 à
- * esquerda; `ajuste`: graus a mais no lado (para ninguém tapar o rosto);
+ * esquerda; `ajuste`: graus a mais no lado e `subir`, graus a mais de cima
+ * (para ninguém tapar o rosto);
  * `escala` abre o plano (grupo, ponte); `parceiro`: o rosto de quem fica de
  * costas no "ombro".
  */
@@ -166,7 +167,7 @@ export function poseDaTomada(
   tomada: Pick<Tomada, "plano" | "movimento" | "sentido">,
   t: number,
   rosto: Ponto,
-  opcoes: { lado: number; ajuste?: number; escala?: number; sozinho?: boolean; parceiro?: Ponto | null },
+  opcoes: { lado: number; ajuste?: number; subir?: number; escala?: number; sozinho?: boolean; parceiro?: Ponto | null },
 ): PoseDaCamera {
   const s = suave(t);
   const ida = (s - 0.5) * 2;
@@ -198,7 +199,8 @@ export function poseDaTomada(
   let h = e.h * (opcoes.escala ?? 1);
   if (opcoes.sozinho && tomada.plano === "aberto") h = 5.8;
   let az = e.az * (opcoes.lado >= 0 ? 1 : -1) + (opcoes.ajuste ?? 0);
-  let el = e.el;
+  // subir: graus a mais de cima, para ver por cima de quem está na frente (o ajoelhado atrás de alguém)
+  let el = e.el + (opcoes.subir ?? 0);
   let d = h / (2 * Math.tan((e.fov * RAD) / 2));
   switch (tomada.movimento) {
     case "aproximar":

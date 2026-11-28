@@ -5,6 +5,8 @@ import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment
 import { sorteio } from "./animacao";
 import { renderPorSoftware } from "./BonecoDePecas";
 import { luzDaHora, PALETAS, type Ambiente, type Hora, type Paleta } from "./ambientes";
+import { PONTE } from "./plano";
+import { Fosco, useSoftware } from "./software";
 
 // O mundo 3D low-poly do molde Mundo3D (protótipo, 18/11/2026): campo, rio,
 // ponte de madeira com cerca, árvores, montanhas, tendas, nuvens e grama.
@@ -29,7 +31,8 @@ const sempre: Livre = () => true;
 const deitado = { polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 } as const;
 
 export const RIO = { z: -7, largura: 5 };
-export const PONTE = { meiaLargura: 1.3, z1: -10.6, z2: -3.4, altura: 0.62 };
+// A ponte mora em plano.ts (conta pura: o conferir também usa)
+export { PONTE };
 
 /** Sorteio com semente (mulberry32): o mesmo número, a mesma sequência (fica em animacao.ts, sem React) */
 export { sorteio };
@@ -71,12 +74,17 @@ function manchas() {
   return texturaDoChao;
 }
 
-const Chao: React.FC<{ cor: string }> = ({ cor }) => (
-  <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-    <planeGeometry args={[400, 400]} />
-    <meshStandardMaterial color={cor} map={manchas()} roughness={0.95} />
-  </mesh>
-);
+const Chao: React.FC<{ cor: string }> = ({ cor }) => {
+  const software = useSoftware();
+  const textura = manchas();
+  if (software) textura.anisotropy = 1;
+  return (
+    <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+      <planeGeometry args={[400, 400]} />
+      <Fosco color={cor} map={textura} roughness={0.95} />
+    </mesh>
+  );
+};
 
 /** O céu: degradê do horizonte para o alto, com o brilho em volta do sol */
 const Ceu: React.FC<{ topo: string; horizonte: string; sol: [number, number, number]; corDoSol: string }> = ({ topo, horizonte, sol, corDoSol }) => {
@@ -117,11 +125,7 @@ const Ceu: React.FC<{ topo: string; horizonte: string; sol: [number, number, num
 const Reflexo: React.FC<{ forca: number }> = ({ forca }) => {
   const { gl, scene } = useThree();
   // Por software (a nuvem), sem o reflexo: ler o mapa em cada pixel dobrava o tempo dos planos de perto
-  const software = useMemo(() => {
-    const ctx = gl.getContext();
-    const info = ctx.getExtension("WEBGL_debug_renderer_info");
-    return /swiftshader|software|llvmpipe/i.test(String(info ? ctx.getParameter(info.UNMASKED_RENDERER_WEBGL) : ctx.getParameter(ctx.RENDERER)));
-  }, [gl]);
+  const software = useSoftware();
   useMemo(() => {
     renderPorSoftware(software);
     if (software) return null;
@@ -143,15 +147,12 @@ const Luzes: React.FC<{ hora: ReturnType<typeof luzDaHora>; centro: [number, num
   const alvo = useMemo(() => new THREE.Object3D(), []);
   // Na nuvem o render é por software (SwiftShader): a sombra fica menor (1024) para não dobrar o tempo
   const { gl } = useThree();
+  const software = useSoftware();
   const tamanho = useMemo(() => {
-    const ctx = gl.getContext();
-    const info = ctx.getExtension("WEBGL_debug_renderer_info");
-    const nome = String(info ? ctx.getParameter(info.UNMASKED_RENDERER_WEBGL) : ctx.getParameter(ctx.RENDERER));
-    const software = /swiftshader|software|llvmpipe/i.test(nome);
     // Por software, a sombra com 1 amostra (a filtrada lia o mapa 4 vezes em cada pixel do chão)
     if (software) gl.shadowMap.type = THREE.BasicShadowMap;
     return software ? 1024 : 2048;
-  }, [gl]);
+  }, [gl, software]);
   alvo.position.set(centro[0], 0, centro[1]);
   alvo.updateMatrixWorld();
   const d = hora.direcaoDoSol;
@@ -165,7 +166,9 @@ const Luzes: React.FC<{ hora: ReturnType<typeof luzDaHora>; centro: [number, num
         target={alvo}
         intensity={hora.forcaDoSol}
         color={hora.sol}
-        castShadow
+        // Por software (a nuvem), o sol não faz sombra: ela custava 12% do tempo do render.
+        // Ficam as sombras de contato (o círculo macio sob os pés e sob os objetos)
+        castShadow={!software}
         shadow-mapSize-width={tamanho}
         shadow-mapSize-height={tamanho}
         shadow-camera-left={-11}
@@ -190,12 +193,12 @@ const Rio: React.FC<{ margem: string }> = ({ margem }) => (
     {[RIO.z - RIO.largura / 2 - 0.25, RIO.z + RIO.largura / 2 + 0.25].map((z) => (
       <mesh key={z} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.015, z]} receiveShadow>
         <planeGeometry args={[400, 0.8]} />
-        <meshStandardMaterial color={margem} roughness={1} {...deitado} />
+        <Fosco color={margem} roughness={1} {...deitado} />
       </mesh>
     ))}
     <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.03, RIO.z]} receiveShadow>
       <planeGeometry args={[400, RIO.largura]} />
-      <meshStandardMaterial color="#3E8ED8" roughness={0.08} metalness={0.2} {...deitado} />
+      <Fosco color="#3E8ED8" roughness={0.08} metalness={0.2} {...deitado} />
     </mesh>
   </group>
 );
@@ -212,21 +215,21 @@ export const Ponte: React.FC<{ balanco: number; queda?: number }> = ({ balanco, 
       {Array.from({ length: tabuas }, (_, i) => (
         <mesh key={i} castShadow position={[0, PONTE.altura - 0.06, -comprimento / 2 + 0.17 + i * 0.34]}>
           <boxGeometry args={[PONTE.meiaLargura * 2, 0.12, 0.3]} />
-          <meshStandardMaterial color={i % 2 ? "#A8743F" : "#9A6A38"} roughness={0.9} flatShading />
+          <Fosco color={i % 2 ? "#A8743F" : "#9A6A38"} roughness={0.9} flatShading />
         </mesh>
       ))}
       {/* As vigas embaixo e os pilares no rio */}
       {[-0.9, 0.9].map((x) => (
         <mesh key={x} castShadow position={[x, PONTE.altura - 0.22, 0]}>
           <boxGeometry args={[0.18, 0.2, comprimento]} />
-          <meshStandardMaterial color="#7A5530" flatShading />
+          <Fosco color="#7A5530" flatShading />
         </mesh>
       ))}
       {[-2.2, 2.2].flatMap((z) =>
         [-0.9, 0.9].map((x) => (
           <mesh key={`${x}${z}`} position={[x, 0.2, z]}>
             <cylinderGeometry args={[0.12, 0.14, 0.8, 6]} />
-            <meshStandardMaterial color="#6E4B29" flatShading />
+            <Fosco color="#6E4B29" flatShading />
           </mesh>
         )),
       )}
@@ -236,13 +239,13 @@ export const Ponte: React.FC<{ balanco: number; queda?: number }> = ({ balanco, 
           {Array.from({ length: 9 }, (_, i) => (
             <mesh key={i} castShadow position={[x, PONTE.altura + 0.42, -comprimento / 2 + i * (comprimento / 8)]}>
               <boxGeometry args={[0.09, 0.84, 0.09]} />
-              <meshStandardMaterial color="#F4F4F0" roughness={0.6} />
+              <Fosco color="#F4F4F0" roughness={0.6} />
             </mesh>
           ))}
           {[0.82, 0.46].map((y) => (
             <mesh key={y} castShadow position={[x, PONTE.altura + y, 0]}>
               <boxGeometry args={[0.07, 0.07, comprimento]} />
-              <meshStandardMaterial color="#F4F4F0" roughness={0.6} />
+              <Fosco color="#F4F4F0" roughness={0.6} />
             </mesh>
           ))}
         </group>
@@ -257,23 +260,23 @@ const Arvore: React.FC<{ x: number; z: number; escala: number; pinheiro: boolean
     <group position={[x, 0, z]} scale={escala}>
       <mesh position={[0, 0.6, 0]}>
         <cylinderGeometry args={[0.12, 0.17, 1.2, 6]} />
-        <meshStandardMaterial color="#7B5232" flatShading />
+        <Fosco color="#7B5232" flatShading />
       </mesh>
       {pinheiro ? (
         <>
           <mesh position={[0, 1.7, 0]}>
             <coneGeometry args={[0.85, 1.6, 7]} />
-            <meshStandardMaterial color={verde} flatShading />
+            <Fosco color={verde} flatShading />
           </mesh>
           <mesh position={[0, 2.5, 0]}>
             <coneGeometry args={[0.6, 1.2, 7]} />
-            <meshStandardMaterial color={verde} flatShading />
+            <Fosco color={verde} flatShading />
           </mesh>
         </>
       ) : (
         <mesh position={[0, 1.75, 0]}>
           <icosahedronGeometry args={[0.95, 0]} />
-          <meshStandardMaterial color={verde} flatShading />
+          <Fosco color={verde} flatShading />
         </mesh>
       )}
     </group>
@@ -290,7 +293,7 @@ const Palmeira: React.FC<{ x: number; z: number; escala: number; tom: number }> 
       {Array.from({ length: gomos }, (_, i) => (
         <mesh key={i} castShadow position={[curva * (i / gomos) ** 2 * 1.6, 0.25 + i * 0.5, 0]} rotation={[0, 0, -curva * (i / gomos) * 0.6]}>
           <cylinderGeometry args={[0.13 - i * 0.008, 0.16 - i * 0.008, 0.52, 7]} />
-          <meshStandardMaterial color={i % 2 ? "#8C6A42" : "#7A5A36"} flatShading />
+          <Fosco color={i % 2 ? "#8C6A42" : "#7A5A36"} flatShading />
         </mesh>
       ))}
       <group position={[curva * 1.6, gomos * 0.5 + 0.05, 0]}>
@@ -298,7 +301,7 @@ const Palmeira: React.FC<{ x: number; z: number; escala: number; tom: number }> 
           <group key={i} rotation={[0, (i / 7) * Math.PI * 2, 0]}>
             <mesh position={[0.75, -0.25, 0]} rotation={[0, 0, -0.55]}>
               <boxGeometry args={[1.6, 0.06, 0.42]} />
-              <meshStandardMaterial color={verde} flatShading />
+              <Fosco color={verde} flatShading />
             </mesh>
           </group>
         ))}
@@ -356,7 +359,7 @@ const Montanhas: React.FC<{ cor: Paleta["montanhas"]; semente: number }> = ({ co
       {lista.map((m, i) => (
         <mesh key={i} castShadow position={[m.x, m.altura / 2 - 0.5, m.z]}>
           <coneGeometry args={[m.raio, m.altura, 7]} />
-          <meshStandardMaterial color={m.cor} flatShading roughness={1} />
+          <Fosco color={m.cor} flatShading roughness={1} />
         </mesh>
       ))}
     </>
@@ -367,19 +370,19 @@ const Tenda: React.FC<{ x: number; z: number; cor: string }> = ({ x, z, cor }) =
   <group position={[x, 0, z]}>
     <mesh position={[0, 0.9, 0]}>
       <coneGeometry args={[1.25, 1.8, 10]} />
-      <meshStandardMaterial color="#F6F3EA" flatShading />
+      <Fosco color="#F6F3EA" flatShading />
     </mesh>
     <mesh position={[0, 1.55, 0]}>
       <coneGeometry args={[0.55, 0.7, 10]} />
-      <meshStandardMaterial color={cor} flatShading />
+      <Fosco color={cor} flatShading />
     </mesh>
     <mesh position={[0, 2.25, 0]}>
       <cylinderGeometry args={[0.025, 0.025, 1, 5]} />
-      <meshStandardMaterial color="#5C4630" />
+      <Fosco color="#5C4630" />
     </mesh>
     <mesh position={[0.22, 2.6, 0]}>
       <boxGeometry args={[0.42, 0.26, 0.02]} />
-      <meshStandardMaterial color={cor} />
+      <Fosco color={cor} />
     </mesh>
   </group>
 );
@@ -401,7 +404,7 @@ const Nuvens: React.FC<{ semente: number; cor?: string }> = ({ semente, cor = "#
           {n.bolas.map(([x, y, z, raio], j) => (
             <mesh key={j} castShadow position={[x, y, z]}>
               <icosahedronGeometry args={[raio, 1]} />
-              <meshStandardMaterial color={cor} flatShading roughness={1} emissive={cor} emissiveIntensity={0.25} />
+              <Fosco color={cor} flatShading roughness={1} emissive={cor} emissiveIntensity={0.25} />
             </mesh>
           ))}
         </group>
@@ -455,7 +458,7 @@ const Grama: React.FC<{ matiz: number; rio: boolean; semente: number; livre: Liv
   return (
     <instancedMesh ref={ref} args={[undefined, undefined, folhas.length]}>
       <coneGeometry args={[0.035, 0.4, 3]} />
-      <meshStandardMaterial roughness={1} flatShading />
+      <Fosco roughness={1} flatShading />
     </instancedMesh>
   );
 };
@@ -475,33 +478,33 @@ const Casa: React.FC<{ x: number; z: number; tipo: NonNullable<Paleta["casas"]>;
     <group position={[x, 0, z]} rotation={[0, giro, 0]}>
       <mesh position={[0, altura / 2, 0]}>
         <boxGeometry args={[largura, altura, fundura]} />
-        <meshStandardMaterial color={parede} flatShading roughness={1} />
+        <Fosco color={parede} flatShading roughness={1} />
       </mesh>
       {/* Porta e janela, na frente */}
       <mesh position={[-largura * 0.15, 0.5, fundura / 2 + 0.01]}>
         <boxGeometry args={[0.55, 1, 0.04]} />
-        <meshStandardMaterial color="#5C3F28" />
+        <Fosco color="#5C3F28" />
       </mesh>
       <mesh position={[largura * 0.25, altura * 0.62, fundura / 2 + 0.01]}>
         <boxGeometry args={[0.42, 0.38, 0.04]} />
-        <meshStandardMaterial color={tipo === "coloridas" ? "#CFE9F7" : "#4A3524"} />
+        <Fosco color={tipo === "coloridas" ? "#CFE9F7" : "#4A3524"} />
       </mesh>
       {tipo === "barro" && (
         <mesh position={[0, altura + 0.08, 0]}>
           <boxGeometry args={[largura + 0.16, 0.16, fundura + 0.16]} />
-          <meshStandardMaterial color="#C7A877" flatShading />
+          <Fosco color="#C7A877" flatShading />
         </mesh>
       )}
       {tipo === "palha" && (
         <mesh position={[0, altura + 0.6, 0]} rotation={[0, Math.PI / 4, 0]}>
           <coneGeometry args={[Math.max(largura, fundura) * 0.86, 1.3, 4]} />
-          <meshStandardMaterial color="#D8B45A" flatShading />
+          <Fosco color="#D8B45A" flatShading />
         </mesh>
       )}
       {tipo === "coloridas" && (
         <mesh position={[0, altura + 0.45, 0]} rotation={[0, 0, Math.PI / 2]} scale={[1, 1, fundura / 1.1]}>
           <cylinderGeometry args={[0.62, 0.62, largura + 0.3, 3, 1, false, Math.PI / 6]} />
-          <meshStandardMaterial color="#C2453A" flatShading />
+          <Fosco color="#C2453A" flatShading />
         </mesh>
       )}
     </group>
@@ -538,24 +541,24 @@ const Muralha: React.FC = () => (
   <group position={[0, 0, -22]}>
     <mesh position={[0, 1.7, 0]}>
       <boxGeometry args={[90, 3.4, 1.4]} />
-      <meshStandardMaterial color="#CDAE74" flatShading roughness={1} />
+      <Fosco color="#CDAE74" flatShading roughness={1} />
     </mesh>
     {Array.from({ length: 45 }, (_, i) => (
       <mesh key={i} castShadow position={[-44 + i * 2, 3.65, 0.4]}>
         <boxGeometry args={[0.9, 0.5, 0.6]} />
-        <meshStandardMaterial color="#C4A268" flatShading />
+        <Fosco color="#C4A268" flatShading />
       </mesh>
     ))}
     {[-30, -16, -6, 6, 16, 30].map((x) => (
       <mesh key={x} castShadow position={[x, 2.6, 0.2]}>
         <boxGeometry args={[2.6, 5.2, 2.6]} />
-        <meshStandardMaterial color="#C8A66C" flatShading roughness={1} />
+        <Fosco color="#C8A66C" flatShading roughness={1} />
       </mesh>
     ))}
     {/* O portão */}
     <mesh position={[0, 1.2, 0.72]}>
       <boxGeometry args={[2.2, 2.4, 0.05]} />
-      <meshStandardMaterial color="#6B4A2E" />
+      <Fosco color="#6B4A2E" />
     </mesh>
   </group>
 );
@@ -575,7 +578,7 @@ const Pedras: React.FC<{ livre?: Livre; semente: number }> = ({ livre = sempre, 
       {lista.map((p, i) => (
         <mesh key={i} castShadow position={[p.x, p.tam * 0.35, p.z]} rotation={[p.giro, p.giro * 2, 0]} scale={[1.3, 0.8, 1]}>
           <icosahedronGeometry args={[p.tam, 0]} />
-          <meshStandardMaterial color={p.tom > 0.5 ? "#B39A72" : "#9E8862"} flatShading />
+          <Fosco color={p.tom > 0.5 ? "#B39A72" : "#9E8862"} flatShading />
         </mesh>
       ))}
     </>
@@ -589,26 +592,26 @@ const Torre: React.FC<{ x: number; z: number; altura: number; raio: number; telh
   <group position={[x, 0, z]}>
     <mesh position={[0, altura / 2, 0]}>
       <cylinderGeometry args={[raio, raio * 1.05, altura, 10]} />
-      <meshStandardMaterial color={PEDRA} flatShading roughness={1} />
+      <Fosco color={PEDRA} flatShading roughness={1} />
     </mesh>
     <mesh position={[0, altura + raio * 0.9, 0]}>
       <coneGeometry args={[raio * 1.25, raio * 1.8, 10]} />
-      <meshStandardMaterial color={telhado} flatShading />
+      <Fosco color={telhado} flatShading />
     </mesh>
     {/* A bandeira no alto */}
     <mesh position={[0, altura + raio * 2.2, 0]}>
       <cylinderGeometry args={[0.05, 0.05, 1.6, 5]} />
-      <meshStandardMaterial color="#5C4630" />
+      <Fosco color="#5C4630" />
     </mesh>
     <mesh position={[0.45, altura + raio * 2.6, 0]}>
       <boxGeometry args={[0.85, 0.5, 0.03]} />
-      <meshStandardMaterial color={telhado} />
+      <Fosco color={telhado} />
     </mesh>
     {/* As janelinhas */}
     {[0.45, 0.7].map((f) => (
       <mesh key={f} castShadow position={[0, altura * f, raio + 0.01]}>
         <boxGeometry args={[0.35, 0.7, 0.05]} />
-        <meshStandardMaterial color="#2E2A28" />
+        <Fosco color="#2E2A28" />
       </mesh>
     ))}
   </group>
@@ -619,18 +622,18 @@ const Castelo: React.FC = () => (
     {/* O muro com ameias */}
     <mesh position={[0, 3, 0]}>
       <boxGeometry args={[26, 6, 2]} />
-      <meshStandardMaterial color={PEDRA} flatShading roughness={1} />
+      <Fosco color={PEDRA} flatShading roughness={1} />
     </mesh>
     {Array.from({ length: 13 }, (_, i) => (
       <mesh key={i} castShadow position={[-12 + i * 2, 6.4, 0.5]}>
         <boxGeometry args={[1, 0.8, 0.9]} />
-        <meshStandardMaterial color="#A19A90" flatShading />
+        <Fosco color="#A19A90" flatShading />
       </mesh>
     ))}
     {/* A torre de menagem no meio, mais alta */}
     <mesh position={[0, 6.5, -4]}>
       <boxGeometry args={[9, 13, 6]} />
-      <meshStandardMaterial color="#B2ABA1" flatShading roughness={1} />
+      <Fosco color="#B2ABA1" flatShading roughness={1} />
     </mesh>
     <Torre x={-13} z={0} altura={9} raio={1.9} telhado="#3F63B8" />
     <Torre x={13} z={0} altura={9} raio={1.9} telhado="#3F63B8" />
@@ -639,11 +642,11 @@ const Castelo: React.FC = () => (
     {/* O portão em arco */}
     <mesh position={[0, 1.6, 1.02]}>
       <boxGeometry args={[3, 3.2, 0.05]} />
-      <meshStandardMaterial color="#5C3F28" />
+      <Fosco color="#5C3F28" />
     </mesh>
     <mesh position={[0, 3.2, 1.02]} rotation={[Math.PI / 2, 0, 0]}>
       <cylinderGeometry args={[1.5, 1.5, 0.05, 16, 1, false, -Math.PI / 2, Math.PI]} />
-      <meshStandardMaterial color="#5C3F28" />
+      <Fosco color="#5C3F28" />
     </mesh>
   </group>
 );
@@ -654,16 +657,16 @@ const Mar: React.FC = () => (
   <group>
     <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.03, BEIRA - 100]}>
       <planeGeometry args={[400, 200]} />
-      <meshStandardMaterial color="#2F86C9" roughness={0.1} metalness={0.2} {...deitado} />
+      <Fosco color="#2F86C9" roughness={0.1} metalness={0.2} {...deitado} />
     </mesh>
     {/* A água rasa e a espuma na beira */}
     <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.035, BEIRA - 1.2]}>
       <planeGeometry args={[400, 2.4]} />
-      <meshStandardMaterial color="#5FB6E0" roughness={0.15} metalness={0.1} {...deitado} />
+      <Fosco color="#5FB6E0" roughness={0.15} metalness={0.1} {...deitado} />
     </mesh>
     <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.04, BEIRA + 0.1]}>
       <planeGeometry args={[400, 0.45]} />
-      <meshStandardMaterial color="#F6FBFF" roughness={1} {...deitado} />
+      <Fosco color="#F6FBFF" roughness={1} {...deitado} />
     </mesh>
   </group>
 );
@@ -672,15 +675,15 @@ const Barco: React.FC<{ x: number; z: number; giro: number; vela: string }> = ({
   <group position={[x, 0.05, z]} rotation={[0, giro, 0]}>
     <mesh position={[0, 0.35, 0]} scale={[1, 0.5, 0.42]}>
       <cylinderGeometry args={[1.9, 1.3, 1.4, 6]} />
-      <meshStandardMaterial color="#7A5132" flatShading />
+      <Fosco color="#7A5132" flatShading />
     </mesh>
     <mesh position={[0, 2.2, 0]}>
       <cylinderGeometry args={[0.07, 0.07, 3.4, 5]} />
-      <meshStandardMaterial color="#5C4630" />
+      <Fosco color="#5C4630" />
     </mesh>
     <mesh position={[0.05, 2.4, 0]}>
       <boxGeometry args={[0.04, 2.2, 1.9]} />
-      <meshStandardMaterial color={vela} flatShading />
+      <Fosco color={vela} flatShading />
     </mesh>
   </group>
 );
@@ -700,35 +703,35 @@ const Salao: React.FC = () => (
   <group>
     <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
       <planeGeometry args={[60, 60]} />
-      <meshStandardMaterial color="#9A8670" roughness={0.7} map={manchas()} />
+      <Fosco color="#9A8670" roughness={0.7} map={manchas()} />
     </mesh>
     {/* As lajotas: linhas mais escuras no chão */}
     {Array.from({ length: 13 }, (_, i) => (
       <mesh key={`l${i}`} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, -14 + i * 2.5]}>
         <planeGeometry args={[32, 0.06]} />
-        <meshStandardMaterial color="#7A6854" {...deitado} />
+        <Fosco color="#7A6854" {...deitado} />
       </mesh>
     ))}
     {/* O tapete vermelho até o trono */}
     <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.025, -1]} receiveShadow>
       <planeGeometry args={[3.2, 24]} />
-      <meshStandardMaterial color="#9E2430" roughness={1} {...deitado} />
+      <Fosco color="#9E2430" roughness={1} {...deitado} />
     </mesh>
     {[-1.65, 1.65].map((x) => (
       <mesh key={x} rotation={[-Math.PI / 2, 0, 0]} position={[x, 0.035, -1]}>
         <planeGeometry args={[0.12, 24]} />
-        <meshStandardMaterial color={OURO} {...deitado} />
+        <Fosco color={OURO} {...deitado} />
       </mesh>
     ))}
     {/* As paredes: o fundo e os lados */}
     <mesh position={[0, 7, -15]}>
       <boxGeometry args={[34, 14, 1]} />
-      <meshStandardMaterial color="#B9A68A" flatShading roughness={1} />
+      <Fosco color="#B9A68A" flatShading roughness={1} />
     </mesh>
     {[-16.5, 16.5].map((x) => (
       <mesh key={x} castShadow position={[x, 7, 0]}>
         <boxGeometry args={[1, 14, 32]} />
-        <meshStandardMaterial color="#AE9B80" flatShading roughness={1} />
+        <Fosco color="#AE9B80" flatShading roughness={1} />
       </mesh>
     ))}
     {/* Os estandartes na parede do fundo */}
@@ -736,11 +739,11 @@ const Salao: React.FC = () => (
       <group key={x} position={[x, 7.5, -14.45]}>
         <mesh>
           <boxGeometry args={[2.2, 5, 0.05]} />
-          <meshStandardMaterial color="#9E2430" />
+          <Fosco color="#9E2430" />
         </mesh>
         <mesh position={[0, 0.6, 0.04]}>
           <boxGeometry args={[0.9, 0.9, 0.02]} />
-          <meshStandardMaterial color={OURO} />
+          <Fosco color={OURO} />
         </mesh>
       </group>
     ))}
@@ -750,20 +753,20 @@ const Salao: React.FC = () => (
         <group key={`${x}${z}`} position={[x, 0, z]}>
           <mesh position={[0, 0.3, 0]}>
             <boxGeometry args={[1.7, 0.6, 1.7]} />
-            <meshStandardMaterial color="#C9B99E" flatShading />
+            <Fosco color="#C9B99E" flatShading />
           </mesh>
           <mesh position={[0, 6, 0]}>
             <cylinderGeometry args={[0.62, 0.7, 11.4, 12]} />
-            <meshStandardMaterial color="#D8CAB0" flatShading roughness={1} />
+            <Fosco color="#D8CAB0" flatShading roughness={1} />
           </mesh>
           <mesh position={[0, 11.9, 0]}>
             <boxGeometry args={[1.8, 0.6, 1.8]} />
-            <meshStandardMaterial color="#C9B99E" flatShading />
+            <Fosco color="#C9B99E" flatShading />
           </mesh>
           {/* A tocha acesa na coluna */}
           <mesh position={[0, 4.2, 0.75]}>
             <coneGeometry args={[0.16, 0.4, 6]} />
-            <meshStandardMaterial color="#FFB547" emissive="#FF8A1F" emissiveIntensity={1.4} />
+            <Fosco color="#FFB547" emissive="#FF8A1F" emissiveIntensity={1.4} />
           </mesh>
         </group>
       )),
@@ -773,25 +776,25 @@ const Salao: React.FC = () => (
       {[0, 1, 2].map((d) => (
         <mesh key={d} castShadow position={[0, 0.2 + d * 0.4, -d * 0.6]}>
           <boxGeometry args={[6 - d * 1.2, 0.4, 3.4 - d * 0.6]} />
-          <meshStandardMaterial color="#C4B293" flatShading />
+          <Fosco color="#C4B293" flatShading />
         </mesh>
       ))}
       <group position={[0, 1.2, -1.4]}>
         <mesh position={[0, 0.5, 0]}>
           <boxGeometry args={[1.8, 1, 1.4]} />
-          <meshStandardMaterial color={OURO} flatShading metalness={0.3} />
+          <Fosco color={OURO} flatShading metalness={0.3} />
         </mesh>
         <mesh position={[0, 1.05, 0.05]}>
           <boxGeometry args={[1.4, 0.15, 1.1]} />
-          <meshStandardMaterial color="#9E2430" />
+          <Fosco color="#9E2430" />
         </mesh>
         <mesh position={[0, 2.3, -0.6]}>
           <boxGeometry args={[1.8, 3.4, 0.25]} />
-          <meshStandardMaterial color={OURO} flatShading metalness={0.3} />
+          <Fosco color={OURO} flatShading metalness={0.3} />
         </mesh>
         <mesh position={[0, 2.1, -0.46]}>
           <boxGeometry args={[1.3, 2.4, 0.05]} />
-          <meshStandardMaterial color="#9E2430" />
+          <Fosco color="#9E2430" />
         </mesh>
       </group>
     </group>

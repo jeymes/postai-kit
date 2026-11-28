@@ -6,6 +6,7 @@
 
 import { normalizarPalavra } from "../../moldes/documentario/infografico/numeros.ts";
 import { estimarPalavras, FPS } from "../../moldes/tempos.ts";
+import { alturaDaConta } from "./layout.ts";
 import { emDoPasso, type Ilustracao, type Lugar } from "./schema.ts";
 
 /** Uma palavra dita, com o quadro em que começa e termina (na base de tempo de quem chama) */
@@ -129,7 +130,7 @@ export function alturaDe(item: Ilustracao): number {
     case "grafico":
       return 520;
     case "conta":
-      return 64 + 80 * item.passos.length + 16;
+      return alturaDaConta(item.passos.length);
     case "texto":
       return item.forma === "carimbo" ? 180 : item.forma === "marcador" ? 130 : 150;
     case "objeto":
@@ -141,13 +142,14 @@ export function alturaDe(item: Ilustracao): number {
   }
 }
 
-/** Onde cada tipo vai sem `lugar` */
-function destinoDe(item: Ilustracao, personagens: ReadonlySet<string> | undefined): Destino {
+/** Onde cada tipo vai sem `lugar` (`semBaixo`: o "baixo" sobe para o alto, embaixo do que já está lá) */
+export function destinoDe(item: Ilustracao, personagens: ReadonlySet<string> | undefined, semBaixo = false): Destino {
   if (item.tipo === "seta" || item.tipo === "circulo") return { livre: true };
   if (item.tipo === "pensamento" && (!personagens || personagens.has(item.quem)) && !item.lugar) return { preso: item.quem };
   const lugar = item.lugar ?? "alto";
   const lado = LADOS[lugar];
   if (lado) return SO_CHEIA.has(item.tipo) ? { faixa: "topo", coluna: "cheia" } : { faixa: "topo", coluna: lado };
+  if (lugar === "baixo" && semBaixo) return { faixa: "topo", coluna: "cheia" };
   return { faixa: lugar === "alto" ? "topo" : lugar === "meio" ? "meio" : "baixo", coluna: "cheia" };
 }
 
@@ -175,6 +177,12 @@ export interface OpcoesDoPlano {
   capacidade?: Partial<Record<Faixa, number>>;
   /** Os ids dos personagens na tela (pensamento de quem não está vira um balão no alto) */
   personagens?: Iterable<string>;
+  /**
+   * Sem faixa de baixo: o que pede "baixo" sobe para o alto, embaixo do que já está lá. No
+   * Conversa a faixa de baixo é o tronco e as pernas de quem está de pé (28/11/2026: o carimbo
+   * "R$ 5.400!" cobria as pernas da Bia e encostava na legenda grande do narrador)
+   */
+  semBaixo?: boolean;
 }
 
 export const CAPACIDADE_PADRAO: Record<Faixa, number> = { topo: 520, meio: 600, baixo: 270 };
@@ -233,7 +241,7 @@ export function planejarIlustracoes(ilustra: ReadonlyArray<Ilustracao> | undefin
         anterior = q;
       });
     }
-    return { item, indice, entra, sai, destino: destinoDe(item, personagens), altura: alturaDe(item), pedacos, achouEm: em.achou, achouAte };
+    return { item, indice, entra, sai, destino: destinoDe(item, personagens, opcoes.semBaixo), altura: alturaDe(item), pedacos, achouEm: em.achou, achouAte };
   });
   // Faixa cheia: quando um item novo não cabe, os mais antigos da mesma faixa saem antes dele entrar
   const porEntrada = [...planos].sort((a, b) => a.entra - b.entra || a.indice - b.indice);

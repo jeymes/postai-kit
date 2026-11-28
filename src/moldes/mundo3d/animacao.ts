@@ -253,6 +253,21 @@ const ALIAS: Record<string, string> = { sentar: "sentado", cair: "caido", levant
 const SO_MOVEM = new Set(["andar", "correr", "virar", "olhar"]);
 
 export const posturaDaAcao = (acao: string): Postura | null => (SO_MOVEM.has(acao) ? null : (POSTURAS[ALIAS[acao] ?? acao] ?? null));
+
+// Olhar e os gestos de braço não mudam a postura de baixo (28/11/2026: o "olhar-cima"
+// levantava quem estava ajoelhado; o "orar" de quem estava sentado o punha de pé).
+/** Só a cabeça, o tronco e os olhos: o resto do corpo fica como estava */
+const SO_CABECA = new Set(["olhar-cima", "olhar-baixo"]);
+/** Só os braços (e a cabeça e o tronco): as pernas ficam como estavam (ajoelhado, sentado, deitado) */
+const SO_BRACOS = new Set(["orar", "levantar-bracos", "chorar", "acenar", "cruzar-bracos", "mostrar", "apontando", "explicando", "pensando", "comemorando", "cabeca", "cintura", "celular", "celular-baixo"]);
+
+/** A postura que a ação pede, por cima da postura de agora (as ações de cima mantêm as pernas) */
+export function posturaPorCima(acao: string, nova: Postura, atual: Postura): Postura {
+  const nome = ALIAS[acao] ?? acao;
+  if (SO_CABECA.has(nome)) return { ...atual, cabeca: nova.cabeca, tronco: nova.tronco, olhos: nova.olhos };
+  if (SO_BRACOS.has(nome)) return { ...nova, pernaEsq: atual.pernaEsq, pernaDir: atual.pernaDir, sentado: atual.sentado, deitado: atual.deitado };
+  return nova;
+}
 /** A pose 2D mais parecida (para o palito, que só tem as poses de sempre) */
 export function poseDoPalito(acao: string): Pose | null {
   const nome = ALIAS[acao] ?? acao;

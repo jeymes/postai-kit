@@ -15,6 +15,12 @@ import { aplicar, distancia, poseDaTomada, projetar, type PoseDaCamera, type Pon
 export type TomadaPronta = Tomada & {
   /** Graus a mais no lado */
   ajuste: number;
+  /** Graus a mais de cima (ver por cima de quem está na frente) */
+  subir: number;
+  /** Nenhum ângulo mostrou o rosto do foco inteiro (alguém na frente): o conferir avisa */
+  tapado: boolean;
+  /** Quem fica na frente do rosto do foco (quando tapado) */
+  tapadoPor: string | null;
   /** 1: quem está junto fica à direita do foco (a câmera vai para esse lado) */
   lado: number;
   parceiro: string | null;
@@ -34,6 +40,8 @@ export type Palco = {
   /** O meio do rosto no mundo (sem a vida e sem o balanço da ponte) */
   rostoDe: (id: string, quadro: number) => Ponto;
   pesDe: (id: string, quadro: number) => Ponto;
+  /** Para onde o corpo vira (radianos, 0 = para a frente do palco); sem isso, de frente */
+  rumoDe?: (id: string, quadro: number) => number;
   /** O meio da multidão ou da ponte (o foco "multidao" ou "ponte") */
   meioDoGrupo: (foco: string) => Ponto | null;
   multidao: Array<[number, number]>;
@@ -64,7 +72,7 @@ export function rostoDaTomada(t: Pick<TomadaPronta, "foco" | "grupo" | "plano">,
 }
 
 export function poseDaTomadaPronta(t: TomadaPronta, progresso: number, rosto: Ponto, parceiro: Ponto | null, palco: Pick<Palco, "sozinho" | "ids">): PoseDaCamera {
-  return poseDaTomada(t, progresso, rosto, { lado: t.lado, ajuste: t.ajuste, escala: t.escala, sozinho: palco.sozinho && t.foco === palco.ids[0], parceiro: t.plano === "ombro" ? parceiro : null });
+  return poseDaTomada(t, progresso, rosto, { lado: t.lado, ajuste: t.ajuste, subir: t.subir, escala: t.escala, sozinho: palco.sozinho && t.foco === palco.ids[0], parceiro: t.plano === "ombro" ? parceiro : null });
 }
 
 export function prepararTomadas(planos: Tomada[], palco: Palco): TomadaPronta[] {
@@ -103,35 +111,80 @@ export function prepararTomadas(planos: Tomada[], palco: Palco): TomadaPronta[] 
         escala = Math.max(1, largo / (7.6 * 0.5625 * 0.85));
       }
     }
-    const pronta: TomadaPronta = { ...t, plano, ajuste: 0, lado, parceiro, grupo, escala, centro: aqui, escondidos: [] };
+    const pronta: TomadaPronta = { ...t, plano, ajuste: 0, subir: 0, tapado: false, tapadoPor: null, lado, parceiro, grupo, escala, centro: aqui, escondidos: [] };
     const rosto = (q: number) => rostoDaTomada(pronta, q, palco);
     const parceiroRosto = (q: number) => (parceiro ? palco.rostoDe(parceiro, q) : null);
-    const filmar = (ajuste: number, k: number, q: number) => aplicar(teste, poseDaTomadaPronta({ ...pronta, ajuste }, k, rosto(q), parceiroRosto(q), palco));
+    const filmar = (ajuste: number, k: number, q: number, subir = 0) => aplicar(teste, poseDaTomadaPronta({ ...pronta, ajuste, subir }, k, rosto(q), parceiroRosto(q), palco));
 
-    // Ninguém do elenco pode ficar na frente do rosto do foco: tenta outros ângulos
-    const tapado = (ajuste: number) => {
-      filmar(ajuste, 0.5, meio);
-      const alvo = palco.rostoDe(t.foco, meio);
-      const a0 = projetar(teste, alvo, largura, altura);
+    // Ninguém do elenco pode ficar na frente do rosto do foco: tenta outros ângulos.
+    // 28/11/2026: mede quanto do rosto fica coberto (0 = nada) no começo, no meio e no
+    // fim da tomada (quem ajoelha no meio dela sumia atrás de quem estava de pé), conta
+    // também quem está no grupo do plano aberto (a Rebeca de pé tapava o Isaque
+    // ajoelhado, os dois no grupo) e a cabeça, não só o corpo
+    let quemTapa: string | null = null;
+    const cobertoEm = (ajuste: number, subir: number, k: number) => {
+      const q = Math.round(t.inicio + (t.fim - 1 - t.inicio) * k);
+      filmar(ajuste, k, q, subir);
+      const alvo = palco.rostoDe(t.foco, q);
+      // O rosto fica na frente da cabeça (a placa do rosto, uns 0,25 m do meio): virado para
+      // quem está junto, ele chega perto da cabeça do outro
+      const rumo = palco.rumoDe?.(t.foco, q) ?? 0;
+      const frente: Ponto = [alvo[0] + Math.sin(rumo) * 0.25, alvo[1], alvo[2] + Math.cos(rumo) * 0.25];
+      const a0 = projetar(teste, frente, largura, altura);
       const dAlvo = distancia(teste, alvo);
-      return ids.some((o) => {
-        if (o === t.foco || (plano === "ombro" && o === parceiro) || grupo.includes(o)) return false;
-        const r = palco.rostoDe(o, meio);
-        if (distancia(teste, r) > dAlvo) return false;
-        const c = caixa(teste, r, palco.pesDe(o, meio), largura, altura);
-        // Na frente do rosto, ou tão perto da lente que entra enorme e cortado na beira do plano
+      let pior = 0;
+      const marcar = (valor: number, o: string) => {
+        if (valor > pior) {
+          pior = valor;
+          quemTapa = o;
+        }
+      };
+      for (const o of ids) {
+        if (o === t.foco || (plano === "ombro" && o === parceiro)) continue;
+        const r = palco.rostoDe(o, q);
+        if (distancia(teste, r) > dAlvo) continue;
+        const c = caixa(teste, r, palco.pesDe(o, q), largura, altura);
+        // Tão perto da lente que entra enorme e cortado na beira do plano (quem está no grupo do aberto já está longe)
         const naTela = c.x + c.meia > 0 && c.x - c.meia < largura;
-        if (naTela && distancia(teste, r) < Math.max(2.4, dAlvo * 0.7)) return true;
-        return Math.abs(a0.x - c.x) < c.meia + 40 && a0.y > c.topo && a0.y < c.pe;
-      });
+        if (!grupo.includes(o) && naTela && distancia(teste, r) < Math.max(2.4, dAlvo * 0.7)) marcar(1, o);
+        // Abraçados ou entregando algo (encostados e da mesma altura), as cabeças se cruzam de
+        // qualquer ângulo: não conta; o ajoelhado encostado em quem está de pé conta
+        const r0 = projetar(teste, r, largura, altura);
+        const encostados = Math.hypot(r[0] - alvo[0], r[2] - alvo[2]) < 0.9;
+        if (encostados && Math.abs(r[1] - alvo[1]) < 0.12) continue;
+        // A cabeça de quem está ao lado em cima do rosto (as cabeças são grandes: cobria metade
+        // do rosto com os corpos separados na tela)
+        if (!encostados && Math.abs(a0.y - r0.y) < 0.5 * c.porMetro) marcar((0.62 * c.porMetro - Math.abs(a0.x - r0.x)) / c.porMetro, o);
+        // O corpo na frente do rosto
+        if (a0.y > c.topo && a0.y < c.pe) marcar((c.meia + 40 - Math.abs(a0.x - c.x)) / c.porMetro, o);
+      }
+      return pior;
     };
-    pronta.ajuste = doGrupo ? 0 : ([0, 12, -12, 22, -22, 32, -32, 45, -45].find((a) => !tapado(a)) ?? 0);
+    const coberto = (ajuste: number, subir = 0) => [0.5, 0.12, 0.88].reduce((soma, k) => soma + cobertoEm(ajuste, subir, k), 0);
+    if (!doGrupo) {
+      // Primeiro de lado; se ninguém sair da frente, um pouco de cima (vê por cima da cabeça de quem está na frente).
+      // Se nenhum ângulo livra o rosto, fica o que cobre menos, e o conferir avisa
+      const angulos = [0, 12, -12, 22, -22, 32, -32, 45, -45];
+      const tentativas = [...angulos.map((a) => [a, 0]), ...[12, 22].flatMap((subir) => angulos.slice(0, 7).map((a) => [a, subir]))];
+      let melhor = { a: 0, subir: 0, coberto: Infinity, quem: null as string | null };
+      for (const [a, subir] of tentativas) {
+        quemTapa = null;
+        const c = coberto(a, subir);
+        if (c < melhor.coberto - 1e-6) melhor = { a, subir, coberto: c, quem: quemTapa };
+        if (c <= 0) break;
+      }
+      pronta.ajuste = melhor.a;
+      pronta.subir = melhor.subir;
+      // Um pedaço pequeno (a ponta do cabelo) passa; metade do rosto, não
+      pronta.tapado = melhor.coberto > 0.3;
+      pronta.tapadoPor = pronta.tapado ? melhor.quem : null;
+    }
 
     // A multidão encostada (na tela) em alguém do elenco, na frente ou atrás, sai do plano
     const escondidos = new Set<number>();
     for (const k of [0, 0.5, 1]) {
       const q = Math.round(t.inicio + (t.fim - t.inicio) * k);
-      filmar(pronta.ajuste, k, q);
+      filmar(pronta.ajuste, k, q, pronta.subir);
       const caixas = ids.map((o) => caixa(teste, palco.rostoDe(o, q), palco.pesDe(o, q), largura, altura));
       palco.multidao.forEach(([x, z], i) => {
         const base: Ponto = [x, palco.alturaDaMultidao, z];
@@ -150,7 +203,7 @@ function caixa(camera: THREE.PerspectiveCamera, rosto: Ponto, pes: Ponto, largur
   const a = projetar(camera, rosto, largura, altura);
   const b = projetar(camera, pes, largura, altura);
   const porMetro = Math.abs(b.y - a.y) / Math.max(0.3, rosto[1] - pes[1]);
-  return { x: (a.x + b.x) / 2, topo: a.y - 0.45 * porMetro, pe: b.y, meia: 0.4 * porMetro, d: distancia(camera, rosto) };
+  return { x: (a.x + b.x) / 2, topo: a.y - 0.45 * porMetro, pe: b.y, meia: 0.4 * porMetro, d: distancia(camera, rosto), porMetro };
 }
 
 /** Onde a câmera passa em todas as tomadas: "livre" (true = pode ter árvore, casa ou pedra) e "semGrama" (longe da lente) */

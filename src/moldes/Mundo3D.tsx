@@ -7,7 +7,7 @@ import { z } from "zod";
 import { SONS, Som, type TipoSom } from "../componentes/audio/Som";
 import { BalaoDeChamada, CartaoDeChamada, medidaDoCartao } from "../componentes/cenas/ChamadaAnimada";
 import { FraseNaLuz } from "../componentes/cenas/FraseNaLuz";
-import type { FormaDaBoca, Momento, Palavra, Pose, Visual } from "../componentes/personagens/Boneco";
+import type { Momento, Pose, Visual } from "../componentes/personagens/Boneco";
 import { Palito } from "../componentes/personagens/Palito";
 import { paginar } from "../componentes/texto/paginar";
 import { fontes } from "../nucleo/marca";
@@ -25,12 +25,12 @@ import {
   type Ambiente,
   type Traje,
 } from "./mundo3d/ambientes";
-import { aplicar, distancia, MOVIMENTOS, PLANOS, planejarTomadas, projetar, type Plano, type Ponto } from "./mundo3d/camera";
+import { aplicar, distancia, MOVIMENTOS, PLANOS, projetar, type Ponto } from "./mundo3d/camera";
 import { BonecoDePecas } from "./mundo3d/BonecoDePecas";
 import { COM_RUA, Figurantes } from "./mundo3d/figurantes";
-import { caminhoLivre, lugaresDaMultidao, poseDaTomadaPronta, prepararTomadas, rostoDaTomada, type Palco } from "./mundo3d/filmagem";
-import { ACOES, batidaDaFala, giroCurto, GRAUS, meioDaCabeca, passo, posicaoNoQuadro, posturaDaAcao, posturaNoQuadro, poseDoPalito, viver } from "./mundo3d/animacao";
-import { anguloSuave, donoNoQuadro, montarAtuacao, numeroSuave, rumoBase } from "./mundo3d/atuacao";
+import { caminhoLivre, poseDaTomadaPronta, rostoDaTomada } from "./mundo3d/filmagem";
+import { ACOES, batidaDaFala, giroCurto, GRAUS, passo, posicaoNoQuadro, posturaDaAcao, posturaNoQuadro, poseDoPalito, viver } from "./mundo3d/animacao";
+import { donoNoQuadro, numeroSuave } from "./mundo3d/atuacao";
 import { ObjetoDeCena, OBJETOS } from "./mundo3d/objetos";
 import { ehObjetoDeMao, ObjetoNaMao3D } from "./mundo3d/objetos";
 import { TestaContexto, testaAgora, TIPOS_DE_TESTA } from "../componentes/personagens/MarcaNaTesta";
@@ -39,9 +39,10 @@ import { ObjetoNaMaoContexto, type TipoDeApoio } from "../componentes/objetos/Ob
 /** Os objetos de festa que o palito (2D) sabe desenhar na mão */
 const APOIO_2D: Partial<Record<string, TipoDeApoio>> = { "caixinha-de-alianca": "caixinha-de-alianca", buque: "buque", bolo: "bolo", presente: "presente", "terno-no-cabide": "terno" };
 import { PainelDoQr, textoDoQr } from "../componentes/midia/QrCode";
-import { Mundo, PONTE } from "./mundo3d/Mundo";
+import { Mundo } from "./mundo3d/Mundo";
+import { linhaDoTempo, planejarFilmagem, PONTE, type PalavraDita } from "./mundo3d/plano";
 import { CamadaDaFala, ilustraSchema } from "../componentes/ilustracao";
-import { duracaoDoMolde, estimarPalavras, FPS, MUNDO3D, quadrosDaCenaDoMundo3D } from "./tempos";
+import { duracaoDoMolde, FPS, MUNDO3D } from "./tempos";
 
 // PROTÓTIPO (18/11/2026, branch prototipo-mundo3d): personagens de palito
 // dentro de um mundo 3D low-poly, com planos de câmera de cinema, multidão e
@@ -274,10 +275,6 @@ const ALTURA_DO_BONECO = 1.75;
 const QUADROS_DA_QUEDA = MUNDO3D.queda;
 const DESCIDA_DA_QUEDA = 1.1;
 
-type PalavraDita = Palavra & { texto: string; fimDeFrase?: boolean };
-
-// Onde começa cada cena e o tempo de cada palavra: o da voz (npm run narrar)
-// ou, antes dela, a estimativa
 // Ilustração da fala (27/11/2026): a faixa do alto para acima das cabeças, que sobem
 // na tela quanto mais perto é o plano (no close o "Oração" caía no cabelo). Fixa por
 // plano, para os itens não piscarem enquanto a câmera anda
@@ -286,43 +283,6 @@ const faixasDaIlustracao = (plano?: string) => ({
   topo: { y0: 210, y1: FIM_DA_FAIXA_DE_CIMA[plano ?? ""] ?? 880 },
   ...(plano === "close" ? { baixo: { y0: 1240, y1: 1400 } } : {}),
 });
-
-function linhaDoTempo(cenas: Mundo3DProps["cenas"]) {
-  let quadro = 0;
-  return cenas.map((cena) => {
-    const inicio = quadro;
-    let palavras: PalavraDita[];
-    let fala: number;
-    let boca: FormaDaBoca[] | undefined;
-    if (cena.narracao) {
-      palavras = cena.narracao.legendas.map((l) => ({
-        texto: l.texto,
-        inicio: inicio + Math.round((l.inicioMs / 1000) * FPS),
-        fim: inicio + Math.round((l.fimMs / 1000) * FPS),
-        ...(l.fimDeFrase ? { fimDeFrase: true } : {}),
-      }));
-      fala = Math.ceil(cena.narracao.duracaoSeg * FPS);
-      boca = cena.narracao.boca?.map((b) => ({
-        quadro: inicio + Math.round(b.inicio * FPS),
-        forma: b.forma,
-      }));
-    } else {
-      palavras = estimarPalavras(cena.fala).map((p) => ({
-        texto: p.texto,
-        inicio: inicio + p.inicio,
-        fim: inicio + p.fim,
-      }));
-      fala = palavras.length ? palavras[palavras.length - 1].fim - inicio : 45;
-    }
-    const limpa = (t: string) => t.toLowerCase().replace(/[^\p{L}]/gu, "");
-    const queda = cena.queda ? palavras.find((p) => limpa(p.texto).startsWith(limpa(cena.queda ?? "")))?.inicio : undefined;
-    // O mesmo tempo que o tempos.ts calcula (o render, a prévia e a conferência batem)
-    void fala;
-    const fim = inicio + quadrosDaCenaDoMundo3D(cena);
-    quadro = fim;
-    return { cena, inicio, fim, palavras, boca, queda };
-  });
-}
 
 export const duracaoDoMundo3D = (props: Mundo3DProps) => duracaoDoMolde("Mundo3D", props);
 
@@ -522,56 +482,36 @@ export const Mundo3D: React.FC<Mundo3DProps> = (props) => {
   const pecas = props.bonecos === "pecas";
   const naCapa = props.semLegenda;
   const ids = useMemo(() => props.personagens.map((p) => p.id), [props.personagens]);
-  // O lugar de cada cena: o da cena (cena.lugar) ou o da história
-  const lugarDaCena = (n: number): Ambiente => {
-    let l = props.cenario.ambiente;
-    for (let k = 0; k <= n; k++) l = linha[k]?.cena.lugar ?? l;
-    return l;
-  };
-  /** Quem está na cena n (sem "cenas", todos) */
-  const presentes = (n: number) => props.personagens.filter((p) => !p.cenas?.length || p.cenas.includes(n + 1)).map((p) => p.id);
-  const aqui = new Set(presentes(indiceDaCena));
   const semente = props.cenario.semente ?? sementeDoTexto(props.titulo);
-  const lugares = useMemo(() => (multidao ? lugaresDaMultidao(multidao.quantos, multidao.naPonte, props.personagens.map((p) => p.onde), semente) : []), [multidao, props.personagens, semente]);
-
-  // A atuação: as poses, as ações na palavra, os passos, os giros e quem segura o quê
-  const atuacao = useMemo(
+  // A atuação (as poses, as ações na palavra, os passos, os giros e quem segura o quê) e as
+  // tomadas (uma ou duas por cena; o lado e o ângulo de cada uma, o grupo do plano aberto e
+  // quem da multidão sai do plano): conta pura em plano.ts, a mesma que o conferir faz
+  const plano = useMemo(
     () =>
-      montarAtuacao(
-        props.personagens.map((p) => ({ id: p.id, onde: p.onde })),
-        linha.map((t) => ({
-          inicio: t.inicio,
-          fim: t.fim,
-          palavras: t.palavras,
-          estados: t.cena.estados,
-          multidao: t.cena.multidao,
-          mudancas: t.cena.mudancas,
-          acoes: t.cena.acoes,
-          quem: t.cena.quem,
-        })),
-        props.objetos ?? [],
-      ),
-    [props.personagens, props.objetos, linha],
+      planejarFilmagem({
+        personagens: props.personagens,
+        multidao,
+        objetos: props.objetos ?? [],
+        ambiente: props.cenario.ambiente,
+        semente,
+        linha,
+        largura: width,
+        altura: height,
+      }),
+    [props.personagens, multidao, props.objetos, props.cenario.ambiente, semente, linha, width, height],
   );
+  const { atuacao, lugares, presentes, presentesNoQuadro, ondeNoChao, rumoDe, meioDoGrupo, sozinho, palco, tomadas } = plano;
+  const lugarDaCena = (n: number) => plano.lugarDaCena(n) as Ambiente;
+  const aqui = new Set(presentes(indiceDaCena));
   const { trilhas } = atuacao;
-  const ondeNoChao = (id: string, quadro: number) => posicaoNoQuadro(trilhas[id], quadro).onde;
-  const presentesNoQuadro = (q: number) => presentes(Math.max(0, linha.findIndex((l) => q < l.fim) === -1 ? linha.length - 1 : linha.findIndex((l) => q < l.fim)));
-  const rumoDe = (id: string, quadro: number) => anguloSuave((k) => rumoBase(id, k, trilhas, presentesNoQuadro), quadro, 10);
   /** O meio do rosto no mundo (sem a vida, só a postura da chave): para a câmera mirar */
-  const rostoDe = (id: string, quadro: number, estatico = false): Ponto => {
-    const pes = pontoNoChao(id, quadro, estatico);
-    const r = meioDaCabeca(posturaNoQuadro(trilhas[id].chaves, quadro).postura);
-    const giro = rumoDe(id, quadro);
-    return [pes[0] + r[0] * Math.cos(giro) + r[2] * Math.sin(giro), pes[1] + r[1], pes[2] - r[0] * Math.sin(giro) + r[2] * Math.cos(giro)];
-  };
+  const rostoDe = (id: string, quadro: number): Ponto => plano.rostoAPartirDe(id, quadro, pontoNoChao(id, quadro));
   /** Os pés no mundo (na ponte, em cima das tábuas e girando com ela) */
-  const pontoNoChao = (id: string, quadro: number, estatico = false): Ponto => {
+  const pontoNoChao = (id: string, quadro: number): Ponto => {
     const p = props.personagens.find((x) => x.id === id);
     const [x, zz] = ondeNoChao(id, quadro);
     if (!p?.naPonte) return [x, 0, zz];
     const y = PONTE.altura;
-    // Nas contas feitas uma vez (as tomadas), sem o balanço deste quadro: todas as abas do render calculam igual
-    if (estatico) return [x, y, zz];
     return [x * Math.cos(balanco) - y * Math.sin(balanco), x * Math.sin(balanco) + y * Math.cos(balanco) - queda * DESCIDA_DA_QUEDA, zz];
   };
   const pontoDaMultidao = (i: number): Ponto => {
@@ -591,60 +531,6 @@ export const Mundo3D: React.FC<Mundo3DProps> = (props) => {
     );
   };
 
-  // O meio do grupo (multidão) ou da ponte
-  const meioDoGrupo = (foco: string): Ponto | null => {
-    if (foco === "ponte") return [0, PONTE.altura + 1.3, (PONTE.z1 + PONTE.z2) / 2];
-    if (foco === "multidao" && lugares.length) {
-      const meio = lugares[Math.floor(lugares.length / 2)];
-      return [meio[0], (multidao?.naPonte ? PONTE.altura : 0) + 1.3, meio[1]];
-    }
-    return null;
-  };
-  const focoValido = (foco: string) => (ids.includes(foco) || meioDoGrupo(foco) ? foco : (ids[0] ?? "ponte"));
-  const sozinho = props.personagens.length === 1 && !multidao;
-
-  // As tomadas: uma ou duas por cena; o lado de cada uma, o grupo do plano aberto e quem da multidão sai do plano
-  const palco = useMemo<Palco>(
-    () => ({
-      ids,
-      presentesNa: presentes,
-      rostoDe: (id, quadro) => rostoDe(id, quadro, true),
-      pesDe: (id, quadro) => pontoNoChao(id, quadro, true),
-      meioDoGrupo,
-      multidao: lugares,
-      alturaDaMultidao: multidao?.naPonte ? PONTE.altura : 0,
-      sozinho,
-      largura: width,
-      altura: height,
-    }),
-    // As funções só leem a trilha e os lugares (sem o quadro de agora)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [ids, trilhas, lugares, multidao, sozinho, width, height],
-  );
-  const tomadas = useMemo(
-    () =>
-      prepararTomadas(
-        planejarTomadas(
-          linha.map((t, n) => ({
-            inicio: t.inicio,
-            fim: t.fim,
-            plano: t.cena.plano as Plano,
-            foco: focoValido(t.cena.foco),
-            quem: t.cena.quem,
-            movimento: t.cena.camera?.movimento,
-            cortar: t.cena.camera?.cortar,
-            palavras: t.palavras,
-            // Mudou quem está ou o lugar: corta (ninguém aparece ou some no meio de um plano)
-            comIlustracao: Boolean(t.cena.ilustra?.length),
-            corteAntes: n > 0 && (presentes(n).join() !== presentes(n - 1).join() || lugarDaCena(n) !== lugarDaCena(n - 1)),
-          })),
-          ids,
-        ),
-        palco,
-      ),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [linha, palco],
-  );
   const tomada = tomadas.find((t) => frame < t.fim) ?? tomadas[tomadas.length - 1];
   const progresso = (frame - tomada.inicio) / Math.max(1, tomada.fim - tomada.inicio);
   const escondidos = new Set(tomada.escondidos);
@@ -866,7 +752,9 @@ export const Mundo3D: React.FC<Mundo3DProps> = (props) => {
     const daCapa = naCapa ? props.capa?.estados?.[id] : undefined;
     if (daCapa) return [{ em: 0, pose: (poseDoPalito(daCapa.pose) ?? "normal") as Pose, expressao: daCapa.expressao }];
     const chaves = trilhas[id]?.chaves ?? [];
-    const lista = chaves.map((c) => ({ em: c.quadro, pose: (poseDoPalito(c.nome) ?? "normal") as Pose, expressao: c.expressao }));
+    // Sentado ou caído que olha para cima ou mexe os braços continua sentado ou caído (o palito só tem uma pose por vez)
+    const poseDaChave = (c: (typeof chaves)[number]): Pose => (c.postura.deitado > 0.5 ? "caido" : c.postura.sentado > 0.5 ? "sentado" : ((poseDoPalito(c.nome) ?? "normal") as Pose));
+    const lista = chaves.map((c) => ({ em: c.quadro, pose: poseDaChave(c), expressao: c.expressao }));
     return lista.length ? lista : [{ em: 0, pose: "normal", expressao: "neutra" }];
   };
 

@@ -17,7 +17,8 @@ import { FiltrosDaIlustracao, Pilula } from "./pecas";
 import type { Ilustracao } from "./schema";
 import { alturaDaPilha, planejarIlustracoes, TEMPO, type Faixa, type ItemPlanejado, type PalavraNoTempo } from "./tempo";
 import { temaDaIlustracao, type TemaDaIlustracao } from "./tema";
-import { ConteudoDoPensamento, ItemDaFaixa, pop } from "./tipos";
+import { ConteudoDoPensamento, ItemDaFaixa, linhasDaConta, pop } from "./tipos";
+import { alturaDaConta } from "./layout";
 
 const LARGURA = 1080;
 const ALTURA = 1920;
@@ -29,11 +30,13 @@ export type Faixas = Record<Faixa, Trecho>;
 
 /**
  * As faixas livres de cada molde (tela 1080x1920). Conversa: o título vai até
- * ~300, as cabeças começam em ~860, a legenda fica entre 1380 e 1560. Mundo3D:
+ * ~300, as cabeças começam em ~860, a legenda fica entre ~1350 (a do narrador) e 1560. Mundo3D:
  * o título some no começo, a legenda fica em 1180 (no close, 1420).
  */
 export const FAIXAS_DO_MOLDE: Record<"conversa" | "mundo3d", Faixas> = {
-  conversa: { topo: { y0: 330, y1: 850 }, meio: { y0: 600, y1: 1200 }, baixo: { y0: 1130, y1: 1400 } },
+  // O baixo acaba acima da legenda grande do narrador (~1350; antes ia até 1400 e o item ficava
+  // atrás dela). No Conversa ele nem é usado (semBaixo: cobriria o corpo de quem está de pé)
+  conversa: { topo: { y0: 330, y1: 850 }, meio: { y0: 600, y1: 1200 }, baixo: { y0: 1080, y1: 1320 } },
   mundo3d: { topo: { y0: 210, y1: 880 }, meio: { y0: 620, y1: 1160 }, baixo: { y0: 1320, y1: 1520 } },
 };
 
@@ -56,6 +59,8 @@ export interface PropsDaCamada {
   topo?: number;
   /** Onde fica o alto da cabeça de cada personagem na tela (para o balão de pensamento), por id */
   personagens?: Record<string, { x: number; y: number }>;
+  /** Sem faixa de baixo (ela cobriria o corpo de quem está de pé): o "baixo" sobe para o alto */
+  semBaixo?: boolean;
 }
 
 /** A entrada (mola sem quique) e a saída (12 quadros, suave) de um item, de 0 a 1 */
@@ -248,7 +253,7 @@ const Circulo: React.FC<{ p: ItemPlanejado; t: number; tema: TemaDaIlustracao }>
 
 // ---- A camada ----
 
-export const CamadaDaFala: React.FC<PropsDaCamada> = ({ ilustra, palavras, fim, inicio, estilo, destaque, idioma, molde = "conversa", faixas: ajustes, topo, personagens }) => {
+export const CamadaDaFala: React.FC<PropsDaCamada> = ({ ilustra, palavras, fim, inicio, estilo, destaque, idioma, molde = "conversa", faixas: ajustes, topo, personagens, semBaixo }) => {
   const t = useCurrentFrame();
   const tema = useMemo(() => temaDaIlustracao({ modelo: estilo?.modelo, fundo: estilo?.fundo, destaque }), [estilo?.modelo, estilo?.fundo, destaque]);
   const faixas = useMemo<Faixas>(() => {
@@ -261,9 +266,10 @@ export const CamadaDaFala: React.FC<PropsDaCamada> = ({ ilustra, palavras, fim, 
         fim,
         inicio,
         personagens: personagens ? Object.keys(personagens) : [],
+        semBaixo,
         capacidade: { topo: faixas.topo.y1 - faixas.topo.y0, meio: faixas.meio.y1 - faixas.meio.y0, baixo: faixas.baixo.y1 - faixas.baixo.y0 },
       }),
-    [ilustra, palavras, fim, inicio, personagens, faixas],
+    [ilustra, palavras, fim, inicio, personagens, faixas, semBaixo],
   );
   if (!planos.length) return null;
   const naTela = planos.filter((p) => t >= p.entra && t < p.sai + TEMPO.saida);
@@ -283,7 +289,8 @@ export const CamadaDaFala: React.FC<PropsDaCamada> = ({ ilustra, palavras, fim, 
     const itens = naTela
       .filter((p) => "faixa" in p.destino && p.destino.faixa === faixa)
       .sort((a, b) => a.entra - b.entra || a.indice - b.indice)
-      .map((p) => ({ p, destino: p.destino, altura: p.altura, ...presenca(p, t) }));
+      // A conta ocupa só as linhas que já entraram (o cartão cresce com elas: tipos.tsx)
+      .map((p) => ({ p, destino: p.destino, altura: p.item.tipo === "conta" ? alturaDaConta(linhasDaConta(p.pedacos, t)) : p.altura, ...presenca(p, t) }));
     if (!itens.length) return;
     const y1 = faixa === "topo" ? fimDoTopo : faixas[faixa].y1;
     const y0 = faixas[faixa].y0;

@@ -4,6 +4,7 @@ import {
   giroCurto,
   posicaoNoQuadro,
   posturaDaAcao,
+  posturaPorCima,
   POSTURAS,
   type ChaveDePostura,
   type Giro,
@@ -110,15 +111,19 @@ export function montarAtuacao(
   const posses: Posse[] = [];
 
   // O estado de agora de cada um, enquanto a trilha é montada (pose e expressão)
-  const agora: Record<string, { pose: string; expressao: Expressao }> = {};
-  for (const id of Object.keys(trilhas)) agora[id] = { pose: "normal", expressao: "neutra" };
+  // (e a postura de agora: quem está ajoelhado e olha para cima continua ajoelhado)
+  const agora: Record<string, { pose: string; expressao: Expressao; postura: Postura }> = {};
+  for (const id of Object.keys(trilhas)) agora[id] = { pose: "normal", expressao: "neutra", postura: POSTURAS.normal };
 
-  const chave = (id: string, quadro: number, nome: string, expressao: Expressao, transicao?: number) => {
-    const postura: Postura | null = posturaDaAcao(nome);
+  /** porCima: a ação mexe só a parte de cima (as ações na palavra); o estado da cena troca a postura toda */
+  const chave = (id: string, quadro: number, nome: string, expressao: Expressao, transicao?: number, porCima = false) => {
+    const pedida: Postura | null = posturaDaAcao(nome);
     const t = trilhas[id];
     if (!t) return;
+    // A mesma pose de agora (só a expressão muda): a postura fica a de agora, com as pernas que tinha
+    const postura = pedida && nome === agora[id].pose ? agora[id].postura : pedida && porCima ? posturaPorCima(nome, pedida, agora[id].postura) : pedida;
     const pose = postura ? nome : agora[id].pose;
-    const final = postura ?? posturaDaAcao(agora[id].pose) ?? POSTURAS.normal;
+    const final = postura ?? agora[id].postura;
     // Nada mudou: não precisa de chave
     if (t.chaves.length && pose === agora[id].pose && expressao === agora[id].expressao) return;
     const nova: ChaveDePostura = {
@@ -136,7 +141,7 @@ export function montarAtuacao(
       else nova.quadro = ultima.quadro + 1;
     }
     t.chaves.push(nova);
-    agora[id] = { pose, expressao };
+    agora[id] = { pose, expressao, postura: final };
   };
 
   const ondeEsta = (id: string, quadro: number): [number, number] => {
@@ -209,7 +214,7 @@ export function montarAtuacao(
     // 2. As trocas no meio da cena (segundos)
     for (const m of cena.mudancas ?? []) {
       const q = Math.min(cena.fim - 2, cena.inicio + Math.round(m.em * FPS));
-      no(naCena(q - 3), () => chave(m.quem, naCena(q - 3), m.pose, m.expressao, 10));
+      no(naCena(q - 3), () => chave(m.quem, naCena(q - 3), m.pose, m.expressao, 10, true));
     }
     // 3. As ações na palavra
     for (const a of cena.acoes ?? []) {
@@ -318,7 +323,7 @@ export function montarAtuacao(
             break;
           }
           const inicio = naCena(q - ANTECIPA - (TRANSICAO[a.acao] && TRANSICAO[a.acao] > 12 ? 6 : 0));
-          no(inicio, () => chave(id, inicio, a.acao, expr()));
+          no(inicio, () => chave(id, inicio, a.acao, expr(), undefined, true));
         }
       }
     }

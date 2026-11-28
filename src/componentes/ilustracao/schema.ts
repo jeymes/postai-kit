@@ -59,7 +59,7 @@ const ponto = z.object({ x: z.number().min(0).max(100), y: z.number().min(0).max
 const base = {
   em: palavra.optional().describe("A palavra da fala em que o item aparece (sem ela, no começo da fala). Pode ser duas: \"três mil\""),
   ate: palavra.optional().describe("A palavra em que o item sai (sem ela, fica até o fim da fala)"),
-  lugar: z.enum(LUGARES).optional().describe("alto, meio, baixo, esquerda ou direita (sem ele, o padrão do tipo, que não cobre rosto nem legenda)"),
+  lugar: z.enum(LUGARES).optional().describe("alto, meio, baixo, esquerda ou direita (sem ele, o padrão do tipo, que não cobre rosto nem legenda; no Conversa o baixo sobe para o alto, embaixo do que está lá: a faixa de baixo é o corpo de quem está de pé)"),
 };
 
 const tipoIcone = z

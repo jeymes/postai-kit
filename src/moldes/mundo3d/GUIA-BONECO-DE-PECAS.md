@@ -72,6 +72,9 @@ cena, personagem só em algumas cenas, figurino).
 - **Postura**: os ângulos de todas as juntas. As que encostam a mão em algum lugar (quadril, queixo, rosto, a
   outra mão) são feitas por alvo (`bracoAte`, IK de dois ossos), uma vez ao carregar. O braço alcança uns 0,55 m
   a partir do ombro: a cabeça é grande, então a mão no rosto pede a cabeça um pouco baixa.
+- **Por cima da postura** (28/11/2026): `olhar-cima` e `olhar-baixo` mexem só a cabeça e o tronco, e os gestos
+  de braço na palavra (`orar`, `levantar-bracos`, `chorar`, `acenar`, `apontar`...) mantêm as pernas: quem está
+  ajoelhado ou sentado continua assim. Para levantar, `levantar` (ou um estado da cena com outra pose).
 - **Mistura**: toda troca leva de 10 a 18 quadros (o ombro mistura por quatérnio, pelo caminho mais curto), com
   uma pontinha de passagem no fim. Nada pula: quem não tem estado numa cena continua como estava, e a
   antecipação do gesto nunca passa para a cena anterior.
@@ -84,10 +87,15 @@ cena, personagem só em algumas cenas, figurino).
   movimento suave por plano, um plano novo a cada pausa da frase (nada de corte com o título na tela), plano
   aberto com o grupo inteiro, ninguém do elenco na frente do rosto nem colado na lente, multidão encostada em
   alguém do elenco sai do plano, nada (árvore, casa, pedra, grama) no caminho da lente; `detalhe` mostra as mãos.
+  O ângulo de cada tomada é escolhido para o rosto do foco não ficar coberto do começo ao fim dela (também o
+  ajoelhado ao lado de quem está de pé): de lado e, se precisar, um pouco de cima. Se nenhum ângulo livra o rosto,
+  o `npm run conferir` avisa (`mundo3d/plano.ts` faz a mesma conta do molde).
 - **Luz**: sol com sombra (acompanha onde a cena acontece; só bonecos e objetos fazem sombra), luz do céu,
   contraluz, reflexo macio, céu em degradê e névoa de longe; `cenario.hora` muda tudo (dia, tarde, noite). No
-  render por software (nuvem): sombra com mapa menor e 1 amostra, o boneco não recebe sombra e não há o
-  reflexo macio (o tempo ficou perto do de antes; na placa de vídeo fica tudo ligado).
+  render por software (nuvem, 28/11/2026): o sol não faz sombra (custava 12% do tempo), ficam as sombras de
+  contato (o círculo macio, mais escuro, sob os pés e sob os objetos), o cenário fosco (chão, grama,
+  montanhas, árvores, casas) usa material simples (`software.tsx`) e não há o reflexo macio: 150 quadros
+  saíram 19% a 25% mais rápidos. Na placa de vídeo fica tudo ligado, igual a antes.
 - **Roupa**: 5 variações por personagem (`figurino`), a mesma pessoa.
 - **Rua viva** (`figurantes.tsx`, `cenario.figurantes`): na cidade, no moderno, na aldeia e no mar, gente passa
   andando no fundo, um veículo atravessa de vez em quando (carro no moderno, carroça com burro nos antigos) e

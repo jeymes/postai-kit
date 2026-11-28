@@ -2,9 +2,10 @@ import { Easing, interpolate, spring } from "remotion";
 import { z } from "zod";
 import type { Expressao, Momento, Palavra } from "../../componentes/personagens/Boneco";
 import { MAOS_OCUPADAS, type Momento2D, type Pose2D } from "../../componentes/personagens/movimento";
-import { ACOES, EXPRESSOES_DO_ROTEIRO, normalizar, PLANOS, POSES_DO_ROTEIRO, type Acao, type Plano, type Troca } from "./regras2d";
+import { ACOES, EXPRESSOES_DO_ROTEIRO, normalizar, PLANOS, POSES_DO_ROTEIRO, type Acao, type Troca } from "./regras2d";
 export { ACOES, EXPRESSOES_DO_ROTEIRO, MINIMO_NO_CENARIO, normalizar, PLANOS, POSES_DO_ROTEIRO, trocasDeCenario, type Troca } from "./regras2d";
 import type { TipoDeApoio } from "../../componentes/objetos/ObjetosDeApoio";
+import { CAMERA_ABERTA, dentro, type Camera } from "./enquadramento";
 
 // A direção do episódio 2D (27/11/2026): as ações na palavra exata, a câmera viva,
 // a troca de cenário com transição e o objeto de apoio sempre na mesma mão.
@@ -228,83 +229,8 @@ export function quandoOutroFala(linha: Array<{ cena: { quem?: string }; palavras
 
 // ---- Câmera ----
 
-export type Camera = { x: number; y: number; z: number };
-export const CAMERA_ABERTA: Camera = { x: 540, y: 960, z: 1 };
-
-/** O ponto da câmera dentro do cenário, sem mostrar fora dele (o cenário é do tamanho da tela) */
-function dentro(c: Camera): Camera {
-  const mx = 540 / c.z;
-  const my = 960 / c.z;
-  return { z: c.z, x: Math.min(1080 - mx, Math.max(mx, c.x)), y: Math.min(1920 - my, Math.max(my, c.y)) };
-}
-
-/** O enquadramento de um plano: `rosto` é o rosto de quem está em foco (na tela, sem câmera) */
-export function enquadrar(plano: Plano, rosto: { x: number; y: number } | null, forca?: number): Camera {
-  if (plano === "aberto" || !rosto) return CAMERA_ABERTA;
-  if (plano === "medio") {
-    const z = 1.14;
-    return dentro({ z, x: 540 + (rosto.x - 540) * 0.5, y: rosto.y + 220 / z });
-  }
-  // Close: o rosto em y ~ 820 na tela (acima da legenda, abaixo do título)
-  // Close de verdade (1,45): com menos, o outro ficava cortado ao meio e parecia erro de enquadramento
-  const z = forca ? 1 + forca : 1.45;
-  return dentro({ z, x: 540 + (rosto.x - 540) * 0.92, y: rosto.y + 160 / z });
-}
-
-const EMOCAO_FORTE = new Set<string>(["surpresa", "medo", "brava", "radiante", "preocupada"]);
-const BRACOS_NO_ALTO = new Set<string>(["comemorando", "cabeca", "acenando"]);
-
-export type PlanoDaFala = { plano: Plano; foco: number };
-
-/**
- * O plano de cada fala. O roteiro manda (`camera` e `foco` da fala, `zoom` do topo); sem isso,
- * a câmera escolhe: a 1ª fala aberta (a prévia do feed), close na emoção forte de quem fala,
- * medio e aberto alternando, e aberto quando há cartão, QR, notificação, abraço ou alguém andando.
- */
-export function planosDasFalas(args: {
-  falas: Array<{
-    quem?: string;
-    camera?: Plano;
-    foco?: string;
-    expressoes: Record<string, string | undefined>;
-    poses: string[];
-    cheia: boolean;
-  }>;
-  ids: string[];
-  viva: boolean;
-  zoom?: { em: string; de: number; ate: number };
-}): PlanoDaFala[] {
-  const { falas, ids, viva, zoom } = args;
-  const planos: PlanoDaFala[] = [];
-  falas.forEach((f, k) => {
-    const fala = ids.indexOf(f.quem ?? "");
-    const foco = f.foco ? ids.indexOf(f.foco) : fala;
-    if (zoom && k >= zoom.de && k <= zoom.ate) {
-      planos.push({ plano: "close", foco: Math.max(0, ids.indexOf(zoom.em)) });
-      return;
-    }
-    if (f.camera) {
-      planos.push({ plano: f.camera, foco: foco >= 0 ? foco : 0 });
-      return;
-    }
-    if (!viva || k === 0 || f.cheia || foco < 0 && ids.length > 1) {
-      // O narrador: aberto, ou um medio no meio de vez em quando
-      planos.push({ plano: !viva || k === 0 || f.cheia || planos[k - 1]?.plano !== "aberto" ? "aberto" : "medio", foco: -1 });
-      return;
-    }
-    const alvo = foco >= 0 ? foco : 0;
-    const antes = planos[k - 1]?.plano ?? "aberto";
-    const emocao = EMOCAO_FORTE.has(f.expressoes[ids[alvo]] ?? "");
-    const bracosNoAlto = f.poses.some((p) => BRACOS_NO_ALTO.has(p));
-    let plano: Plano;
-    if (emocao && !bracosNoAlto && antes !== "close") plano = "close";
-    else if (antes === "aberto") plano = "medio";
-    else if (antes === "close") plano = k % 2 ? "medio" : "aberto";
-    else plano = k % 3 === 0 && !bracosNoAlto ? "close" : "aberto";
-    planos.push({ plano, foco: alvo });
-  });
-  return planos;
-}
+// O plano de cada fala e o ponto da câmera (sem React nem Remotion) ficam no enquadramento.ts
+export { CAMERA_ABERTA, enquadrar, MEIO_CORPO, planosDasFalas, semCortarNinguem, type Camera, type PlanoDaFala } from "./enquadramento";
 
 /** A câmera agora: troca suave de um plano para o outro (16 quadros) e um respiro (aproxima devagar e balança de leve) */
 export function cameraAgora(alvos: Array<{ em: number; camera: Camera }>, frame: number): Camera {

@@ -141,24 +141,29 @@ const Peca: React.FC<{
   <mesh geometry={geo} material={material(cor, tipo)} position={position} rotation={rotation} scale={scale} castShadow receiveShadow={!porSoftware} />
 );
 
-/** A sombra macia de contato embaixo do boneco (a do sol vem do mundo) */
-let texturaDaSombra: THREE.CanvasTexture | null = null;
-function sombraMacia() {
-  if (texturaDaSombra) return texturaDaSombra;
+/**
+ * A sombra macia de contato embaixo do boneco (a do sol vem do mundo). Por software
+ * (a nuvem), o sol não faz sombra: a de contato fica mais escura, para ninguém flutuar.
+ */
+const texturasDaSombra = new Map<boolean, THREE.CanvasTexture>();
+export function sombraMacia(forte = false) {
+  const pronta = texturasDaSombra.get(forte);
+  if (pronta) return pronta;
   const c = document.createElement("canvas");
   c.width = 128;
   c.height = 128;
   const ctx = c.getContext("2d");
   if (ctx) {
     const g = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
-    g.addColorStop(0, "rgba(20,16,28,0.55)");
-    g.addColorStop(0.55, "rgba(20,16,28,0.22)");
+    g.addColorStop(0, `rgba(20,16,28,${forte ? 0.78 : 0.55})`);
+    g.addColorStop(0.55, `rgba(20,16,28,${forte ? 0.36 : 0.22})`);
     g.addColorStop(1, "rgba(20,16,28,0)");
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, 128, 128);
   }
-  texturaDaSombra = new THREE.CanvasTexture(c);
-  return texturaDaSombra;
+  const textura = new THREE.CanvasTexture(c);
+  texturasDaSombra.set(forte, textura);
+  return textura;
 }
 
 // ---------- O rosto, desenhado no canvas (frente reta da cabeça) ----------
@@ -590,9 +595,9 @@ export const BonecoDePecas: React.FC<{
   return (
     <group position={posicao} rotation={[0, virar, 0]} scale={[espelhar ? -1 : 1, 1, 1]}>
       {/* A sombra de contato embaixo (a do sol vem do mundo) */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[p.deitado * 0.75, 0.012, 0]} scale={[1 + p.deitado * 1.4, 1, 1]} renderOrder={1}>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[p.deitado * 0.75, 0.012, 0]} scale={[(1 + p.deitado * 1.4) * (porSoftware ? 1.1 : 1), porSoftware ? 1.1 : 1, 1]} renderOrder={1}>
         <planeGeometry args={[0.95, 0.75]} />
-        <meshBasicMaterial map={sombraMacia()} transparent depthWrite={false} />
+        <meshBasicMaterial map={sombraMacia(porSoftware)} transparent depthWrite={false} />
       </mesh>
       {/* Caído: o corpo inteiro deita de lado, girando nos pés */}
       <group rotation={[0, 0, (-p.deitado * Math.PI) / 2]} position={[0, p.deitado * 0.29, 0]}>

@@ -51,6 +51,7 @@ import {
   planosDasFalas,
   POSES_DO_ROTEIRO,
   quandoOutroFala,
+  semCortarNinguem,
   transformDaCamera,
   trocaAgora,
   trocasDeCenario,
@@ -529,7 +530,8 @@ const TOPO_DA_CABECA = 905;
 const PernasNoSofa: React.FC<{ x: number; y: number; calca?: string; sapato?: string; cor?: string; palito: boolean; liso: boolean }> = ({ x, y, calca, sapato, cor, palito, liso }) => {
   const traco = liso ? { stroke: "none" } : { stroke: TRACO, strokeWidth: 6 };
   return (
-    <svg viewBox="0 0 1080 1920" width={1080} height={1920} style={{ position: "absolute", inset: 0, pointerEvents: "none", zIndex: 2 }}>
+    // Na frente do assento (o sofá da sala e a poltrona, que fica na frente da pessoa)
+    <svg viewBox="0 0 1080 1920" width={1080} height={1920} style={{ position: "absolute", inset: 0, pointerEvents: "none", zIndex: 4 }}>
       <g transform={`translate(0 ${y})`}>
         {palito ? (
           <path
@@ -636,6 +638,19 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
   const poseAgora = (quem: string) => momentoAgora(momentosDaPessoa(quem), frame)?.pose;
   // Quanto cada um andou (ações de andar) e o abraço (quem está na pose chega perto do outro)
   const andou = (indice: number) => andarAgora(pessoas[indice]?.comCartao ?? [], frame).x;
+  /** Quanto alguém tinha andado num quadro (para planejar a câmera de cada fala) */
+  const andouEm = (indice: number, quadro: number) => andarAgora(pessoas[indice]?.comCartao ?? [], quadro).x;
+  /** Em cada fala: alguém está andando em algum momento dela (do respiro antes dela até a próxima)? Uma vez por vídeo */
+  const andandoPorFala = React.useMemo(
+    () =>
+      linha.map((l, k) => {
+        const ate = linha[k + 1]?.inicio ?? l.inicio + quadrosDaFalaConversa(l.cena);
+        for (let q = l.inicio - 6; q < ate; q += 4) if (pessoas.some((p) => p.tipo !== "criatura" && andarAgora(p.comCartao, q).andando > 0.05)) return true;
+        return false;
+      }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- as props do vídeo não mudam entre os quadros
+    [props],
+  );
   /** O lugar de alguém agora (com o que andou) */
   const aqui = (indice: number): Lugar => ({ ...lugares[indice], left: lugares[indice].left + andou(indice) });
   const trocaDeAgora = trocaAgora(trocas, frame);
@@ -653,12 +668,14 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
         poses: ids.flatMap((id) => [estadoNaCena(cena, id)?.pose, cena.meio?.[id]?.pose, ...(cena.acoes ?? []).filter((a) => a.quem === id).map((a) => a.pose)]).filter(
           (x): x is NonNullable<typeof x> => Boolean(x),
         ),
-        // Cartão, QR, notificação, abraço ou alguém andando: a cena precisa do quadro inteiro
+        // Cartão, QR, notificação ou abraço: a cena precisa do quadro inteiro
         cheia:
           Boolean(cena.qr || cena.notificacao || cena.luz) ||
           Boolean(cartao && k >= cartao.entra && k <= cartao.sai) ||
-          ids.some((id) => estadoNaCena(cena, id)?.pose === "abraco") ||
-          (cena.acoes ?? []).some((a) => a.acao?.startsWith("andar") || a.acao === "voltar"),
+          ids.some((id) => estadoNaCena(cena, id)?.pose === "abraco"),
+        // Alguém andando (a ação da fala ou a caminhada da fala anterior que ainda não acabou):
+        // aberto sempre, até contra o close do roteiro (28/11/2026)
+        andando: (cena.acoes ?? []).some((a) => a.acao?.startsWith("andar") || a.acao === "voltar") || andandoPorFala[k],
       })),
       ids,
       viva: props.camera !== "fixa",
@@ -671,7 +688,12 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
       const sentado = ehSentado(momentoAgora(momentosDaPessoa(quemFoco.id), inicio + 10)?.pose);
       const r = rostoDe(lugares[foco], sentado);
       const forca = props.zoom && k >= props.zoom.de && k <= props.zoom.ate ? props.zoom.forca ?? 0.25 : undefined;
-      return { em: Math.max(0, inicio - 6), camera: enquadrar(plano, { x: r.x + andou(foco), y: r.y }, forca) };
+      const rosto = { x: r.x + andou(foco), y: r.y };
+      const camera = enquadrar(plano, rosto, forca);
+      if (plano !== "close") return { em: Math.max(0, inicio - 6), camera };
+      // No close, o outro entra inteiro ou sai inteiro do quadro (28/11/2026: ficava meio corpo na borda)
+      const outros = elenco.flatMap((p, i) => (i === foco ? [] : [lugares[i].left + 270 + andouEm(i, inicio + 10)]));
+      return { em: Math.max(0, inicio - 6), camera: semCortarNinguem(camera, rosto, outros) };
     });
     if (props.ctaFinal) alvos.push({ em: inicioDoCta - 8, camera: enquadrar("aberto", null) });
     return alvos;
@@ -809,8 +831,15 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
                   position: "absolute",
                   left: lugar.left + chegarPerto + andou(indice) + afastarNoQr * afastarParaOQr(elenco.length, indice),
                   top: 790 - subirNoCartao,
-                  // No carro, todos ficam atrás do painel (ele cobre o colo)
-                  zIndex: ehSentado(agora?.pose) || TODOS_ATRAS_DA_FRENTE.includes(lugarAgora.nome) ? 0 : 2,
+                  // No carro, todos ficam atrás do painel (ele cobre o colo). Só fica atrás do móvel
+                  // quem o móvel cobre (cobertoPeloMovel): de pé, ou sentado sem ser o da cama/sofá
+                  // (sozinho no meio, o da direita), fica na frente dele, e a poltrona na frente de
+                  // todos (28/11/2026: sozinho na cama, a cama cortava o corpo e as pernas sumiam)
+                  zIndex:
+                    TODOS_ATRAS_DA_FRENTE.includes(lugarAgora.nome) ||
+                    (ehSentado(agora?.pose) && cobertoPeloMovel(Boolean(Frente), lugarAgora.nome, elenco.length, indice))
+                      ? 0
+                      : 2,
                 }}
               />
               </MaoDoObjetoContexto.Provider>
@@ -832,7 +861,8 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
             if (!ehSentado(poseAgora(quem))) return null;
             if (cobertoPeloMovel(Boolean(Frente), lugarAgora.nome, elenco.length, indice)) return null;
             return (
-              <AbsoluteFill key={`poltrona-${quem}`} style={{ zIndex: 1 }}>
+              // Na frente da pessoa (que fica na frente do móvel do cenário, se houver)
+              <AbsoluteFill key={`poltrona-${quem}`} style={{ zIndex: 3 }}>
                 <CamadaDaFrente fundo={fundo}>
                   <PoltronaNaFrente centro={lugares[indice].left + 270 + andou(indice)} subir={subirNoCartao} />
                 </CamadaDaFrente>
@@ -975,6 +1005,8 @@ export const Conversa: React.FC<ConversaProps> = (props) => {
                   (l.cena.notificacao ? 145 : 0)
                 }
                 personagens={Object.fromEntries(elenco.map((p, i) => [p.id, { x: aqui(i).left + 270, y: 860 - subirNoCartao }]))}
+                // A faixa de baixo é o corpo de quem está de pé e encosta na legenda: o "baixo" sobe para o alto
+                semBaixo
               />
             ) : null,
           )}

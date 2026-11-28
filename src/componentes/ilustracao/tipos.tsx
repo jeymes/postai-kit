@@ -9,6 +9,7 @@ import { APOIOS, DesenhoDoApoio, type TipoDeApoio } from "../objetos/ObjetosDeAp
 import { formatar, casasDe } from "../../moldes/documentario/infografico/numeros";
 import { cresce, mola } from "../../moldes/documentario/infografico/tema";
 import { GraficoCompacto } from "./graficos";
+import { alturaDaConta, filaDeIcones, LINHA_DA_CONTA } from "./layout";
 import { DesenhoDoIcone } from "./icones";
 import { Cartao, ComExpoente, Pilula, TABULAR, TextoComDestaque } from "./pecas";
 import { OBJETOS_DA_FALA, textoDoPasso, type Ilustracao } from "./schema";
@@ -49,32 +50,41 @@ const Selo: React.FC<{ nome: Parameters<typeof DesenhoDoIcone>[0]["nome"]; diame
 );
 
 const TIcone: React.FC<{ item: De<"icone">; c: Caixa }> = ({ item, c }) => {
-  if (item.icone) {
-    const p = pop(c.t);
-    return (
-      <div style={{ ...centro, gap: 16 }}>
-        <Selo nome={item.icone} diametro={180} tema={c.tema} p={p} />
-        {item.rotulo && (
-          <Pilula tema={c.tema} tamanho={42} style={{ opacity: mola(c.t, 6, 14), translate: `0 ${(1 - mola(c.t, 6, 14)) * 10}px` }}>
-            {item.rotulo}
-          </Pilula>
-        )}
-      </div>
-    );
-  }
-  const icones = item.icones ?? [];
-  const n = icones.length;
-  const diametro = Math.min(170, (c.largura - (n - 1) * 30) / n);
+  // Um ícone ou a fila: cada um na sua vaga, com o rótulo do tamanho dela (28/11/2026: na fila,
+  // a vaga era só o círculo, e "Ganhou pouco" e "Quer de novo" passavam um por cima do outro)
+  const icones = item.icone ? [{ icone: item.icone, rotulo: item.rotulo }] : (item.icones ?? []);
+  const fila = filaDeIcones(
+    icones.map((ic) => ic.rotulo),
+    c.largura,
+    c.altura,
+    item.icone ? 42 : 36,
+  );
   return (
-    <div style={{ ...centro, flexDirection: "row", alignItems: "flex-start", gap: 30, paddingTop: 10 }}>
+    <div style={{ ...centro, flexDirection: "row", alignItems: "flex-start", gap: fila.vao, paddingTop: 10 }}>
       {icones.map((ic, k) => {
-        const p = pop(c.agora - c.plano.pedacos[k]);
+        const p = item.icone ? pop(c.t) : pop(c.agora - c.plano.pedacos[k]);
+        const rotulo = fila.linhas[k];
         return (
-          <div key={k} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14, width: diametro }}>
-            <Selo nome={ic.icone} diametro={diametro} tema={c.tema} p={p} />
-            {ic.rotulo && (
-              <Pilula tema={c.tema} tamanho={36} style={{ opacity: Math.min(1, p) }}>
-                {ic.rotulo}
+          <div key={k} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14, width: fila.vaga }}>
+            <Selo nome={ic.icone} diametro={fila.diametro} tema={c.tema} p={p} />
+            {rotulo.length > 0 && (
+              <Pilula
+                tema={c.tema}
+                tamanho={fila.fonte}
+                style={{
+                  maxWidth: fila.vaga,
+                  boxSizing: "border-box",
+                  textAlign: "center",
+                  opacity: item.icone ? mola(c.t, 6, 14) : Math.min(1, p),
+                  translate: item.icone ? `0 ${(1 - mola(c.t, 6, 14)) * 10}px` : undefined,
+                }}
+              >
+                {rotulo.map((linha, n) => (
+                  <React.Fragment key={n}>
+                    {n > 0 && <br />}
+                    {linha}
+                  </React.Fragment>
+                ))}
               </Pilula>
             )}
           </div>
@@ -153,15 +163,33 @@ const TConta: React.FC<{ item: De<"conta">; c: Caixa }> = ({ item, c }) => {
   const { tema } = c;
   const p = mola(c.t, 0, 16);
   const n = item.passos.length;
+  // Cada linha entra com a altura dela (28/11/2026: o cartão nascia com a altura da conta
+  // inteira e ficava alto e vazio até a próxima linha entrar). A CamadaDaFala dá a caixa
+  // com a mesma conta (linhasDaConta), então o cartão cresce junto com a pilha
+  const entradas = item.passos.map((_, k) => mola(c.agora - c.plano.pedacos[k], 0, 14));
+  const embaixo = "faixa" in c.plano.destino && c.plano.destino.faixa === "baixo";
   return (
-    <div style={centro}>
-      <Cartao tema={tema} progresso={p} style={{ width: Math.min(860, c.largura), height: c.altura, padding: "32px 44px", boxSizing: "border-box", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+    <div style={{ ...centro, justifyContent: embaixo ? "flex-end" : "flex-start" }}>
+      <Cartao
+        tema={tema}
+        progresso={p}
+        style={{
+          width: Math.min(860, c.largura),
+          height: alturaDaConta(entradas.reduce((a, b) => a + b, 0)),
+          padding: "32px 44px",
+          boxSizing: "border-box",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "flex-start",
+          overflow: "hidden",
+        }}
+      >
         {item.passos.map((passo, k) => {
           const resultado = k === n - 1 && n > 1;
-          const e = mola(c.agora - c.plano.pedacos[k], 0, 14);
+          const e = entradas[k];
           const risco = resultado ? cresce(c.agora - c.plano.pedacos[k], -2, 12) : 0;
           return (
-            <div key={k} style={{ position: "relative", height: 80, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div key={k} style={{ position: "relative", height: LINHA_DA_CONTA * e, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
               {resultado && <div style={{ position: "absolute", top: 2, left: "8%", width: `${84 * risco}%`, height: 5, borderRadius: 3, backgroundColor: tema.eixo }} />}
               <span
                 style={{
@@ -186,6 +214,9 @@ const TConta: React.FC<{ item: De<"conta">; c: Caixa }> = ({ item, c }) => {
     </div>
   );
 };
+
+/** As linhas da conta já na tela agora (com a que está entrando pela metade): a CamadaDaFala reserva só essa altura */
+export const linhasDaConta = (pedacos: ReadonlyArray<number>, agora: number) => pedacos.reduce((soma, q) => soma + mola(agora - q, 0, 14), 0);
 
 // ---- Texto em destaque: sticker, carimbo ou marcador ----
 

@@ -135,7 +135,7 @@ O boneco não pode ficar parado enquanto o narrador fala. Nos vídeos bons, **al
 
 - `em`: a palavra da fala em que o item aparece (pode ser duas: `"três mil"`). Sem acento, maiúscula ou pontuação não faz diferença; plural e a palavra cortada no fim também batem. Sem `em`, aparece no começo da fala. Se a mesma palavra aparece duas vezes, o item seguinte pega a próxima vez.
 - `ate` (opcional): a palavra em que ele sai. Sem `ate`, fica até o fim da fala. Fica no mínimo 1,2 s.
-- `lugar` (opcional): `alto` (padrão: entre o título e as cabeças), `meio` (no centro: cobre os personagens, use só quando ninguém está ali), `baixo` (entre os ombros e a legenda: só coisa pequena, texto ou número), `esquerda` ou `direita` (metades do alto: dois itens lado a lado; gráfico e conta sempre ocupam o alto inteiro). O padrão nunca cobre rosto nem legenda.
+- `lugar` (opcional): `alto` (padrão: entre o título e as cabeças), `meio` (no centro: cobre os personagens, use só quando ninguém está ali), `baixo` (entre os ombros e a legenda: só coisa pequena, texto ou número; **no Conversa o `baixo` sobe para o alto**, embaixo do que já está lá, porque ali ele cobriria o corpo de quem está de pé e a legenda grande do narrador), `esquerda` ou `direita` (metades do alto: dois itens lado a lado; gráfico e conta sempre ocupam o alto inteiro). O padrão nunca cobre rosto nem legenda.
 - No máximo **6 itens por fala**. Se não couber no alto, o mais antigo sai sozinho para o novo entrar.
 
 Os 9 tipos (exemplos prontos):

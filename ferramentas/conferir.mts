@@ -19,6 +19,7 @@ import { normalizarPalavra } from "../src/moldes/documentario/infografico/numero
 import { ACOES, MAOS_OCUPADAS, MINIMO_NO_CENARIO, normalizar, POSES_DO_ROTEIRO, trocasDeCenario } from "../src/moldes/conversa/regras2d.ts";
 import { corpoSemBracos } from "../src/componentes/personagens/semMangas.ts";
 import { conferirIlustra } from "../src/componentes/ilustracao/tempo.ts";
+import type { CenaDoPlano } from "../src/moldes/mundo3d/plano.ts";
 import { ilustraSchema } from "../src/componentes/ilustracao/schema.ts";
 
 const arquivo = process.argv.slice(2).find((arg) => !arg.startsWith("--"));
@@ -547,6 +548,40 @@ if (peca.molde === "Mundo3D") {
       aviso("diretora-de-arte", `cena ${n}: ${seg.toFixed(1)} s sem nenhuma ação (o boneco só respira e gesticula): ponha "acoes" na palavra forte (ex.: { "quem": "${cena.foco}", "em": "<palavra>", "acao": "apontar" })`);
   });
   if (trocas > 3) aviso("roteirista", `${trocas} trocas de lugar: o vídeo fica picado (use no máximo 2 ou 3)`);
+  // O rosto do foco atrás de alguém em todo ângulo (28/11/2026: o ajoelhado atrás de quem está
+  // de pé sumia no plano). A mesma conta da câmera do molde: ela já procura outro ângulo e olha
+  // de cima; se nada livra o rosto, a equipe muda o "onde", o foco ou o plano
+  if (pecas && (m.personagens ?? []).every((p) => p.onde)) {
+    try {
+      const { linhaDoTempo, planejarFilmagem } = await import("../src/moldes/mundo3d/plano.ts");
+      const { sementeDoTexto } = await import("../src/moldes/mundo3d/ambientes.ts");
+      const doc3d = peca as unknown as { cenas: CenaDoPlano[]; cenario?: { semente?: number }; titulo?: string; multidao?: { quantos: number; naPonte?: boolean } | null };
+      const linha = linhaDoTempo(doc3d.cenas.map((c) => ({ ...c, plano: c.plano ?? "medio", foco: c.foco ?? "" })));
+      const { tomadas } = planejarFilmagem({
+        personagens: (m.personagens ?? []).map((p) => ({ ...p, onde: p.onde as [number, number] })),
+        multidao: doc3d.multidao ? { quantos: doc3d.multidao.quantos, naPonte: doc3d.multidao.naPonte ?? true } : null,
+        objetos: m.objetos ?? [],
+        ambiente: ambiente,
+        semente: doc3d.cenario?.semente ?? sementeDoTexto(doc3d.titulo ?? ""),
+        linha,
+        largura: 1080,
+        altura: 1920,
+      });
+      const ditos = new Set<string>();
+      for (const t of tomadas) {
+        if (!t.tapado) continue;
+        const chave = `${t.cena}-${t.foco}`;
+        if (ditos.has(chave)) continue;
+        ditos.add(chave);
+        aviso(
+          "diretora-de-arte",
+          `cena ${t.cena + 1}: o rosto de ${t.foco} fica atrás de ${t.tapadoPor ?? "alguém"} no plano "${t.plano}" de todos os ângulos (ajoelhado, sentado ou colado a quem está de pé): afaste o "onde", ponha o foco em quem está na frente ou use "aberto"`,
+        );
+      }
+    } catch (e) {
+      aviso("producao", `não deu para conferir a câmera do 3D (${e instanceof Error ? e.message : e})`);
+    }
+  }
   // Objetos com buraco nas cenas: o kit mostra em todas do meio (não some e volta)
   for (const o of m.objetos ?? []) {
     if (!o.cenas?.length) continue;
@@ -763,6 +798,7 @@ cenas.forEach((cena, i) => {
   }
 
   // As ações na palavra
+  const POSES_COM_CELULAR = ["celular", "celular-baixo", "sentado"];
   const posesPorPessoa = new Map<string, string>();
   cenas2d.forEach((cena, i) => {
     for (const id of ids) {
@@ -781,7 +817,8 @@ cenas.forEach((cena, i) => {
       if (!alvo || !achou)
         erro("diretora-de-arte", `cena ${i + 1}: a ação de "${a.quem}" está na palavra "${a.em}", que não está na fala ("${cena.fala}"); use uma palavra da fala, "inicio" ou "fim"`);
       const antes = posesPorPessoa.get(a.quem ?? "") ?? "normal";
-      if (a.acao === "guardar-celular" && antes !== "celular" && antes !== "sentado")
+      // Com o celular na mão: celular, celular-baixo (28/11/2026: dava falso aviso) ou sentado com ele
+      if (a.acao === "guardar-celular" && !POSES_COM_CELULAR.includes(antes))
         aviso("diretora-de-arte", `cena ${i + 1}: "${a.quem}" guarda o celular, mas não está com ele (pose ${antes})`);
       if (a.acao === "levantar" && antes !== "sentado" && antes !== "sentado-livre")
         aviso("diretora-de-arte", `cena ${i + 1}: "${a.quem}" levanta, mas não está sentado`);
@@ -791,8 +828,17 @@ cenas.forEach((cena, i) => {
         aviso("diretora-de-arte", `cena ${i + 1}: "${a.quem}" tem desenho próprio, que não tem as costas desenhadas: ele só vira de lado (use "virar")`);
       if (cena.luz && (a.acao === "guardar-celular" || a.acao === "baixar-celular"))
         erro("diretora-de-arte", `cena ${i + 1}: a luz do aviso acende no celular, e "${a.quem}" guarda o celular na mesma fala; tire a ação ou a luz`);
-      if (a.pose) posesPorPessoa.set(a.quem ?? "", a.pose);
+      // A pose que a ação deixa (como no molde, direcao.ts): baixar o celular deixa celular-baixo,
+      // e quem guarda depois está com ele na mão
+      const deixa =
+        a.pose ??
+        { "pegar-celular": "celular", "baixar-celular": "celular-baixo", "guardar-celular": "normal", levantar: "normal" }[a.acao ?? ""] ??
+        (a.acao === "cair-sentado" ? (antes === "celular" || antes === "sentado" ? "sentado" : "sentado-livre") : undefined);
+      if (deixa) posesPorPessoa.set(a.quem ?? "", deixa);
     }
+    // Quem anda (ou volta) nesta fala: a câmera fica aberta, mesmo com close pedido
+    if (cena.camera && cena.camera !== "aberto" && (cena.acoes ?? []).some((a) => a.acao?.startsWith("andar") || a.acao === "voltar"))
+      aviso("diretora-de-arte", `cena ${i + 1}: camera "${cena.camera}" com alguém andando; o molde usa o plano aberto (quem anda precisa do quadro inteiro)`);
     for (const id of ids) {
       const m = cena.meio?.[id];
       if (m?.pose) posesPorPessoa.set(id, m.pose);

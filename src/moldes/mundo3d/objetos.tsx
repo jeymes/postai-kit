@@ -1,6 +1,8 @@
 import React, { useMemo } from "react";
 import { useCurrentFrame } from "remotion";
 import * as THREE from "three";
+import { sombraMacia } from "./BonecoDePecas";
+import { useSoftware } from "./software";
 
 // Os objetos de cena do Mundo3D (21/11/2026): animais, a oferta, o altar, o
 // fogo e a serpente, que a crítica pedia ("o narrador conta a oferta, mas o
@@ -446,57 +448,92 @@ export const ObjetoNaMao3D: React.FC<{ tipo: TipoDeObjeto }> = ({ tipo }) => (
   </group>
 );
 
+/**
+ * O tamanho da sombra de contato de cada objeto no chão (largura e fundo, em metros).
+ * Só no render por software (a nuvem): ali o sol não faz sombra (custava 12% do tempo)
+ * e o objeto, sem nada embaixo, parecia flutuar. Na placa de vídeo, a sombra é a do sol.
+ */
+const SOMBRA_DE_CONTATO: Partial<Record<TipoDeObjeto, [number, number]>> = {
+  ovelha: [1.0, 0.6],
+  cordeiro: [0.7, 0.42],
+  altar: [1.3, 1.1],
+  "altar-com-fogo": [1.3, 1.1],
+  fogueira: [1.0, 0.9],
+  "cesto-de-frutos": [0.6, 0.5],
+  "feixe-de-trigo": [0.5, 0.45],
+  cajado: [0.35, 0.3],
+  serpente: [0.9, 0.5],
+  jarro: [0.45, 0.4],
+  "arvore-com-frutos": [1.8, 1.6],
+  "pedra-grande": [1.7, 1.3],
+  "caixinha-de-alianca": [0.8, 0.7],
+  buque: [0.8, 0.7],
+  bolo: [0.8, 0.7],
+  presente: [0.6, 0.55],
+  "terno-no-cabide": [0.7, 0.6],
+};
+
 export const ObjetoDeCena: React.FC<{ tipo: TipoDeObjeto; posicao: [number, number, number]; giro?: number; escala?: number }> = ({
   tipo,
   posicao,
   giro = 0,
   escala = 1,
-}) => (
-  <group position={posicao} rotation={[0, giro, 0]} scale={escala}>
-    {tipo === "ovelha" && <Ovelha tamanho={1} />}
-    {tipo === "cordeiro" && <Ovelha tamanho={0.65} />}
-    {tipo === "altar" && <Altar fogo={false} />}
-    {tipo === "altar-com-fogo" && <Altar fogo />}
-    {tipo === "fogueira" && <Fogo />}
-    {tipo === "cesto-de-frutos" && <CestoDeFrutos />}
-    {tipo === "feixe-de-trigo" && <FeixeDeTrigo />}
-    {tipo === "cajado" && <Cajado />}
-    {tipo === "serpente" && <Serpente />}
-    {tipo === "jarro" && <Jarro />}
-    {tipo === "arvore-com-frutos" && <ArvoreComFrutos />}
-    {tipo === "pedra-grande" && <PedraGrande />}
-    {tipo === "caixinha-de-alianca" && (
-      <>
-        <Mesinha />
-        <group position={[0, 0.745, 0]} scale={1.3}>
-          <CaixinhaDeAlianca />
-        </group>
-      </>
-    )}
-    {tipo === "buque" && (
-      <>
-        <Mesinha />
-        <group position={[0, 0.745, 0]} rotation={[0, 0, Math.PI / 2.3]}>
-          <Buque />
-        </group>
-      </>
-    )}
-    {tipo === "bolo" && (
-      <>
-        <Mesinha />
-        <group position={[0, 0.745, 0]}>
-          <BoloDeFesta />
-        </group>
-      </>
-    )}
-    {tipo === "presente" && <Presente />}
-    {tipo === "terno-no-cabide" && (
-      <>
-        <Cabideiro />
-        <group position={[0, 1.75, 0.04]}>
-          <Terno />
-        </group>
-      </>
-    )}
-  </group>
-);
+}) => {
+  const software = useSoftware();
+  const sombra = software ? SOMBRA_DE_CONTATO[tipo] : undefined;
+  return (
+    <group position={posicao} rotation={[0, giro, 0]} scale={escala}>
+      {sombra && (
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.012, 0]} renderOrder={1}>
+          <planeGeometry args={sombra} />
+          <meshBasicMaterial map={sombraMacia(true)} transparent depthWrite={false} />
+        </mesh>
+      )}
+      {tipo === "ovelha" && <Ovelha tamanho={1} />}
+      {tipo === "cordeiro" && <Ovelha tamanho={0.65} />}
+      {tipo === "altar" && <Altar fogo={false} />}
+      {tipo === "altar-com-fogo" && <Altar fogo />}
+      {tipo === "fogueira" && <Fogo />}
+      {tipo === "cesto-de-frutos" && <CestoDeFrutos />}
+      {tipo === "feixe-de-trigo" && <FeixeDeTrigo />}
+      {tipo === "cajado" && <Cajado />}
+      {tipo === "serpente" && <Serpente />}
+      {tipo === "jarro" && <Jarro />}
+      {tipo === "arvore-com-frutos" && <ArvoreComFrutos />}
+      {tipo === "pedra-grande" && <PedraGrande />}
+      {tipo === "caixinha-de-alianca" && (
+        <>
+          <Mesinha />
+          <group position={[0, 0.745, 0]} scale={1.3}>
+            <CaixinhaDeAlianca />
+          </group>
+        </>
+      )}
+      {tipo === "buque" && (
+        <>
+          <Mesinha />
+          <group position={[0, 0.745, 0]} rotation={[0, 0, Math.PI / 2.3]}>
+            <Buque />
+          </group>
+        </>
+      )}
+      {tipo === "bolo" && (
+        <>
+          <Mesinha />
+          <group position={[0, 0.745, 0]}>
+            <BoloDeFesta />
+          </group>
+        </>
+      )}
+      {tipo === "presente" && <Presente />}
+      {tipo === "terno-no-cabide" && (
+        <>
+          <Cabideiro />
+          <group position={[0, 1.75, 0.04]}>
+            <Terno />
+          </group>
+        </>
+      )}
+    </group>
+  );
+};
